@@ -2,7 +2,8 @@ import {
   MagnifyingGlassIcon, 
   PlusIcon,
   FunnelIcon,
-  XMarkIcon
+  XMarkIcon,
+  ArchiveBoxIcon
 } from '@heroicons/react/24/outline'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -12,7 +13,8 @@ const SearchAndFilter = ({
   selectedCategory, 
   setSelectedCategory, 
   categories,
-  onAddClick 
+  onAddClick,
+  onArchiveClick
 }) => {
   const searchInputRef = useRef(null)
   const dropdownRef = useRef(null)
@@ -213,15 +215,24 @@ const SearchAndFilter = ({
           </div>
         </div>
 
-        {/* Add Book Button */}
-        <button
-          onClick={onAddClick}
-          className="flex items-center gap-2 px-6 py-2 text-gray-800 bg-gray-200 rounded-lg shadow-sm hover:bg-gray-300 hover:shadow-md transition-all w-full md:w-auto justify-center focus:outline-none focus:ring-0"
-          title="Add a new catalog item"
-        >
-          <PlusIcon className="w-5 h-5 text-gray-700" />
-          <span className="font-medium">Add New Book</span>
-        </button>
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+          <button
+            onClick={onArchiveClick}
+            className="flex items-center gap-2 px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow-md transition-all w-full md:w-auto justify-center focus:outline-none focus:ring-0"
+            title="View archived items"
+          >
+            <ArchiveBoxIcon className="w-5 h-5 text-gray-600" />
+            <span className="font-medium">Archives</span>
+          </button>
+          <button
+            onClick={onAddClick}
+            className="flex items-center gap-2 px-6 py-2 text-gray-800 bg-gray-200 rounded-lg shadow-sm hover:bg-gray-300 hover:shadow-md transition-all w-full md:w-auto justify-center focus:outline-none focus:ring-0"
+            title="Add a new catalog item"
+          >
+            <PlusIcon className="w-5 h-5 text-gray-700" />
+            <span className="font-medium">Add New Book</span>
+          </button>
+        </div>
       </div>
     </div>
   )

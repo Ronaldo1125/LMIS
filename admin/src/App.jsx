@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Sidebar from './components/Sidebar'
 import Dashboard from './components/Dashboard'
 import Cataloging from './components/Cataloging'
+import Accessions from './components/Accessions'
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard')
@@ -13,6 +14,8 @@ function App() {
         return <Dashboard />
       case 'cataloging':
         return <Cataloging />
+      case 'Accessions':
+        return <Accessions />
       default:
         return <Dashboard />
     }

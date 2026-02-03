@@ -3,10 +3,41 @@ import StatsOverview from './CatalogingComponents/StatsOverview'
 import SearchAndFilter from './CatalogingComponents/SearchAndFilter'
 import BooksTable from './CatalogingComponents/BooksTable'
 import AddBookModal from './CatalogingComponents/AddBookModal'
+import ViewBookModal from './CatalogingComponents/ViewBookModal'
+import EditBookModal from './CatalogingComponents/EditBookModal'
+import ArchivesModal from './CatalogingComponents/ArchivesModal'
 
 const Cataloging = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isArchivesOpen, setIsArchivesOpen] = useState(false)
+  const [selectedBook, setSelectedBook] = useState(null)
+  const [editBook, setEditBook] = useState({
+    id: null,
+    category: '',
+    callNumber: '',
+    title: '',
+    author: '',
+    editor: '',
+    edition: '',
+    publication: '',
+    isbn: '',
+    issn: '',
+    publisher: '',
+    dateOfPublication: '',
+    extent: '',
+    otherPhysicalDetails: '',
+    dimensions: '',
+    accompanyingMaterial: '',
+    notesArea: '',
+    subjects: '',
+    copies: '',
+    available: '',
+    status: '',
+    year: '',
+  })
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [books, setBooks] = useState([
     {
@@ -147,7 +178,10 @@ const Cataloging = () => {
     'Atlas'
   ]
 
+  const archivedBooks = books.filter(book => book.status === 'Archived')
+
   const filteredBooks = books.filter(book => {
+    if (book.status === 'Archived') return false
     const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          book.isbn.includes(searchTerm)
@@ -192,13 +226,97 @@ const Cataloging = () => {
     setIsAddModalOpen(false)
   }
 
-  const handleDeleteBook = (id) => {
-    setBooks(books.filter(book => book.id !== id))
+  const handleArchiveBook = (id) => {
+    setBooks(books.map(book => (
+      book.id === id ? { ...book, status: 'Archived' } : book
+    )))
+  }
+
+  const handleRestoreBook = (id) => {
+    setBooks(books.map(book => (
+      book.id === id ? { ...book, status: 'Available' } : book
+    )))
   }
 
   const handleEditBook = (book) => {
-    // Edit functionality can be implemented here
-    console.log('Edit book:', book)
+    setEditBook({
+      id: book.id,
+      category: book.category || '',
+      callNumber: book.callNumber || '',
+      title: book.title || '',
+      author: book.author || '',
+      editor: book.editor || '',
+      edition: book.edition || '',
+      publication: book.publication || '',
+      isbn: book.isbn || '',
+      issn: book.issn || '',
+      publisher: book.publisher || '',
+      dateOfPublication: book.dateOfPublication || '',
+      extent: book.extent || '',
+      otherPhysicalDetails: book.otherPhysicalDetails || '',
+      dimensions: book.dimensions || '',
+      accompanyingMaterial: book.accompanyingMaterial || '',
+      notesArea: book.notesArea || '',
+      subjects: book.subjects || '',
+      copies: book.copies ?? '',
+      available: book.available ?? '',
+      status: book.status || '',
+      year: book.year ?? '',
+    })
+    setIsEditModalOpen(true)
+  }
+
+  const handleUpdateBook = () => {
+    const publicationYear = editBook.dateOfPublication
+      ? new Date(editBook.dateOfPublication).getFullYear()
+      : editBook.year || null
+
+    const copiesCount = editBook.copies === '' ? null : parseInt(editBook.copies, 10)
+    const availableCount = editBook.available === '' ? null : parseInt(editBook.available, 10)
+
+    const updatedBook = {
+      ...editBook,
+      year: publicationYear,
+      copies: copiesCount,
+      available: availableCount ?? copiesCount,
+    }
+
+    setBooks(books.map(book => (book.id === updatedBook.id ? updatedBook : book)))
+    setIsEditModalOpen(false)
+    setEditBook({
+      id: null,
+      category: '',
+      callNumber: '',
+      title: '',
+      author: '',
+      editor: '',
+      edition: '',
+      publication: '',
+      isbn: '',
+      issn: '',
+      publisher: '',
+      dateOfPublication: '',
+      extent: '',
+      otherPhysicalDetails: '',
+      dimensions: '',
+      accompanyingMaterial: '',
+      notesArea: '',
+      subjects: '',
+      copies: '',
+      available: '',
+      status: '',
+      year: '',
+    })
+  }
+
+  const handleViewBook = (book) => {
+    setSelectedBook(book)
+    setIsViewModalOpen(true)
+  }
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false)
+    setSelectedBook(null)
   }
 
   return (
@@ -222,13 +340,15 @@ const Cataloging = () => {
         setSelectedCategory={setSelectedCategory}
         categories={categories}
         onAddClick={() => setIsAddModalOpen(true)}
+        onArchiveClick={() => setIsArchivesOpen(true)}
       />
 
       {/* Books Table */}
       <BooksTable
         books={filteredBooks}
-        onDelete={handleDeleteBook}
+        onArchive={handleArchiveBook}
         onEdit={handleEditBook}
+        onView={handleViewBook}
       />
 
       {/* Add Book Modal */}
@@ -239,6 +359,28 @@ const Cataloging = () => {
         newBook={newBook}
         setNewBook={setNewBook}
         categories={categories}
+      />
+
+      <ViewBookModal
+        isOpen={isViewModalOpen}
+        onClose={handleCloseViewModal}
+        book={selectedBook}
+      />
+
+      <EditBookModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleUpdateBook}
+        editBook={editBook}
+        setEditBook={setEditBook}
+        categories={categories}
+      />
+
+      <ArchivesModal
+        isOpen={isArchivesOpen}
+        onClose={() => setIsArchivesOpen(false)}
+        archivedBooks={archivedBooks}
+        onRestore={handleRestoreBook}
       />
     </div>
   )

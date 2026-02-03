@@ -1,7 +1,7 @@
 import { 
   HomeIcon, 
   BookOpenIcon, 
-  ShoppingCartIcon,
+  DocumentPlusIcon,
   UsersIcon,
   ShieldCheckIcon,
   Cog6ToothIcon,
@@ -14,7 +14,7 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
     { id: 'cataloging', label: 'Cataloging', icon: BookOpenIcon },
-    { id: 'acquisitions', label: 'Acquisitions', icon: ShoppingCartIcon },
+    { id: 'Accessions', label: 'Accessions', icon: DocumentPlusIcon },
     { id: 'user-management', label: 'User Management', icon: UsersIcon },
     { id: 'security', label: 'Security', icon: ShieldCheckIcon },
     { id: 'settings', label: 'Settings', icon: Cog6ToothIcon },
