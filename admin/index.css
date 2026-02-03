@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* Brand Colors */
+  --dark-blue-1: #154A9A;
+  --dark-blue-2: #0F61F7;
+  --dark-blue-3: #0248D4;
+  --dark-blue-4: #0032A6;
+  --black: #000000;
+  --white: #ffffff;
+  
+  /* Secondary Colors - Complement */
+  --secondary-1-light: #6045D2;
+  --secondary-1-medium: #3F1BD2;
+  --secondary-1-dark: #2D0CB4;
+  --secondary-1-darker: #23088F;
+  --secondary-1-darkest: #1A066F;
+  
+  /* Secondary Colors - Secondary (1) */
+  --secondary-2-light: #FFDA3C;
+  --secondary-2-medium: #FFD002;
+  --secondary-2-dark: #FFCF00;
+  --secondary-2-darker: #CFA900;
+  --secondary-2-darkest: #A08200;
+  
+  /* Secondary Colors - Secondary (2) */
+  --secondary-3-light: #FFBB3C;
+  --secondary-3-medium: #FFA602;
+  --secondary-3-dark: #FFA500;
+  --secondary-3-darker: #CF8700;
+  --secondary-3-darkest: #A06800;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+a {
+  font-weight: 500;
+  color: var(--dark-blue-2);
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: var(--dark-blue-1);
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: var(--dark-blue-1);
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+button:hover {
+  border-color: var(--secondary-2-light);
+  background-color: var(--dark-blue-3);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto var(--secondary-2-medium);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: var(--dark-blue-4);
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: var(--dark-blue-2);
+  }
+  button {
+    background-color: var(--dark-blue-1);
+  }
+  button:hover {
+    background-color: var(--dark-blue-3);
+  }
+}
