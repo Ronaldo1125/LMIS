@@ -1,5 +1,6 @@
 import { UsersIcon, ArrowDownTrayIcon, EyeIcon } from '@heroicons/react/24/outline'
-import DashboardHeader from './DashboardComponents/DashboardHeader'
+import { useState, useEffect } from 'react'
+import DashboardHeader from './DashboardComponents/Dashboardheader'
 import StatCard from './DashboardComponents/StatCard'
 import DateTimeCard from './DashboardComponents/Datetimecard'
 import CollectionByCategory from './DashboardComponents/CollectionByCategory'
@@ -8,6 +9,17 @@ import MostDownloadedStats from './DashboardComponents/MostDownloadedStats'
 import WebsiteAnalytics from './DashboardComponents/WebsiteAnalytics'
 
 const Dashboard = () => {
+  const [isSticky, setIsSticky] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsSticky(window.scrollY > 20)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const stats = [
     {
       title: 'Patrons',
@@ -33,6 +45,9 @@ const Dashboard = () => {
     <div className="p-6">
       {/* Header */}
       <DashboardHeader />
+      
+      {/* Spacer when header is sticky */}
+      {isSticky && <div className="h-[88px] mb-6" />}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
