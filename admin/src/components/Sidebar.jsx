@@ -7,7 +7,8 @@ import {
   Cog6ToothIcon,  
   ArrowRightOnRectangleIcon,  
   Bars3Icon,  
-  XMarkIcon  
+  XMarkIcon,
+  ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline'
 
 const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
@@ -16,7 +17,7 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
     { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
     { id: 'cataloging', label: 'Cataloging', icon: BookOpenIcon },
     { id: 'accessions', label: 'Accessions', icon: DocumentPlusIcon },
-    { id: 'acquisitions', label: 'Acquisitions', icon: DocumentPlusIcon },
+    { id: 'acquisitions', label: 'Acquisitions', icon: ClipboardDocumentCheckIcon },
     { id: 'user-management', label: 'User Management', icon: UsersIcon },
     { id: 'security', label: 'Security', icon: ShieldCheckIcon },
   ]
