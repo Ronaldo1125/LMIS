@@ -14,7 +14,7 @@ function App() {
         return <Dashboard />
       case 'cataloging':
         return <Cataloging />
-      case 'Accessions':
+      case 'accessions':
         return <Accessions />
       default:
         return <Dashboard />
