@@ -16,6 +16,7 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
     { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
     { id: 'cataloging', label: 'Cataloging', icon: BookOpenIcon },
     { id: 'accessions', label: 'Accessions', icon: DocumentPlusIcon },
+    { id: 'acquisitions', label: 'Acquisitions', icon: DocumentPlusIcon },
     { id: 'user-management', label: 'User Management', icon: UsersIcon },
     { id: 'security', label: 'Security', icon: ShieldCheckIcon },
   ]

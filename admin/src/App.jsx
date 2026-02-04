@@ -3,7 +3,7 @@ import Sidebar from './components/Sidebar'
 import Dashboard from './components/Dashboard'
 import Cataloging from './components/Cataloging'
 import Accessions from './components/Accessions'
-
+import UserManagement from './components/UserManagement'
 function App() {
   const [currentView, setCurrentView] = useState('dashboard')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -16,6 +16,8 @@ function App() {
         return <Cataloging />
       case 'accessions':
         return <Accessions />
+      case 'user-management':
+        return <UserManagement />
       default:
         return <Dashboard />
     }
