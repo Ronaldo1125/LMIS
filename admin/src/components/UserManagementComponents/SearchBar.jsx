@@ -68,8 +68,10 @@ function SearchBar({
             onClick={onAddStaff}
             className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
             style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              fontFamily: '"Inter", sans-serif'
+              backgroundColor: 'var(--dark-blue-1)',
+              color: 'var(--white)',
+              fontFamily: '"Inter", sans-serif',
+              border: '1px solid var(--dark-blue-2)'
             }}
           >
             <UserPlus size={18} />
@@ -80,8 +82,10 @@ function SearchBar({
             onClick={onAddLibrarian}
             className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
             style={{
-              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-              fontFamily: '"Inter", sans-serif'
+              backgroundColor: 'var(--secondary-1-medium)',
+              color: 'var(--white)',
+              fontFamily: '"Inter", sans-serif',
+              border: '1px solid var(--secondary-1-dark)'
             }}
           >
             <UserCog size={18} />
@@ -92,9 +96,17 @@ function SearchBar({
 
       <style>{`
         select {
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23154A9A' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
           background-repeat: no-repeat;
           background-position: right 0.75rem center;
+          color: var(--dark-blue-4);
+        }
+        select:focus {
+          border-color: var(--secondary-2-light);
+          box-shadow: 0 0 0 2px var(--secondary-2-light);
+        }
+        button:hover {
+          background-color: var(--dark-blue-3) !important;
         }
       `}</style>
     </div>

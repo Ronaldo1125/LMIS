@@ -5,21 +5,21 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
     switch (role) {
       case 'Staff':
         return {
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white'
+          background: 'var(--secondary-3-light)',
+          color: 'var(--dark-blue-1)'
         }
       case 'Librarian':
         return {
-          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-          color: 'white'
+          background: 'var(--secondary-1-light)',
+          color: 'var(--secondary-1-dark)'
         }
       case 'Patron':
         return {
-          background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-          color: 'white'
+          background: 'var(--secondary-2-light)',
+          color: 'var(--secondary-2-darkest)'
         }
       default:
-        return { background: '#e5e7eb', color: '#374151' }
+        return { background: 'var(--secondary-4-grey)', color: 'var(--dark-blue-4)' }
     }
   }
 
@@ -218,15 +218,16 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
 
 // Helper function to generate gradient colors based on name
 function getGradientColors(name) {
+  // Use theme color for avatar backgrounds (match badge color logic)
   const colors = [
-    '#667eea, #764ba2',
-    '#f093fb, #f5576c',
-    '#4facfe, #00f2fe',
-    '#43e97b, #38f9d7',
-    '#fa709a, #fee140',
-    '#30cfd0, #330867',
-    '#a8edea, #fed6e3',
-    '#ff9a9e, #fecfef'
+    'var(--secondary-3-light)',
+    'var(--secondary-1-light)',
+    'var(--secondary-2-light)',
+    'var(--secondary-2-dark)',
+    'var(--secondary-2-darker)',
+    'var(--secondary-1-dark)',
+    'var(--secondary-3-dark)',
+    'var(--dark-blue-1)'
   ]
   const index = name.charCodeAt(0) % colors.length
   return colors[index]

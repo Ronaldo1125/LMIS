@@ -71,14 +71,10 @@ function AddStaffModal({ onClose, onSubmit }) {
         {/* Header */}
         <div 
           className="px-8 py-6 text-white relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+          style={{ background: 'var(--dark-blue-1)' }}
         >
-          <div 
-            className="absolute inset-0 opacity-20"
-            style={{ background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.2) 0%, transparent 50%)' }}
-          />
           <div className="relative flex items-center justify-between">
-            <h2 className="text-2xl font-bold" style={{ fontFamily: '"Playfair Display", serif' }}>
+            <h2 className="text-2xl font-bold" style={{ fontFamily: 'inherit' }}>
               Add New Staff Member
             </h2>
             <button
@@ -207,8 +203,8 @@ function AddStaffModal({ onClose, onSubmit }) {
               type="submit"
               className="flex-1 px-6 py-3 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95"
               style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                fontFamily: '"Inter", sans-serif'
+                background: 'var(--dark-blue-1)',
+                fontFamily: 'inherit'
               }}
             >
               Add Staff Member

@@ -62,18 +62,14 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
         {/* Header */}
         <div 
           className="px-8 py-6 text-white relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}
+          style={{ background: 'var(--secondary-3-light)' }}
         >
-          <div 
-            className="absolute inset-0 opacity-20"
-            style={{ background: 'radial-gradient(circle at 50% 80%, rgba(255,255,255,0.2) 0%, transparent 50%)' }}
-          />
           <div className="relative flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: '"Playfair Display", serif' }}>
+              <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: 'inherit' }}>
                 Reset Password
               </h2>
-              <p className="text-sm opacity-90" style={{ fontFamily: '"Inter", sans-serif' }}>
+              <p className="text-sm opacity-90" style={{ fontFamily: 'inherit' }}>
                 For {user.name}
               </p>
             </div>
@@ -179,8 +175,8 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
               type="submit"
               className="flex-1 px-6 py-3 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95"
               style={{
-                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                fontFamily: '"Inter", sans-serif'
+                background: 'var(--secondary-3-light)',
+                fontFamily: 'inherit'
               }}
             >
               Reset Password

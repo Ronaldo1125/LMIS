@@ -101,16 +101,10 @@ function UserManagement() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2" style={{ 
-            fontFamily: '"Playfair Display", serif',
-            color: '#1a1a2e',
-            letterSpacing: '-0.02em'
-          }}>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--dark-blue-1)' }}>
             User Management
           </h1>
-          <p className="text-gray-600" style={{ fontFamily: '"Inter", sans-serif' }}>
-            Manage library staff, librarians, and patrons
-          </p>
+          <p className="text-gray-600">Manage library staff, librarians, and patrons</p>
         </div>
 
         {/* Stats Cards */}
