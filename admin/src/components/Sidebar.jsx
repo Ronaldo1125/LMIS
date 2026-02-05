@@ -1,13 +1,12 @@
-import {  
-  HomeIcon,  
-  BookOpenIcon,  
-  DocumentPlusIcon,  
-  UsersIcon,  
-  ShieldCheckIcon,  
-  Cog6ToothIcon,  
-  ArrowRightOnRectangleIcon,  
-  Bars3Icon,  
-  XMarkIcon,
+import {
+  HomeIcon,
+  BookOpenIcon,
+  DocumentPlusIcon,
+  UsersIcon,
+  ShieldCheckIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+  Bars3Icon,
   ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline'
 
@@ -30,26 +29,34 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
 
   return (
     <aside 
-      className={`flex-shrink-0 text-white transition-all duration-300 ${isOpen ? 'w-64' : 'w-20'}`}
+      className={`flex-shrink-0 text-white transition-all duration-300 relative ${isOpen ? 'w-64' : 'w-20'}`}
       style={{ background: 'var(--dark-blue-1)', boxShadow: '2px 0 10px rgba(0,0,0,0.1)' }}
     >
+      {/* Toggle Button */}
+      <button
+        onClick={() => setIsSidebarOpen(!isOpen)}
+        className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 rounded-lg transition-all z-10 hover:scale-110 active:scale-95 flex items-center justify-center"
+        style={{ 
+          backgroundColor: 'var(--secondary-2-light)',
+          boxShadow: '0 4px 12px rgba(255, 218, 60, 0.4)',
+          width: '28px',   // slimmer width
+          height: '70px',  // taller height
+          borderRadius: '14px' // pill shape
+        }}
+        title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+      >
+        <div style={{ fontSize: '22px', lineHeight: 1, fontWeight: 'bold', color: 'var(--dark-blue-4)' }}>
+          {isOpen ? '⟩' : '⟨'}
+        </div>
+      </button>
+
       <div className="h-full flex flex-col">
         {/* Logo Section */}
-        <div className="p-4 border-b border-white border-opacity-10">
-          <div className="flex items-center justify-center gap-3">
-            <div className={`flex items-center gap-3 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
-              <img src="/LOGO.svg" alt="LMIS Logo" className="w-16 h-16 flex-shrink-0" style={{ filter: 'brightness(0) invert(1)' }} />
-              <h1 className="text-xl font-bold whitespace-nowrap">LMIS</h1>
-            </div>
-            <button
-              onClick={() => setIsSidebarOpen(!isOpen)}
-              className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${!isOpen ? 'mx-auto' : ''}`}
-              style={{ backgroundColor: 'var(--white)', color: 'var(--dark-blue-1)' }}
-              title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-            >
-              {isOpen ? <XMarkIcon className="w-4 h-4" /> : <Bars3Icon className="w-4 h-4" />}
-            </button>
-          </div>
+        <div className="p-4 border-b border-white border-opacity-10 flex items-center justify-center">
+          <img src="/LOGO.svg" alt="LMIS Logo" className="w-12 h-12 flex-shrink-0" style={{ filter: 'brightness(0) invert(1)' }} />
+          <h1 className={`text-xl font-bold whitespace-nowrap transition-all duration-300 ${isOpen ? 'opacity-100 ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
+            LMIS
+          </h1>
         </div>
 
         {/* Navigation */}
