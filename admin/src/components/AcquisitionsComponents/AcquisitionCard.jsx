@@ -15,7 +15,7 @@ const AcquisitionCard = ({ acquisition, viewMode }) => {
   if (viewMode === 'list') {
     return (
       <div className="flex gap-6 p-5 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:translate-x-2 group">
-        <div className="flex-shrink-0 w-20 h-[120px] rounded-lg overflow-hidden shadow-md bg-slate-100">
+        <div className="flex-shrink-0 w-20 h-[120px] rounded-lg overflow-hidden shadow-md bg-gray-100">
           <img 
             src={coverImage} 
             alt={`Cover of ${title}`}
@@ -24,14 +24,14 @@ const AcquisitionCard = ({ acquisition, viewMode }) => {
           />
         </div>
         
-        <div className="flex-1 flex flex-col justify-center gap-2">
-          <h3 className="text-lg font-bold text-[#154A9A] leading-tight">
+        <div className="flex-1 flex flex-col justify-center gap-1.5">
+          <h3 className="text-lg font-semibold text-[#154A9A] leading-tight tracking-tight">
             {title}
           </h3>
-          <p className="text-[15px] text-slate-600 font-medium">
+          <p className="text-[15px] text-gray-600 font-normal tracking-normal">
             by {author}
           </p>
-          <p className="text-[13px] text-slate-500 font-medium mt-1">
+          <p className="text-[13px] text-gray-500 font-normal tracking-wide mt-0.5">
             Acquired: {formatDate(acquisitionDate)}
           </p>
         </div>
@@ -41,7 +41,7 @@ const AcquisitionCard = ({ acquisition, viewMode }) => {
 
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer hover:-translate-y-2 hover:scale-[1.02] group">
-      <div className="relative w-full aspect-[2/3] overflow-hidden bg-slate-100">
+      <div className="relative w-full aspect-[2/3] overflow-hidden bg-gray-100">
         <img 
           src={coverImage} 
           alt={`Cover of ${title}`}
@@ -49,17 +49,17 @@ const AcquisitionCard = ({ acquisition, viewMode }) => {
           loading="lazy"
         />
         <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <p className="text-white text-xs font-semibold drop-shadow-lg">
+          <p className="text-white text-xs font-medium tracking-wide drop-shadow-lg">
             {formatDate(acquisitionDate)}
           </p>
         </div>
       </div>
       
       <div className="p-5">
-        <h3 className="text-base font-bold text-[#154A9A] leading-snug mb-2 line-clamp-2">
+        <h3 className="text-base font-semibold text-[#154A9A] leading-snug tracking-tight mb-2 line-clamp-2">
           {title}
         </h3>
-        <p className="text-sm text-slate-600 font-medium">
+        <p className="text-sm text-gray-600 font-normal tracking-normal">
           {author}
         </p>
       </div>
