@@ -97,8 +97,7 @@ function UserManagement() {
   }
 
   return (
-    <div className="min-h-screen p-8" style={{ backgroundColor: '#fafbfc' }}>
-      <div className="max-w-7xl mx-auto">
+    <div className="p-6 min-h-screen">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--dark-blue-1)' }}>
@@ -156,7 +155,6 @@ function UserManagement() {
           />
         )}
       </div>
-    </div>
   )
 }
 

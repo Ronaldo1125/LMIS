@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import ViewToggle from './AcquisitionsComponents/ViewToggle';
 import SortControls from './AcquisitionsComponents/SortControls';
+import SearchBar from './AcquisitionsComponents/SearchBar';
 import AcquisitionsList from './AcquisitionsComponents/AcquisitionsList';
 import AcquisitionsGrid from './AcquisitionsComponents/AcquisitionsGrid';
 
@@ -8,6 +9,7 @@ const Acquisitions = () => {
   const [viewMode, setViewMode] = useState('grid'); // 'list' or 'grid'
   const [sortBy, setSortBy] = useState('date'); // 'alphabetical' or 'date'
   const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Sample data - replace with your actual data source
   const acquisitionsData = [
@@ -55,9 +57,21 @@ const Acquisitions = () => {
     }
   ];
 
-  // Sorting logic
-  const sortedAcquisitions = useMemo(() => {
-    const sorted = [...acquisitionsData];
+  // Filter and sort logic
+  const filteredAndSortedAcquisitions = useMemo(() => {
+    // First filter by search query
+    let filtered = acquisitionsData;
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = acquisitionsData.filter(book => 
+        book.title.toLowerCase().includes(query) || 
+        book.author.toLowerCase().includes(query)
+      );
+    }
+    
+    // Then sort
+    const sorted = [...filtered];
     
     if (sortBy === 'alphabetical') {
       sorted.sort((a, b) => {
@@ -73,7 +87,8 @@ const Acquisitions = () => {
     }
     
     return sorted;
-  }, [sortBy, sortOrder]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy, sortOrder, searchQuery]);
 
   const handleSortChange = (newSortBy) => {
     if (sortBy === newSortBy) {
@@ -85,19 +100,38 @@ const Acquisitions = () => {
     }
   };
 
+  // ESC key to clear search
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && searchQuery) {
+        setSearchQuery('');
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchQuery]);
+
   return (
-    <div className="max-w-[1400px] mx-auto px-8 py-10 min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 pb-8 border-b-2 border-slate-200">
-        <div className="flex-1 mb-6 md:mb-0">
-          <h1 className="text-5xl font-bold mb-2 tracking-tight text-[#154A9A]">
-            Acquisitions
-          </h1>
-          <p className="text-base text-slate-600 font-medium">
-            {sortedAcquisitions.length} {sortedAcquisitions.length === 1 ? 'book' : 'books'} acquired
-          </p>
-        </div>
-        
-        <div className="flex flex-col md:flex-row gap-6 w-full md:w-auto">
+    <div className="p-6 min-h-screen">
+      {/* Header (Matched with Accessions) */}
+      <div className="mb-8">
+        <h1
+          className="text-3xl font-bold mb-2"
+          style={{ color: 'var(--dark-blue-1)' }}
+        >
+          Acquisitions
+        </h1>
+        <p className="text-gray-600">
+          {filteredAndSortedAcquisitions.length}{' '}
+          {filteredAndSortedAcquisitions.length === 1 ? 'book' : 'books'} 
+          {searchQuery && ' found'}
+        </p>
+      </div>
+
+      {/* Controls */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
+        <div className="flex flex-col sm:flex-row gap-6">
           <SortControls
             sortBy={sortBy}
             sortOrder={sortOrder}
@@ -108,13 +142,34 @@ const Acquisitions = () => {
             onViewChange={setViewMode}
           />
         </div>
+        
+        <SearchBar 
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
       </div>
 
+      {/* Content */}
       <div>
-        {viewMode === 'grid' ? (
-          <AcquisitionsGrid acquisitions={sortedAcquisitions} />
+        {filteredAndSortedAcquisitions.length > 0 ? (
+          viewMode === 'grid' ? (
+            <AcquisitionsGrid acquisitions={filteredAndSortedAcquisitions} />
+          ) : (
+            <AcquisitionsList acquisitions={filteredAndSortedAcquisitions} />
+          )
         ) : (
-          <AcquisitionsList acquisitions={sortedAcquisitions} />
+          <div className="text-center py-16">
+            <p className="text-gray-500 text-lg font-normal tracking-normal">
+              No books found matching "{searchQuery}"
+            </p>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="mt-4 px-6 py-2 bg-[#154A9A] text-white rounded-lg hover:bg-[#154A9A]/90 
+                         transition-colors duration-200 font-medium tracking-normal"
+            >
+              Clear Search
+            </button>
+          </div>
         )}
       </div>
     </div>

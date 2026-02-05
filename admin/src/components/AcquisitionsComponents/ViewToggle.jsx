@@ -1,53 +1,48 @@
-import React from 'react';
+import { Squares2X2Icon, Bars3Icon } from '@heroicons/react/24/outline';
 
 const ViewToggle = ({ viewMode, onViewChange }) => {
+  const isGridActive = viewMode === 'grid';
+  const isListActive = viewMode === 'list';
+  
   return (
-    <div className="flex gap-2 p-1.5 bg-white rounded-xl border-2 border-slate-200 shadow-sm">
+    <div className="inline-flex items-center rounded-xl bg-white border border-slate-300 shadow-sm p-1">
+      
+      {/* Grid */}
       <button
-        className={`flex items-center justify-center w-11 h-11 rounded-lg transition-all duration-300 ${
-          viewMode === 'grid'
-            ? 'bg-[#154A9A] text-white shadow-md'
-            : 'bg-transparent text-slate-500 hover:bg-slate-100 hover:text-[#0F61F7]'
-        }`}
+        type="button"
         onClick={() => onViewChange('grid')}
         aria-label="Grid view"
-        title="Grid view"
+        className={`
+          !border-0 !p-0 !m-0
+          flex h-10 w-10 items-center justify-center rounded-lg
+          transition-all duration-300 ease-out
+          ${isGridActive ? '!bg-[#154A9A]' : '!bg-transparent hover:!bg-slate-100'}
+        `}
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <rect x="2" y="2" width="6.5" height="6.5" rx="1" stroke="currentColor" strokeWidth="1.5" />
-          <rect x="11.5" y="2" width="6.5" height="6.5" rx="1" stroke="currentColor" strokeWidth="1.5" />
-          <rect x="2" y="11.5" width="6.5" height="6.5" rx="1" stroke="currentColor" strokeWidth="1.5" />
-          <rect x="11.5" y="11.5" width="6.5" height="6.5" rx="1" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
+        <Squares2X2Icon 
+          className="h-5 w-5"
+          stroke={isGridActive ? '#ffffff' : '#154A9A'}
+          strokeWidth={2}
+        />
       </button>
-      
+
+      {/* List */}
       <button
-        className={`flex items-center justify-center w-11 h-11 rounded-lg transition-all duration-300 ${
-          viewMode === 'list'
-            ? 'bg-[#154A9A] text-white shadow-md'
-            : 'bg-transparent text-slate-500 hover:bg-slate-100 hover:text-[#0F61F7]'
-        }`}
+        type="button"
         onClick={() => onViewChange('list')}
         aria-label="List view"
-        title="List view"
+        className={`
+          !border-0 !p-0 !m-0
+          flex h-10 w-10 items-center justify-center rounded-lg
+          transition-all duration-300 ease-out
+          ${isListActive ? '!bg-[#154A9A]' : '!bg-transparent hover:!bg-slate-100'}
+        `}
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <rect x="2" y="3.5" width="16" height="2" rx="1" fill="currentColor" />
-          <rect x="2" y="9" width="16" height="2" rx="1" fill="currentColor" />
-          <rect x="2" y="14.5" width="16" height="2" rx="1" fill="currentColor" />
-        </svg>
+        <Bars3Icon 
+          className="h-5 w-5"
+          stroke={isListActive ? '#ffffff' : '#154A9A'}
+          strokeWidth={2}
+        />
       </button>
     </div>
   );
