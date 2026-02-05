@@ -90,6 +90,8 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
           {footerItems.map((item) => {
             const Icon = item.icon
             const isActive = currentView === item.id
+            const isLogout = item.id === 'logout'
+            
             return (
               <button
                 key={item.id}
@@ -97,7 +99,7 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
                 className={`w-full flex items-center px-4 py-2 rounded-lg transition-all group ${
                   isActive
                     ? 'text-white shadow-lg'
-                    : 'text-white text-opacity-70 hover:text-opacity-100 hover:bg-white hover:bg-opacity-10'
+                    : `text-white text-opacity-70 hover:text-opacity-100 ${isLogout ? 'hover:bg-red-500 hover:bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10'}`
                 } ${isOpen ? 'space-x-3' : 'justify-center'}`}
                 style={isActive ? { backgroundColor: '#158EF3' } : {}}
                 title={item.label}

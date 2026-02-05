@@ -10,12 +10,12 @@ import AccountLogin from './components/AccountLogin'
 // Check for existing authentication
 const getInitialAuthState = () => {
   const token = localStorage.getItem('authToken')
-  const savedUser = localStorage.getItem('user')
+  const savedAdmin = localStorage.getItem('admin')
   
-  if (token && savedUser) {
+  if (token && savedAdmin) {
     return {
       isAuthenticated: true,
-      user: JSON.parse(savedUser)
+      user: JSON.parse(savedAdmin)
     }
   }
   
@@ -39,7 +39,7 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('authToken')
-    localStorage.removeItem('user')
+    localStorage.removeItem('admin')
     setIsAuthenticated(false)
     setUser(null)
     setCurrentView('dashboard')
@@ -57,6 +57,10 @@ function App() {
         return <UserManagement />
       case 'acquisitions':
         return <Acquisitions />
+      case 'logout':
+        // Handle logout when clicked from sidebar
+        handleLogout()
+        return null
       default:
         return <Dashboard />
     }
@@ -76,7 +80,6 @@ function App() {
         currentView={currentView}
         setCurrentView={setCurrentView}
         user={user}
-        onLogout={handleLogout}
       />
       
       <main className="flex-1 overflow-x-hidden overflow-y-auto pl-6">
