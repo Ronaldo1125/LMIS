@@ -6,8 +6,9 @@ import {
   ShieldCheckIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
-  Bars3Icon,
-  ClipboardDocumentCheckIcon
+  ClipboardDocumentCheckIcon,
+  ChevronDoubleLeftIcon,
+  ChevronDoubleRightIcon
 } from '@heroicons/react/24/outline'
 
 const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
@@ -29,23 +30,31 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
 
   return (
     <aside 
-      className={`flex-shrink-0 bg-[#154A9A] text-white transition-all duration-300 relative ${isOpen ? 'w-64' : 'w-20'}`}
+      className={`flex-shrink-0 bg-[#154A9A] text-white transition-all duration-300 relative ${
+        isOpen ? 'w-64' : 'w-20'
+      }`}
       style={{ boxShadow: '2px 0 10px rgba(0,0,0,0.1)' }}
     >
       {/* Toggle Button */}
       <button
         onClick={() => setIsSidebarOpen(!isOpen)}
-        className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 bg-[#FFD002] rounded-xl transition-all z-10 hover:scale-110 hover:shadow-lg active:scale-95 flex items-center justify-center"
+        className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 
+                   bg-white rounded-full p-1 transition-all z-10 
+                   hover:bg-gray-100 hover:shadow-md active:scale-95 
+                   flex items-center justify-center border border-gray-200 
+                   focus:outline-none focus:ring-0"
         style={{ 
-          boxShadow: '0 4px 12px rgba(255, 208, 2, 0.4)',
-          width: '28px',
-          height: '70px',
+          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
+          width: '32px',
+          height: '32px',
         }}
         title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
       >
-        <div className="text-[22px] leading-none font-bold text-[#154A9A]">
-          {isOpen ? '⟩' : '⟨'}
-        </div>
+        {isOpen ? (
+          <ChevronDoubleLeftIcon className="w-5 h-5 text-gray-700" />
+        ) : (
+          <ChevronDoubleRightIcon className="w-5 h-5 text-gray-700" />
+        )}
       </button>
 
       <div className="h-full flex flex-col">

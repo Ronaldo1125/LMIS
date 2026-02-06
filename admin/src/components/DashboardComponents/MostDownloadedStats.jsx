@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Download, FileText, TrendingUp, Book, Sparkles, X } from 'lucide-react';
 
 const MostDownloadedStats = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [timeRange, setTimeRange] = useState('month');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
+  
+  const categoryDropdownRef = useRef(null);
+  const timeRangeDropdownRef = useRef(null);
 
   // Sample data structure - replace with your actual API data
   const [downloadStats] = useState({
@@ -182,6 +187,39 @@ const MostDownloadedStats = () => {
     { value: 'reference', label: 'Reference Materials', subcategories: ['Encyclopedia', 'Atlas'] }
   ];
 
+  const timeRanges = [
+    { value: 'week', label: 'Last Week' },
+    { value: 'month', label: 'Last Month' },
+    { value: 'quarter', label: 'Last Quarter' },
+    { value: 'year', label: 'Last Year' }
+  ];
+
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsCategoryOpen(false);
+        setIsTimeRangeOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const onClickOutside = (event) => {
+      if (!categoryDropdownRef.current?.contains(event.target)) {
+        setIsCategoryOpen(false);
+      }
+      if (!timeRangeDropdownRef.current?.contains(event.target)) {
+        setIsTimeRangeOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
+
   const getCategoryColor = (category) => {
     const colors = {
       'Books': styles.darkBlue2,
@@ -205,6 +243,16 @@ const MostDownloadedStats = () => {
     if (index === 1) return { bg: styles.grey300, color: styles.grey900 };
     if (index === 2) return { bg: styles.secondary3Light, color: styles.grey900 };
     return { bg: styles.grey100, color: styles.grey700 };
+  };
+
+  const getCategoryLabel = (value) => {
+    const category = categories.find(cat => cat.value === value);
+    return category ? category.label : 'All Categories';
+  };
+
+  const getTimeRangeLabel = (value) => {
+    const range = timeRanges.find(tr => tr.value === value);
+    return range ? range.label : 'Last Month';
   };
 
   const renderDownloadItem = (item, index) => {
@@ -444,7 +492,8 @@ const MostDownloadedStats = () => {
           paddingBottom: '20px', 
           borderBottom: `2px solid ${styles.grey100}` 
         }}>
-          <div style={{ flex: '1', minWidth: '180px' }}>
+          {/* Category Dropdown */}
+          <div style={{ flex: '1', minWidth: '180px' }} ref={categoryDropdownRef}>
             <label style={{ 
               display: 'block', 
               fontSize: '11px', 
@@ -456,38 +505,83 @@ const MostDownloadedStats = () => {
             }}>
               Category
             </label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: `2px solid ${styles.grey200}`,
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: styles.grey900,
-                backgroundColor: styles.white,
-                outline: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = styles.darkBlue2;
-                e.target.style.boxShadow = `0 0 0 3px rgba(15, 97, 247, 0.1)`;
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = styles.grey200;
-                e.target.style.boxShadow = 'none';
-              }}
-            >
-              {categories.map(cat => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
-              ))}
-            </select>
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCategoryOpen(!isCategoryOpen);
+                  setIsTimeRangeOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: `2px solid ${styles.grey200}`,
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: styles.grey900,
+                  backgroundColor: styles.white,
+                  outline: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  textAlign: 'left'
+                }}
+              >
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {getCategoryLabel(selectedCategory)}
+                </span>
+                <span style={{ color: styles.grey400, marginLeft: '8px' }}>▾</span>
+              </button>
+
+              {isCategoryOpen && (
+                <div style={{
+                  position: 'absolute',
+                  zIndex: 20,
+                  marginTop: '8px',
+                  width: '100%',
+                  borderRadius: '8px',
+                  border: `1px solid ${styles.grey200}`,
+                  backgroundColor: styles.white,
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                }}>
+                  <div style={{ maxHeight: '256px', overflowY: 'auto', padding: '8px 0', fontSize: '14px' }}>
+                    {categories.map(cat => (
+                      <button
+                        key={cat.value}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCategory(cat.value);
+                          setIsCategoryOpen(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '8px 16px',
+                          backgroundColor: styles.white,
+                          color: styles.grey700,
+                          border: 'none',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          fontWeight: '500',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = styles.grey50}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = styles.white}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
-          <div style={{ flex: '1', minWidth: '180px' }}>
+          {/* Time Range Dropdown */}
+          <div style={{ flex: '1', minWidth: '180px' }} ref={timeRangeDropdownRef}>
             <label style={{ 
               display: 'block', 
               fontSize: '11px', 
@@ -499,36 +593,79 @@ const MostDownloadedStats = () => {
             }}>
               Time Range
             </label>
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: `2px solid ${styles.grey200}`,
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: styles.grey900,
-                backgroundColor: styles.white,
-                outline: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = styles.darkBlue2;
-                e.target.style.boxShadow = `0 0 0 3px rgba(15, 97, 247, 0.1)`;
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = styles.grey200;
-                e.target.style.boxShadow = 'none';
-              }}
-            >
-              <option value="week">Last Week</option>
-              <option value="month">Last Month</option>
-              <option value="quarter">Last Quarter</option>
-              <option value="year">Last Year</option>
-            </select>
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsTimeRangeOpen(!isTimeRangeOpen);
+                  setIsCategoryOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: `2px solid ${styles.grey200}`,
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: styles.grey900,
+                  backgroundColor: styles.white,
+                  outline: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  textAlign: 'left'
+                }}
+              >
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {getTimeRangeLabel(timeRange)}
+                </span>
+                <span style={{ color: styles.grey400, marginLeft: '8px' }}>▾</span>
+              </button>
+
+              {isTimeRangeOpen && (
+                <div style={{
+                  position: 'absolute',
+                  zIndex: 20,
+                  marginTop: '8px',
+                  width: '100%',
+                  borderRadius: '8px',
+                  border: `1px solid ${styles.grey200}`,
+                  backgroundColor: styles.white,
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                }}>
+                  <div style={{ maxHeight: '256px', overflowY: 'auto', padding: '8px 0', fontSize: '14px' }}>
+                    {timeRanges.map(tr => (
+                      <button
+                        key={tr.value}
+                        type="button"
+                        onClick={() => {
+                          setTimeRange(tr.value);
+                          setIsTimeRangeOpen(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '8px 16px',
+                          backgroundColor: styles.white,
+                          color: styles.grey700,
+                          border: 'none',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          fontWeight: '500',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = styles.grey50}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = styles.white}
+                      >
+                        {tr.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

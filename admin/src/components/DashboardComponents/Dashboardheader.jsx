@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon, BellIcon, UserCircleIcon, CalendarIcon, XMarkIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, BellIcon, UserCircleIcon, CalendarIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect, useRef } from 'react'
 
 const DashboardHeader = () => {
@@ -7,7 +7,6 @@ const DashboardHeader = () => {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [showNotifications, setShowNotifications] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(false)
   const headerRef = useRef(null)
   const notificationRef = useRef(null)
   const accountRef = useRef(null)
@@ -85,13 +84,6 @@ const DashboardHeader = () => {
 
     document.addEventListener('mousedown', handleClickOutside)
 
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true)
-      document.documentElement.classList.add('dark')
-    }
-
     return () => {
       if (scrollContainer) {
         scrollContainer.removeEventListener('scroll', handleScroll)
@@ -118,15 +110,26 @@ const DashboardHeader = () => {
 
   const unreadCount = notifications.filter(n => !n.read).length
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode)
-    if (!isDarkMode) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
+  // Menu item functions
+  const handleMyProfile = () => {
+    setShowAccountMenu(false)
+    console.log('Navigate to My Profile')
+    // Add your navigation logic here
+    // e.g., navigate('/profile')
+  }
+
+  const handlePreferences = () => {
+    setShowAccountMenu(false)
+    console.log('Navigate to Preferences')
+    // Add your navigation logic here
+    // e.g., navigate('/preferences')
+  }
+
+  const handleHelpSupport = () => {
+    setShowAccountMenu(false)
+    console.log('Navigate to Help & Support')
+    // Add your navigation logic here
+    // e.g., navigate('/help')
   }
 
   const getNotificationIcon = (type) => {
@@ -348,56 +351,32 @@ const DashboardHeader = () => {
 
                 {/* Menu Items */}
                 <div className="py-2">
-                  <button className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3">
+                  <button 
+                    onClick={handleMyProfile}
+                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                  >
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     My Profile
                   </button>
-                  <button className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Settings
-                  </button>
-                  <button className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3">
+                  <button 
+                    onClick={handlePreferences}
+                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                  >
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                     </svg>
                     Preferences
                   </button>
-                  <button className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3">
+                  <button 
+                    onClick={handleHelpSupport}
+                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                  >
                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Help & Support
-                  </button>
-                </div>
-
-                {/* Light/Dark Mode Toggle */}
-                <div className="border-t border-gray-200 p-2">
-                  <button 
-                    onClick={toggleDarkMode}
-                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-between rounded-md group"
-                  >
-                    <div className="flex items-center gap-3">
-                      {isDarkMode ? (
-                        <>
-                          <SunIcon className="w-5 h-5 text-gray-400 group-hover:text-yellow-500 transition-colors" />
-                          <span>Light Mode</span>
-                        </>
-                      ) : (
-                        <>
-                          <MoonIcon className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
-                          <span>Dark Mode</span>
-                        </>
-                      )}
-                    </div>
-                    {/* Toggle Switch */}
-                    <div className={`w-10 h-5 rounded-full transition-colors ${isDarkMode ? 'bg-indigo-500' : 'bg-gray-300'}`}>
-                      <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform ${isDarkMode ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
-                    </div>
                   </button>
                 </div>
               </div>
