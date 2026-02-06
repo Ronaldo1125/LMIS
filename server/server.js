@@ -32,18 +32,8 @@ app.get('/api/profile', authMiddleware, (req, res) => {
   });
 });
 
-// Admin-only route example
-app.get('/api/admin/users', authMiddleware, roleMiddleware('admin'), async (req, res) => {
-  try {
-    const [users] = await pool.query(
-      'SELECT id, username, full_name, is_active, created_at, last_login FROM admins'
-    );
-    res.json({ users });
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+const adminpanelUsersRoutes = require('./routes/adminpanelUsers');
+app.use('/api/adminpanel-users', adminpanelUsersRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -15,37 +15,32 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Username and password are required' });
     }
 
-    // Query admin from database
-    const [admins] = await pool.query(
-      'SELECT * FROM admins WHERE username = ? AND is_active = TRUE',
+    const [users] = await pool.query(
+      'SELECT * FROM adminpanel_users WHERE username = ? AND is_active = TRUE',
       [username]
     );
 
-    if (admins.length === 0) {
+    if (users.length === 0) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const admin = admins[0];
+    const user = users[0];
 
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, admin.password_hash);
-
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Update last login
     await pool.query(
-      'UPDATE admins SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
-      [admin.id]
+      'UPDATE adminpanel_users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+      [user.id]
     );
 
-    // Generate JWT token
     const token = jwt.sign(
-      { 
-        id: admin.id, 
-        username: admin.username,
-        role: 'admin'
+      {
+        id: user.id,
+        username: user.username,
+        role: user.role
       },
       process.env.JWT_SECRET || 'your-secret-key-change-this',
       { expiresIn: '24h' }
@@ -54,11 +49,12 @@ router.post('/login', async (req, res) => {
     res.json({
       message: 'Login successful',
       token,
-      admin: {
-        id: admin.id,
-        username: admin.username,
-        full_name: admin.full_name,
-        last_login: admin.last_login
+      user: {
+        id: user.id,
+        username: user.username,
+        full_name: user.full_name,
+        role: user.role,
+        last_login: user.last_login
       }
     });
 
@@ -68,6 +64,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
+
 // Logout route
 router.post('/logout', authMiddleware, (req, res) => {
   res.json({ message: 'Logout successful' });
@@ -76,18 +73,18 @@ router.post('/logout', authMiddleware, (req, res) => {
 // Verify token route
 router.get('/verify', authMiddleware, async (req, res) => {
   try {
-    const [admins] = await pool.query(
-      'SELECT id, username, full_name, last_login FROM admins WHERE id = ? AND is_active = TRUE',
+    const [users] = await pool.query(
+      'SELECT id, username, full_name, role, last_login FROM adminpanel_users WHERE id = ? AND is_active = TRUE',
       [req.user.id]
     );
 
-    if (admins.length === 0) {
+    if (users.length === 0) {
       return res.status(401).json({ message: 'User not found' });
     }
 
     res.json({
       valid: true,
-      admin: admins[0]
+      user: users[0]
     });
 
   } catch (error) {
@@ -95,5 +92,6 @@ router.get('/verify', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 module.exports = router;

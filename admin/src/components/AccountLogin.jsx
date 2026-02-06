@@ -16,7 +16,6 @@ function AccountLogin({ onLoginSuccess }) {
       ...prev,
       [name]: value
     }))
-    // Clear error when user starts typing
     if (error) setError('')
   }
 
@@ -25,7 +24,6 @@ function AccountLogin({ onLoginSuccess }) {
     setError('')
     setIsLoading(true)
 
-    // Basic validation
     if (!formData.username || !formData.password) {
       setError('Please fill in all fields')
       setIsLoading(false)
@@ -33,7 +31,6 @@ function AccountLogin({ onLoginSuccess }) {
     }
 
     try {
-      // Replace with your actual API endpoint
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -51,13 +48,21 @@ function AccountLogin({ onLoginSuccess }) {
         throw new Error(data.message || 'Login failed')
       }
 
-      // Store authentication token
+      // Store authentication token and user data
       localStorage.setItem('authToken', data.token)
-      localStorage.setItem('admin', JSON.stringify(data.admin))
+      localStorage.setItem('user', JSON.stringify(data.user))
+
+      // Store notification data for dashboard
+      const notificationData = {
+        username: data.user.full_name || data.user.username,
+        role: data.user.role,
+        timestamp: Date.now()
+      }
+      sessionStorage.setItem('loginNotification', JSON.stringify(notificationData))
 
       // Call success callback
       if (onLoginSuccess) {
-        onLoginSuccess(data.admin)
+        onLoginSuccess(data.user)
       }
 
     } catch (err) {
