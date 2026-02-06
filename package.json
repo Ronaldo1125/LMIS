@@ -1,11 +1,12 @@
 {
-  "name": "lmis",
+ "name": "lmis",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently \"npm run server\" \"npm run admin\"",
+    "start": "concurrently \"npm run server\" \"npm run admin\" \"npm run web\"",
+    "server": "cd server && node server.js",
     "admin": "cd admin && npm run dev",
-    "server": "cd server && node server.js"
+    "web": "cd web && npm run dev"
   },
   "keywords": [],
   "author": "",
