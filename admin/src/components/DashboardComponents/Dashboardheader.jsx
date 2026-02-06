@@ -85,13 +85,6 @@ const DashboardHeader = () => {
 
     document.addEventListener('mousedown', handleClickOutside)
 
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true)
-      document.documentElement.classList.add('dark')
-    }
-
     return () => {
       if (scrollContainer) {
         scrollContainer.removeEventListener('scroll', handleScroll)
