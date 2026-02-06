@@ -83,14 +83,10 @@ function AddLibrarianModal({ onClose, onSubmit }) {
         {/* Header */}
         <div 
           className="px-8 py-6 text-white relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}
+          style={{ background: 'var(--dark-blue-1)' }}
         >
-          <div 
-            className="absolute inset-0 opacity-20"
-            style={{ background: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.25) 0%, transparent 50%)' }}
-          />
           <div className="relative flex items-center justify-between">
-            <h2 className="text-2xl font-bold" style={{ fontFamily: '"Playfair Display", serif' }}>
+            <h2 className="text-2xl font-bold" style={{ fontFamily: 'inherit' }}>
               Add New Librarian
             </h2>
             <button
@@ -117,7 +113,7 @@ function AddLibrarianModal({ onClose, onSubmit }) {
                 value={formData.name}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.name ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-pink-500'
+                  errors.name ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
                 }`}
                 placeholder="Enter full name"
                 style={{ fontFamily: '"Inter", sans-serif' }}
@@ -137,7 +133,7 @@ function AddLibrarianModal({ onClose, onSubmit }) {
                 value={formData.email}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-pink-500'
+                  errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
                 }`}
                 placeholder="email@library.com"
                 style={{ fontFamily: '"Inter", sans-serif' }}
@@ -157,7 +153,7 @@ function AddLibrarianModal({ onClose, onSubmit }) {
                 value={formData.phone}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-pink-500'
+                  errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
                 }`}
                 placeholder="+1 (555) 000-0000"
                 style={{ fontFamily: '"Inter", sans-serif' }}
@@ -177,7 +173,7 @@ function AddLibrarianModal({ onClose, onSubmit }) {
                 onChange={handleChange}
                 rows="3"
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all resize-none ${
-                  errors.address ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-pink-500'
+                  errors.address ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
                 }`}
                 placeholder="Enter complete address"
                 style={{ fontFamily: '"Inter", sans-serif' }}
@@ -197,7 +193,7 @@ function AddLibrarianModal({ onClose, onSubmit }) {
                 value={formData.dateOfBirth}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.dateOfBirth ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-pink-500'
+                  errors.dateOfBirth ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
                 }`}
                 style={{ fontFamily: '"Inter", sans-serif' }}
               />
@@ -216,7 +212,7 @@ function AddLibrarianModal({ onClose, onSubmit }) {
                 value={formData.certification}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.certification ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-pink-500'
+                  errors.certification ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
                 }`}
                 placeholder="e.g., Master of Library Science (MLS)"
                 style={{ fontFamily: '"Inter", sans-serif' }}
@@ -236,7 +232,7 @@ function AddLibrarianModal({ onClose, onSubmit }) {
                 onChange={handleChange}
                 min="0"
                 className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.yearsOfExperience ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-pink-500'
+                  errors.yearsOfExperience ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
                 }`}
                 placeholder="Enter years of experience"
                 style={{ fontFamily: '"Inter", sans-serif' }}
@@ -259,8 +255,8 @@ function AddLibrarianModal({ onClose, onSubmit }) {
               type="submit"
               className="flex-1 px-6 py-3 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95"
               style={{
-                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                fontFamily: '"Inter", sans-serif'
+                background: 'var(--dark-blue-1)',
+                fontFamily: 'inherit'
               }}
             >
               Add Librarian
