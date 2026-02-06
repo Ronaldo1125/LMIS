@@ -10,12 +10,12 @@ import AccountLogin from './components/AccountLogin'
 // Check for existing authentication
 const getInitialAuthState = () => {
   const token = localStorage.getItem('authToken')
-  const savedAdmin = localStorage.getItem('admin')
+  const savedUser = localStorage.getItem('user') // Fixed: Changed from 'admin' to 'user'
   
-  if (token && savedAdmin) {
+  if (token && savedUser) {
     return {
       isAuthenticated: true,
-      user: JSON.parse(savedAdmin)
+      user: JSON.parse(savedUser) // Fixed: Changed from savedAdmin to savedUser
     }
   }
   
@@ -39,7 +39,8 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('authToken')
-    localStorage.removeItem('admin')
+    localStorage.removeItem('user') // Fixed: Changed from 'admin' to 'user'
+    sessionStorage.removeItem('loginNotification') // Also clear login notification
     setIsAuthenticated(false)
     setUser(null)
     setCurrentView('dashboard')

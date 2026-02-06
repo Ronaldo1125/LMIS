@@ -1,22 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import StatsCards from './UserManagementComponents/StatsCards'
 import SearchBar from './UserManagementComponents/SearchBar'
 import UsersTable from './UserManagementComponents/UsersTable'
 import AddStaffModal from './UserManagementComponents/AddStaffModal'
 import AddLibrarianModal from './UserManagementComponents/AddLibrarianModal'
 import ResetPasswordModal from './UserManagementComponents/ResetPasswordModal'
-import { Users, UserCog, BookUser } from 'lucide-react'
+import axios from 'axios'
+
+const API_URL = 'http://localhost:5000/api/adminpanel-users'
 
 function UserManagement() {
-  const [users, setUsers] = useState([
-    { id: 1, name: 'John Doe', email: 'john.doe@library.com', role: 'Staff', status: 'Active', dateAdded: '2024-01-15' },
-    { id: 2, name: 'Jane Smith', email: 'jane.smith@library.com', role: 'Librarian', status: 'Active', dateAdded: '2024-01-10', isActiveLibrarian: true },
-    { id: 3, name: 'Bob Wilson', email: 'bob.wilson@library.com', role: 'Librarian', status: 'Inactive', dateAdded: '2024-01-08', isActiveLibrarian: false },
-    { id: 4, name: 'Alice Johnson', email: 'alice.johnson@email.com', role: 'Patron', status: 'Active', dateAdded: '2024-02-01' },
-    { id: 5, name: 'Charlie Brown', email: 'charlie.brown@email.com', role: 'Patron', status: 'Active', dateAdded: '2024-02-03' },
-    { id: 6, name: 'Diana Prince', email: 'diana.prince@library.com', role: 'Staff', status: 'Active', dateAdded: '2024-01-20' },
-  ])
-
+  const [users, setUsers] = useState([])
+  const [stats, setStats] = useState({ staff: 0, librarians: 0, patrons: 0 })
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
@@ -24,137 +20,286 @@ function UserManagement() {
   const [showAddLibrarianModal, setShowAddLibrarianModal] = useState(false)
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
+  const [currentUserRole, setCurrentUserRole] = useState(null)
 
-  // Calculate stats
-  const stats = {
-    staff: users.filter(u => u.role === 'Staff').length,
-    librarians: users.filter(u => u.role === 'Librarian').length,
-    patrons: users.filter(u => u.role === 'Patron').length,
+  // Fetch current user role on mount
+  useEffect(() => {
+    // Try multiple sources for the role
+    let role = localStorage.getItem('userRole')
+    
+    // If not found, try getting from user object
+    if (!role) {
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr)
+          role = user.role
+          // Store it for next time
+          localStorage.setItem('userRole', role)
+        } catch (e) {
+          console.error('Error parsing user data:', e)
+        }
+      }
+    }
+    
+    console.log('Current user role:', role) // DEBUG: Check what role is being set
+    setCurrentUserRole(role)
+    fetchUsers()
+    fetchStats()
+  }, [])
+
+  // Check if current user is admin
+  const isAdmin = currentUserRole === 'admin'
+  
+  // Check if user can view this page
+  const canView = currentUserRole === 'admin' || currentUserRole === 'librarian'
+  
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('authToken')
+      const response = await axios.get(API_URL, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setUsers(response.data.users)
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await axios.get(`${API_URL}/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setStats(response.data)
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+    }
   }
 
   // Filter users
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesRole = roleFilter === 'All' || user.role === roleFilter
-    const matchesStatus = statusFilter === 'All' || user.status === statusFilter
+    const matchesSearch = 
+      user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesRole = roleFilter === 'All' || user.role === roleFilter.toLowerCase()
+    const matchesStatus = statusFilter === 'All' || 
+      (statusFilter === 'Active' && user.is_active) ||
+      (statusFilter === 'Inactive' && !user.is_active)
     return matchesSearch && matchesRole && matchesStatus
   })
 
-  const handleAddStaff = (staffData) => {
-    const newStaff = {
-      id: users.length + 1,
-      ...staffData,
-      role: 'Staff',
-      status: 'Active',
-      dateAdded: new Date().toISOString().split('T')[0]
+  // Add isActiveLibrarian flag for display purposes
+  const usersWithActiveFlag = filteredUsers.map(user => {
+    if (user.role === 'librarian') {
+      return { ...user, isActiveLibrarian: user.is_active }
     }
-    setUsers([...users, newStaff])
-    setShowAddStaffModal(false)
-  }
+    return user
+  })
 
-  const handleAddLibrarian = (librarianData) => {
-    const newLibrarian = {
-      id: users.length + 1,
-      ...librarianData,
-      role: 'Librarian',
-      status: 'Inactive',
-      dateAdded: new Date().toISOString().split('T')[0],
-      isActiveLibrarian: false
+  const handleAddStaff = async (staffData) => {
+    if (!isAdmin) {
+      alert('Only administrators can add staff members')
+      return
     }
-    setUsers([...users, newLibrarian])
-    setShowAddLibrarianModal(false)
+
+    try {
+      const token = localStorage.getItem('authToken')
+      await axios.post(`${API_URL}/staff`, staffData, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setShowAddStaffModal(false)
+      fetchUsers()
+      fetchStats()
+    } catch (error) {
+      console.error('Error adding staff:', error)
+      alert(error.response?.data?.message || 'Error adding staff')
+    }
   }
 
-  const handleResetPassword = (userId, newPassword) => {
-    console.log(`Password reset for user ${userId}:`, newPassword)
-    setShowResetPasswordModal(false)
-    setSelectedUser(null)
+  const handleAddLibrarian = async (librarianData) => {
+    if (!isAdmin) {
+      alert('Only administrators can add librarians')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('authToken')
+      await axios.post(`${API_URL}/librarians`, librarianData, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setShowAddLibrarianModal(false)
+      fetchUsers()
+      fetchStats()
+    } catch (error) {
+      console.error('Error adding librarian:', error)
+      alert(error.response?.data?.message || 'Error adding librarian')
+    }
   }
 
-  const handleDeactivateAccount = (userId) => {
-    setUsers(users.map(user => 
-      user.id === userId ? { ...user, status: 'Inactive' } : user
-    ))
+  const handleResetPassword = async (userId, newPassword) => {
+    if (!isAdmin) {
+      alert('Only administrators can reset passwords')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('authToken')
+      await axios.put(
+        `${API_URL}/${userId}/reset-password`,
+        { password: newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setShowResetPasswordModal(false)
+      setSelectedUser(null)
+      alert('Password reset successfully')
+    } catch (error) {
+      console.error('Error resetting password:', error)
+      alert(error.response?.data?.message || 'Error resetting password')
+    }
   }
 
-  const handleSetActiveLibrarian = (userId) => {
-    setUsers(users.map(user => {
-      if (user.role === 'Librarian') {
-        if (user.id === userId) {
-          return { ...user, isActiveLibrarian: true, status: 'Active' }
-        } else {
-          return { ...user, isActiveLibrarian: false }
-        }
-      }
-      return user
-    }))
+  const handleDeactivateAccount = async (userId) => {
+    if (!isAdmin) {
+      alert('Only administrators can deactivate accounts')
+      return
+    }
+
+    if (!confirm('Are you sure you want to deactivate this account?')) return
+
+    try {
+      const token = localStorage.getItem('authToken')
+      await axios.put(
+        `${API_URL}/${userId}/deactivate`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      fetchUsers()
+      fetchStats()
+    } catch (error) {
+      console.error('Error deactivating account:', error)
+      alert(error.response?.data?.message || 'Error deactivating account')
+    }
+  }
+
+  const handleSetActiveLibrarian = async (userId) => {
+    if (!isAdmin) {
+      alert('Only administrators can set the active librarian')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('authToken')
+      await axios.put(
+        `${API_URL}/${userId}/set-active-librarian`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      fetchUsers()
+    } catch (error) {
+      console.error('Error setting active librarian:', error)
+      alert(error.response?.data?.message || 'Error setting active librarian')
+    }
   }
 
   const handleOpenResetPassword = (user) => {
+    if (!isAdmin) {
+      alert('Only administrators can reset passwords')
+      return
+    }
     setSelectedUser(user)
     setShowResetPasswordModal(true)
   }
 
+  if (loading) {
+    return (
+      <div className="p-6 min-h-screen flex items-center justify-center">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    )
+  }
+
+  // Check if user has permission to view this page
+  if (!canView) {
+    return (
+      <div className="p-6 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-xl font-semibold mb-2">Access Denied</div>
+          <div className="text-gray-600">You don't have permission to view this page.</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 min-h-screen">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--dark-blue-1)' }}>
-            User Management
-          </h1>
-          <p className="text-gray-600">Manage library staff, librarians, and patrons</p>
-        </div>
-
-        {/* Stats Cards */}
-        <StatsCards stats={stats} />
-
-        {/* Search and Actions */}
-        <SearchBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          roleFilter={roleFilter}
-          setRoleFilter={setRoleFilter}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          onAddStaff={() => setShowAddStaffModal(true)}
-          onAddLibrarian={() => setShowAddLibrarianModal(true)}
-        />
-
-        {/* Users Table */}
-        <UsersTable
-          users={filteredUsers}
-          onResetPassword={handleOpenResetPassword}
-          onDeactivateAccount={handleDeactivateAccount}
-          onSetActiveLibrarian={handleSetActiveLibrarian}
-        />
-
-        {/* Modals */}
-        {showAddStaffModal && (
-          <AddStaffModal
-            onClose={() => setShowAddStaffModal(false)}
-            onSubmit={handleAddStaff}
-          />
-        )}
-
-        {showAddLibrarianModal && (
-          <AddLibrarianModal
-            onClose={() => setShowAddLibrarianModal(false)}
-            onSubmit={handleAddLibrarian}
-          />
-        )}
-
-        {showResetPasswordModal && selectedUser && (
-          <ResetPasswordModal
-            user={selectedUser}
-            onClose={() => {
-              setShowResetPasswordModal(false)
-              setSelectedUser(null)
-            }}
-            onSubmit={handleResetPassword}
-          />
-        )}
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--dark-blue-1)' }}>
+          User Management
+        </h1>
+        <p className="text-gray-600">
+          {isAdmin 
+            ? 'Manage library staff, librarians, and patrons' 
+            : 'View library staff, librarians, and patrons'}
+        </p>
       </div>
+
+      {/* Stats Cards */}
+      <StatsCards stats={stats} />
+
+      {/* Search and Actions */}
+      <SearchBar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        roleFilter={roleFilter}
+        setRoleFilter={setRoleFilter}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        onAddStaff={() => setShowAddStaffModal(true)}
+        onAddLibrarian={() => setShowAddLibrarianModal(true)}
+        isAdmin={isAdmin}
+      />
+
+      {/* Users Table */}
+      <UsersTable
+        users={usersWithActiveFlag}
+        onResetPassword={handleOpenResetPassword}
+        onDeactivateAccount={handleDeactivateAccount}
+        onSetActiveLibrarian={handleSetActiveLibrarian}
+        isAdmin={isAdmin}
+      />
+
+      {/* Modals */}
+      {showAddStaffModal && (
+        <AddStaffModal
+          onClose={() => setShowAddStaffModal(false)}
+          onSubmit={handleAddStaff}
+        />
+      )}
+
+      {showAddLibrarianModal && (
+        <AddLibrarianModal
+          onClose={() => setShowAddLibrarianModal(false)}
+          onSubmit={handleAddLibrarian}
+        />
+      )}
+
+      {showResetPasswordModal && selectedUser && (
+        <ResetPasswordModal
+          user={selectedUser}
+          onClose={() => {
+            setShowResetPasswordModal(false)
+            setSelectedUser(null)
+          }}
+          onSubmit={handleResetPassword}
+        />
+      )}
+    </div>
   )
 }
 

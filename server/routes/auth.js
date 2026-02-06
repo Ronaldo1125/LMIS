@@ -31,11 +31,13 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Update last login timestamp
     await pool.query(
       'UPDATE adminpanel_users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
       [user.id]
     );
 
+    // Generate JWT token
     const token = jwt.sign(
       {
         id: user.id,
@@ -53,8 +55,7 @@ router.post('/login', async (req, res) => {
         id: user.id,
         username: user.username,
         full_name: user.full_name,
-        role: user.role,
-        last_login: user.last_login
+        role: user.role
       }
     });
 
@@ -67,6 +68,8 @@ router.post('/login', async (req, res) => {
 
 // Logout route
 router.post('/logout', authMiddleware, (req, res) => {
+  // In a JWT-based system, logout is handled client-side by removing the token
+  // Optionally, you could maintain a token blacklist here
   res.json({ message: 'Logout successful' });
 });
 

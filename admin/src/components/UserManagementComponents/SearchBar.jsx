@@ -8,7 +8,8 @@ function SearchBar({
   statusFilter,
   setStatusFilter,
   onAddStaff,
-  onAddLibrarian 
+  onAddLibrarian,
+  isAdmin 
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-md p-6 mb-8 border border-gray-100">
@@ -62,36 +63,38 @@ function SearchBar({
           </select>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          <button
-            onClick={onAddStaff}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
-            style={{
-              backgroundColor: 'var(--dark-blue-1)',
-              color: 'var(--white)',
-              fontFamily: '"Inter", sans-serif',
-              border: '1px solid var(--dark-blue-2)'
-            }}
-          >
-            <UserPlus size={18} />
-            Add Staff
-          </button>
+        {/* Action Buttons - Only visible to admins */}
+        {isAdmin && (
+          <div className="flex gap-3">
+            <button
+              onClick={onAddStaff}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+              style={{
+                backgroundColor: 'var(--dark-blue-1)',
+                color: 'var(--white)',
+                fontFamily: '"Inter", sans-serif',
+                border: '1px solid var(--dark-blue-2)'
+              }}
+            >
+              <UserPlus size={18} />
+              Add Staff
+            </button>
 
-          <button
-            onClick={onAddLibrarian}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
-            style={{
-              backgroundColor: 'var(--secondary-1-medium)',
-              color: 'var(--white)',
-              fontFamily: '"Inter", sans-serif',
-              border: '1px solid var(--secondary-1-dark)'
-            }}
-          >
-            <UserCog size={18} />
-            Add Librarian
-          </button>
-        </div>
+            <button
+              onClick={onAddLibrarian}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+              style={{
+                backgroundColor: 'var(--secondary-1-medium)',
+                color: 'var(--white)',
+                fontFamily: '"Inter", sans-serif',
+                border: '1px solid var(--secondary-1-dark)'
+              }}
+            >
+              <UserCog size={18} />
+              Add Librarian
+            </button>
+          </div>
+        )}
       </div>
 
       <style>{`
