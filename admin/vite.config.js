@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -9,7 +10,14 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
-      }
-    }
-  }
+      },
+    },
+  },
+  css: {
+    preprocessorOptions: {
+      css: {
+        includePaths: [path.resolve(__dirname, 'src')],
+      },
+    },
+  },
 })
