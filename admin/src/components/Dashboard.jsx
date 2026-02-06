@@ -7,6 +7,7 @@ import CollectionByCategory from './DashboardComponents/CollectionByCategory'
 import RecentAcquisitions from './DashboardComponents/RecentAcquisitions'
 import MostDownloadedStats from './DashboardComponents/MostDownloadedStats'
 import WebsiteAnalytics from './DashboardComponents/WebsiteAnalytics'
+import LoginNotification from './DashboardComponents/LoginNotification' 
 
 const Dashboard = () => {
   const [isSticky, setIsSticky] = useState(false)
@@ -43,6 +44,9 @@ const Dashboard = () => {
 
   return (
     <div className="p-6">
+      {/* Login Success Notification */}
+      <LoginNotification />
+      
       {/* Header */}
       <DashboardHeader />
       
@@ -70,10 +74,12 @@ const Dashboard = () => {
         <CollectionByCategory />
         <RecentAcquisitions />
       </div>
+      
       {/* Download Stats */}
-        <MostDownloadedStats />     
+      <MostDownloadedStats />     
+      
       {/* Website Charts */}
-        <WebsiteAnalytics />    
+      <WebsiteAnalytics />    
     </div>
   )
 }
