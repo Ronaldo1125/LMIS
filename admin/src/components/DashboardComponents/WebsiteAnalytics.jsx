@@ -14,35 +14,154 @@ import {
 const WebsiteAnalytics = () => {
   const [timeRange, setTimeRange] = useState('week');
 
-  // Daily activity data
-  const dailyActivityData = [
-    { date: 'Mon', views: 245, downloads: 145, searches: 189 },
-    { date: 'Tue', views: 298, downloads: 178, searches: 223 },
-    { date: 'Wed', views: 356, downloads: 203, searches: 267 },
-    { date: 'Thu', views: 312, downloads: 189, searches: 234 },
-    { date: 'Fri', views: 387, downloads: 225, searches: 298 },
-    { date: 'Sat', views: 267, downloads: 167, searches: 198 },
-    { date: 'Sun', views: 198, downloads: 134, searches: 156 }
-  ];
+  // Data organized by time range
+  const analyticsData = {
+    week: {
+      activityData: [
+        { date: 'Mon', views: 245, downloads: 145, searches: 189 },
+        { date: 'Tue', views: 298, downloads: 178, searches: 223 },
+        { date: 'Wed', views: 356, downloads: 203, searches: 267 },
+        { date: 'Thu', views: 312, downloads: 189, searches: 234 },
+        { date: 'Fri', views: 387, downloads: 225, searches: 298 },
+        { date: 'Sat', views: 267, downloads: 167, searches: 198 },
+        { date: 'Sun', views: 198, downloads: 134, searches: 156 }
+      ],
+      hourlyData: [
+        { hour: '12AM', users: 12 },
+        { hour: '3AM', users: 8 },
+        { hour: '6AM', users: 23 },
+        { hour: '9AM', users: 156 },
+        { hour: '12PM', users: 234 },
+        { hour: '3PM', users: 198 },
+        { hour: '6PM', users: 145 },
+        { hour: '9PM', users: 89 }
+      ],
+      metrics: {
+        pageViews: '12,847',
+        pageViewsChange: '+18.2%',
+        registrations: '234',
+        registrationsChange: '+12.5%',
+        searches: '1,687',
+        searchesChange: '+9.4%',
+        avgTime: '6m 45s',
+        avgTimeChange: '+2m 18s'
+      },
+      topSearches: [
+        { query: 'economic development plan', count: 234, trend: 'up' },
+        { query: 'infrastructure statistics', count: 198, trend: 'up' },
+        { query: 'regional development', count: 167, trend: 'down' },
+        { query: 'poverty indicators', count: 145, trend: 'up' },
+        { query: 'investment policies', count: 123, trend: 'stable' }
+      ],
+      deviceStats: [
+        { device: 'Desktop', percentage: 58, count: 1247, color: '#0F61F7' },
+        { device: 'Mobile', percentage: 32, count: 687, color: '#3F1BD2' },
+        { device: 'Tablet', percentage: 10, count: 215, color: '#9CA3AF' }
+      ]
+    },
+    month: {
+      activityData: [
+        { date: 'Week 1', views: 1845, downloads: 1245, searches: 1589 },
+        { date: 'Week 2', views: 2198, downloads: 1578, searches: 1823 },
+        { date: 'Week 3', views: 2456, downloads: 1803, searches: 2067 },
+        { date: 'Week 4', views: 2612, downloads: 1989, searches: 2234 }
+      ],
+      hourlyData: [
+        { hour: '12AM', users: 89 },
+        { hour: '3AM', users: 56 },
+        { hour: '6AM', users: 167 },
+        { hour: '9AM', users: 1234 },
+        { hour: '12PM', users: 1876 },
+        { hour: '3PM', users: 1543 },
+        { hour: '6PM', users: 1098 },
+        { hour: '9PM', users: 678 }
+      ],
+      metrics: {
+        pageViews: '54,328',
+        pageViewsChange: '+24.7%',
+        registrations: '1,056',
+        registrationsChange: '+18.3%',
+        searches: '7,234',
+        searchesChange: '+15.8%',
+        avgTime: '8m 23s',
+        avgTimeChange: '+3m 45s'
+      },
+      topSearches: [
+        { query: 'digital transformation guide', count: 1876, trend: 'up' },
+        { query: 'annual budget reports', count: 1654, trend: 'up' },
+        { query: 'policy framework 2026', count: 1432, trend: 'up' },
+        { query: 'statistical yearbook', count: 1298, trend: 'stable' },
+        { query: 'investment opportunities', count: 1154, trend: 'down' }
+      ],
+      deviceStats: [
+        { device: 'Desktop', percentage: 62, count: 8934, color: '#0F61F7' },
+        { device: 'Mobile', percentage: 28, count: 4032, color: '#3F1BD2' },
+        { device: 'Tablet', percentage: 10, count: 1440, color: '#9CA3AF' }
+      ]
+    },
+    year: {
+      activityData: [
+        { date: 'Jan', views: 8234, downloads: 5432, searches: 6789 },
+        { date: 'Feb', views: 8876, downloads: 5876, searches: 7234 },
+        { date: 'Mar', views: 9432, downloads: 6234, searches: 7876 },
+        { date: 'Apr', views: 10123, downloads: 6789, searches: 8432 },
+        { date: 'May', views: 10876, downloads: 7234, searches: 9087 },
+        { date: 'Jun', views: 11234, downloads: 7654, searches: 9543 },
+        { date: 'Jul', views: 10987, downloads: 7432, searches: 9234 },
+        { date: 'Aug', views: 11543, downloads: 7876, searches: 9876 },
+        { date: 'Sep', views: 12098, downloads: 8234, searches: 10234 },
+        { date: 'Oct', views: 12654, downloads: 8654, searches: 10765 },
+        { date: 'Nov', views: 13234, downloads: 9087, searches: 11234 },
+        { date: 'Dec', views: 13876, downloads: 9543, searches: 11876 }
+      ],
+      hourlyData: [
+        { hour: '12AM', users: 432 },
+        { hour: '3AM', users: 289 },
+        { hour: '6AM', users: 876 },
+        { hour: '9AM', users: 6543 },
+        { hour: '12PM', users: 9876 },
+        { hour: '3PM', users: 8234 },
+        { hour: '6PM', users: 5876 },
+        { hour: '9PM', users: 3654 }
+      ],
+      metrics: {
+        pageViews: '687,432',
+        pageViewsChange: '+32.4%',
+        registrations: '14,567',
+        registrationsChange: '+28.9%',
+        searches: '98,234',
+        searchesChange: '+22.6%',
+        avgTime: '9m 54s',
+        avgTimeChange: '+4m 32s'
+      },
+      topSearches: [
+        { query: 'comprehensive development plan', count: 23456, trend: 'up' },
+        { query: 'annual statistical report', count: 21234, trend: 'up' },
+        { query: 'government transparency', count: 19876, trend: 'up' },
+        { query: 'economic indicators 2026', count: 18543, trend: 'stable' },
+        { query: 'public procurement data', count: 17234, trend: 'up' }
+      ],
+      deviceStats: [
+        { device: 'Desktop', percentage: 65, count: 123456, color: '#0F61F7' },
+        { device: 'Mobile', percentage: 25, count: 47543, color: '#3F1BD2' },
+        { device: 'Tablet', percentage: 10, count: 19017, color: '#9CA3AF' }
+      ]
+    }
+  };
 
-  // Hourly traffic pattern
-  const hourlyTrafficData = [
-    { hour: '12AM', users: 12 },
-    { hour: '3AM', users: 8 },
-    { hour: '6AM', users: 23 },
-    { hour: '9AM', users: 156 },
-    { hour: '12PM', users: 234 },
-    { hour: '3PM', users: 198 },
-    { hour: '6PM', users: 145 },
-    { hour: '9PM', users: 89 }
-  ];
+  // Get current data based on selected time range
+  const currentData = analyticsData[timeRange];
+  const dailyActivityData = currentData.activityData;
+  const hourlyTrafficData = currentData.hourlyData;
+  const topSearches = currentData.topSearches;
+  const deviceStats = currentData.deviceStats;
 
-  // User engagement metrics
+  // User engagement metrics with dynamic data
   const engagementMetrics = [
     { 
       label: 'Total Page Views', 
-      value: '12,847', 
-      change: '+18.2%',
+      value: currentData.metrics.pageViews, 
+      change: currentData.metrics.pageViewsChange,
       isPositive: true,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,8 +175,8 @@ const WebsiteAnalytics = () => {
     },
     { 
       label: 'New Registrations', 
-      value: '234', 
-      change: '+12.5%',
+      value: currentData.metrics.registrations, 
+      change: currentData.metrics.registrationsChange,
       isPositive: true,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,8 +189,8 @@ const WebsiteAnalytics = () => {
     },
     { 
       label: 'Search Queries', 
-      value: '1,687', 
-      change: '+9.4%',
+      value: currentData.metrics.searches, 
+      change: currentData.metrics.searchesChange,
       isPositive: true,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,8 +203,8 @@ const WebsiteAnalytics = () => {
     },
     { 
       label: 'Avg. Time on Site', 
-      value: '6m 45s', 
-      change: '+2m 18s',
+      value: currentData.metrics.avgTime, 
+      change: currentData.metrics.avgTimeChange,
       isPositive: true,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,22 +215,6 @@ const WebsiteAnalytics = () => {
       iconColor: 'text-[#FFA602]',
       borderColor: 'border-l-[#FFA602]'
     }
-  ];
-
-  // Top search queries
-  const topSearches = [
-    { query: 'economic development plan', count: 234, trend: 'up' },
-    { query: 'infrastructure statistics', count: 198, trend: 'up' },
-    { query: 'regional development', count: 167, trend: 'down' },
-    { query: 'poverty indicators', count: 145, trend: 'up' },
-    { query: 'investment policies', count: 123, trend: 'stable' }
-  ];
-
-  // Device breakdown
-  const deviceStats = [
-    { device: 'Desktop', percentage: 58, count: 1247, color: '#0F61F7' },
-    { device: 'Mobile', percentage: 32, count: 687, color: '#3F1BD2' },
-    { device: 'Tablet', percentage: 10, count: 215, color: '#9CA3AF' }
   ];
 
   return (
@@ -196,7 +299,7 @@ const WebsiteAnalytics = () => {
         <div className="xl:col-span-2 bg-white p-6 rounded-xl shadow-sm">
           <div className="flex justify-between items-center mb-5">
             <h3 className="text-lg font-semibold text-[#154A9A]">
-              Daily Activity Trends
+              {timeRange === 'week' ? 'Daily Activity Trends' : timeRange === 'month' ? 'Weekly Activity Trends' : 'Monthly Activity Trends'}
             </h3>
             <div className="flex gap-5">
               <span className="flex items-center gap-1.5 text-xs text-gray-600 font-medium">
@@ -329,7 +432,7 @@ const WebsiteAnalytics = () => {
                       {search.query}
                     </p>
                     <span className="text-xs text-gray-500">
-                      {search.count} searches
+                      {search.count.toLocaleString()} searches
                     </span>
                   </div>
                 </div>

@@ -6,57 +6,47 @@ function StatsCards({ stats }) {
       title: 'Staff Members',
       count: stats.staff,
       icon: Users,
-      bg: 'var(--white)',
-      iconBg: 'var(--dark-blue-1)', // strong contrast for white icon
-      iconColor: 'var(--white)',
-      textColor: 'var(--dark-blue-4)'
+      bgColor: 'bg-blue-50',
+      iconColor: 'text-[#0F61F7]',
+      borderColor: 'border-l-[#0F61F7]'
     },
     {
       title: 'Librarians',
       count: stats.librarians,
       icon: UserCog,
-      bg: 'var(--white)',
-      iconBg: 'var(--secondary-1-dark)', // strong contrast for white icon
-      iconColor: 'var(--white)',
-      textColor: 'var(--secondary-1-darker)'
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-[#3F1BD2]',
+      borderColor: 'border-l-[#3F1BD2]'
     },
     {
       title: 'Patrons',
       count: stats.patrons,
       icon: BookUser,
-      bg: 'var(--white)',
-      iconBg: 'var(--secondary-2-darkest)', // strong contrast for white icon
-      iconColor: 'var(--white)',
-      textColor: 'var(--dark-blue-4)'
+      bgColor: 'bg-orange-50',
+      iconColor: 'text-[#FFA602]',
+      borderColor: 'border-l-[#FFA602]'
     }
   ]
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
       {cards.map((card, index) => (
         <div
           key={index}
-          className="rounded-xl p-4 flex flex-col justify-between min-h-[110px] border border-gray-200 bg-white"
-          style={{
-            background: card.bg,
-            color: card.textColor,
-            fontFamily: 'var(--font-family, Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif)',
-            boxShadow: '0 2px 8px 0 rgba(21,74,154,0.04)'
-          }}
+          className={`bg-white p-5 rounded-xl shadow-sm border-l-4 ${card.borderColor} 
+            flex gap-4 items-center hover:shadow-md hover:-translate-y-1 transition-all duration-200`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="p-2 rounded-lg flex items-center justify-center" style={{ background: card.iconBg, opacity: 1, width: 36, height: 36 }}>
-              <card.icon className="w-5 h-5" strokeWidth={2.2} color={card.iconColor} />
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold" style={{ fontFamily: 'inherit', color: card.textColor }}>
-                {card.count}
-              </div>
-            </div>
+          <div className={`w-[52px] h-[52px] ${card.bgColor} rounded-lg flex items-center justify-center flex-shrink-0 ${card.iconColor}`}>
+            <card.icon className="w-6 h-6" strokeWidth={2} />
           </div>
-          <h3 className="text-base font-semibold opacity-95" style={{ fontFamily: 'inherit', letterSpacing: '0.01em', color: card.textColor }}>
-            {card.title}
-          </h3>
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+              {card.title}
+            </p>
+            <h3 className="text-2xl font-bold text-[#154A9A]">
+              {card.count.toLocaleString()}
+            </h3>
+          </div>
         </div>
       ))}
     </div>
