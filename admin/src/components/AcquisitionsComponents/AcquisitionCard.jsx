@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AcquisitionCard = ({ acquisition, viewMode }) => {
+const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
   const { title, author, coverImage, acquisitionDate } = acquisition;
   
   const formatDate = (dateString) => {
@@ -14,7 +14,10 @@ const AcquisitionCard = ({ acquisition, viewMode }) => {
 
   if (viewMode === 'list') {
     return (
-      <div className="flex gap-6 p-5 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:translate-x-2 group">
+      <div 
+        className="flex gap-6 p-5 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:translate-x-2 group"
+        onClick={onViewDetails}
+      >
         <div className="flex-shrink-0 w-20 h-[120px] rounded-lg overflow-hidden shadow-md bg-gray-100">
           <img 
             src={coverImage} 
@@ -35,12 +38,27 @@ const AcquisitionCard = ({ acquisition, viewMode }) => {
             Acquired: {formatDate(acquisitionDate)}
           </p>
         </div>
+
+        {/* View Details Indicator */}
+        <div className="flex items-center">
+          <svg 
+            className="w-6 h-6 text-[#154A9A] opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer hover:-translate-y-2 hover:scale-[1.02] group">
+    <div 
+      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer hover:-translate-y-2 hover:scale-[1.02] group"
+      onClick={onViewDetails}
+    >
       <div className="relative w-full aspect-[2/3] overflow-hidden bg-gray-100">
         <img 
           src={coverImage} 
@@ -62,6 +80,25 @@ const AcquisitionCard = ({ acquisition, viewMode }) => {
         <p className="text-sm text-gray-600 font-normal tracking-normal">
           {author}
         </p>
+        
+        {/* View Details Button for Grid View */}
+        <button
+          className="mt-3 text-sm text-[#154A9A] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1"
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails();
+          }}
+        >
+          View Details
+          <svg 
+            className="w-4 h-4" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
     </div>
   );

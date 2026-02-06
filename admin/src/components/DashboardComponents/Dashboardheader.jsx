@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon, BellIcon, UserCircleIcon, CalendarIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, BellIcon, UserCircleIcon, CalendarIcon, XMarkIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect, useRef } from 'react'
 
 const DashboardHeader = () => {
@@ -7,6 +7,7 @@ const DashboardHeader = () => {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [showNotifications, setShowNotifications] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const headerRef = useRef(null)
   const notificationRef = useRef(null)
   const accountRef = useRef(null)
@@ -84,6 +85,13 @@ const DashboardHeader = () => {
 
     document.addEventListener('mousedown', handleClickOutside)
 
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme === 'dark') {
+      setIsDarkMode(true)
+      document.documentElement.classList.add('dark')
+    }
+
     return () => {
       if (scrollContainer) {
         scrollContainer.removeEventListener('scroll', handleScroll)
@@ -109,6 +117,17 @@ const DashboardHeader = () => {
   }
 
   const unreadCount = notifications.filter(n => !n.read).length
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode)
+    if (!isDarkMode) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }
 
   const getNotificationIcon = (type) => {
     switch(type) {
@@ -356,13 +375,29 @@ const DashboardHeader = () => {
                   </button>
                 </div>
 
-                {/* Logout */}
+                {/* Light/Dark Mode Toggle */}
                 <div className="border-t border-gray-200 p-2">
-                  <button className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3 rounded-md">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Sign Out
+                  <button 
+                    onClick={toggleDarkMode}
+                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-between rounded-md group"
+                  >
+                    <div className="flex items-center gap-3">
+                      {isDarkMode ? (
+                        <>
+                          <SunIcon className="w-5 h-5 text-gray-400 group-hover:text-yellow-500 transition-colors" />
+                          <span>Light Mode</span>
+                        </>
+                      ) : (
+                        <>
+                          <MoonIcon className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                          <span>Dark Mode</span>
+                        </>
+                      )}
+                    </div>
+                    {/* Toggle Switch */}
+                    <div className={`w-10 h-5 rounded-full transition-colors ${isDarkMode ? 'bg-indigo-500' : 'bg-gray-300'}`}>
+                      <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform ${isDarkMode ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
+                    </div>
                   </button>
                 </div>
               </div>
