@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "LMIS Backend Server",
   "dependencies": {
+    "axios": "^1.13.4",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",

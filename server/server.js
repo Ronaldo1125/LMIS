@@ -24,14 +24,6 @@ app.get('/api', (req, res) => {
 // Auth routes
 app.use('/api/auth', authRoutes);
 
-// Protected route example
-app.get('/api/profile', authMiddleware, (req, res) => {
-  res.json({ 
-    message: 'Protected route accessed successfully',
-    user: req.user 
-  });
-});
-
 const adminpanelUsersRoutes = require('./routes/adminpanelUsers');
 app.use('/api/adminpanel-users', adminpanelUsersRoutes);
 
