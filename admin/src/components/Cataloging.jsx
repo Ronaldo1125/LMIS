@@ -117,89 +117,130 @@ const Cataloging = () => {
     }
   }
 
-  const handleEditBook = (book) => {
-    setEditBook({
-      id: book.id,
-      category: book.category || '',
-      callNumber: book.call_number || '',
-      title: book.title || '',
-      author: book.author || '',
-      editor: book.editor || '',
-      edition: book.edition || '',
-      publication: book.publication || '',
-      isbn: book.isbn || '',
-      issn: book.issn || '',
-      publisher: book.publisher || '',
-      dateOfPublication: book.date_of_publication || '',
-      extent: book.extent || '',
-      otherPhysicalDetails: book.other_physical_details || '',
-      dimensions: book.dimensions || '',
-      accompanyingMaterial: book.accompanying_material || '',
-      notesArea: book.notes_area || '',
-      subjects: book.subjects || '',
-      copies: book.copies ?? '',
-    })
-    setIsEditModalOpen(true)
-  }
-
-  const handleUpdateBook = async () => {
+  const handleArchiveBook = async (id, reason) => {
     try {
       const token = localStorage.getItem('authToken')
-      
-      const bookData = {
-        category: editBook.category,
-        call_number: editBook.callNumber,
-        title: editBook.title,
-        author: editBook.author,
-        editor: editBook.editor,
-        edition: editBook.edition,
-        publication: editBook.publication,
-        publisher: editBook.publisher,
-        date_of_publication: editBook.dateOfPublication,
-        extent: editBook.extent,
-        dimensions: editBook.dimensions,
-        other_physical_details: editBook.otherPhysicalDetails,
-        accompanying_material: editBook.accompanyingMaterial,
-        isbn: editBook.isbn,
-        issn: editBook.issn,
-        notes_area: editBook.notesArea,
-        subjects: editBook.subjects,
-        copies: parseInt(editBook.copies)
-      }
-
-      await axios.put(`${API_URL}/books/${editBook.id}`, bookData, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-
-      setIsEditModalOpen(false)
-      setEditBook({
-        id: null,
-        category: '',
-        callNumber: '',
-        title: '',
-        author: '',
-        editor: '',
-        edition: '',
-        publication: '',
-        isbn: '',
-        issn: '',
-        publisher: '',
-        dateOfPublication: '',
-        extent: '',
-        otherPhysicalDetails: '',
-        dimensions: '',
-        accompanyingMaterial: '',
-        notesArea: '',
-        subjects: '',
-        copies: '',
-      })
-      
-      fetchBooks()
+      await axios.patch(
+        `${API_URL}/books/${id}/archive`,
+        { reason },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+      fetchBooks() // Refresh the list
     } catch (err) {
-      console.error('Error updating book:', err)
-      setError('Failed to update book. Please try again.')
+      console.error('Error archiving book:', err)
+      if (err.response?.data?.message) {
+        setError(err.response.data.message)
+      } else {
+        setError('Failed to archive book. Please try again.')
+      }
     }
   }
+
+  const handleUnarchiveBook = async (id) => {
+    try {
+      const token = localStorage.getItem('authToken')
+      await axios.patch(
+        `${API_URL}/books/${id}/unarchive`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+      fetchBooks() // Refresh main list
+    } catch (err) {
+      console.error('Error unarchiving book:', err)
+      setError('Failed to unarchive book. Please try again.')
+    }
+  }
+
+  const handleEditBook = (book) => {
+  setEditBook({
+    id: book.id,
+    category: book.category || '',
+    callNumber: book.call_number || '',
+    title: book.title || '',
+    author: book.author || '',
+    editor: book.editor || '',
+    edition: book.edition || '',
+    publication: book.publication || '',
+    isbn: book.isbn || '',
+    issn: book.issn || '',
+    publisher: book.publisher || '',
+    // Format the date to yyyy-MM-dd for the date input
+    dateOfPublication: book.date_of_publication 
+      ? book.date_of_publication.split('T')[0] 
+      : '',
+    extent: book.extent || '',
+    otherPhysicalDetails: book.other_physical_details || '',
+    dimensions: book.dimensions || '',
+    accompanyingMaterial: book.accompanying_material || '',
+    notesArea: book.notes_area || '',
+    subjects: book.subjects || '',
+    copies: book.copies ?? '',
+  })
+  setIsEditModalOpen(true)
+}
+
+const handleUpdateBook = async () => {
+  try {
+    const token = localStorage.getItem('authToken')
+    
+    const bookData = {
+      category: editBook.category,
+      call_number: editBook.callNumber,
+      title: editBook.title,
+      author: editBook.author,
+      editor: editBook.editor,
+      edition: editBook.edition,
+      publication: editBook.publication,
+      publisher: editBook.publisher,
+      date_of_publication: editBook.dateOfPublication || null, // Just send the date string
+      extent: editBook.extent,
+      dimensions: editBook.dimensions,
+      other_physical_details: editBook.otherPhysicalDetails,
+      accompanying_material: editBook.accompanyingMaterial,
+      isbn: editBook.isbn,
+      issn: editBook.issn,
+      notes_area: editBook.notesArea,
+      subjects: editBook.subjects,
+      copies: parseInt(editBook.copies)
+    }
+
+    await axios.put(`${API_URL}/books/${editBook.id}`, bookData, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    setIsEditModalOpen(false)
+    setEditBook({
+      id: null,
+      category: '',
+      callNumber: '',
+      title: '',
+      author: '',
+      editor: '',
+      edition: '',
+      publication: '',
+      isbn: '',
+      issn: '',
+      publisher: '',
+      dateOfPublication: '',
+      extent: '',
+      otherPhysicalDetails: '',
+      dimensions: '',
+      accompanyingMaterial: '',
+      notesArea: '',
+      subjects: '',
+      copies: '',
+    })
+    
+    fetchBooks()
+  } catch (err) {
+    console.error('Error updating book:', err)
+    setError('Failed to update book. Please try again.')
+  }
+}
 
   const handleViewBook = async (book) => {
     try {
@@ -265,6 +306,7 @@ const Cataloging = () => {
             onEdit={handleEditBook}
             onView={handleViewBook}
             onDelete={handleDeleteBook}
+            onArchive={handleArchiveBook}
           />
 
           {/* Pagination */}
@@ -318,12 +360,11 @@ const Cataloging = () => {
         categories={categories}
       />
 
-      {/* Archives Modal - Note: This needs backend support for archived books */}
+      {/* Archives Modal */}
       <ArchivesModal
         isOpen={isArchivesOpen}
         onClose={() => setIsArchivesOpen(false)}
-        archivedBooks={[]} // Empty for now - needs archive endpoint
-        onRestore={() => {}} // Needs restore endpoint
+        onRestore={handleUnarchiveBook}
       />
     </div>
   )

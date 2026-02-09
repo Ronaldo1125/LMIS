@@ -4,16 +4,41 @@ const router = express.Router();
 const pool = require('../config/connection');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
-// Get all books with pagination and search
+// Helper function to format dates
+const formatDateForResponse = (book) => {
+  if (book.date_of_publication) {
+    // Convert to yyyy-MM-dd format
+    const date = new Date(book.date_of_publication);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    book.date_of_publication = `${year}-${month}-${day}`;
+  }
+  return book;
+};
+
+// Get all books with pagination and search (excludes archived by default)
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', category = '' } = req.query;
+    const { page = 1, limit = 10, search = '', category = '', showArchived = 'false' } = req.query;
     const offset = (page - 1) * limit;
 
     let query = 'SELECT * FROM books WHERE 1=1';
     let countQuery = 'SELECT COUNT(*) as total FROM books WHERE 1=1';
     const params = [];
     const countParams = [];
+
+    // Archive filter
+    if (showArchived === 'true') {
+      query += ' AND is_archived = TRUE';
+      countQuery += ' AND is_archived = TRUE';
+    } else if (showArchived === 'all') {
+      // Show both archived and non-archived
+    } else {
+      // Default: show only non-archived
+      query += ' AND is_archived = FALSE';
+      countQuery += ' AND is_archived = FALSE';
+    }
 
     // Search filter
     if (search) {
@@ -40,8 +65,11 @@ router.get('/', authMiddleware, async (req, res) => {
     const [countResult] = await pool.query(countQuery, countParams);
     const total = countResult[0].total;
 
+    // Format dates in all books
+    const formattedBooks = books.map(formatDateForResponse);
+
     res.json({
-      books,
+      books: formattedBooks,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -64,7 +92,9 @@ router.get('/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'Book not found' });
     }
 
-    res.json(books[0]);
+    // Format the date before sending
+    const formattedBook = formatDateForResponse(books[0]);
+    res.json(formattedBook);
   } catch (error) {
     console.error('Error fetching book:', error);
     res.status(500).json({ message: 'Error fetching book' });
@@ -82,9 +112,9 @@ router.get('/meta/categories', authMiddleware, async (req, res) => {
         display_order
       FROM categories
       ORDER BY 
-        COALESCE(parent_id, id),  -- Group by parent
-        display_order,             -- Then by display order
-        name                       -- Then alphabetically
+        COALESCE(parent_id, id),
+        display_order,
+        name
     `);
     res.json(categories);
   } catch (error) {
@@ -93,8 +123,111 @@ router.get('/meta/categories', authMiddleware, async (req, res) => {
   }
 });
 
+// Archive a book (Admin only)
+router.patch('/:id/archive', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+  try {
+    const { reason } = req.body;
+    
+    // Check if book exists and is not already archived
+    const [existingBook] = await pool.query(
+      'SELECT id, is_archived FROM books WHERE id = ?', 
+      [req.params.id]
+    );
+    
+    if (existingBook.length === 0) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+
+    if (existingBook[0].is_archived) {
+      return res.status(400).json({ message: 'Book is already archived' });
+    }
+
+    // Archive the book
+    await pool.query(
+      `UPDATE books 
+       SET is_archived = TRUE, 
+           archived_at = NOW(), 
+           archived_by = ?,
+           archive_reason = ?
+       WHERE id = ?`,
+      [req.user.email || req.user.username, reason || null, req.params.id]
+    );
+
+    res.json({ message: 'Book archived successfully' });
+  } catch (error) {
+    console.error('Error archiving book:', error);
+    res.status(500).json({ message: 'Error archiving book' });
+  }
+});
+
+// Unarchive a book (Admin only)
+router.patch('/:id/unarchive', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+  try {
+    // Check if book exists and is archived
+    const [existingBook] = await pool.query(
+      'SELECT id, is_archived FROM books WHERE id = ?', 
+      [req.params.id]
+    );
+    
+    if (existingBook.length === 0) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+
+    if (!existingBook[0].is_archived) {
+      return res.status(400).json({ message: 'Book is not archived' });
+    }
+
+    // Unarchive the book
+    await pool.query(
+      `UPDATE books 
+       SET is_archived = FALSE,
+           archived_at = NULL,
+           archived_by = NULL,
+           archive_reason = NULL
+       WHERE id = ?`,
+      [req.params.id]
+    );
+
+    res.json({ message: 'Book unarchived successfully' });
+  } catch (error) {
+    console.error('Error unarchiving book:', error);
+    res.status(500).json({ message: 'Error unarchiving book' });
+  }
+});
+
+// Get archive statistics (Admin only)
+router.get('/meta/archive-stats', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+  try {
+    const [stats] = await pool.query(`
+      SELECT 
+        COUNT(*) as total_archived,
+        COUNT(DISTINCT archived_by) as unique_archivers,
+        archive_reason,
+        COUNT(*) as count_by_reason
+      FROM books 
+      WHERE is_archived = TRUE
+      GROUP BY archive_reason
+    `);
+
+    const [totalCount] = await pool.query(`
+      SELECT 
+        SUM(CASE WHEN is_archived = TRUE THEN 1 ELSE 0 END) as archived,
+        SUM(CASE WHEN is_archived = FALSE THEN 1 ELSE 0 END) as active,
+        COUNT(*) as total
+      FROM books
+    `);
+
+    res.json({
+      overview: totalCount[0],
+      byReason: stats
+    });
+  } catch (error) {
+    console.error('Error fetching archive stats:', error);
+    res.status(500).json({ message: 'Error fetching archive statistics' });
+  }
+});
+
 // Create new book (Admin only)
-// CHANGED: roleMiddleware(['admin']) → roleMiddleware('admin')
 router.post('/', authMiddleware, roleMiddleware('admin'), async (req, res) => {
   try {
     const {
@@ -169,7 +302,6 @@ router.post('/', authMiddleware, roleMiddleware('admin'), async (req, res) => {
 });
 
 // Update book (Admin only)
-// CHANGED: roleMiddleware(['admin']) → roleMiddleware('admin')
 router.put('/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => {
   try {
     const {
@@ -252,7 +384,6 @@ router.put('/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => 
 });
 
 // Delete book (Admin only)
-// CHANGED: roleMiddleware(['admin']) → roleMiddleware('admin')
 router.delete('/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => {
   try {
     const [result] = await pool.query('DELETE FROM books WHERE id = ?', [req.params.id]);

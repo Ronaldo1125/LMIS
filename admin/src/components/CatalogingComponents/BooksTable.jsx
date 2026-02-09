@@ -1,10 +1,11 @@
 import { 
   BookOpenIcon,
   PencilSquareIcon,
-  TrashIcon
+  TrashIcon,
+  ArchiveBoxIcon
 } from '@heroicons/react/24/outline'
 
-const BooksTable = ({ books, onEdit, onView, onDelete }) => {
+const BooksTable = ({ books, onEdit, onView, onDelete, onArchive }) => {
   const renderValue = (value) => {
     if (value === null || value === undefined || value === '') return '—'
     return value
@@ -50,7 +51,7 @@ const BooksTable = ({ books, onEdit, onView, onDelete }) => {
                     {renderValue(book.category)}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-gray-700">{renderValue(book.callNumber)}</td>
+                <td className="px-6 py-4 text-gray-700">{renderValue(book.call_number)}</td>
                 <td className="px-6 py-4 max-w-[360px]">
                   <div className="font-medium truncate" style={{ color: 'var(--dark-blue-1)' }}>
                     {renderValue(book.title)}
@@ -72,6 +73,19 @@ const BooksTable = ({ books, onEdit, onView, onDelete }) => {
                       title="Edit"
                     >
                       <PencilSquareIcon className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        const reason = window.prompt(`Why are you archiving "${book.title}"?\n(Optional - press OK to skip)`)
+                        if (reason !== null) { // User didn't cancel
+                          onArchive && onArchive(book.id, reason || undefined)
+                        }
+                      }}
+                      className="p-2 text-gray-500 hover:text-amber-600 rounded-lg transition-colors bg-transparent hover:bg-transparent"
+                      title="Archive"
+                    >
+                      <ArchiveBoxIcon className="w-5 h-5" />
                     </button>
                     <button 
                       onClick={(event) => {
