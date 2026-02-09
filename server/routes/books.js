@@ -94,7 +94,8 @@ router.get('/meta/categories', authMiddleware, async (req, res) => {
 });
 
 // Create new book (Admin only)
-router.post('/', authMiddleware, roleMiddleware(['admin']), async (req, res) => {
+// CHANGED: roleMiddleware(['admin']) → roleMiddleware('admin')
+router.post('/', authMiddleware, roleMiddleware('admin'), async (req, res) => {
   try {
     const {
       category,
@@ -168,7 +169,8 @@ router.post('/', authMiddleware, roleMiddleware(['admin']), async (req, res) => 
 });
 
 // Update book (Admin only)
-router.put('/:id', authMiddleware, roleMiddleware(['admin']), async (req, res) => {
+// CHANGED: roleMiddleware(['admin']) → roleMiddleware('admin')
+router.put('/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => {
   try {
     const {
       category,
@@ -250,7 +252,8 @@ router.put('/:id', authMiddleware, roleMiddleware(['admin']), async (req, res) =
 });
 
 // Delete book (Admin only)
-router.delete('/:id', authMiddleware, roleMiddleware(['admin']), async (req, res) => {
+// CHANGED: roleMiddleware(['admin']) → roleMiddleware('admin')
+router.delete('/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => {
   try {
     const [result] = await pool.query('DELETE FROM books WHERE id = ?', [req.params.id]);
     
