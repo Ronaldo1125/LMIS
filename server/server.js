@@ -27,6 +27,10 @@ app.use('/api/auth', authRoutes);
 const adminpanelUsersRoutes = require('./routes/adminpanelUsers');
 app.use('/api/adminpanel-users', adminpanelUsersRoutes);
 
+// Add this line in server.js after your other routes
+const booksRoutes = require('./routes/books');
+app.use('/api/books', booksRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
