@@ -5,17 +5,18 @@ import Cataloging from './components/Cataloging'
 import Accessions from './components/Accessions'
 import UserManagement from './components/UserManagement'
 import Acquisitions from './components/Acquisitions'
+import Security from './components/Security'
 import AccountLogin from './components/AccountLogin'
 
 // Check for existing authentication
 const getInitialAuthState = () => {
   const token = localStorage.getItem('authToken')
-  const savedUser = localStorage.getItem('user') // Fixed: Changed from 'admin' to 'user'
+  const savedUser = localStorage.getItem('user')
   
   if (token && savedUser) {
     return {
       isAuthenticated: true,
-      user: JSON.parse(savedUser) // Fixed: Changed from savedAdmin to savedUser
+      user: JSON.parse(savedUser)
     }
   }
   
@@ -39,8 +40,8 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('authToken')
-    localStorage.removeItem('user') // Fixed: Changed from 'admin' to 'user'
-    sessionStorage.removeItem('loginNotification') // Also clear login notification
+    localStorage.removeItem('user')
+    sessionStorage.removeItem('loginNotification')
     setIsAuthenticated(false)
     setUser(null)
     setCurrentView('dashboard')
@@ -58,8 +59,9 @@ function App() {
         return <UserManagement />
       case 'acquisitions':
         return <Acquisitions />
+      case 'security':
+        return <Security />
       case 'logout':
-        // Handle logout when clicked from sidebar
         handleLogout()
         return null
       default:
