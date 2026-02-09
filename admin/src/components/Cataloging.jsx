@@ -104,7 +104,7 @@ const Cataloging = () => {
     fetchBooks()
   }
 
-  const handleArchiveBook = async (id) => {
+  const handleDeleteBook = async (id) => {
     try {
       const token = localStorage.getItem('authToken')
       await axios.delete(`${API_URL}/books/${id}`, {
@@ -112,8 +112,8 @@ const Cataloging = () => {
       })
       fetchBooks()
     } catch (err) {
-      console.error('Error archiving book:', err)
-      setError('Failed to archive book. Please try again.')
+      console.error('Error deleting book:', err)
+      setError('Failed to delete book. Please try again.')
     }
   }
 
@@ -262,9 +262,9 @@ const Cataloging = () => {
           {/* Books Table */}
           <BooksTable
             books={books}
-            onArchive={handleArchiveBook}
             onEdit={handleEditBook}
             onView={handleViewBook}
+            onDelete={handleDeleteBook}
           />
 
           {/* Pagination */}

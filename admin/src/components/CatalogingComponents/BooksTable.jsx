@@ -1,10 +1,10 @@
 import { 
   BookOpenIcon,
   PencilSquareIcon,
-  ArchiveBoxIcon
+  TrashIcon
 } from '@heroicons/react/24/outline'
 
-const BooksTable = ({ books, onArchive, onEdit, onView }) => {
+const BooksTable = ({ books, onEdit, onView, onDelete }) => {
   const renderValue = (value) => {
     if (value === null || value === undefined || value === '') return '—'
     return value
@@ -76,12 +76,14 @@ const BooksTable = ({ books, onArchive, onEdit, onView }) => {
                     <button 
                       onClick={(event) => {
                         event.stopPropagation()
-                        onArchive && onArchive(book.id)
+                        if (window.confirm(`Are you sure you want to permanently delete "${book.title}"? This action cannot be undone.`)) {
+                          onDelete && onDelete(book.id)
+                        }
                       }}
-                      className="p-2 text-gray-500 hover:text-amber-600 rounded-lg transition-colors bg-transparent hover:bg-transparent"
-                      title="Archive"
+                      className="p-2 text-gray-500 hover:text-red-600 rounded-lg transition-colors bg-transparent hover:bg-transparent"
+                      title="Delete"
                     >
-                      <ArchiveBoxIcon className="w-5 h-5" />
+                      <TrashIcon className="w-5 h-5" />
                     </button>
                   </div>
                 </td>
