@@ -64,9 +64,12 @@ function AddStaffModal({ onClose, onSubmit }) {
       style={{ animation: 'fadeIn 0.2s ease-out' }}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
+        className="bg-white shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
-        style={{ animation: 'slideUp 0.3s ease-out' }}
+        style={{ 
+          animation: 'slideUp 0.3s ease-out',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)'
+        }}
       >
         {/* Header */}
         <div 
@@ -79,7 +82,7 @@ function AddStaffModal({ onClose, onSubmit }) {
             </h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all"
+              className="p-2 hover:bg-white hover:bg-opacity-20 transition-all"
             >
               <X size={24} />
             </button>
@@ -100,13 +103,13 @@ function AddStaffModal({ onClose, onSubmit }) {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.name ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
+                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
+                  errors.name ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
                 }`}
                 placeholder="Enter full name"
                 style={{ fontFamily: '"Inter", sans-serif' }}
               />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+              {errors.name && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.name}</p>}
             </div>
 
             {/* Email */}
@@ -120,13 +123,13 @@ function AddStaffModal({ onClose, onSubmit }) {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
+                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
+                  errors.email ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
                 }`}
                 placeholder="email@library.com"
                 style={{ fontFamily: '"Inter", sans-serif' }}
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              {errors.email && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.email}</p>}
             </div>
 
             {/* Phone */}
@@ -140,13 +143,13 @@ function AddStaffModal({ onClose, onSubmit }) {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
+                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
+                  errors.phone ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
                 }`}
                 placeholder="+1 (555) 000-0000"
                 style={{ fontFamily: '"Inter", sans-serif' }}
               />
-              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+              {errors.phone && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.phone}</p>}
             </div>
 
             {/* Address */}
@@ -160,13 +163,13 @@ function AddStaffModal({ onClose, onSubmit }) {
                 value={formData.address}
                 onChange={handleChange}
                 rows="3"
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all resize-none ${
-                  errors.address ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
+                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all resize-none ${
+                  errors.address ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
                 }`}
                 placeholder="Enter complete address"
                 style={{ fontFamily: '"Inter", sans-serif' }}
               />
-              {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+              {errors.address && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.address}</p>}
             </div>
 
             {/* Date of Birth */}
@@ -180,12 +183,12 @@ function AddStaffModal({ onClose, onSubmit }) {
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.dateOfBirth ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
+                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
+                  errors.dateOfBirth ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
                 }`}
                 style={{ fontFamily: '"Inter", sans-serif' }}
               />
-              {errors.dateOfBirth && <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>}
+              {errors.dateOfBirth && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.dateOfBirth}</p>}
             </div>
           </div>
 
@@ -194,14 +197,14 @@ function AddStaffModal({ onClose, onSubmit }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+              className="flex-1 px-4 py-2 font-semibold text-gray-700 transition-all cancel-button shadow-sm"
               style={{ fontFamily: '"Inter", sans-serif' }}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95"
+              className="flex-1 px-4 py-2 font-semibold text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95"
               style={{
                 background: 'var(--dark-blue-1)',
                 fontFamily: 'inherit'
@@ -228,6 +231,16 @@ function AddStaffModal({ onClose, onSubmit }) {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+
+        .cancel-button {
+          background-color: #f3f4f6 !important;
+        }
+
+        .cancel-button:hover {
+          background-color: #fef2f2 !important;
+          color: #dc2626 !important;
+          box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2) !important;
         }
       `}</style>
     </div>
