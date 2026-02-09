@@ -116,9 +116,12 @@ const handleSubmit = async (e) => {
       style={{ animation: 'fadeIn 0.2s ease-out' }}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden"
+        className="bg-white shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
-        style={{ animation: 'slideUp 0.3s ease-out' }}
+        style={{ 
+          animation: 'slideUp 0.3s ease-out',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)'
+        }}
       >
         {/* Header */}
         <div 
@@ -131,7 +134,7 @@ const handleSubmit = async (e) => {
             </h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all"
+              className="p-2 hover:bg-white hover:bg-opacity-20 transition-all"
               disabled={isSubmitting}
             >
               <X size={24} />
@@ -154,13 +157,13 @@ const handleSubmit = async (e) => {
                 value={formData.full_name}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.full_name ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
+                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
+                  errors.full_name ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 placeholder="Enter full name"
                 style={{ fontFamily: '"Inter", sans-serif' }}
               />
-              {errors.full_name && <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>}
+              {errors.full_name && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.full_name}</p>}
             </div>
 
             {/* Username */}
@@ -175,14 +178,14 @@ const handleSubmit = async (e) => {
                 value={formData.username}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.username ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
+                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
+                  errors.username ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 placeholder="Enter username"
                 style={{ fontFamily: '"Inter", sans-serif' }}
                 autoComplete="off"
               />
-              {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
+              {errors.username && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.username}</p>}
             </div>
 
             {/* Password */}
@@ -197,14 +200,14 @@ const handleSubmit = async (e) => {
                 value={formData.password}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
+                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
+                  errors.password ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 placeholder="Enter password (min. 6 characters)"
                 style={{ fontFamily: '"Inter", sans-serif' }}
                 autoComplete="new-password"
               />
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              {errors.password && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.password}</p>}
             </div>
 
             {/* Confirm Password */}
@@ -219,20 +222,20 @@ const handleSubmit = async (e) => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                  errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-purple-500'
+                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
+                  errors.confirmPassword ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 placeholder="Confirm password"
                 style={{ fontFamily: '"Inter", sans-serif' }}
                 autoComplete="new-password"
               />
-              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.confirmPassword}</p>}
             </div>
 
             {/* Submit Error */}
             {errors.submit && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p className="text-red-600 text-sm">{errors.submit}</p>
+              <div className="p-4 bg-red-50 shadow-sm">
+                <p className="text-red-600 text-sm font-semibold">{errors.submit}</p>
               </div>
             )}
           </div>
@@ -243,7 +246,7 @@ const handleSubmit = async (e) => {
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed cancel-button"
+              className="flex-1 px-4 py-2 font-semibold text-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed cancel-button shadow-sm"
               style={{ fontFamily: '"Inter", sans-serif' }}
             >
               Cancel
@@ -251,7 +254,7 @@ const handleSubmit = async (e) => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-6 py-3 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="flex-1 px-4 py-2 font-semibold text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               style={{
                 background: 'var(--dark-blue-1)',
                 fontFamily: 'inherit'
@@ -281,13 +284,13 @@ const handleSubmit = async (e) => {
         }
 
         .cancel-button {
-          background-color: white !important;
+          background-color: #f3f4f6 !important;
         }
 
         .cancel-button:hover:not(:disabled) {
           background-color: #fef2f2 !important;
-          border-color: #fca5a5 !important;
           color: #dc2626 !important;
+          box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2) !important;
         }
       `}</style>
     </div>
