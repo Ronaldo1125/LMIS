@@ -93,13 +93,16 @@ function UserManagement() {
     return matchesSearch && matchesRole && matchesStatus
   })
 
-  // Add isActiveLibrarian flag for display purposes
-  const usersWithActiveFlag = filteredUsers.map(user => {
-    if (user.role === 'librarian') {
-      return { ...user, isActiveLibrarian: user.is_active }
-    }
-    return user
-  })
+  // Transform API data to match UsersTable component expectations
+  const usersWithActiveFlag = filteredUsers.map(user => ({
+    id: user.id,
+    name: user.full_name,
+    email: user.username, // or user.email if your API has an email field
+    role: user.role.charAt(0).toUpperCase() + user.role.slice(1), // Capitalize role
+    status: user.is_active ? 'Active' : 'Inactive',
+    dateAdded: user.created_at || user.date_added || new Date().toISOString(),
+    isActiveLibrarian: user.role === 'librarian' && user.is_active
+  }))
 
   const handleAddStaff = async (staffData) => {
     if (!isAdmin) {

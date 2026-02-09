@@ -114,7 +114,7 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
                 Name
               </th>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                Email
+                Username
               </th>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                 Role
@@ -142,12 +142,9 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                      style={{
-                        background: getAvatarGradient(user.name)
-                      }}
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-600 text-white font-semibold text-sm"
                     >
-                      {user.name.split(' ').map(n => n[0]).join('')}
+                      {user.name ? user.name.split(' ').map(n => n[0]).join('') : '?'}
                     </div>
                     <div className="font-semibold text-[#154A9A]">
                       {user.name}
@@ -197,22 +194,6 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
       `}</style>
     </div>
   )
-}
-
-// Helper function to generate gradient colors based on name
-function getAvatarGradient(name) {
-  const gradients = [
-    'linear-gradient(135deg, #0F61F7, #0D52D1)',
-    'linear-gradient(135deg, #3F1BD2, #2E1499)',
-    'linear-gradient(135deg, #FFA602, #E69500)',
-    'linear-gradient(135deg, #FF6B6B, #E85555)',
-    'linear-gradient(135deg, #4ECDC4, #44B8B0)',
-    'linear-gradient(135deg, #9B59B6, #8E44AD)',
-    'linear-gradient(135deg, #3498DB, #2980B9)',
-    'linear-gradient(135deg, #1ABC9C, #16A085)'
-  ]
-  const index = name.charCodeAt(0) % gradients.length
-  return gradients[index]
 }
 
 export default UsersTable
