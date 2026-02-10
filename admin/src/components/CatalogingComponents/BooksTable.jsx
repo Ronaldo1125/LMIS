@@ -59,15 +59,8 @@ const BooksTable = ({ books, onEdit, onView, onDelete, onArchive }) => {
                     {renderValue(book.category)}
                   </span>
                 </td>
-<<<<<<< HEAD
-                <td className="px-6 py-4 text-gray-700 border-r border-gray-200">
-                  {renderValue(book.callNumber)}
-                </td>
-                <td className="px-6 py-4 max-w-[360px] border-r border-gray-200">
-=======
                 <td className="px-6 py-4 text-gray-700">{renderValue(book.call_number)}</td>
                 <td className="px-6 py-4 max-w-[360px]">
->>>>>>> 163555e1786336a3885e06ed4541671fd2e67ec0
                   <div className="font-medium truncate" style={{ color: 'var(--dark-blue-1)' }}>
                     {renderValue(book.title)}
                   </div>
