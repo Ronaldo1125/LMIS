@@ -115,21 +115,16 @@ const DashboardHeader = () => {
     setShowAccountMenu(false)
     console.log('Navigate to My Profile')
     // Add your navigation logic here
-    // e.g., navigate('/profile')
-  }
-
-  const handlePreferences = () => {
-    setShowAccountMenu(false)
-    console.log('Navigate to Preferences')
-    // Add your navigation logic here
-    // e.g., navigate('/preferences')
+    // e.g., navigate('/profile') or open profile modal
+    alert('Opening Profile Settings...')
   }
 
   const handleHelpSupport = () => {
     setShowAccountMenu(false)
     console.log('Navigate to Help & Support')
     // Add your navigation logic here
-    // e.g., navigate('/help')
+    // e.g., navigate('/help') or open help center
+    alert('Opening Help & Support...')
   }
 
   const getNotificationIcon = (type) => {
@@ -359,15 +354,6 @@ const DashboardHeader = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     My Profile
-                  </button>
-                  <button 
-                    onClick={handlePreferences}
-                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
-                  >
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                    </svg>
-                    Preferences
                   </button>
                   <button 
                     onClick={handleHelpSupport}
