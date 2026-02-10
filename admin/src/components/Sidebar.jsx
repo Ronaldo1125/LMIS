@@ -122,7 +122,7 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
 
           {/* Version Info */}
           <div className={`text-[10px] text-white text-opacity-60 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
-            <p>© 2026 LMIS DepDEV</p>
+            <p>© 2026 LMIS DEPDev</p>
             <p>Version 1.0.0</p>
           </div>
         </div>

@@ -7,12 +7,15 @@ import {
   AcademicCapIcon, 
   ScaleIcon, 
   BookmarkIcon, 
-  XMarkIcon 
+  XMarkIcon,
+  ChevronDownIcon,
+  ChevronUpIcon
 } from '@heroicons/react/24/outline'
 
 const CollectionByCategory = () => {
   const [hoveredCategory, setHoveredCategory] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [expandedCategories, setExpandedCategories] = useState({})
 
   const categories = [
     { name: 'Books', icon: BookOpenIcon, count: 1247, color: 'var(--dark-blue-1)' },
@@ -43,20 +46,15 @@ const CollectionByCategory = () => {
     }
   ]
 
+  const toggleCategory = (categoryName) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [categoryName]: !prev[categoryName]
+    }))
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-full">
-      <style>{`
-        @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(30px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        .category-item {
-          animation: slideInRight 0.6s ease-out forwards;
-          animation-delay: calc(var(--index) * 0.1s + 0.2s);
-          opacity: 0;
-        }
-      `}</style>
-
       <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--dark-blue-1)' }}>
         Collection by Category
       </h2>
@@ -69,9 +67,8 @@ const CollectionByCategory = () => {
           return (
             <div
               key={cat.name}
-              className="category-item p-4 rounded-lg shadow-sm cursor-pointer transition-all"
+              className="p-4 rounded-lg shadow-sm cursor-pointer transition-all"
               style={{
-                '--index': index,
                 background: isHovered ? `${cat.color}15` : '#fff',
                 borderLeft: `4px solid ${cat.color}`,
                 transform: isHovered ? 'translateX(6px)' : 'translateX(0)'
@@ -118,47 +115,57 @@ const CollectionByCategory = () => {
           aria-modal="true"
         >
           <div 
-            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-y-auto"
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-y-auto max-h-[80vh]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-bold" style={{ color: 'var(--dark-blue-1)' }}>
+            <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200 sticky top-0 bg-white z-10">
+              <h2 className="text-lg font-bold" style={{ color: 'var(--dark-blue-1)' }}>
                 All Categories
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <XMarkIcon className="w-6 h-6 text-gray-600" />
+              <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+                <XMarkIcon className="w-5 h-5 text-gray-600" />
               </button>
             </div>
 
-            {/* Category Grid */}
-            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Category List (vertical, expandable) */}
+            <div className="p-4 space-y-4">
               {categories.map((cat) => {
                 const Icon = cat.icon
+                const isExpanded = expandedCategories[cat.name]
+                const hasSubcategories = cat.subcategories && cat.subcategories.length > 0
+
                 return (
-                  <div 
-                    key={cat.name} 
-                    className="p-4 rounded-lg shadow-sm border flex flex-col gap-2 hover:bg-gray-50 transition-colors"
-                    style={{ borderColor: cat.color }}
-                  >
-                    <div className="flex items-center justify-between">
+                  <div key={cat.name} className="border rounded-lg">
+                    <button
+                      onClick={() => hasSubcategories && toggleCategory(cat.name)}
+                      className="flex items-center justify-between w-full p-3 hover:bg-gray-50 transition-colors text-left"
+                    >
                       <div className="flex items-center gap-3">
                         <Icon className="w-5 h-5" style={{ color: cat.color }} />
-                        <span className="font-medium text-gray-800">{cat.name}</span>
+                        <span className="text-sm font-medium text-gray-700">{cat.name}</span>
                       </div>
-                      <span 
-                        className="px-2 py-1 text-xs font-semibold rounded"  
-                        style={{ background: `${cat.color}20`, color: cat.color }}
-                      >
-                        {cat.count} items
-                      </span>
-                    </div>
-                    {cat.subcategories && (
-                      <ul className="ml-6 list-disc text-xs text-gray-600 space-y-1">
-                        {cat.subcategories.map((sub) => (
-                          <li key={sub}>{sub}</li>
-                        ))}
-                      </ul>
+                      {hasSubcategories && (
+                        isExpanded ? (
+                          <ChevronUpIcon className="w-4 h-4 text-gray-400" />
+                        ) : (
+                          <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+                        )
+                      )}
+                    </button>
+
+                    {/* Subcategories */}
+                    {hasSubcategories && isExpanded && (
+                      <div className="px-6 pb-3 bg-gray-50 border-t">
+                        <ul className="space-y-2 mt-2 text-sm text-gray-700">
+                          {cat.subcategories.map((sub) => (
+                            <li key={sub} className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                              {sub}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </div>
                 )
@@ -166,10 +173,10 @@ const CollectionByCategory = () => {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+            <div className="px-4 py-3 border-t border-gray-200 flex justify-end sticky bottom-0 bg-white">
               <button 
                 onClick={() => setIsModalOpen(false)} 
-                className="px-4 py-2 rounded-lg text-sm font-medium text-white"
+                className="px-4 py-1.5 rounded-lg text-sm font-medium text-white"
                 style={{ background: 'var(--dark-blue-1)' }}
               >
                 Close
