@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from './components/Sidebar'
 import Dashboard from './components/Dashboard'
 import Cataloging from './components/Cataloging'
@@ -32,6 +32,21 @@ function App() {
   const initialAuth = getInitialAuthState()
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuth.isAuthenticated)
   const [user, setUser] = useState(initialAuth.user)
+
+  // ✅ Dynamic Page Title
+  useEffect(() => {
+    const pageTitles = {
+      dashboard: 'Dashboard',
+      cataloging: 'Cataloging',
+      accessions: 'Accessions',
+      acquisitions: 'Acquisitions',
+      'user-management': 'User Management',
+      security: 'Security'
+    }
+
+    const currentTitle = pageTitles[currentView] || 'LMIS'
+    document.title = `${currentTitle} | LMIS`
+  }, [currentView])
 
   const handleLoginSuccess = (userData) => {
     setIsAuthenticated(true)
