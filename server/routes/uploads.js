@@ -8,8 +8,9 @@ const crypto = require('crypto');
 const pool = require('../config/connection');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../uploads');
+// Ensure upload directory exists - using absolute path from project root
+// This will create: C:\Users\Laptop\Desktop\LMIS\server\uploads
+const uploadDir = path.join(process.cwd(), 'uploads');
 fs.mkdir(uploadDir, { recursive: true }).catch(console.error);
 
 // Allowed file types and their MIME types
