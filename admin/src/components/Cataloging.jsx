@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import axios from 'axios'
 import StatsOverview from './CatalogingComponents/StatsOverview'
 import SearchAndFilter from './CatalogingComponents/SearchAndFilter'
 import BooksTable from './CatalogingComponents/BooksTable'
@@ -7,6 +8,8 @@ import ViewBookModal from './CatalogingComponents/ViewBookModal'
 import EditBookModal from './CatalogingComponents/EditBookModal'
 import ArchivesModal from './CatalogingComponents/ArchivesModal'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
 const Cataloging = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -14,131 +17,15 @@ const Cataloging = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isArchivesOpen, setIsArchivesOpen] = useState(false)
   const [selectedBook, setSelectedBook] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [books, setBooks] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+
   const [editBook, setEditBook] = useState({
     id: null,
-    category: '',
-    callNumber: '',
-    title: '',
-    author: '',
-    editor: '',
-    edition: '',
-    publication: '',
-    isbn: '',
-    issn: '',
-    publisher: '',
-    dateOfPublication: '',
-    extent: '',
-    otherPhysicalDetails: '',
-    dimensions: '',
-    accompanyingMaterial: '',
-    notesArea: '',
-    subjects: '',
-    copies: '',
-    available: '',
-    status: '',
-    year: '',
-  })
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [books, setBooks] = useState([
-    {
-      id: 1,
-      title: 'National Budget Overview 2025',
-      author: 'Department of Finance',
-      isbn: '978-0-0001-2025-1',
-      category: 'Annual Reports',
-      publisher: 'Govt Printing Office',
-      year: 2025,
-      copies: 12,
-      available: 9,
-      status: 'Available'
-    },
-    {
-      id: 2,
-      title: 'Public Health Special Bulletin: Influenza Trends',
-      author: 'Ministry of Health',
-      isbn: '978-0-0002-2024-8',
-      category: 'Special Reports',
-      publisher: 'Govt Health Publications',
-      year: 2024,
-      copies: 7,
-      available: 4,
-      status: 'Available'
-    },
-    {
-      id: 3,
-      title: 'Official Gazette — January Issue',
-      author: 'Government Communications Office',
-      isbn: '978-0-0003-2026-3',
-      category: 'Newspapers',
-      publisher: 'Govt Gazette Press',
-      year: 2026,
-      copies: 15,
-      available: 0,
-      status: 'Not Available'
-    },
-    {
-      id: 4,
-      title: 'Statistical Yearbook 2024',
-      author: 'National Statistics Bureau',
-      isbn: '978-0-0004-2024-2',
-      category: 'Sourcebook',
-      publisher: 'Govt Statistical Office',
-      year: 2024,
-      copies: 10,
-      available: 6,
-      status: 'Available'
-    },
-    {
-      id: 5,
-      title: 'Coastal Erosion Assessment',
-      author: 'Department of Environment',
-      isbn: '978-0-0005-2023-9',
-      category: 'Thesis/Research papers',
-      publisher: 'Govt Research Series',
-      year: 2023,
-      copies: 5,
-      available: 3,
-      status: 'Available'
-    },
-    {
-      id: 6,
-      title: 'Administrative Procedure Act (Revised)',
-      author: 'Office of the Attorney General',
-      isbn: '978-0-0006-2022-6',
-      category: 'Statute/Law/Legal Documents',
-      publisher: 'Govt Legal Press',
-      year: 2022,
-      copies: 8,
-      available: 8,
-      status: 'Available'
-    },
-    {
-      id: 7,
-      title: 'Public Procurement Manual',
-      author: 'Department of Procurement',
-      isbn: '978-0-0007-2021-4',
-      category: 'Guides/Manuals',
-      publisher: 'Govt Service Press',
-      year: 2021,
-      copies: 6,
-      available: 1,
-      status: 'Available'
-    },
-    {
-      id: 8,
-      title: 'National Atlas of Infrastructure',
-      author: 'Ministry of Works',
-      isbn: '978-0-0008-2020-0',
-      category: 'Atlas',
-      publisher: 'Govt Mapping Agency',
-      year: 2020,
-      copies: 4,
-      available: 2,
-      status: 'Available'
-    },
-  ])
-
-  const [newBook, setNewBook] = useState({
     category: '',
     callNumber: '',
     title: '',
@@ -178,110 +65,153 @@ const Cataloging = () => {
     'Atlas'
   ]
 
-  const archivedBooks = books.filter(book => book.status === 'Archived')
+  // Fetch books from API - wrapped in useCallback to prevent infinite loops
+  const fetchBooks = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError('')
+      const token = localStorage.getItem('authToken')
+      
+      const params = {
+        page: currentPage,
+        limit: 10,
+        search: searchTerm,
+        category: selectedCategory !== 'all' ? selectedCategory : ''
+      }
 
-  const filteredBooks = books.filter(book => {
-    if (book.status === 'Archived') return false
-    const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         book.isbn.includes(searchTerm)
-    const matchesCategory = selectedCategory === 'all' || book.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+      const response = await axios.get(`${API_URL}/books`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params
+      })
 
-  const handleAddBook = (e) => {
-    e.preventDefault()
-    const publicationYear = newBook.dateOfPublication
-      ? new Date(newBook.dateOfPublication).getFullYear()
-      : null
-    const bookToAdd = {
-      id: books.length + 1,
-      ...newBook,
-      year: publicationYear,
-      copies: parseInt(newBook.copies),
-      available: parseInt(newBook.copies),
-      status: 'Available'
+      setBooks(response.data.books)
+      setTotalPages(response.data.pagination.totalPages)
+    } catch (err) {
+      console.error('Error fetching books:', err)
+      setError('Failed to load books. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setBooks([...books, bookToAdd])
-    setNewBook({
-      category: '',
-      callNumber: '',
-      title: '',
-      author: '',
-      editor: '',
-      edition: '',
-      publication: '',
-      isbn: '',
-      issn: '',
-      publisher: '',
-      dateOfPublication: '',
-      extent: '',
-      otherPhysicalDetails: '',
-      dimensions: '',
-      accompanyingMaterial: '',
-      notesArea: '',
-      subjects: '',
-      copies: '',
-    })
-    setIsAddModalOpen(false)
+  }, [currentPage, searchTerm, selectedCategory])
+
+  useEffect(() => {
+    fetchBooks()
+  }, [fetchBooks])
+
+  const handleBookAdded = () => {
+    // Reset to first page and refresh
+    setCurrentPage(1)
+    fetchBooks()
   }
 
-  const handleArchiveBook = (id) => {
-    setBooks(books.map(book => (
-      book.id === id ? { ...book, status: 'Archived' } : book
-    )))
+  const handleDeleteBook = async (id) => {
+    try {
+      const token = localStorage.getItem('authToken')
+      await axios.delete(`${API_URL}/books/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchBooks()
+    } catch (err) {
+      console.error('Error deleting book:', err)
+      setError('Failed to delete book. Please try again.')
+    }
   }
 
-  const handleRestoreBook = (id) => {
-    setBooks(books.map(book => (
-      book.id === id ? { ...book, status: 'Available' } : book
-    )))
+  const handleArchiveBook = async (id, reason) => {
+    try {
+      const token = localStorage.getItem('authToken')
+      await axios.patch(
+        `${API_URL}/books/${id}/archive`,
+        { reason },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+      fetchBooks() // Refresh the list
+    } catch (err) {
+      console.error('Error archiving book:', err)
+      if (err.response?.data?.message) {
+        setError(err.response.data.message)
+      } else {
+        setError('Failed to archive book. Please try again.')
+      }
+    }
+  }
+
+  const handleUnarchiveBook = async (id) => {
+    try {
+      const token = localStorage.getItem('authToken')
+      await axios.patch(
+        `${API_URL}/books/${id}/unarchive`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+      fetchBooks() // Refresh main list
+    } catch (err) {
+      console.error('Error unarchiving book:', err)
+      setError('Failed to unarchive book. Please try again.')
+    }
   }
 
   const handleEditBook = (book) => {
-    setEditBook({
-      id: book.id,
-      category: book.category || '',
-      callNumber: book.callNumber || '',
-      title: book.title || '',
-      author: book.author || '',
-      editor: book.editor || '',
-      edition: book.edition || '',
-      publication: book.publication || '',
-      isbn: book.isbn || '',
-      issn: book.issn || '',
-      publisher: book.publisher || '',
-      dateOfPublication: book.dateOfPublication || '',
-      extent: book.extent || '',
-      otherPhysicalDetails: book.otherPhysicalDetails || '',
-      dimensions: book.dimensions || '',
-      accompanyingMaterial: book.accompanyingMaterial || '',
-      notesArea: book.notesArea || '',
-      subjects: book.subjects || '',
-      copies: book.copies ?? '',
-      available: book.available ?? '',
-      status: book.status || '',
-      year: book.year ?? '',
-    })
-    setIsEditModalOpen(true)
-  }
+  setEditBook({
+    id: book.id,
+    category: book.category || '',
+    callNumber: book.call_number || '',
+    title: book.title || '',
+    author: book.author || '',
+    editor: book.editor || '',
+    edition: book.edition || '',
+    publication: book.publication || '',
+    isbn: book.isbn || '',
+    issn: book.issn || '',
+    publisher: book.publisher || '',
+    // Format the date to yyyy-MM-dd for the date input
+    dateOfPublication: book.date_of_publication 
+      ? book.date_of_publication.split('T')[0] 
+      : '',
+    extent: book.extent || '',
+    otherPhysicalDetails: book.other_physical_details || '',
+    dimensions: book.dimensions || '',
+    accompanyingMaterial: book.accompanying_material || '',
+    notesArea: book.notes_area || '',
+    subjects: book.subjects || '',
+    copies: book.copies ?? '',
+  })
+  setIsEditModalOpen(true)
+}
 
-  const handleUpdateBook = () => {
-    const publicationYear = editBook.dateOfPublication
-      ? new Date(editBook.dateOfPublication).getFullYear()
-      : editBook.year || null
-
-    const copiesCount = editBook.copies === '' ? null : parseInt(editBook.copies, 10)
-    const availableCount = editBook.available === '' ? null : parseInt(editBook.available, 10)
-
-    const updatedBook = {
-      ...editBook,
-      year: publicationYear,
-      copies: copiesCount,
-      available: availableCount ?? copiesCount,
+const handleUpdateBook = async () => {
+  try {
+    const token = localStorage.getItem('authToken')
+    
+    const bookData = {
+      category: editBook.category,
+      call_number: editBook.callNumber,
+      title: editBook.title,
+      author: editBook.author,
+      editor: editBook.editor,
+      edition: editBook.edition,
+      publication: editBook.publication,
+      publisher: editBook.publisher,
+      date_of_publication: editBook.dateOfPublication || null, // Just send the date string
+      extent: editBook.extent,
+      dimensions: editBook.dimensions,
+      other_physical_details: editBook.otherPhysicalDetails,
+      accompanying_material: editBook.accompanyingMaterial,
+      isbn: editBook.isbn,
+      issn: editBook.issn,
+      notes_area: editBook.notesArea,
+      subjects: editBook.subjects,
+      copies: parseInt(editBook.copies)
     }
 
-    setBooks(books.map(book => (book.id === updatedBook.id ? updatedBook : book)))
+    await axios.put(`${API_URL}/books/${editBook.id}`, bookData, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
     setIsEditModalOpen(false)
     setEditBook({
       id: null,
@@ -303,15 +233,27 @@ const Cataloging = () => {
       notesArea: '',
       subjects: '',
       copies: '',
-      available: '',
-      status: '',
-      year: '',
     })
+    
+    fetchBooks()
+  } catch (err) {
+    console.error('Error updating book:', err)
+    setError('Failed to update book. Please try again.')
   }
+}
 
-  const handleViewBook = (book) => {
-    setSelectedBook(book)
-    setIsViewModalOpen(true)
+  const handleViewBook = async (book) => {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await axios.get(`${API_URL}/books/${book.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setSelectedBook(response.data)
+      setIsViewModalOpen(true)
+    } catch (err) {
+      console.error('Error fetching book details:', err)
+      setError('Failed to load book details.')
+    }
   }
 
   const handleCloseViewModal = () => {
@@ -329,7 +271,14 @@ const Cataloging = () => {
         <p className="text-gray-600">Manage and organize your library collection</p>
       </div>
 
-      {/* Stats Cards - Now Horizontal */}
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800 text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Stats Cards */}
       <StatsOverview books={books} />
 
       {/* Search and Filter Controls */}
@@ -343,30 +292,65 @@ const Cataloging = () => {
         onArchiveClick={() => setIsArchivesOpen(true)}
       />
 
-      {/* Books Table */}
-      <BooksTable
-        books={filteredBooks}
-        onArchive={handleArchiveBook}
-        onEdit={handleEditBook}
-        onView={handleViewBook}
-      />
+      {/* Loading State */}
+      {loading ? (
+        <div className="bg-white rounded-xl shadow-md p-8 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-gray-600">Loading books...</p>
+        </div>
+      ) : (
+        <>
+          {/* Books Table */}
+          <BooksTable
+            books={books}
+            onEdit={handleEditBook}
+            onView={handleViewBook}
+            onDelete={handleDeleteBook}
+            onArchive={handleArchiveBook}
+          />
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              <span className="px-4 py-2 text-gray-700">
+                Page {currentPage} of {totalPages}
+              </span>
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Add Book Modal */}
       <AddBookModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleAddBook}
-        newBook={newBook}
-        setNewBook={setNewBook}
-        categories={categories}
+        onBookAdded={handleBookAdded}
       />
 
+      {/* View Book Modal */}
       <ViewBookModal
         isOpen={isViewModalOpen}
         onClose={handleCloseViewModal}
         book={selectedBook}
       />
 
+      {/* Edit Book Modal */}
       <EditBookModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -376,11 +360,11 @@ const Cataloging = () => {
         categories={categories}
       />
 
+      {/* Archives Modal */}
       <ArchivesModal
         isOpen={isArchivesOpen}
         onClose={() => setIsArchivesOpen(false)}
-        archivedBooks={archivedBooks}
-        onRestore={handleRestoreBook}
+        onRestore={handleUnarchiveBook}
       />
     </div>
   )

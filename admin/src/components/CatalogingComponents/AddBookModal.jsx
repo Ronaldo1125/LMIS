@@ -1,297 +1,187 @@
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { useState } from 'react'
+import axios from 'axios'
+import ModalHeader from './AddBookModal/ModalHeader'
+import ErrorAlert from './AddBookModal/ErrorAlert'
+import BookFormFields from './AddBookModal/BookFormFields'
+import FormActions from './AddBookModal/FormActions'
+import FileUploadSection from './AddBookModal/FileUploadSection'
+import { useBookForm } from './AddBookModal/UseBookForm'
 
-const AddBookModal = ({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  newBook, 
-  setNewBook, 
-  categories 
-}) => {
-  if (!isOpen) return null
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    onSubmit(e)
+const AddBookModal = ({ isOpen, onClose, onBookAdded }) => {
+  const {
+    categories,
+    loading,
+    error,
+    formData,
+    setFormData,
+    handleSubmit
+  } = useBookForm(isOpen, onClose, onBookAdded)
+
+  const [selectedFiles, setSelectedFiles] = useState([])
+  const [uploadError, setUploadError] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files)
+    
+    // Validate file types
+    const allowedTypes = [
+      'application/pdf',
+      'application/epub+zip',
+      'application/x-mobipocket-ebook',
+      'application/vnd.amazon.ebook',
+      'image/vnd.djvu',
+      'image/x-djvu'
+    ]
+    
+    const allowedExtensions = ['.pdf', '.epub', '.mobi', '.azw3', '.djvu']
+    
+    const invalidFiles = files.filter(file => {
+      const hasValidMime = allowedTypes.includes(file.type)
+      const hasValidExt = allowedExtensions.some(ext => 
+        file.name.toLowerCase().endsWith(ext)
+      )
+      return !hasValidMime && !hasValidExt
+    })
+    
+    if (invalidFiles.length > 0) {
+      setUploadError('Invalid file type. Only PDF, EPUB, MOBI, AZW3, and DJVU files are allowed.')
+      return
+    }
+
+    // Validate file size (100MB max)
+    const maxSize = 100 * 1024 * 1024
+    const oversizedFiles = files.filter(file => file.size > maxSize)
+    
+    if (oversizedFiles.length > 0) {
+      setUploadError(`File size exceeds 100MB limit: ${oversizedFiles[0].name}`)
+      return
+    }
+
+    // Validate max 5 files
+    if (files.length > 5) {
+      setUploadError('Maximum 5 files allowed per upload.')
+      return
+    }
+
+    setUploadError('')
+    setSelectedFiles(files)
   }
+
+  // Remove selected file
+  const handleRemoveFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index))
+    setUploadError('')
+  }
+
+  // Enhanced submit handler with file upload
+  const handleSubmitWithFiles = async (e) => {
+    e.preventDefault()
+    
+    try {
+      // First, submit the book form and get the bookId
+      const bookId = await handleSubmit(e)
+      
+      if (!bookId) {
+        // Book creation failed, error is already set in useBookForm
+        return
+      }
+
+      // If files are selected, upload them
+      if (selectedFiles.length > 0) {
+        setIsUploading(true)
+        setUploadError('')
+
+        const formData = new FormData()
+        selectedFiles.forEach(file => {
+          formData.append('files', file)
+        })
+        formData.append('setPrimary', 'true') // Set first file as primary
+
+        const token = localStorage.getItem('authToken')
+        
+        try {
+          const response = await axios.post(
+            `${API_URL}/uploads/${bookId}`,
+            formData,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          )
+
+          console.log('Files uploaded successfully:', response.data)
+        } catch (uploadErr) {
+          console.error('Error uploading files:', uploadErr)
+          setUploadError(
+            uploadErr.response?.data?.message || 
+            'Book created but file upload failed. You can add files later.'
+          )
+          // Don't return here - still want to close modal and refresh
+        } finally {
+          setIsUploading(false)
+        }
+      }
+
+      // Reset files
+      setSelectedFiles([])
+      setUploadError('')
+      
+      // Close modal
+      onClose()
+      
+      // Trigger refresh
+      if (onBookAdded) {
+        onBookAdded()
+      }
+      
+    } catch (err) {
+      console.error('Error in form submission:', err)
+      // Error is already handled in useBookForm
+    }
+  }
+
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <h2 className="text-2xl font-bold" style={{ color: 'var(--dark-blue-1)' }}>
-            Add New Book
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <XMarkIcon className="w-6 h-6 text-gray-600" />
-          </button>
-        </div>
+        <ModalHeader 
+          title="Add New Book" 
+          onClose={onClose} 
+          disabled={loading || isUploading} 
+        />
 
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category *
-              </label>
-              <select
-                required
-                value={newBook.category}
-                onChange={(e) => setNewBook({...newBook, category: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-              >
-                <option value="">Select category</option>
-                {categories.filter(cat => cat !== 'all').map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
+        <form onSubmit={handleSubmitWithFiles} className="p-6">
+          <ErrorAlert message={error} />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Call Number
-              </label>
-              <input
-                type="text"
-                value={newBook.callNumber}
-                onChange={(e) => setNewBook({...newBook, callNumber: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="Enter call number"
-              />
-            </div>
+          <BookFormFields
+            formData={formData}
+            onChange={setFormData}
+            categories={categories}
+            loading={loading || isUploading}
+          />
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title *
-              </label>
-              <input
-                type="text"
-                required
-                value={newBook.title}
-                onChange={(e) => setNewBook({...newBook, title: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="Enter book title"
-              />
-            </div>
+          {/* File Upload Section */}
+          <FileUploadSection
+            selectedFiles={selectedFiles}
+            onFileChange={handleFileChange}
+            onRemoveFile={handleRemoveFile}
+            error={uploadError}
+            loading={loading || isUploading}
+          />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Author *
-              </label>
-              <input
-                type="text"
-                required
-                value={newBook.author}
-                onChange={(e) => setNewBook({...newBook, author: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="Author name"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Editor
-              </label>
-              <input
-                type="text"
-                value={newBook.editor}
-                onChange={(e) => setNewBook({...newBook, editor: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="Editor name"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Edition
-              </label>
-              <input
-                type="text"
-                value={newBook.edition}
-                onChange={(e) => setNewBook({...newBook, edition: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="e.g., 2nd ed."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Publication
-              </label>
-              <input
-                type="text"
-                value={newBook.publication}
-                onChange={(e) => setNewBook({...newBook, publication: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="Place of publication"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Publisher *
-              </label>
-              <input
-                type="text"
-                required
-                value={newBook.publisher}
-                onChange={(e) => setNewBook({...newBook, publisher: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="Publisher name"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Date of Publication
-              </label>
-              <input
-                type="date"
-                value={newBook.dateOfPublication}
-                onChange={(e) => setNewBook({...newBook, dateOfPublication: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Extent of Item
-              </label>
-              <input
-                type="text"
-                value={newBook.extent}
-                onChange={(e) => setNewBook({...newBook, extent: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="e.g., 120 pages"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Dimensions
-              </label>
-              <input
-                type="text"
-                value={newBook.dimensions}
-                onChange={(e) => setNewBook({...newBook, dimensions: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="e.g., 21 cm"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Other Physical Details
-              </label>
-              <textarea
-                rows="2"
-                value={newBook.otherPhysicalDetails}
-                onChange={(e) => setNewBook({...newBook, otherPhysicalDetails: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="e.g., illustrations, maps"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Accompanying Material
-              </label>
-              <textarea
-                rows="2"
-                value={newBook.accompanyingMaterial}
-                onChange={(e) => setNewBook({...newBook, accompanyingMaterial: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="e.g., 1 CD-ROM, 1 map"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ISBN *
-              </label>
-              <input
-                type="text"
-                required
-                value={newBook.isbn}
-                onChange={(e) => setNewBook({...newBook, isbn: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="978-X-XXX-XXXXX-X"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ISSN
-              </label>
-              <input
-                type="text"
-                value={newBook.issn}
-                onChange={(e) => setNewBook({...newBook, issn: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="XXXX-XXXX"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Notes Area
-              </label>
-              <textarea
-                rows="3"
-                value={newBook.notesArea}
-                onChange={(e) => setNewBook({...newBook, notesArea: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="Additional notes"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Subjects
-              </label>
-              <textarea
-                rows="2"
-                value={newBook.subjects}
-                onChange={(e) => setNewBook({...newBook, subjects: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="Comma-separated subjects"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Number of Copies *
-              </label>
-              <input
-                type="number"
-                required
-                value={newBook.copies}
-                onChange={(e) => setNewBook({...newBook, copies: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
-                placeholder="0"
-                min="1"
-              />
-            </div>
-          </div>
-
-          <div className="mt-8 flex gap-4 justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
-              style={{ backgroundColor: 'var(--secondary-3-medium)' }}
-            >
-              Add Book
-            </button>
-          </div>
+          <FormActions
+            onCancel={onClose}
+            loading={loading || isUploading}
+            submitText={isUploading ? 'Uploading Files...' : 'Add Book'}
+            loadingText={isUploading ? 'Uploading Files...' : 'Adding...'}
+          />
         </form>
       </div>
     </div>

@@ -1,10 +1,11 @@
 import {
   BookOpenIcon,
   PencilSquareIcon,
+  TrashIcon,
   ArchiveBoxIcon
 } from '@heroicons/react/24/outline'
 
-const BooksTable = ({ books, onArchive, onEdit, onView }) => {
+const BooksTable = ({ books, onEdit, onView, onDelete, onArchive }) => {
   const renderValue = (value) => {
     if (value === null || value === undefined || value === '') return '—'
     return value
@@ -58,10 +59,15 @@ const BooksTable = ({ books, onArchive, onEdit, onView }) => {
                     {renderValue(book.category)}
                   </span>
                 </td>
+<<<<<<< HEAD
                 <td className="px-6 py-4 text-gray-700 border-r border-gray-200">
                   {renderValue(book.callNumber)}
                 </td>
                 <td className="px-6 py-4 max-w-[360px] border-r border-gray-200">
+=======
+                <td className="px-6 py-4 text-gray-700">{renderValue(book.call_number)}</td>
+                <td className="px-6 py-4 max-w-[360px]">
+>>>>>>> 163555e1786336a3885e06ed4541671fd2e67ec0
                   <div className="font-medium truncate" style={{ color: 'var(--dark-blue-1)' }}>
                     {renderValue(book.title)}
                   </div>
@@ -90,12 +96,27 @@ const BooksTable = ({ books, onArchive, onEdit, onView }) => {
                     <button
                       onClick={(event) => {
                         event.stopPropagation()
-                        onArchive && onArchive(book.id)
+                        const reason = window.prompt(`Why are you archiving "${book.title}"?\n(Optional - press OK to skip)`)
+                        if (reason !== null) { // User didn't cancel
+                          onArchive && onArchive(book.id, reason || undefined)
+                        }
                       }}
                       className="p-2 text-gray-500 hover:text-amber-600 rounded-sm transition-colors bg-transparent hover:bg-transparent"
                       title="Archive"
                     >
                       <ArchiveBoxIcon className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        if (window.confirm(`Are you sure you want to permanently delete "${book.title}"? This action cannot be undone.`)) {
+                          onDelete && onDelete(book.id)
+                        }
+                      }}
+                      className="p-2 text-gray-500 hover:text-red-600 rounded-lg transition-colors bg-transparent hover:bg-transparent"
+                      title="Delete"
+                    >
+                      <TrashIcon className="w-5 h-5" />
                     </button>
                   </div>
                 </td>

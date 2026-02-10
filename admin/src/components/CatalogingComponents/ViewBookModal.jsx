@@ -8,29 +8,26 @@ const ViewBookModal = ({ isOpen, onClose, book }) => {
     return value
   }
 
-  const details = [
-    { label: 'Category', value: book.category },
-    { label: 'Call Number', value: book.callNumber },
-    { label: 'Title', value: book.title },
-    { label: 'Author', value: book.author },
-    { label: 'Editor', value: book.editor },
-    { label: 'Edition', value: book.edition },
-    { label: 'Publication', value: book.publication },
-    { label: 'Publisher', value: book.publisher },
-    { label: 'Date of Publication', value: book.dateOfPublication },
-    { label: 'Year', value: book.year },
-    { label: 'ISBN', value: book.isbn },
-    { label: 'ISSN', value: book.issn },
-    { label: 'Extent of Item', value: book.extent },
-    { label: 'Dimensions', value: book.dimensions },
-    { label: 'Other Physical Details', value: book.otherPhysicalDetails },
-    { label: 'Accompanying Material', value: book.accompanyingMaterial },
-    { label: 'Notes Area', value: book.notesArea },
-    { label: 'Subjects', value: book.subjects },
-    { label: 'Copies', value: book.copies },
-    { label: 'Available', value: book.available },
-    { label: 'Status', value: book.status },
-  ]
+const details = [
+  { label: 'Category', value: book.category },
+  { label: 'Call Number', value: book.call_number },
+  { label: 'Title', value: book.title },
+  { label: 'Author', value: book.author },
+  { label: 'Editor', value: book.editor },
+  { label: 'Edition', value: book.edition },
+  { label: 'Publication', value: book.publication },
+  { label: 'Publisher', value: book.publisher },
+  { label: 'Date of Publication', value: book.date_of_publication },
+  { label: 'Extent of Item', value: book.extent },
+  { label: 'Dimensions', value: book.dimensions },
+  { label: 'Other Physical Details', value: book.other_physical_details },
+  { label: 'Accompanying Material', value: book.accompanying_material },
+  { label: 'ISBN', value: book.isbn },
+  { label: 'ISSN', value: book.issn },
+  { label: 'Notes Area', value: book.notes_area },
+  { label: 'Subjects', value: book.subjects },
+  { label: 'Copies', value: book.copies },
+]
 
   return (
     <div

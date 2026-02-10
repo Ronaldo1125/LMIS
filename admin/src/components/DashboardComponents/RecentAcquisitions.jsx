@@ -91,7 +91,6 @@ const RecentAcquisitions = () => {
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <SparklesIcon className="w-5 h-5" style={{ color: 'var(--secondary-1-medium)' }} />
         <h2 className="text-2xl font-bold" style={{ color: 'var(--dark-blue-1)' }}>
           Recent Acquisitions
         </h2>
@@ -137,7 +136,7 @@ const RecentAcquisitions = () => {
           style={{ background: '#64748b' }}
           onClick={() => setIsModalOpen(true)}
         >
-          View All Acquisitions
+          View More
         </button>
       </div>
 

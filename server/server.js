@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -16,6 +17,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Serve uploaded files statically (optional - if you want direct access)
+// Note: The download route handles authentication, so this is optional
+// If you want public access to files, uncomment the line below:
+// app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 // Routes
 app.get('/api', (req, res) => {
   res.json({ message: 'Library Management System API v1.0' });
@@ -26,6 +32,14 @@ app.use('/api/auth', authRoutes);
 
 const adminpanelUsersRoutes = require('./routes/adminpanelUsers');
 app.use('/api/adminpanel-users', adminpanelUsersRoutes);
+
+// Books routes
+const booksRoutes = require('./routes/books');
+app.use('/api/books', booksRoutes);
+
+// Uploads routes - handles file upload/download with authentication
+const uploadsRoutes = require('./routes/uploads');
+app.use('/api/uploads', uploadsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
