@@ -24,14 +24,21 @@ const CollectionByCategory = () => {
       icon: DocumentTextIcon, 
       count: 389, 
       color: '#64748b',
-      subcategories: ['Annual Reports', 'Special Reports']
+      subcategories: [
+        { name: 'Annual Reports', count: 120 },
+        { name: 'Special Reports', count: 45 }
+      ]
     },
     { 
       name: 'Periodicals', 
       icon: NewspaperIcon, 
       count: 542, 
       color: 'var(--secondary-1-medium)',
-      subcategories: ['Magazines', 'Newspapers', 'Journals']
+      subcategories: [
+        { name: 'Magazines', count: 200 },
+        { name: 'Newspapers', count: 180 },
+        { name: 'Journals', count: 162 }
+      ]
     },
     { name: 'Sourcebook', icon: ArchiveBoxIcon, count: 210, color: 'var(--secondary-3-medium)' },
     { name: 'Thesis/Research papers', icon: AcademicCapIcon, count: 156, color: 'var(--dark-blue-1)' },
@@ -42,7 +49,10 @@ const CollectionByCategory = () => {
       icon: BookOpenIcon, 
       count: 320, 
       color: 'var(--secondary-3-medium)',
-      subcategories: ['Encyclopedia', 'Atlas']
+      subcategories: [
+        { name: 'Encyclopedia', count: 150 },
+        { name: 'Atlas', count: 170 }
+      ]
     }
   ]
 
@@ -59,7 +69,7 @@ const CollectionByCategory = () => {
         Collection by Category
       </h2>
 
-      {/* Front view cards (summary only) */}
+      {/* Front view cards */}
       <div className="space-y-3 flex-grow">
         {categories.slice(0,4).map((cat, index) => {
           const Icon = cat.icon
@@ -128,7 +138,7 @@ const CollectionByCategory = () => {
               </button>
             </div>
 
-            {/* Category List (vertical, expandable) */}
+            {/* Category List */}
             <div className="p-4 space-y-4">
               {categories.map((cat) => {
                 const Icon = cat.icon
@@ -154,14 +164,14 @@ const CollectionByCategory = () => {
                       )}
                     </button>
 
-                    {/* Subcategories */}
+                    {/* Subcategories with item counts */}
                     {hasSubcategories && isExpanded && (
                       <div className="px-6 pb-3 bg-gray-50 border-t">
                         <ul className="space-y-2 mt-2 text-sm text-gray-700">
                           {cat.subcategories.map((sub) => (
-                            <li key={sub} className="flex items-center gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                              {sub}
+                            <li key={sub.name} className="flex items-center justify-between">
+                              <span>{sub.name}</span>
+                              <span className="text-xs text-gray-500">{sub.count} items</span>
                             </li>
                           ))}
                         </ul>
