@@ -89,7 +89,7 @@ const logUploadAction = async (uploadId, action, userId, ipAddress, userAgent, d
 };
 
 // Upload file(s) for a book (Admin only)
-router.post('/:bookId', authMiddleware, roleMiddleware('admin'), upload.array('files', 5), async (req, res) => {
+router.post('/:bookId', authMiddleware, roleMiddleware('admin','librarian'), upload.array('files', 5), async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
@@ -308,7 +308,7 @@ router.get('/:id/download', authMiddleware, async (req, res) => {
 });
 
 // Set primary file (Admin only)
-router.patch('/:id/set-primary', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+router.patch('/:id/set-primary', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
@@ -352,7 +352,7 @@ router.patch('/:id/set-primary', authMiddleware, roleMiddleware('admin'), async 
   }
 });
 // Delete ALL uploads for a book (Admin only) — called when deleting a book
-router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
   const connection = await pool.getConnection();
 
   try {
@@ -411,7 +411,7 @@ router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin'), async (r
 });
 
 // Delete upload (Admin only)
-router.delete('/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+router.delete('/:id', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
