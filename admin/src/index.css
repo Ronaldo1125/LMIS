@@ -97,19 +97,3 @@ button:focus,
 button:focus-visible {
   outline: 4px auto var(--secondary-2-light);
 }
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: var(--dark-blue-4);
-    background-color: #9f9d9d;
-  }
-  a:hover {
-    color: var(--dark-blue-2);
-  }
-  button {
-    background-color: var(--dark-blue-1);
-  }
-  button:hover {
-    background-color: var(--dark-blue-3);
-  }
-}
