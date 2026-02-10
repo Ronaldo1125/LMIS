@@ -1,84 +1,83 @@
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import React from 'react'
+import { BookOpenIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
 
-const AcquisitionDetailsModal = ({ isOpen, onClose, acquisition }) => {
-  if (!isOpen || !acquisition) return null
+const BookDetailsModal = ({ book, onClose }) => {
+  if (!book) return null
 
-  const renderValue = (value) => {
-    if (!value || value === '') return '—'
-    return value
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
   }
 
-  const details = [
-    { label: 'Category', value: acquisition.category },
-    { label: 'Call Number', value: acquisition.callNumber },
-    { label: 'Title', value: acquisition.title },
-    { label: 'Author', value: acquisition.author },
-    { label: 'Publisher', value: acquisition.publisher },
-    { label: 'Year', value: acquisition.year },
-    { label: 'ISBN', value: acquisition.isbn },
-    { label: 'Copies', value: acquisition.copies },
-    { label: 'Available', value: acquisition.available },
-    { label: 'Status', value: acquisition.status },
-  ]
-
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-xl shadow-lg max-w-md w-full max-h-[85vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl overflow-hidden">
+        
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between rounded-t-xl">
-          <h2 className="text-lg font-bold text-[#154A9A]">Book Details</h2>
+        <div className="flex justify-between items-center px-6 py-4 border-b-4 border-[#0F61F7] bg-blue-50">
+          <h2 className="text-lg font-semibold text-[#154A9A] uppercase tracking-wide">
+            Book Details
+          </h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Close"
+            className="text-[#154A9A] hover:text-[#0F61F7] transition-colors text-xl font-bold"
           >
-            <XMarkIcon className="w-5 h-5 text-gray-600" />
+            ✕
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-4">
-          {details.map((item) => (
-            <div key={item.label}>
-              <p className="text-xs uppercase tracking-wide text-gray-400 mb-0.5">
-                {item.label}
-              </p>
-              <p className="text-sm text-gray-700">{renderValue(item.value)}</p>
+        <div className="p-6 space-y-8">
+          {/* Book Information */}
+          <div>
+            <h3 className="text-md font-bold text-[#154A9A] mb-3 flex items-center gap-2">
+              📘 Book Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+              <p><strong>Title:</strong> {book.title}</p>
+              <p><strong>Author(s):</strong> {book.author}</p>
+              <p><strong>ISBN:</strong> {book.isbn || 'N/A'}</p>
+              <p><strong>Edition:</strong> {book.edition || 'N/A'}</p>
+              <p><strong>Publisher:</strong> {book.publisher || 'N/A'}</p>
+              <p><strong>Year of Publication:</strong> {book.year || 'N/A'}</p>
+              <p><strong>Subject / Category:</strong> {book.category || 'N/A'}</p>
+              <p><strong>Language:</strong> {book.language || 'N/A'}</p>
             </div>
-          ))}
+          </div>
+
+          {/* Acquisition Details */}
+          <div>
+            <h3 className="text-md font-bold text-[#154A9A] mb-3 flex items-center gap-2">
+              📥 Acquisition Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+              <p><strong>Method:</strong> {book.acquisitionMethod || 'N/A'}</p>
+              <p><strong>Supplier / Donor:</strong> {book.supplier || 'N/A'}</p>
+              <p><strong>Request Source:</strong> {book.requestSource || 'N/A'}</p>
+              <p><strong>Request Date:</strong> {formatDate(book.requestDate)}</p>
+              <p><strong>Approval Status:</strong> {book.approvalStatus || 'Pending'}</p>
+              <p className="flex items-center gap-1">
+                <CalendarDaysIcon className="w-4 h-4 text-[#0F61F7]" />
+                <span><strong>Created:</strong> {formatDate(book.createdAt || book.dateAdded)}</span>
+              </p>
+            </div>
+          </div>
 
           {/* Description */}
-          {acquisition.description && (
-            <div className="mt-4">
-              <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">
-                Description
-              </p>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {acquisition.description}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-4 py-3 flex justify-end border-t border-gray-200">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-          >
-            Close
-          </button>
+          <div className="bg-blue-50 border-l-4 border-[#0F61F7] p-4 rounded-lg shadow-sm">
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {book.description || 'No description available.'}
+            </p>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-export default AcquisitionDetailsModal
+export default BookDetailsModal
