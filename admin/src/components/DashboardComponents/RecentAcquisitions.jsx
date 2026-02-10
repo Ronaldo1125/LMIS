@@ -92,9 +92,9 @@ const RecentAcquisitions = () => {
         Recent Acquisitions
       </h2>
 
-      {/* Front View */}
+      {/* Preview — EXACTLY SAME (NO IMAGE, NO SIZE CHANGE) */}
       <div className="space-y-4 flex-grow">
-        {recentAcquisitions.slice(0, 3).map((item, index) => (
+        {recentAcquisitions.slice(0, 4).map((item, index) => (
           <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
             <h3 className="text-sm font-semibold text-gray-900">
               {item.title}
@@ -114,7 +114,7 @@ const RecentAcquisitions = () => {
         View More
       </button>
 
-      {/* Modal */}
+      {/* Modal — SAME SIZE */}
       {isModalOpen && (
         <div
           className={`fixed inset-0 flex items-center justify-center z-50 transition-opacity duration-400 ${
@@ -131,10 +131,9 @@ const RecentAcquisitions = () => {
                 ? 'scale-100 opacity-100 translate-y-0'
                 : 'scale-50 opacity-0 translate-y-10'
             }`}
-            style={{
-              transformOrigin: 'bottom center'
-            }}
+            style={{ transformOrigin: 'bottom center' }}
           >
+
             {/* Header */}
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
               <h2 className="text-xl font-bold" style={{ color: 'var(--dark-blue-1)' }}>
@@ -153,39 +152,48 @@ const RecentAcquisitions = () => {
               {recentAcquisitions.map((item, index) => (
                 <div
                   key={index}
-                  className="p-4 rounded-lg border flex flex-col gap-2"
+                  className="p-4 rounded-lg border flex gap-4"
                   style={{ borderColor: item.color }}
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">
-                        {item.title}
-                      </h3>
-                      <p className="text-xs text-gray-600 italic">
-                        by {item.author}
-                      </p>
-                    </div>
-                    <span
-                      className="px-2 py-1 text-xs font-semibold rounded uppercase"
-                      style={{
-                        background: `${item.color}20`,
-                        color: item.color
-                      }}
-                    >
-                      {item.type}
-                    </span>
+                  {/* Image Placeholder — ONLY IN MODAL */}
+                  <div className="w-20 h-24 bg-gray-200 rounded-md flex-shrink-0 flex items-center justify-center text-xs text-gray-500">
+                    Image
                   </div>
 
-                  <div className="flex justify-between items-center border-t pt-2">
-                    <span className="text-xs text-gray-500">
-                      {item.category}
-                    </span>
-                    <span
-                      className="text-xs font-semibold"
-                      style={{ color: item.color }}
-                    >
-                      {formatDate(item.date)}
-                    </span>
+                  {/* Text Content */}
+                  <div className="flex-1 flex flex-col gap-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900">
+                          {item.title}
+                        </h3>
+                        <p className="text-xs text-gray-600 italic">
+                          by {item.author}
+                        </p>
+                      </div>
+
+                      <span
+                        className="px-2 py-1 text-xs font-semibold rounded uppercase"
+                        style={{
+                          background: `${item.color}20`,
+                          color: item.color
+                        }}
+                      >
+                        {item.type}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center border-t pt-2">
+                      <span className="text-xs text-gray-500">
+                        {item.category}
+                      </span>
+                      <span
+                        className="text-xs font-semibold"
+                        style={{ color: item.color }}
+                      >
+                        {formatDate(item.date)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -201,6 +209,7 @@ const RecentAcquisitions = () => {
                 Close
               </button>
             </div>
+
           </div>
         </div>
       )}

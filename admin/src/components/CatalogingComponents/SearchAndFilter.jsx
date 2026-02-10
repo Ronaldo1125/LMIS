@@ -3,7 +3,8 @@ import {
   PlusIcon,
   FunnelIcon,
   XMarkIcon,
-  ArchiveBoxIcon
+  ArchiveBoxIcon,
+  ArrowUpTrayIcon
 } from '@heroicons/react/24/outline'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -14,7 +15,8 @@ const SearchAndFilter = ({
   setSelectedCategory,
   categories,
   onAddClick,
-  onArchiveClick
+  onArchiveClick,
+  onImportClick
 }) => {
   const searchInputRef = useRef(null)
   const dropdownRef = useRef(null)
@@ -28,8 +30,8 @@ const SearchAndFilter = ({
   const searchPlaceholder = useMemo(() => {
     const placeholders = [
       'Search by title, author, or ISBN...',
-      'Try “climate change”, “atlas”, or “policy”...',
-      'Looking for a phrase? Use quotes like “water scarcity”.'
+      'Try "climate change", "atlas", or "policy"...',
+      'Looking for a phrase? Use quotes like "water scarcity".'
     ]
     return placeholders[new Date().getDate() % placeholders.length]
   }, [])
@@ -261,6 +263,8 @@ const SearchAndFilter = ({
 
         {/* Actions */}
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+
+          {/* Archives */}
           <button
             onClick={onArchiveClick}
             className="
@@ -278,6 +282,25 @@ const SearchAndFilter = ({
             <span className="font-medium">Archives</span>
           </button>
 
+          {/* Import Excel — sits between Archives and Add, visually distinct */}
+          <button
+            onClick={onImportClick}
+            className="
+              flex items-center gap-2 px-6 py-2
+              text-emerald-700 bg-white
+              border border-emerald-300 shadow-sm
+              hover:bg-emerald-50 hover:border-emerald-400 hover:shadow-md
+              transition-all
+              w-full md:w-auto justify-center
+              focus:outline-none focus:ring-0
+            "
+            title="Import books from Excel"
+          >
+            <ArrowUpTrayIcon className="w-5 h-5 text-emerald-600" />
+            <span className="font-medium">Import Excel</span>
+          </button>
+
+          {/* Add New Book */}
           <button
             onClick={onAddClick}
             className="
@@ -293,6 +316,7 @@ const SearchAndFilter = ({
             <PlusIcon className="w-5 h-5 text-gray-700" />
             <span className="font-medium">Add New Book</span>
           </button>
+
         </div>
 
       </div>
@@ -301,4 +325,3 @@ const SearchAndFilter = ({
 }
 
 export default SearchAndFilter
-
