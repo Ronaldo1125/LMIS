@@ -57,7 +57,7 @@ function SearchBar({
   }, [])
 
   return (
-    <div className="bg-white rounded-2xl shadow-md p-6 mb-8 border border-gray-100">
+    <div className="bg-white shadow-md p-6 mb-8 border border-gray-100">
       <div className="flex flex-col lg:flex-row gap-4">
         {/* Search Input */}
         <div className="flex-1 relative">
@@ -71,7 +71,7 @@ function SearchBar({
             placeholder="Search by name or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-0 focus:border-gray-300 transition-all"
+            className="w-full pl-12 pr-10 py-3 border border-gray-300 focus:outline-none focus:ring-0 focus:border-gray-300 transition-all"
             style={{ fontFamily: '"Inter", sans-serif' }}
           />
           {searchQuery && (
@@ -99,7 +99,7 @@ function SearchBar({
               setIsRoleOpen(!isRoleOpen)
               setIsStatusOpen(false)
             }}
-            className="pl-10 pr-8 py-3 border border-gray-300 rounded-xl bg-white hover:bg-white focus:outline-none focus:ring-0 focus:border-gray-300 active:bg-white flex items-center justify-between transition-all"
+            className="pl-10 pr-8 py-3 border border-gray-300 bg-white hover:bg-white focus:outline-none focus:ring-0 focus:border-gray-300 active:bg-white flex items-center justify-between transition-all"
             style={{ fontFamily: '"Inter", sans-serif', minWidth: '150px' }}
             aria-haspopup="listbox"
             aria-expanded={isRoleOpen}
@@ -111,7 +111,7 @@ function SearchBar({
           </button>
 
           {isRoleOpen && (
-            <div className="absolute z-20 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
+            <div className="absolute z-20 mt-2 w-full border border-gray-200 bg-white shadow-lg">
               <div className="max-h-64 overflow-y-auto py-2 text-sm">
                 {roles.map(role => (
                   <button
@@ -140,7 +140,7 @@ function SearchBar({
               setIsStatusOpen(!isStatusOpen)
               setIsRoleOpen(false)
             }}
-            className="pl-4 pr-8 py-3 border border-gray-300 rounded-xl bg-white hover:bg-white focus:outline-none focus:ring-0 focus:border-gray-300 active:bg-white flex items-center justify-between transition-all"
+            className="pl-4 pr-8 py-3 border border-gray-300 bg-white hover:bg-white focus:outline-none focus:ring-0 focus:border-gray-300 active:bg-white flex items-center justify-between transition-all"
             style={{ fontFamily: '"Inter", sans-serif', minWidth: '150px' }}
             aria-haspopup="listbox"
             aria-expanded={isStatusOpen}
@@ -152,7 +152,7 @@ function SearchBar({
           </button>
 
           {isStatusOpen && (
-            <div className="absolute z-20 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
+            <div className="absolute z-20 mt-2 w-full border border-gray-200 bg-white shadow-lg">
               <div className="max-h-64 overflow-y-auto py-2 text-sm">
                 {statuses.map(status => (
                   <button
@@ -177,7 +177,7 @@ function SearchBar({
         <div className="flex gap-3">
           <button
             onClick={onAddStaff}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg focus:outline-none focus:ring-0"
+            className="flex items-center gap-2 px-5 py-3 font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg focus:outline-none focus:ring-0"
             style={{
               backgroundColor: 'var(--dark-blue-1)',
               color: 'var(--white)',
@@ -191,7 +191,7 @@ function SearchBar({
 
           <button
             onClick={onAddLibrarian}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg focus:outline-none focus:ring-0"
+            className="flex items-center gap-2 px-5 py-3 font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg focus:outline-none focus:ring-0"
             style={{
               backgroundColor: 'var(--secondary-1-medium)',
               color: 'var(--white)',
@@ -215,3 +215,4 @@ function SearchBar({
 }
 
 export default SearchBar
+

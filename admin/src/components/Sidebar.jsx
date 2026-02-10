@@ -4,7 +4,6 @@ import {
   DocumentPlusIcon,
   UsersIcon,
   ShieldCheckIcon,
-  Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   ClipboardDocumentCheckIcon,
   ChevronDoubleLeftIcon,
@@ -22,9 +21,8 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
     { id: 'security', label: 'Security', icon: ShieldCheckIcon },
   ]
 
-  // Footer items (Settings + Logout)
+  // Footer items (only Logout now)
   const footerItems = [
-    { id: 'settings', label: 'Settings', icon: Cog6ToothIcon },
     { id: 'logout', label: 'Logout', icon: ArrowRightOnRectangleIcon },
   ]
 

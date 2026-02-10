@@ -6,9 +6,9 @@ import {
   ArchiveBoxIcon, 
   AcademicCapIcon, 
   ScaleIcon, 
-  BookmarkIcon 
+  BookmarkIcon, 
+  XMarkIcon 
 } from '@heroicons/react/24/outline'
-import { XMarkIcon } from '@heroicons/react/24/outline'
 
 const CollectionByCategory = () => {
   const [hoveredCategory, setHoveredCategory] = useState(null)
@@ -45,6 +45,18 @@ const CollectionByCategory = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-full">
+      <style>{`
+        @keyframes slideInRight {
+          from { opacity: 0; transform: translateX(30px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .category-item {
+          animation: slideInRight 0.6s ease-out forwards;
+          animation-delay: calc(var(--index) * 0.1s + 0.2s);
+          opacity: 0;
+        }
+      `}</style>
+
       <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--dark-blue-1)' }}>
         Collection by Category
       </h2>
@@ -57,8 +69,9 @@ const CollectionByCategory = () => {
           return (
             <div
               key={cat.name}
-              className="p-4 rounded-lg shadow-sm cursor-pointer transition-all"
+              className="category-item p-4 rounded-lg shadow-sm cursor-pointer transition-all"
               style={{
+                '--index': index,
                 background: isHovered ? `${cat.color}15` : '#fff',
                 borderLeft: `4px solid ${cat.color}`,
                 transform: isHovered ? 'translateX(6px)' : 'translateX(0)'
@@ -101,6 +114,8 @@ const CollectionByCategory = () => {
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
           onClick={() => setIsModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
         >
           <div 
             className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-y-auto"
@@ -121,19 +136,23 @@ const CollectionByCategory = () => {
               {categories.map((cat) => {
                 const Icon = cat.icon
                 return (
-                  <div key={cat.name} className="p-4 rounded-lg shadow-sm border flex flex-col gap-2"
-                       style={{ borderColor: cat.color }}>
+                  <div 
+                    key={cat.name} 
+                    className="p-4 rounded-lg shadow-sm border flex flex-col gap-2 hover:bg-gray-50 transition-colors"
+                    style={{ borderColor: cat.color }}
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Icon className="w-5 h-5" style={{ color: cat.color }} />
                         <span className="font-medium text-gray-800">{cat.name}</span>
                       </div>
-                      <span className="px-2 py-1 text-xs font-semibold rounded" 
-                            style={{ background: `${cat.color}20`, color: cat.color }}>
+                      <span 
+                        className="px-2 py-1 text-xs font-semibold rounded"  
+                        style={{ background: `${cat.color}20`, color: cat.color }}
+                      >
                         {cat.count} items
                       </span>
                     </div>
-                    {/* Subcategories */}
                     {cat.subcategories && (
                       <ul className="ml-6 list-disc text-xs text-gray-600 space-y-1">
                         {cat.subcategories.map((sub) => (

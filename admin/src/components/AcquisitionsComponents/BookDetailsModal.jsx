@@ -1,51 +1,79 @@
 import React from 'react'
-import { BookOpenIcon } from '@heroicons/react/24/outline'
+import { BookOpenIcon, CalendarDaysIcon } from '@heroicons/react/24/outline'
 
 const BookDetailsModal = ({ book, onClose }) => {
   if (!book) return null
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  }
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl overflow-hidden">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl overflow-hidden">
+        
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4" style={{ backgroundColor: 'var(--dark-blue-1)' }}>
-          <h2 className="text-lg font-semibold text-white">Book Details</h2>
+        <div className="flex justify-between items-center px-6 py-4 border-b-4 border-[#0F61F7] bg-blue-50">
+          <h2 className="text-lg font-semibold text-[#154A9A] uppercase tracking-wide">
+            Book Details
+          </h2>
           <button
             onClick={onClose}
-            className="text-white hover:text-gray-200 transition-colors"
+            className="text-[#154A9A] hover:text-[#0F61F7] transition-colors text-xl font-bold"
           >
             ✕
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
-          <div className="flex gap-6">
-            <div className="w-32 h-48 rounded-lg overflow-hidden bg-gray-100 shadow">
-              {book.coverImage ? (
-                <img
-                  src={book.coverImage}
-                  alt={`Cover of ${book.title}`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <BookOpenIcon className="w-16 h-16 mx-auto text-gray-300 mt-12" />
-              )}
-            </div>
-
-            <div className="flex-1 space-y-2">
-              <h3 className="text-xl font-bold text-[#154A9A]">{book.title}</h3>
-              <p className="text-gray-700">Author: {book.author}</p>
-              <p className="text-gray-700">Category: {book.category}</p>
-              <p className="text-gray-700">Call Number: {book.callNumber}</p>
-              <p className="text-gray-700">ISBN: {book.isbn}</p>
-              <p className="text-gray-700">Acquisition Date: {book.acquisitionDate}</p>
+        <div className="p-6 space-y-8">
+          {/* Book Information */}
+          <div>
+            <h3 className="text-md font-bold text-[#154A9A] mb-3 flex items-center gap-2">
+              📘 Book Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+              <p><strong>Title:</strong> {book.title}</p>
+              <p><strong>Author(s):</strong> {book.author}</p>
+              <p><strong>ISBN:</strong> {book.isbn || 'N/A'}</p>
+              <p><strong>Edition:</strong> {book.edition || 'N/A'}</p>
+              <p><strong>Publisher:</strong> {book.publisher || 'N/A'}</p>
+              <p><strong>Year of Publication:</strong> {book.year || 'N/A'}</p>
+              <p><strong>Subject / Category:</strong> {book.category || 'N/A'}</p>
+              <p><strong>Language:</strong> {book.language || 'N/A'}</p>
             </div>
           </div>
 
-          <p className="text-gray-600 text-sm leading-relaxed">
-            {book.description || 'No description available.'}
-          </p>
+          {/* Acquisition Details */}
+          <div>
+            <h3 className="text-md font-bold text-[#154A9A] mb-3 flex items-center gap-2">
+              📥 Acquisition Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+              <p><strong>Method:</strong> {book.acquisitionMethod || 'N/A'}</p>
+              <p><strong>Supplier / Donor:</strong> {book.supplier || 'N/A'}</p>
+              <p><strong>Request Source:</strong> {book.requestSource || 'N/A'}</p>
+              <p><strong>Request Date:</strong> {formatDate(book.requestDate)}</p>
+              <p><strong>Approval Status:</strong> {book.approvalStatus || 'Pending'}</p>
+              <p className="flex items-center gap-1">
+                <CalendarDaysIcon className="w-4 h-4 text-[#0F61F7]" />
+                <span><strong>Created:</strong> {formatDate(book.createdAt || book.dateAdded)}</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div className="bg-blue-50 border-l-4 border-[#0F61F7] p-4 rounded-lg shadow-sm">
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {book.description || 'No description available.'}
+            </p>
+          </div>
         </div>
       </div>
     </div>

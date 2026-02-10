@@ -11,36 +11,48 @@ const AccessionsTable = ({ accessions, onArchive, onEdit, onView }) => {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-none shadow-md border border-gray-300 overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full border-collapse">
           <thead style={{ backgroundColor: 'var(--dark-blue-1)' }}>
-            <tr>
+            <tr className="border-b border-gray-300">
               <th
-                className="px-6 py-4 text-left text-sm font-semibold text-white sticky left-0 z-20"
+                className="px-6 py-4 text-left text-sm font-semibold text-white sticky left-0 z-20 border-r border-gray-300"
                 style={{ backgroundColor: 'var(--dark-blue-1)' }}
               >
                 Accession No.
               </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-white min-w-[220px]">Title</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-white">Source</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-white">Date Received</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-white">Qty</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-white">Status</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-white">Actions</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-white border-r border-gray-300 min-w-[220px]">
+                Title
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-white border-r border-gray-300">
+                Source
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-white border-r border-gray-300">
+                Date Received
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-white border-r border-gray-300">
+                Qty
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-white border-r border-gray-300">
+                Status
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-white">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-300">
             {accessions.map((item, index) => (
               <tr
                 key={item.id}
-                className="group hover:bg-gray-50 transition-colors cursor-pointer"
+                className="group hover:bg-gray-100 transition-colors cursor-pointer"
                 style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => onView && onView(item)}
               >
-                <td className="px-6 py-4 sticky left-0 z-10 bg-white group-hover:bg-gray-50">
+                <td className="px-6 py-4 sticky left-0 z-10 bg-white group-hover:bg-gray-100 border-r border-gray-200">
                   <span
-                    className="px-3 py-1 rounded-full text-xs font-medium"
+                    className="px-3 py-1 rounded-sm text-xs font-medium"
                     style={{
                       backgroundColor: 'var(--secondary-3-light)',
                       color: 'var(--dark-blue-1)'
@@ -49,7 +61,7 @@ const AccessionsTable = ({ accessions, onArchive, onEdit, onView }) => {
                     {renderValue(item.accessionNumber)}
                   </span>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 border-r border-gray-200">
                   <div className="font-medium truncate" style={{ color: 'var(--dark-blue-1)' }}>
                     {renderValue(item.title)}
                   </div>
@@ -57,12 +69,18 @@ const AccessionsTable = ({ accessions, onArchive, onEdit, onView }) => {
                     Click to view details
                   </div>
                 </td>
-                <td className="px-6 py-4 text-gray-700">
+                <td className="px-6 py-4 text-gray-700 border-r border-gray-200">
                   {renderValue(item.sourceName)}
                 </td>
-                <td className="px-6 py-4 text-gray-700">{renderValue(item.dateReceived)}</td>
-                <td className="px-6 py-4 text-gray-700">{renderValue(item.quantity)}</td>
-                <td className="px-6 py-4 text-gray-700">{renderValue(item.status)}</td>
+                <td className="px-6 py-4 text-gray-700 border-r border-gray-200">
+                  {renderValue(item.dateReceived)}
+                </td>
+                <td className="px-6 py-4 text-gray-700 border-r border-gray-200">
+                  {renderValue(item.quantity)}
+                </td>
+                <td className="px-6 py-4 text-gray-700 border-r border-gray-200">
+                  {renderValue(item.status)}
+                </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
                     <button
@@ -70,7 +88,7 @@ const AccessionsTable = ({ accessions, onArchive, onEdit, onView }) => {
                         event.stopPropagation()
                         onEdit && onEdit(item)
                       }}
-                      className="p-2 text-gray-500 hover:text-blue-600 rounded-lg transition-colors bg-transparent hover:bg-transparent"
+                      className="p-2 text-gray-500 hover:text-blue-600 rounded-sm transition-colors bg-transparent hover:bg-transparent"
                       title="Edit"
                     >
                       <PencilSquareIcon className="w-5 h-5" />
@@ -80,7 +98,7 @@ const AccessionsTable = ({ accessions, onArchive, onEdit, onView }) => {
                         event.stopPropagation()
                         onArchive && onArchive(item.id)
                       }}
-                      className="p-2 text-gray-500 hover:text-amber-600 rounded-lg transition-colors bg-transparent hover:bg-transparent"
+                      className="p-2 text-gray-500 hover:text-amber-600 rounded-sm transition-colors bg-transparent hover:bg-transparent"
                       title="Archive"
                     >
                       <ArchiveBoxIcon className="w-5 h-5" />
