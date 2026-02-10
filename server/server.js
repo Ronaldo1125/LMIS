@@ -41,6 +41,10 @@ app.use('/api/books', booksRoutes);
 const uploadsRoutes = require('./routes/uploads');
 app.use('/api/uploads', uploadsRoutes);
 
+// Books Excel import route  ← NEW
+const importBooksRoute = require('./routes/importBooks');
+app.use('/api/books', importBooksRoute);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
