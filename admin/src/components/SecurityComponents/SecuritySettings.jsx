@@ -107,7 +107,7 @@ const SecuritySettings = () => {
 
       {/* Save Message */}
       {savedMessage && (
-        <div className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
+        <div className={`mb-6 p-4 flex items-center gap-2 ${
           savedMessage.includes('Error') 
             ? 'bg-red-50 text-red-800 border border-red-200' 
             : 'bg-green-50 text-green-800 border border-green-200'
@@ -123,7 +123,7 @@ const SecuritySettings = () => {
 
       <div className="space-y-6">
         {/* Password Policy */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white shadow-sm p-6 border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <Lock className="w-5 h-5" />
             Password Policy
@@ -140,7 +140,7 @@ const SecuritySettings = () => {
                 max="32"
                 value={settings.passwordPolicy.minLength}
                 onChange={(e) => updateSetting('passwordPolicy', 'minLength', parseInt(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -150,7 +150,7 @@ const SecuritySettings = () => {
                   type="checkbox"
                   checked={settings.passwordPolicy.requireUppercase}
                   onChange={(e) => updateSetting('passwordPolicy', 'requireUppercase', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Require uppercase letters</span>
               </label>
@@ -160,7 +160,7 @@ const SecuritySettings = () => {
                   type="checkbox"
                   checked={settings.passwordPolicy.requireLowercase}
                   onChange={(e) => updateSetting('passwordPolicy', 'requireLowercase', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Require lowercase letters</span>
               </label>
@@ -170,7 +170,7 @@ const SecuritySettings = () => {
                   type="checkbox"
                   checked={settings.passwordPolicy.requireNumbers}
                   onChange={(e) => updateSetting('passwordPolicy', 'requireNumbers', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Require numbers</span>
               </label>
@@ -180,7 +180,7 @@ const SecuritySettings = () => {
                   type="checkbox"
                   checked={settings.passwordPolicy.requireSpecialChars}
                   onChange={(e) => updateSetting('passwordPolicy', 'requireSpecialChars', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Require special characters</span>
               </label>
@@ -196,7 +196,7 @@ const SecuritySettings = () => {
                 max="365"
                 value={settings.passwordPolicy.expirationDays}
                 onChange={(e) => updateSetting('passwordPolicy', 'expirationDays', parseInt(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <p className="mt-1 text-xs text-gray-500">Set to 0 for no expiration</p>
             </div>
@@ -204,7 +204,7 @@ const SecuritySettings = () => {
         </div>
 
         {/* Session Policy */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white shadow-sm p-6 border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5" />
             Session Policy
@@ -221,7 +221,7 @@ const SecuritySettings = () => {
                 max="1440"
                 value={settings.sessionPolicy.maxSessionDuration}
                 onChange={(e) => updateSetting('sessionPolicy', 'maxSessionDuration', parseInt(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -235,7 +235,7 @@ const SecuritySettings = () => {
                 max="120"
                 value={settings.sessionPolicy.inactivityTimeout}
                 onChange={(e) => updateSetting('sessionPolicy', 'inactivityTimeout', parseInt(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -249,7 +249,7 @@ const SecuritySettings = () => {
                 max="10"
                 value={settings.sessionPolicy.maxConcurrentSessions}
                 onChange={(e) => updateSetting('sessionPolicy', 'maxConcurrentSessions', parseInt(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -258,7 +258,7 @@ const SecuritySettings = () => {
                 type="checkbox"
                 checked={settings.sessionPolicy.requireReauthentication}
                 onChange={(e) => updateSetting('sessionPolicy', 'requireReauthentication', e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
               />
               <span className="text-sm text-gray-700">Require re-authentication for sensitive actions</span>
             </label>
@@ -266,7 +266,7 @@ const SecuritySettings = () => {
         </div>
 
         {/* Login Policy */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white shadow-sm p-6 border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <Key className="w-5 h-5" />
             Login Policy
@@ -283,7 +283,7 @@ const SecuritySettings = () => {
                 max="10"
                 value={settings.loginPolicy.maxFailedAttempts}
                 onChange={(e) => updateSetting('loginPolicy', 'maxFailedAttempts', parseInt(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -297,7 +297,7 @@ const SecuritySettings = () => {
                 max="1440"
                 value={settings.loginPolicy.lockoutDuration}
                 onChange={(e) => updateSetting('loginPolicy', 'lockoutDuration', parseInt(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -306,7 +306,7 @@ const SecuritySettings = () => {
                 type="checkbox"
                 checked={settings.loginPolicy.twoFactorEnabled}
                 onChange={(e) => updateSetting('loginPolicy', 'twoFactorEnabled', e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
               />
               <span className="text-sm text-gray-700">Enable two-factor authentication</span>
             </label>
@@ -316,7 +316,7 @@ const SecuritySettings = () => {
                 type="checkbox"
                 checked={settings.loginPolicy.ipWhitelisting}
                 onChange={(e) => updateSetting('loginPolicy', 'ipWhitelisting', e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
               />
               <span className="text-sm text-gray-700">Enable IP whitelisting</span>
             </label>
@@ -324,7 +324,7 @@ const SecuritySettings = () => {
         </div>
 
         {/* Audit Policy */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white shadow-sm p-6 border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <AlertCircle className="w-5 h-5" />
             Audit Policy
@@ -341,7 +341,7 @@ const SecuritySettings = () => {
                 max="3650"
                 value={settings.auditPolicy.logRetentionDays}
                 onChange={(e) => updateSetting('auditPolicy', 'logRetentionDays', parseInt(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -353,7 +353,7 @@ const SecuritySettings = () => {
                   type="checkbox"
                   checked={settings.auditPolicy.logFailedLogins}
                   onChange={(e) => updateSetting('auditPolicy', 'logFailedLogins', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Failed login attempts</span>
               </label>
@@ -363,7 +363,7 @@ const SecuritySettings = () => {
                   type="checkbox"
                   checked={settings.auditPolicy.logSuccessfulLogins}
                   onChange={(e) => updateSetting('auditPolicy', 'logSuccessfulLogins', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Successful logins</span>
               </label>
@@ -373,7 +373,7 @@ const SecuritySettings = () => {
                   type="checkbox"
                   checked={settings.auditPolicy.logDataChanges}
                   onChange={(e) => updateSetting('auditPolicy', 'logDataChanges', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Data modifications</span>
               </label>
@@ -383,7 +383,7 @@ const SecuritySettings = () => {
                   type="checkbox"
                   checked={settings.auditPolicy.logAccessAttempts}
                   onChange={(e) => updateSetting('auditPolicy', 'logAccessAttempts', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Resource access attempts</span>
               </label>
@@ -396,7 +396,7 @@ const SecuritySettings = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             <Save className="w-5 h-5" />
             {saving ? 'Saving...' : 'Save Settings'}

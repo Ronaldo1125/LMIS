@@ -126,7 +126,7 @@ const SessionManagement = () => {
 
       {/* Sessions Grid */}
       {loading ? (
-        <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+        <div className="bg-white shadow-sm p-8 text-center border border-gray-200">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading sessions...</p>
         </div>
@@ -136,10 +136,10 @@ const SessionManagement = () => {
             sessions.map((session) => (
               <div
                 key={session.id}
-                className={`bg-white rounded-lg shadow-sm p-5 border-2 ${
+                className={`bg-white shadow-sm p-5 border-2 ${
                   session.id === currentSessionId
                     ? 'border-green-500 bg-green-50'
-                    : 'border-transparent'
+                    : 'border-gray-200'
                 }`}
               >
                 {/* Header */}
@@ -181,7 +181,7 @@ const SessionManagement = () => {
 
                 {/* Warning for suspicious activity */}
                 {session.suspicious && (
-                  <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                  <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 mb-4">
                     <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0" />
                     <p className="text-sm text-yellow-800">Unusual activity detected</p>
                   </div>
@@ -200,7 +200,7 @@ const SessionManagement = () => {
               </div>
             ))
           ) : (
-            <div className="col-span-2 bg-white rounded-lg shadow-sm p-12 text-center">
+            <div className="col-span-2 bg-white shadow-sm p-12 text-center border border-gray-200">
               <Monitor className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <p className="text-gray-500">No active sessions found</p>
             </div>
@@ -210,17 +210,17 @@ const SessionManagement = () => {
 
       {/* Summary Stats */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white shadow-sm p-4 border border-gray-200">
           <p className="text-sm text-gray-600 mb-1">Total Sessions</p>
           <p className="text-2xl font-bold text-gray-800">{sessions.length}</p>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white shadow-sm p-4 border border-gray-200">
           <p className="text-sm text-gray-600 mb-1">Suspicious Sessions</p>
           <p className="text-2xl font-bold text-yellow-600">
             {sessions.filter(s => s.suspicious).length}
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white shadow-sm p-4 border border-gray-200">
           <p className="text-sm text-gray-600 mb-1">Active Users</p>
           <p className="text-2xl font-bold text-green-600">
             {new Set(sessions.map(s => s.user)).size}
@@ -280,3 +280,4 @@ const getMockSessions = () => [
 ]
 
 export default SessionManagement
+
