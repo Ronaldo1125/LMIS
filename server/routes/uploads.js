@@ -351,6 +351,64 @@ router.patch('/:id/set-primary', authMiddleware, roleMiddleware('admin'), async 
     connection.release();
   }
 });
+// Delete ALL uploads for a book (Admin only) — called when deleting a book
+router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const { bookId } = req.params;
+
+    // Fetch all active uploads for this book so we can delete the physical files
+    const [uploads] = await connection.query(
+      'SELECT id, file_path FROM uploads WHERE book_id = ? AND status = "active"',
+      [bookId]
+    );
+
+    if (uploads.length > 0) {
+      const ids = uploads.map(u => u.id);
+
+      // Soft-delete all records
+      await connection.query(
+        `UPDATE uploads SET status = "deleted" WHERE book_id = ?`,
+        [bookId]
+      );
+
+      // Log each deletion
+      const userId = req.user.email || req.user.username;
+      const ipAddress = req.ip || req.connection.remoteAddress;
+      const userAgent = req.get('user-agent');
+      for (const id of ids) {
+        await logUploadAction(id, 'deleted', userId, ipAddress, userAgent, 'Deleted with book');
+      }
+
+      await connection.commit();
+
+      // Delete physical files + the book's folder
+      for (const upload of uploads) {
+        await fs.unlink(upload.file_path).catch(err =>
+          console.error(`Could not delete file ${upload.file_path}:`, err)
+        );
+      }
+
+      // Remove the now-empty book directory
+      const bookDir = path.join(uploadDir, `book_${bookId}`);
+      await fs.rmdir(bookDir).catch(() => {}); // silently ignore if non-empty or missing
+    } else {
+      await connection.commit();
+    }
+
+    res.json({ message: `All uploads for book ${bookId} deleted` });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error deleting uploads for book:', error);
+    res.status(500).json({ message: 'Error deleting uploads for book' });
+  } finally {
+    connection.release();
+  }
+});
 
 // Delete upload (Admin only)
 router.delete('/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => {
