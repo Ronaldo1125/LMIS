@@ -33,7 +33,7 @@ const FileUploadSection = ({ selectedFiles, onFileChange, onRemoveFile, error, l
   return (
     <div className="mb-6">
       <label className="block text-sm font-semibold text-gray-700 mb-2">
-        Digital Files (Optional)
+        Upload digital copy
       </label>
       
       {/* Upload Area */}

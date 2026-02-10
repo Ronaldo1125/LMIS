@@ -107,16 +107,21 @@ const Cataloging = () => {
   const handleDeleteBook = async (id) => {
     try {
       const token = localStorage.getItem('authToken')
-      await axios.delete(`${API_URL}/books/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const headers = { Authorization: `Bearer ${token}` }
+
+      // 1. Delete all uploaded files for this book first
+      await axios.delete(`${API_URL}/uploads/book/${id}`, { headers })
+
+      // 2. Delete the book record itself
+      await axios.delete(`${API_URL}/books/${id}`, { headers })
+
       fetchBooks()
     } catch (err) {
       console.error('Error deleting book:', err)
       setError('Failed to delete book. Please try again.')
     }
   }
-
+  
   const handleArchiveBook = async (id, reason) => {
     try {
       const token = localStorage.getItem('authToken')
