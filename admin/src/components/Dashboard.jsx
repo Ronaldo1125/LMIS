@@ -7,7 +7,7 @@ import CollectionByCategory from './DashboardComponents/CollectionByCategory'
 import RecentAcquisitions from './DashboardComponents/RecentAcquisitions'
 import MostDownloadedStats from './DashboardComponents/MostDownloadedStats'
 import WebsiteAnalytics from './DashboardComponents/WebsiteAnalytics'
-import LoginNotification from './DashboardComponents/LoginNotification' 
+import LoginNotification from './DashboardComponents/LoginNotification'
 
 const Dashboard = () => {
   const [isSticky, setIsSticky] = useState(false)
@@ -16,7 +16,6 @@ const Dashboard = () => {
     const handleScroll = () => {
       setIsSticky(window.scrollY > 20)
     }
-
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -43,18 +42,17 @@ const Dashboard = () => {
   ]
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       {/* Login Success Notification */}
       <LoginNotification />
-      
+
       {/* Header */}
-      <DashboardHeader />
-      
-      {/* Spacer when header is sticky */}
-      {isSticky && <div className="h-[88px] mb-6" />}
+      <div className={`sticky top-0 z-30 bg-white ${isSticky ? 'shadow-md' : ''}`}>
+        <DashboardHeader />
+      </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <StatCard
             key={index}
@@ -64,22 +62,20 @@ const Dashboard = () => {
             colorVar={stat.colorVar}
           />
         ))}
-        
-        {/* Date & Time Card */}
         <DateTimeCard />
       </div>
 
-      {/* Collection & Acquisitions Grid */}
+      {/* Collection & Acquisitions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CollectionByCategory />
         <RecentAcquisitions />
       </div>
-      
+
       {/* Download Stats */}
-      <MostDownloadedStats />     
-      
-      {/* Website Charts */}
-      <WebsiteAnalytics />    
+      <MostDownloadedStats />
+
+      {/* Website Analytics */}
+      <WebsiteAnalytics />
     </div>
   )
 }

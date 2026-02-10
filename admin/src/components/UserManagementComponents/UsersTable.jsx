@@ -17,14 +17,14 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
   const getStatusBadge = (status) => {
     if (status === 'Active') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-green-100 text-green-700">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
           <CheckCircle size={14} />
           Active
         </span>
       )
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-600">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
         <Circle size={14} />
         Inactive
       </span>
@@ -37,7 +37,7 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
         <div className="flex gap-2">
           <button
             onClick={() => onResetPassword(user)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#0F61F7] text-white hover:bg-[#0D52D1] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0F61F7] text-white hover:bg-[#0D52D1] transition-colors"
           >
             <Key size={14} />
             Reset Password
@@ -45,7 +45,7 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
           {user.status === 'Active' && (
             <button
               onClick={() => onDeactivateAccount(user.id)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
             >
               <UserX size={14} />
               Deactivate
@@ -61,14 +61,14 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
           {!user.isActiveLibrarian && (
             <button
               onClick={() => onSetActiveLibrarian(user.id)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
             >
               <Crown size={14} />
               Set Active
             </button>
           )}
           {user.isActiveLibrarian && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-md">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-md">
               <Crown size={14} />
               Active Librarian
             </span>
@@ -81,7 +81,7 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
       return (
         <button
           onClick={() => onResetPassword(user)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#0F61F7] text-white hover:bg-[#0D52D1] transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0F61F7] text-white hover:bg-[#0D52D1] transition-colors"
         >
           <Key size={14} />
           Reset Password
@@ -92,7 +92,7 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
 
   if (users.length === 0) {
     return (
-      <div className="bg-white shadow-sm p-12 text-center border border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-200">
         <div className="text-gray-400 mb-4">
           <Circle size={64} className="mx-auto opacity-50" />
         </div>
@@ -105,7 +105,7 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
   }
 
   return (
-    <div className="bg-white shadow-sm overflow-hidden border border-gray-200">
+    <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -114,7 +114,7 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
                 Name
               </th>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                Username
+                Email
               </th>
               <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                 Role
@@ -142,9 +142,12 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-10 h-10 flex items-center justify-center bg-gray-600 text-white font-semibold text-sm"
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                      style={{
+                        background: getAvatarGradient(user.name)
+                      }}
                     >
-                      {user.name ? user.name.split(' ').map(n => n[0]).join('') : '?'}
+                      {user.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div className="font-semibold text-[#154A9A]">
                       {user.name}
@@ -156,7 +159,7 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
                 </td>
                 <td className="px-6 py-4">
                   <span 
-                    className={`inline-block px-3 py-1 text-xs font-semibold ${getRoleBadgeStyle(user.role)}`}
+                    className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getRoleBadgeStyle(user.role)}`}
                   >
                     {user.role}
                   </span>
@@ -194,6 +197,22 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
       `}</style>
     </div>
   )
+}
+
+// Helper function to generate gradient colors based on name
+function getAvatarGradient(name) {
+  const gradients = [
+    'linear-gradient(135deg, #0F61F7, #0D52D1)',
+    'linear-gradient(135deg, #3F1BD2, #2E1499)',
+    'linear-gradient(135deg, #FFA602, #E69500)',
+    'linear-gradient(135deg, #FF6B6B, #E85555)',
+    'linear-gradient(135deg, #4ECDC4, #44B8B0)',
+    'linear-gradient(135deg, #9B59B6, #8E44AD)',
+    'linear-gradient(135deg, #3498DB, #2980B9)',
+    'linear-gradient(135deg, #1ABC9C, #16A085)'
+  ]
+  const index = name.charCodeAt(0) % gradients.length
+  return gradients[index]
 }
 
 export default UsersTable

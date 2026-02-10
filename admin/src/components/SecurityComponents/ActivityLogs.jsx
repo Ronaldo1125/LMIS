@@ -117,7 +117,7 @@ const ActivityLogs = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+      <div className="bg-white shadow-sm p-4 mb-6 border border-gray-200">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
           <div className="relative">
@@ -127,7 +127,7 @@ const ActivityLogs = () => {
               placeholder="Search logs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
@@ -137,7 +137,7 @@ const ActivityLogs = () => {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
             >
               <option value="all">All Types</option>
               <option value="login">Login</option>
@@ -157,14 +157,14 @@ const ActivityLogs = () => {
               type="date"
               value={dateRange.start}
               onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           <div className="flex gap-2">
             <button
               onClick={exportLogs}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             >
               <Download className="w-4 h-4" />
               Export
@@ -175,7 +175,7 @@ const ActivityLogs = () => {
                 setFilterType('all')
                 setDateRange({ start: '', end: '' })
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border border-gray-300 hover:bg-gray-50 transition-colors"
             >
               Clear
             </button>
@@ -184,7 +184,7 @@ const ActivityLogs = () => {
       </div>
 
       {/* Logs Table */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white shadow-sm overflow-hidden border border-gray-200">
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -232,7 +232,7 @@ const ActivityLogs = () => {
                         {log.action}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(log.type)}`}>
+                        <span className={`px-2 py-1 text-xs font-semibold ${getTypeColor(log.type)}`}>
                           {log.type}
                         </span>
                       </td>
@@ -318,3 +318,4 @@ const getMockLogs = () => [
 ]
 
 export default ActivityLogs
+
