@@ -114,16 +114,12 @@ const DashboardHeader = () => {
   const handleMyProfile = () => {
     setShowAccountMenu(false)
     console.log('Navigate to My Profile')
-    // Add your navigation logic here
-    // e.g., navigate('/profile') or open profile modal
     alert('Opening Profile Settings...')
   }
 
   const handleHelpSupport = () => {
     setShowAccountMenu(false)
     console.log('Navigate to Help & Support')
-    // Add your navigation logic here
-    // e.g., navigate('/help') or open help center
     alert('Opening Help & Support...')
   }
 
@@ -248,7 +244,11 @@ const DashboardHeader = () => {
 
             {/* Notifications Dropdown */}
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+              <div className="fixed mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-[100] overflow-hidden" 
+                   style={{ 
+                     right: '1rem',
+                     top: isSticky ? '4.5rem' : '5.5rem'
+                   }}>
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
                   <div>
@@ -326,7 +326,11 @@ const DashboardHeader = () => {
 
             {/* Account Dropdown */}
             {showAccountMenu && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+              <div className="fixed mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-[100] overflow-hidden"
+                   style={{ 
+                     right: '1rem',
+                     top: isSticky ? '4.5rem' : '5.5rem'
+                   }}>
                 {/* User Info */}
                 <div className="p-4 bg-gradient-to-br from-[var(--dark-blue-1)] to-[var(--dark-blue-2)]">
                   <div className="flex items-center gap-3">

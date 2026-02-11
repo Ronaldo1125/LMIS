@@ -111,11 +111,12 @@ const CollectionByCategory = () => {
       {/* Button */}
       <div className="mt-4">
         <button 
-          className="w-full px-4 py-2.5 rounded-lg text-white font-semibold shadow-sm text-sm"
+          className="w-full px-4 py-2.5 rounded-lg text-white font-semibold shadow-sm text-sm flex items-center justify-between"
           style={{ background: '#64748b' }}
           onClick={() => setIsModalOpen(true)}
         >
-          View All Catalog ({totalItems.toLocaleString()} total items)
+          <span>View All Catalog</span>
+          <span className="text-xs opacity-90">({totalItems.toLocaleString()} total items)</span>
         </button>
       </div>
 
