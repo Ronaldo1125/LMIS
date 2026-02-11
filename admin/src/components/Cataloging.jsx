@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
+import { BookOpen } from 'lucide-react'
 import StatsOverview from './CatalogingComponents/StatsOverview'
 import SearchAndFilter from './CatalogingComponents/SearchAndFilter'
 import BooksTable from './CatalogingComponents/BooksTable'
@@ -7,7 +8,7 @@ import AddBookModal from './CatalogingComponents/AddBookModal'
 import ViewBookModal from './CatalogingComponents/ViewBookModal'
 import EditBookModal from './CatalogingComponents/EditBookModal'
 import ArchivesModal from './CatalogingComponents/ArchivesModal'
-import ImportBooksModal from './CatalogingComponents/ImportBooksModal'   // ← NEW
+import ImportBooksModal from './CatalogingComponents/ImportBooksModal'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -17,7 +18,7 @@ const Cataloging = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isArchivesOpen, setIsArchivesOpen] = useState(false)
-  const [isImportOpen, setIsImportOpen] = useState(false)              // ← NEW
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [selectedBook, setSelectedBook] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [books, setBooks] = useState([])
@@ -104,7 +105,6 @@ const Cataloging = () => {
     fetchBooks()
   }
 
-  // ── Called after a successful import so the table refreshes ── NEW
   const handleImported = () => {
     setCurrentPage(1)
     fetchBooks()
@@ -244,78 +244,85 @@ const Cataloging = () => {
   }
 
   return (
-    <div className="p-6 min-h-screen" style={{ backgroundColor: '#f8fafc' }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--dark-blue-1)' }}>
-          Cataloging
-        </h1>
-        <p className="text-gray-600">Manage and organize your library collection</p>
+      <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <BookOpen className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Cataloging</h1>
+            <p className="text-sm text-gray-600">Manage and organize your library collection</p>
+          </div>
+        </div>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800 text-sm">{error}</p>
-        </div>
-      )}
+      <div className="px-6">
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800 text-sm">{error}</p>
+          </div>
+        )}
 
-      {/* Stats Cards */}
-      <StatsOverview books={books} />
+        {/* Stats Cards */}
+        <StatsOverview books={books} />
 
-      {/* Search and Filter Controls */}
-      <SearchAndFilter
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        categories={categories}
-        onAddClick={() => setIsAddModalOpen(true)}
-        onArchiveClick={() => setIsArchivesOpen(true)}
-        onImportClick={() => setIsImportOpen(true)}        // ← NEW
-      />
+        {/* Search and Filter Controls */}
+        <SearchAndFilter
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          categories={categories}
+          onAddClick={() => setIsAddModalOpen(true)}
+          onArchiveClick={() => setIsArchivesOpen(true)}
+          onImportClick={() => setIsImportOpen(true)}
+        />
 
-      {/* Loading State */}
-      {loading ? (
-        <div className="bg-white rounded-xl shadow-md p-8 text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-600">Loading books...</p>
-        </div>
-      ) : (
-        <>
-          {/* Books Table */}
-          <BooksTable
-            books={books}
-            onEdit={handleEditBook}
-            onView={handleViewBook}
-            onDelete={handleDeleteBook}
-            onArchive={handleArchiveBook}
-          />
+        {/* Loading State */}
+        {loading ? (
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600">Loading books...</p>
+          </div>
+        ) : (
+          <>
+            {/* Books Table */}
+            <BooksTable
+              books={books}
+              onEdit={handleEditBook}
+              onView={handleViewBook}
+              onDelete={handleDeleteBook}
+              onArchive={handleArchiveBook}
+            />
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-6 flex justify-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              <span className="px-4 py-2 text-gray-700">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </>
-      )}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex justify-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <span className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Add Book Modal */}
       <AddBookModal
@@ -348,7 +355,7 @@ const Cataloging = () => {
         onRestore={handleUnarchiveBook}
       />
 
-      {/* Import Books Modal  ← NEW */}
+      {/* Import Books Modal */}
       <ImportBooksModal
         isOpen={isImportOpen}
         onClose={() => setIsImportOpen(false)}

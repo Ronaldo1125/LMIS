@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { BookMarked } from 'lucide-react';
 import ViewToggle from './AcquisitionsComponents/ViewToggle';
 import SortControls from './AcquisitionsComponents/SortControls';
 import SearchBar from './AcquisitionsComponents/SearchBar';
@@ -113,64 +114,68 @@ const Acquisitions = () => {
   }, [searchQuery]);
 
   return (
-    <div className="p-6 min-h-screen">
-      {/* Header (Matched with Accessions) */}
-      <div className="mb-8">
-        <h1
-          className="text-3xl font-bold mb-2"
-          style={{ color: 'var(--dark-blue-1)' }}
-        >
-          Acquisitions
-        </h1>
-        <p className="text-gray-600">
-          {filteredAndSortedAcquisitions.length}{' '}
-          {filteredAndSortedAcquisitions.length === 1 ? 'book' : 'books'} 
-          {searchQuery && ' found'}
-        </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <BookMarked className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Acquisitions</h1>
+            <p className="text-sm text-gray-600">
+              {filteredAndSortedAcquisitions.length}{' '}
+              {filteredAndSortedAcquisitions.length === 1 ? 'book' : 'books'} 
+              {searchQuery && ' found'}
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
-        <div className="flex flex-col sm:flex-row gap-6">
-          <SortControls
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSortChange={handleSortChange}
-          />
-          <ViewToggle
-            viewMode={viewMode}
-            onViewChange={setViewMode}
+      <div className="px-6">
+        {/* Controls */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
+          <div className="flex flex-col sm:flex-row gap-6">
+            <SortControls
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSortChange={handleSortChange}
+            />
+            <ViewToggle
+              viewMode={viewMode}
+              onViewChange={setViewMode}
+            />
+          </div>
+          
+          <SearchBar 
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
           />
         </div>
-        
-        <SearchBar 
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-      </div>
 
-      {/* Content */}
-      <div>
-        {filteredAndSortedAcquisitions.length > 0 ? (
-          viewMode === 'grid' ? (
-            <AcquisitionsGrid acquisitions={filteredAndSortedAcquisitions} />
+        {/* Content */}
+        <div>
+          {filteredAndSortedAcquisitions.length > 0 ? (
+            viewMode === 'grid' ? (
+              <AcquisitionsGrid acquisitions={filteredAndSortedAcquisitions} />
+            ) : (
+              <AcquisitionsList acquisitions={filteredAndSortedAcquisitions} />
+            )
           ) : (
-            <AcquisitionsList acquisitions={filteredAndSortedAcquisitions} />
-          )
-        ) : (
-          <div className="text-center py-16">
-            <p className="text-gray-500 text-lg font-normal tracking-normal">
-              No books found matching "{searchQuery}"
-            </p>
-            <button
-              onClick={() => setSearchQuery('')}
-              className="mt-4 px-6 py-2 bg-[#154A9A] text-white rounded-lg hover:bg-[#154A9A]/90 
-                         transition-colors duration-200 font-medium tracking-normal"
-            >
-              Clear Search
-            </button>
-          </div>
-        )}
+            <div className="bg-white rounded-lg shadow-sm p-16 text-center">
+              <p className="text-gray-500 text-lg font-normal tracking-normal">
+                No books found matching "{searchQuery}"
+              </p>
+              <button
+                onClick={() => setSearchQuery('')}
+                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                           transition-colors duration-200 font-medium tracking-normal"
+              >
+                Clear Search
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
