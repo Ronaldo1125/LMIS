@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
+import { Package } from 'lucide-react'
 import StatsOverview from './AccessionsComponents/StatsOverview'
 import SearchAndFilter from './AccessionsComponents/SearchAndFilter'
 import AccessionsTable from './AccessionsComponents/AccessionsTable'
@@ -200,48 +201,53 @@ const Accessions = () => {
   }
 
   return (
-    <div className="p-6 min-h-screen" style={{ backgroundColor: '#f8fafc' }}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--dark-blue-1)' }}>
-          Accessions
-        </h1>
-        <p className="text-gray-600">Track new acquisitions and intake workflow</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Package className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Accessions</h1>
+            <p className="text-sm text-gray-600">Track new acquisitions and intake workflow</p>
+          </div>
+        </div>
       </div>
 
-      <StatsOverview accessions={accessions} />
+      <div className="px-6">
+        <StatsOverview accessions={accessions} />
 
-      <SearchAndFilter
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedStatus={selectedStatus}
-        setSelectedStatus={setSelectedStatus}
-        statuses={statuses}
-        onAddClick={() => setIsAddModalOpen(true)}
-        onArchiveClick={handleOpenArchives}
-      />
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-          {error}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="flex items-center justify-center py-20 text-gray-400">
-          <svg className="animate-spin w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-          </svg>
-          Loading accessions...
-        </div>
-      ) : (
-        <AccessionsTable
-          accessions={filteredAccessions}
-          onArchive={handleArchiveAccession}
-          onEdit={handleEditAccession}
-          onView={handleViewAccession}
+        <SearchAndFilter
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedStatus={selectedStatus}
+          setSelectedStatus={setSelectedStatus}
+          statuses={statuses}
+          onAddClick={() => setIsAddModalOpen(true)}
+          onArchiveClick={handleOpenArchives}
         />
-      )}
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-600">Loading accessions...</p>
+          </div>
+        ) : (
+          <AccessionsTable
+            accessions={filteredAccessions}
+            onArchive={handleArchiveAccession}
+            onEdit={handleEditAccession}
+            onView={handleViewAccession}
+          />
+        )}
+      </div>
 
       <AddAccessionModal
         isOpen={isAddModalOpen}
