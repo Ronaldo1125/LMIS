@@ -23,38 +23,31 @@ function UserManagement() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [currentUserRole, setCurrentUserRole] = useState(null)
 
-  // Fetch current user role on mount
   useEffect(() => {
-    // Try multiple sources for the role
     let role = localStorage.getItem('userRole')
-    
-    // If not found, try getting from user object
+
     if (!role) {
       const userStr = localStorage.getItem('user')
       if (userStr) {
         try {
           const user = JSON.parse(userStr)
           role = user.role
-          // Store it for next time
           localStorage.setItem('userRole', role)
         } catch (e) {
           console.error('Error parsing user data:', e)
         }
       }
     }
-    
-    console.log('Current user role:', role) // DEBUG: Check what role is being set
+
+    console.log('Current user role:', role)
     setCurrentUserRole(role)
     fetchUsers()
     fetchStats()
   }, [])
 
-  // Check if current user is admin
   const isAdmin = currentUserRole === 'admin'
-  
-  // Check if user can view this page
   const canView = currentUserRole === 'admin' || currentUserRole === 'librarian'
-  
+
   const fetchUsers = async () => {
     try {
       setLoading(true)
@@ -82,24 +75,27 @@ function UserManagement() {
     }
   }
 
-  // Filter users
   const filteredUsers = users.filter(user => {
-    const matchesSearch = 
+    const matchesSearch =
       user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.username.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesRole = roleFilter === 'All' || user.role === roleFilter.toLowerCase()
-    const matchesStatus = statusFilter === 'All' || 
+
+    const matchesRole =
+      roleFilter === 'All' || user.role === roleFilter.toLowerCase()
+
+    const matchesStatus =
+      statusFilter === 'All' ||
       (statusFilter === 'Active' && user.is_active) ||
       (statusFilter === 'Inactive' && !user.is_active)
+
     return matchesSearch && matchesRole && matchesStatus
   })
 
-  // Transform API data to match UsersTable component expectations
   const usersWithActiveFlag = filteredUsers.map(user => ({
     id: user.id,
     name: user.full_name,
-    email: user.username, // or user.email if your API has an email field
-    role: user.role.charAt(0).toUpperCase() + user.role.slice(1), // Capitalize role
+    email: user.username,
+    role: user.role.charAt(0).toUpperCase() + user.role.slice(1),
     status: user.is_active ? 'Active' : 'Inactive',
     dateAdded: user.created_at || user.date_added || new Date().toISOString(),
     isActiveLibrarian: user.role === 'librarian' && user.is_active
@@ -230,7 +226,6 @@ function UserManagement() {
     )
   }
 
-  // Check if user has permission to view this page
   if (!canView) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -253,8 +248,8 @@ function UserManagement() {
           <div>
             <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
             <p className="text-sm text-gray-600">
-              {isAdmin 
-                ? 'Manage library staff, librarians, and patrons' 
+              {isAdmin
+                ? 'Manage library staff, librarians, and patrons'
                 : 'View library staff, librarians, and patrons'}
             </p>
           </div>
@@ -262,23 +257,25 @@ function UserManagement() {
       </div>
 
       <div className="px-6">
-        {/* Stats Cards */}
+       
         <StatsCards stats={stats} />
 
-        {/* Search and Actions */}
-        <SearchBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          roleFilter={roleFilter}
-          setRoleFilter={setRoleFilter}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          onAddStaff={() => setShowAddStaffModal(true)}
-          onAddLibrarian={() => setShowAddLibrarianModal(true)}
-          isAdmin={isAdmin}
-        />
+        
+        <div className="sticky top-0 z-20 bg-gray-50 py-4">
+          <SearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            roleFilter={roleFilter}
+            setRoleFilter={setRoleFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            onAddStaff={() => setShowAddStaffModal(true)}
+            onAddLibrarian={() => setShowAddLibrarianModal(true)}
+            isAdmin={isAdmin}
+          />
+        </div>
 
-        {/* Users Table */}
+       
         <UsersTable
           users={usersWithActiveFlag}
           onResetPassword={handleOpenResetPassword}
@@ -288,7 +285,6 @@ function UserManagement() {
         />
       </div>
 
-      {/* Modals */}
       {showAddStaffModal && (
         <AddStaffModal
           onClose={() => setShowAddStaffModal(false)}
