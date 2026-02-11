@@ -124,7 +124,7 @@ router.get('/meta/categories', authMiddleware, async (req, res) => {
 });
 
 // Archive a book (Admin only)
-router.patch('/:id/archive', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+router.patch('/:id/archive', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
   try {
     const { reason } = req.body;
     
@@ -161,7 +161,7 @@ router.patch('/:id/archive', authMiddleware, roleMiddleware('admin'), async (req
 });
 
 // Unarchive a book (Admin only)
-router.patch('/:id/unarchive', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+router.patch('/:id/unarchive', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
   try {
     // Check if book exists and is archived
     const [existingBook] = await pool.query(
@@ -196,7 +196,7 @@ router.patch('/:id/unarchive', authMiddleware, roleMiddleware('admin'), async (r
 });
 
 // Get archive statistics (Admin only)
-router.get('/meta/archive-stats', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+router.get('/meta/archive-stats', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
   try {
     const [stats] = await pool.query(`
       SELECT 
@@ -228,7 +228,7 @@ router.get('/meta/archive-stats', authMiddleware, roleMiddleware('admin'), async
 });
 
 // Create new book (Admin only)
-router.post('/', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+router.post('/', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
   try {
     const {
       category,
@@ -302,7 +302,7 @@ router.post('/', authMiddleware, roleMiddleware('admin'), async (req, res) => {
 });
 
 // Update book (Admin only)
-router.put('/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+router.put('/:id', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
   try {
     const {
       category,
@@ -384,7 +384,7 @@ router.put('/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => 
 });
 
 // Delete book (Admin only)
-router.delete('/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+router.delete('/:id', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
   try {
     const [result] = await pool.query('DELETE FROM books WHERE id = ?', [req.params.id]);
     
