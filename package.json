@@ -1,23 +1,24 @@
 {
  "name": "lmis",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "start": "concurrently \"npm run server\" \"npm run admin\" \"npm run web\"",
-    "server": "cd server && node server.js",
-    "admin": "cd admin && npm run dev",
-    "web": "cd web && npm run dev"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "concurrently": "^9.2.1"
-  },
-  "devDependencies": {
-    "autoprefixer": "^10.4.24",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18"
-  }
+ "version": "1.0.0",
+ "main": "index.js",
+ "scripts": {
+  "start": "concurrently \"npm run server\" \"npm run admin\" \"npm run web\"",
+  "server": "cd server && node server.js",
+  "admin": "cd admin && npm run dev",
+  "web": "cd web && npm run dev"
+ },
+ "keywords": [],
+ "author": "",
+ "license": "ISC",
+ "description": "",
+ "dependencies": {
+  "concurrently": "^9.2.1",
+  "xlsx": "^0.18.5"
+ },
+ "devDependencies": {
+  "autoprefixer": "^10.4.24",
+  "postcss": "^8.5.6",
+  "tailwindcss": "^4.1.18"
+ }
 }
