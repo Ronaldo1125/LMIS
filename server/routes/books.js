@@ -226,6 +226,52 @@ router.get('/meta/archive-stats', authMiddleware, roleMiddleware('admin','librar
     res.status(500).json({ message: 'Error fetching archive statistics' });
   }
 });
+// Get catalog statistics
+router.get('/meta/stats', authMiddleware, async (req, res) => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+    const [[{ total }]] = await pool.query(
+      'SELECT COUNT(*) as total FROM books WHERE is_archived = FALSE'
+    );
+
+    const [[{ missing }]] = await pool.query(
+      `SELECT COUNT(*) as missing FROM books 
+       WHERE is_archived = FALSE 
+       AND (isbn IS NULL OR isbn = '') 
+       AND (issn IS NULL OR issn = '')`
+    );
+
+    const [publisherRows] = await pool.query(
+      `SELECT COALESCE(NULLIF(publisher, ''), 'Unknown') as publisher, COUNT(*) as count
+       FROM books
+       WHERE is_archived = FALSE
+       GROUP BY publisher
+       ORDER BY count DESC
+       LIMIT 1`
+    );
+
+    const [[{ recent }]] = await pool.query(
+      `SELECT COUNT(*) as recent FROM books 
+       WHERE is_archived = FALSE 
+       AND created_at >= ?`,
+      [thirtyDaysAgoStr]
+    );
+
+    res.json({
+      totalBooks: total,
+      missingIdentifiers: missing,
+      mostCommonPublisher: publisherRows[0]?.publisher || 'N/A',
+      mostCommonPublisherCount: publisherRows[0]?.count || 0,
+      recentlyCataloged: recent
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ message: 'Error fetching statistics' });
+  }
+});
 
 // Create new book (Admin only)
 router.post('/', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
