@@ -55,7 +55,6 @@ const Accessions = () => {
   const [newAccession, setNewAccession] = useState(emptyAccessionForm)
   const [editAccession, setEditAccession] = useState({ id: null, ...emptyAccessionForm })
 
-  // ── Fetch all active accessions ──────────────────────────────────────────────
   const fetchAccessions = useCallback(async () => {
     try {
       setLoading(true)
@@ -72,7 +71,6 @@ const Accessions = () => {
     }
   }, [])
 
-  // ── Fetch archived accessions ────────────────────────────────────────────────
   const fetchArchivedAccessions = useCallback(async () => {
     try {
       const { data } = await axios.get(`${API_BASE}/accessions/archived`, {
@@ -88,7 +86,6 @@ const Accessions = () => {
     fetchAccessions()
   }, [fetchAccessions])
 
-  // ── Filtering ────────────────────────────────────────────────────────────────
   const statuses = ['all', 'Pending Review', 'Cataloged']
 
   const filteredAccessions = accessions.filter((item) => {
@@ -97,12 +94,13 @@ const Accessions = () => {
       (item.accession_no || '').toLowerCase().includes(search) ||
       (item.title || '').toLowerCase().includes(search) ||
       (item.author || '').toLowerCase().includes(search)
+
     const matchesStatus =
       selectedStatus === 'all' || item.status === selectedStatus
+
     return matchesSearch && matchesStatus
   })
 
-  // ── Add accession ────────────────────────────────────────────────────────────
   const handleAddAccession = async (e) => {
     e.preventDefault()
     try {
@@ -118,7 +116,6 @@ const Accessions = () => {
     }
   }
 
-  // ── Archive accession ────────────────────────────────────────────────────────
   const handleArchiveAccession = async (id) => {
     if (!confirm('Archive this accession?')) return
     try {
@@ -132,7 +129,6 @@ const Accessions = () => {
     }
   }
 
-  // ── Restore accession ────────────────────────────────────────────────────────
   const handleRestoreAccession = async (id) => {
     try {
       await axios.patch(
@@ -147,7 +143,6 @@ const Accessions = () => {
     }
   }
 
-  // ── Edit accession ───────────────────────────────────────────────────────────
   const handleEditAccession = (item) => {
     setEditAccession({
       id: item.id,
@@ -188,13 +183,11 @@ const Accessions = () => {
     }
   }
 
-  // ── View accession ───────────────────────────────────────────────────────────
   const handleViewAccession = (item) => {
     setSelectedAccession(item)
     setIsViewModalOpen(true)
   }
 
-  // ── Open archives modal ──────────────────────────────────────────────────────
   const handleOpenArchives = () => {
     fetchArchivedAccessions()
     setIsArchivesOpen(true)
@@ -210,7 +203,9 @@ const Accessions = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Accessions</h1>
-            <p className="text-sm text-gray-600">Track new acquisitions and intake workflow</p>
+            <p className="text-sm text-gray-600">
+              Track new acquisitions and intake workflow
+            </p>
           </div>
         </div>
       </div>
@@ -218,15 +213,18 @@ const Accessions = () => {
       <div className="px-6">
         <StatsOverview accessions={accessions} />
 
-        <SearchAndFilter
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          selectedStatus={selectedStatus}
-          setSelectedStatus={setSelectedStatus}
-          statuses={statuses}
-          onAddClick={() => setIsAddModalOpen(true)}
-          onArchiveClick={handleOpenArchives}
-        />
+        {/* ✅ Sticky Search and Filter */}
+        <div className="sticky top-0 z-20 bg-gray-50 pb-4">
+          <SearchAndFilter
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedStatus={selectedStatus}
+            setSelectedStatus={setSelectedStatus}
+            statuses={statuses}
+            onAddClick={() => setIsAddModalOpen(true)}
+            onArchiveClick={handleOpenArchives}
+          />
+        </div>
 
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
