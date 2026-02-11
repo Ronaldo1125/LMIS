@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Package } from 'lucide-react'
 import StatsOverview from './AccessionsComponents/StatsOverview'
 import SearchAndFilter from './AccessionsComponents/SearchAndFilter'
 import AccessionsTable from './AccessionsComponents/AccessionsTable'
@@ -190,32 +191,40 @@ const Accessions = () => {
   }
 
   return (
-    <div className="p-6 min-h-screen" style={{ backgroundColor: '#f8fafc' }}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--dark-blue-1)' }}>
-          Accessions
-        </h1>
-        <p className="text-gray-600">Track new acquisitions and intake workflow</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Package className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Accessions</h1>
+            <p className="text-sm text-gray-600">Track new acquisitions and intake workflow</p>
+          </div>
+        </div>
       </div>
 
-      <StatsOverview accessions={accessions} />
+      <div className="px-6">
+        <StatsOverview accessions={accessions} />
 
-      <SearchAndFilter
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedStatus={selectedStatus}
-        setSelectedStatus={setSelectedStatus}
-        statuses={statuses}
-        onAddClick={() => setIsAddModalOpen(true)}
-        onArchiveClick={() => setIsArchivesOpen(true)}
-      />
+        <SearchAndFilter
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedStatus={selectedStatus}
+          setSelectedStatus={setSelectedStatus}
+          statuses={statuses}
+          onAddClick={() => setIsAddModalOpen(true)}
+          onArchiveClick={() => setIsArchivesOpen(true)}
+        />
 
-      <AccessionsTable
-        accessions={filteredAccessions}
-        onArchive={handleArchiveAccession}
-        onEdit={handleEditAccession}
-        onView={handleViewAccession}
-      />
+        <AccessionsTable
+          accessions={filteredAccessions}
+          onArchive={handleArchiveAccession}
+          onEdit={handleEditAccession}
+          onView={handleViewAccession}
+        />
+      </div>
 
       <AddAccessionModal
         isOpen={isAddModalOpen}

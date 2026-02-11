@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Users } from 'lucide-react'
 import StatsCards from './UserManagementComponents/StatsCards'
 import SearchBar from './UserManagementComponents/SearchBar'
 import UsersTable from './UserManagementComponents/UsersTable'
@@ -220,8 +221,11 @@ function UserManagement() {
 
   if (loading) {
     return (
-      <div className="p-6 min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
     )
   }
@@ -229,8 +233,8 @@ function UserManagement() {
   // Check if user has permission to view this page
   if (!canView) {
     return (
-      <div className="p-6 min-h-screen flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center max-w-md">
           <div className="text-red-500 text-xl font-semibold mb-2">Access Denied</div>
           <div className="text-gray-600">You don't have permission to view this page.</div>
         </div>
@@ -239,43 +243,50 @@ function UserManagement() {
   }
 
   return (
-    <div className="p-6 min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--dark-blue-1)' }}>
-          User Management
-        </h1>
-        <p className="text-gray-600">
-          {isAdmin 
-            ? 'Manage library staff, librarians, and patrons' 
-            : 'View library staff, librarians, and patrons'}
-        </p>
+      <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Users className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
+            <p className="text-sm text-gray-600">
+              {isAdmin 
+                ? 'Manage library staff, librarians, and patrons' 
+                : 'View library staff, librarians, and patrons'}
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <StatsCards stats={stats} />
+      <div className="px-6">
+        {/* Stats Cards */}
+        <StatsCards stats={stats} />
 
-      {/* Search and Actions */}
-      <SearchBar
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        roleFilter={roleFilter}
-        setRoleFilter={setRoleFilter}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        onAddStaff={() => setShowAddStaffModal(true)}
-        onAddLibrarian={() => setShowAddLibrarianModal(true)}
-        isAdmin={isAdmin}
-      />
+        {/* Search and Actions */}
+        <SearchBar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          roleFilter={roleFilter}
+          setRoleFilter={setRoleFilter}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          onAddStaff={() => setShowAddStaffModal(true)}
+          onAddLibrarian={() => setShowAddLibrarianModal(true)}
+          isAdmin={isAdmin}
+        />
 
-      {/* Users Table */}
-      <UsersTable
-        users={usersWithActiveFlag}
-        onResetPassword={handleOpenResetPassword}
-        onDeactivateAccount={handleDeactivateAccount}
-        onSetActiveLibrarian={handleSetActiveLibrarian}
-        isAdmin={isAdmin}
-      />
+        {/* Users Table */}
+        <UsersTable
+          users={usersWithActiveFlag}
+          onResetPassword={handleOpenResetPassword}
+          onDeactivateAccount={handleDeactivateAccount}
+          onSetActiveLibrarian={handleSetActiveLibrarian}
+          isAdmin={isAdmin}
+        />
+      </div>
 
       {/* Modals */}
       {showAddStaffModal && (

@@ -56,6 +56,9 @@ const CollectionByCategory = () => {
     }
   ]
 
+  // Calculate total items across all categories
+  const totalItems = categories.reduce((sum, cat) => sum + cat.count, 0)
+
   const toggleCategory = (categoryName) => {
     setExpandedCategories(prev => ({
       ...prev,
@@ -112,7 +115,7 @@ const CollectionByCategory = () => {
           style={{ background: '#64748b' }}
           onClick={() => setIsModalOpen(true)}
         >
-          View All Categories
+          View All Catalog ({totalItems.toLocaleString()} total items)
         </button>
       </div>
 
@@ -129,39 +132,56 @@ const CollectionByCategory = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200 sticky top-0 bg-white z-10">
-              <h2 className="text-lg font-bold" style={{ color: 'var(--dark-blue-1)' }}>
-                All Categories
-              </h2>
-              <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-                <XMarkIcon className="w-5 h-5 text-gray-600" />
-              </button>
+            <div className="px-4 py-3 border-b border-gray-200 sticky top-0 bg-white z-10">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-bold" style={{ color: 'var(--dark-blue-1)' }}>
+                    All Categories
+                  </h2>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    {totalItems.toLocaleString()} total items across {categories.length} categories
+                  </p>
+                </div>
+                <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+                  <XMarkIcon className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
             </div>
 
             {/* Category List */}
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-3">
               {categories.map((cat) => {
                 const Icon = cat.icon
                 const isExpanded = expandedCategories[cat.name]
                 const hasSubcategories = cat.subcategories && cat.subcategories.length > 0
 
                 return (
-                  <div key={cat.name} className="border rounded-lg">
+                  <div key={cat.name} className="border rounded-lg overflow-hidden">
                     <button
                       onClick={() => hasSubcategories && toggleCategory(cat.name)}
                       className="flex items-center justify-between w-full p-3 hover:bg-gray-50 transition-colors text-left"
                     >
-                      <div className="flex items-center gap-3">
-                        <Icon className="w-5 h-5" style={{ color: cat.color }} />
-                        <span className="text-sm font-medium text-gray-700">{cat.name}</span>
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${cat.color}20` }}>
+                          <Icon className="w-5 h-5" style={{ color: cat.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium text-gray-900 block">{cat.name}</span>
+                          <span className="text-xs text-gray-500">{cat.count.toLocaleString()} items</span>
+                        </div>
                       </div>
-                      {hasSubcategories && (
-                        isExpanded ? (
-                          <ChevronUpIcon className="w-4 h-4 text-gray-400" />
-                        ) : (
-                          <ChevronDownIcon className="w-4 h-4 text-gray-400" />
-                        )
-                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold px-2 py-1 rounded" style={{ color: cat.color, background: `${cat.color}15` }}>
+                          {cat.count}
+                        </span>
+                        {hasSubcategories && (
+                          isExpanded ? (
+                            <ChevronUpIcon className="w-4 h-4 text-gray-400" />
+                          ) : (
+                            <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+                          )
+                        )}
+                      </div>
                     </button>
 
                     {/* Subcategories with item counts */}
@@ -169,9 +189,9 @@ const CollectionByCategory = () => {
                       <div className="px-6 pb-3 bg-gray-50 border-t">
                         <ul className="space-y-2 mt-2 text-sm text-gray-700">
                           {cat.subcategories.map((sub) => (
-                            <li key={sub.name} className="flex items-center justify-between">
-                              <span>{sub.name}</span>
-                              <span className="text-xs text-gray-500">{sub.count} items</span>
+                            <li key={sub.name} className="flex items-center justify-between py-1">
+                              <span className="text-gray-700">{sub.name}</span>
+                              <span className="text-xs text-gray-500 font-medium">{sub.count} items</span>
                             </li>
                           ))}
                         </ul>
