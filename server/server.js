@@ -45,6 +45,10 @@ app.use('/api/uploads', uploadsRoutes);
 const importBooksRoute = require('./routes/importBooks');
 app.use('/api/books', importBooksRoute);
 
+// Accessions routes
+const accessionsRoutes = require('./routes/accessions');
+app.use('/api/accessions', accessionsRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
