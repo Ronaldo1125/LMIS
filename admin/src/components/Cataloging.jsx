@@ -282,29 +282,28 @@ const Cataloging = () => {
       </div>
 
       <div className="px-6">
-        {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-800 text-sm">{error}</p>
           </div>
         )}
 
-        {/* Stats Cards */}
         <StatsOverview stats={catalogStats} />
 
-        {/* Search and Filter Controls */}
-        <SearchAndFilter
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          categories={categories}
-          onAddClick={() => setIsAddModalOpen(true)}
-          onArchiveClick={() => setIsArchivesOpen(true)}
-          onImportClick={() => setIsImportOpen(true)}
-        />
+        
+        <div className="sticky top-0 z-40 bg-gray-50">
+          <SearchAndFilter
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            categories={categories}
+            onAddClick={() => setIsAddModalOpen(true)}
+            onArchiveClick={() => setIsArchivesOpen(true)}
+            onImportClick={() => setIsImportOpen(true)}
+          />
+        </div>
 
-        {/* Loading State */}
         {loading ? (
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -312,7 +311,6 @@ const Cataloging = () => {
           </div>
         ) : (
           <>
-            {/* Books Table */}
             <BooksTable
               books={books}
               onEdit={handleEditBook}
@@ -321,7 +319,6 @@ const Cataloging = () => {
               onArchive={handleArchiveBook}
             />
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 flex justify-center gap-2">
                 <button
@@ -347,21 +344,18 @@ const Cataloging = () => {
         )}
       </div>
 
-      {/* Add Book Modal */}
       <AddBookModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onBookAdded={handleBookAdded}
       />
 
-      {/* View Book Modal */}
       <ViewBookModal
         isOpen={isViewModalOpen}
         onClose={handleCloseViewModal}
         book={selectedBook}
       />
 
-      {/* Edit Book Modal */}
       <EditBookModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -371,14 +365,12 @@ const Cataloging = () => {
         categories={categories}
       />
 
-      {/* Archives Modal */}
       <ArchivesModal
         isOpen={isArchivesOpen}
         onClose={() => setIsArchivesOpen(false)}
         onRestore={handleUnarchiveBook}
       />
 
-      {/* Import Books Modal */}
       <ImportBooksModal
         isOpen={isImportOpen}
         onClose={() => setIsImportOpen(false)}
