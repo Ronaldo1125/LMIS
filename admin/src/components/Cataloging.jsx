@@ -26,6 +26,7 @@ const Cataloging = () => {
   const [error, setError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [catalogStats, setCatalogStats] = useState(null)
 
   const [editBook, setEditBook] = useState({
     id: null,
@@ -73,7 +74,7 @@ const Cataloging = () => {
       setLoading(true)
       setError('')
       const token = localStorage.getItem('authToken')
-      
+
       const params = {
         page: currentPage,
         limit: 10,
@@ -96,18 +97,36 @@ const Cataloging = () => {
     }
   }, [currentPage, searchTerm, selectedCategory])
 
+  const fetchStats = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await axios.get(`${API_URL}/books/meta/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setCatalogStats(response.data)
+    } catch (err) {
+      console.error('Error fetching stats:', err)
+    }
+  }, [])
+
   useEffect(() => {
     fetchBooks()
   }, [fetchBooks])
 
+  useEffect(() => {
+    fetchStats()
+  }, [fetchStats])
+
   const handleBookAdded = () => {
     setCurrentPage(1)
     fetchBooks()
+    fetchStats()
   }
 
   const handleImported = () => {
     setCurrentPage(1)
     fetchBooks()
+    fetchStats()
   }
 
   const handleDeleteBook = async (id) => {
@@ -117,12 +136,13 @@ const Cataloging = () => {
       await axios.delete(`${API_URL}/uploads/book/${id}`, { headers })
       await axios.delete(`${API_URL}/books/${id}`, { headers })
       fetchBooks()
+      fetchStats()
     } catch (err) {
       console.error('Error deleting book:', err)
       setError('Failed to delete book. Please try again.')
     }
   }
-  
+
   const handleArchiveBook = async (id, reason) => {
     try {
       const token = localStorage.getItem('authToken')
@@ -132,6 +152,7 @@ const Cataloging = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       fetchBooks()
+      fetchStats()
     } catch (err) {
       console.error('Error archiving book:', err)
       setError(err.response?.data?.message || 'Failed to archive book. Please try again.')
@@ -147,6 +168,7 @@ const Cataloging = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       fetchBooks()
+      fetchStats()
     } catch (err) {
       console.error('Error unarchiving book:', err)
       setError('Failed to unarchive book. Please try again.')
@@ -183,7 +205,7 @@ const Cataloging = () => {
   const handleUpdateBook = async () => {
     try {
       const token = localStorage.getItem('authToken')
-      
+
       const bookData = {
         category: editBook.category,
         call_number: editBook.callNumber,
@@ -216,8 +238,9 @@ const Cataloging = () => {
         publisher: '', dateOfPublication: '', extent: '', otherPhysicalDetails: '',
         dimensions: '', accompanyingMaterial: '', notesArea: '', subjects: '', copies: '',
       })
-      
+
       fetchBooks()
+      fetchStats()
     } catch (err) {
       console.error('Error updating book:', err)
       setError('Failed to update book. Please try again.')
@@ -267,7 +290,7 @@ const Cataloging = () => {
         )}
 
         {/* Stats Cards */}
-        <StatsOverview books={books} />
+        <StatsOverview stats={catalogStats} />
 
         {/* Search and Filter Controls */}
         <SearchAndFilter
