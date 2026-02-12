@@ -9,7 +9,8 @@ function SearchBar({
   statusFilter,
   setStatusFilter,
   onAddStaff,
-  onAddLibrarian 
+  onAddLibrarian,
+  currentUserRole // Add this prop
 }) {
   const searchInputRef = useRef(null)
   const roleDropdownRef = useRef(null)
@@ -19,6 +20,9 @@ function SearchBar({
 
   const roles = ['All', 'Staff', 'Librarian', 'Patron']
   const statuses = ['All', 'Active', 'Inactive']
+
+  // Check if user is admin
+  const isAdmin = currentUserRole === 'admin'
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -173,36 +177,38 @@ function SearchBar({
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          <button
-            onClick={onAddStaff}
-            className="flex items-center gap-2 px-5 py-3 font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg focus:outline-none focus:ring-0"
-            style={{
-              backgroundColor: 'var(--dark-blue-1)',
-              color: 'var(--white)',
-              fontFamily: '"Inter", sans-serif',
-              border: '1px solid var(--dark-blue-2)'
-            }}
-          >
-            <UserPlus size={18} />
-            Add Staff
-          </button>
+        {/* Action Buttons - Only show for admins */}
+        {isAdmin && (
+          <div className="flex gap-3">
+            <button
+              onClick={onAddStaff}
+              className="flex items-center gap-2 px-5 py-3 font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg focus:outline-none focus:ring-0"
+              style={{
+                backgroundColor: 'var(--dark-blue-1)',
+                color: 'var(--white)',
+                fontFamily: '"Inter", sans-serif',
+                border: '1px solid var(--dark-blue-2)'
+              }}
+            >
+              <UserPlus size={18} />
+              Add Staff
+            </button>
 
-          <button
-            onClick={onAddLibrarian}
-            className="flex items-center gap-2 px-5 py-3 font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg focus:outline-none focus:ring-0"
-            style={{
-              backgroundColor: 'var(--secondary-1-medium)',
-              color: 'var(--white)',
-              fontFamily: '"Inter", sans-serif',
-              border: '1px solid var(--secondary-1-dark)'
-            }}
-          >
-            <UserCog size={18} />
-            Add Librarian
-          </button>
-        </div>
+            <button
+              onClick={onAddLibrarian}
+              className="flex items-center gap-2 px-5 py-3 font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg focus:outline-none focus:ring-0"
+              style={{
+                backgroundColor: 'var(--secondary-1-medium)',
+                color: 'var(--white)',
+                fontFamily: '"Inter", sans-serif',
+                border: '1px solid var(--secondary-1-dark)'
+              }}
+            >
+              <UserCog size={18} />
+              Add Librarian
+            </button>
+          </div>
+        )}
       </div>
 
       <style>{`
@@ -215,4 +221,3 @@ function SearchBar({
 }
 
 export default SearchBar
-

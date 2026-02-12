@@ -21,6 +21,9 @@ const FormField = ({ label, required, children, colSpan }) => (
 const inputClass =
   'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-colors bg-white'
 
+const readOnlyInputClass =
+  'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600 cursor-not-allowed'
+
 const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAccession }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
@@ -166,7 +169,7 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
             <div className="flex items-center gap-2 mb-2">
               <SparklesIcon className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-semibold text-blue-700">
-                Autofill from Catalog
+                Select Cataloged Book
               </span>
               {autofilled && (
                 <button
@@ -174,12 +177,12 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
                   onClick={handleClearAutofill}
                   className="ml-auto text-xs text-red-500 hover:text-red-700 underline"
                 >
-                  Clear autofill
+                  Clear selection
                 </button>
               )}
             </div>
             <p className="text-xs text-blue-500 mb-3">
-              Search for an existing cataloged book to automatically fill in the bibliographic fields below.
+              Search for a cataloged book to add to accessions. Bibliographic details will be locked from the catalog.
             </p>
             <div className="relative" ref={searchRef}>
               <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -194,7 +197,7 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
               {autofilled && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-green-600 text-xs font-medium">
                   <SparklesIcon className="w-3.5 h-3.5" />
-                  Autofilled
+                  Selected
                 </div>
               )}
 
@@ -279,170 +282,172 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
             </div>
           </div>
 
-          {/* ── Bibliographic Fields ───────────────────────────────────────── */}
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-100 pb-2">
-              Bibliographic Details
-              {autofilled && (
+          {/* ── Bibliographic Fields (Read-only when autofilled) ──────────── */}
+          {autofilled && (
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-100 pb-2">
+                Bibliographic Details
                 <span className="ml-2 text-xs font-normal text-blue-500 normal-case tracking-normal">
-                  — autofilled, edit if needed
+                  — from catalog (read-only)
                 </span>
-              )}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              <FormField label="Title" required colSpan={2}>
-                <input
-                  type="text"
-                  required
-                  value={newAccession.title}
-                  onChange={(e) => setNewAccession({ ...newAccession, title: e.target.value })}
-                  className={inputClass}
-                  placeholder="Book title"
-                />
-              </FormField>
+                <FormField label="Title" required colSpan={2}>
+                  <input
+                    type="text"
+                    value={newAccession.title}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Author">
-                <input
-                  type="text"
-                  value={newAccession.author}
-                  onChange={(e) => setNewAccession({ ...newAccession, author: e.target.value })}
-                  className={inputClass}
-                  placeholder="Author name"
-                />
-              </FormField>
+                <FormField label="Author">
+                  <input
+                    type="text"
+                    value={newAccession.author}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Editor">
-                <input
-                  type="text"
-                  value={newAccession.editor}
-                  onChange={(e) => setNewAccession({ ...newAccession, editor: e.target.value })}
-                  className={inputClass}
-                  placeholder="Editor name"
-                />
-              </FormField>
+                <FormField label="Editor">
+                  <input
+                    type="text"
+                    value={newAccession.editor}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Edition">
-                <input
-                  type="text"
-                  value={newAccession.edition}
-                  onChange={(e) => setNewAccession({ ...newAccession, edition: e.target.value })}
-                  className={inputClass}
-                  placeholder="e.g. 3rd edition"
-                />
-              </FormField>
+                <FormField label="Edition">
+                  <input
+                    type="text"
+                    value={newAccession.edition}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Publication">
-                <input
-                  type="text"
-                  value={newAccession.publication}
-                  onChange={(e) => setNewAccession({ ...newAccession, publication: e.target.value })}
-                  className={inputClass}
-                  placeholder="Place of publication"
-                />
-              </FormField>
+                <FormField label="Publication">
+                  <input
+                    type="text"
+                    value={newAccession.publication}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Publisher">
-                <input
-                  type="text"
-                  value={newAccession.publisher}
-                  onChange={(e) => setNewAccession({ ...newAccession, publisher: e.target.value })}
-                  className={inputClass}
-                  placeholder="Publisher name"
-                />
-              </FormField>
+                <FormField label="Publisher">
+                  <input
+                    type="text"
+                    value={newAccession.publisher}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Date of Publication">
-                <input
-                  type="date"
-                  value={newAccession.date_of_publication}
-                  onChange={(e) => setNewAccession({ ...newAccession, date_of_publication: e.target.value })}
-                  className={inputClass}
-                />
-              </FormField>
+                <FormField label="Date of Publication">
+                  <input
+                    type="date"
+                    value={newAccession.date_of_publication}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Extent">
-                <input
-                  type="text"
-                  value={newAccession.extent}
-                  onChange={(e) => setNewAccession({ ...newAccession, extent: e.target.value })}
-                  className={inputClass}
-                  placeholder="e.g. 320 p."
-                />
-              </FormField>
+                <FormField label="Extent">
+                  <input
+                    type="text"
+                    value={newAccession.extent}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Dimensions">
-                <input
-                  type="text"
-                  value={newAccession.dimensions}
-                  onChange={(e) => setNewAccession({ ...newAccession, dimensions: e.target.value })}
-                  className={inputClass}
-                  placeholder="e.g. 23 cm"
-                />
-              </FormField>
+                <FormField label="Dimensions">
+                  <input
+                    type="text"
+                    value={newAccession.dimensions}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="ISBN">
-                <input
-                  type="text"
-                  value={newAccession.isbn}
-                  onChange={(e) => setNewAccession({ ...newAccession, isbn: e.target.value })}
-                  className={inputClass}
-                  placeholder="ISBN"
-                />
-              </FormField>
+                <FormField label="ISBN">
+                  <input
+                    type="text"
+                    value={newAccession.isbn}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="ISSN">
-                <input
-                  type="text"
-                  value={newAccession.issn}
-                  onChange={(e) => setNewAccession({ ...newAccession, issn: e.target.value })}
-                  className={inputClass}
-                  placeholder="ISSN"
-                />
-              </FormField>
+                <FormField label="ISSN">
+                  <input
+                    type="text"
+                    value={newAccession.issn}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Other Physical Details" colSpan={2}>
-                <input
-                  type="text"
-                  value={newAccession.other_physical_details}
-                  onChange={(e) => setNewAccession({ ...newAccession, other_physical_details: e.target.value })}
-                  className={inputClass}
-                  placeholder="Illustrations, maps, etc."
-                />
-              </FormField>
+                <FormField label="Other Physical Details" colSpan={2}>
+                  <input
+                    type="text"
+                    value={newAccession.other_physical_details}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Accompanying Material" colSpan={2}>
-                <input
-                  type="text"
-                  value={newAccession.accompanying_material}
-                  onChange={(e) => setNewAccession({ ...newAccession, accompanying_material: e.target.value })}
-                  className={inputClass}
-                  placeholder="CD, maps, etc."
-                />
-              </FormField>
+                <FormField label="Accompanying Material" colSpan={2}>
+                  <input
+                    type="text"
+                    value={newAccession.accompanying_material}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Subjects" colSpan={2}>
-                <input
-                  type="text"
-                  value={newAccession.subjects}
-                  onChange={(e) => setNewAccession({ ...newAccession, subjects: e.target.value })}
-                  className={inputClass}
-                  placeholder="Subject headings"
-                />
-              </FormField>
+                <FormField label="Subjects" colSpan={2}>
+                  <input
+                    type="text"
+                    value={newAccession.subjects}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
-              <FormField label="Notes Area" colSpan={2}>
-                <textarea
-                  rows={3}
-                  value={newAccession.notes_area}
-                  onChange={(e) => setNewAccession({ ...newAccession, notes_area: e.target.value })}
-                  className={inputClass}
-                  placeholder="Additional notes"
-                />
-              </FormField>
+                <FormField label="Notes Area" colSpan={2}>
+                  <textarea
+                    rows={3}
+                    value={newAccession.notes_area}
+                    readOnly
+                    className={readOnlyInputClass}
+                  />
+                </FormField>
 
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* ── Warning when no book selected ──────────────────────────────── */}
+          {!autofilled && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <div className="flex items-start gap-2">
+                <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-amber-800">No Book Selected</p>
+                  <p className="text-xs text-amber-600 mt-1">
+                    Please select a cataloged book from the search above to proceed. Accessions must be linked to existing catalog records.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ── Actions ────────────────────────────────────────────────────── */}
           <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
@@ -455,7 +460,8 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
             </button>
             <button
               type="submit"
-              className="px-6 py-2 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-medium text-sm"
+              disabled={!autofilled}
+              className="px-6 py-2 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
               style={{ backgroundColor: 'var(--secondary-3-medium)' }}
             >
               Add Accession

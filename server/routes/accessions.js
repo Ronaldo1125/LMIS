@@ -104,6 +104,20 @@ router.get('/', async (req, res) => {
   }
 });
 
+// ─── Get archived accessions ───────────────────────────────────────────────────
+// GET /api/accessions/archived
+router.get('/archived', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT * FROM accessions WHERE is_archived = 1 ORDER BY archived_at DESC`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching archived accessions:', err);
+    res.status(500).json({ message: 'Failed to fetch archived accessions' });
+  }
+});
+
 // ─── Get single accession ──────────────────────────────────────────────────────
 // GET /api/accessions/:id
 router.get('/:id', async (req, res) => {
@@ -252,9 +266,10 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// ─── Archive accession ─────────────────────────────────────────────────────────
-// DELETE /api/accessions/:id
-router.delete('/:id', async (req, res) => {
+
+// ─── Archive accession (soft delete) ───────────────────────────────────────────
+// PATCH /api/accessions/:id/archive
+router.patch('/:id/archive', async (req, res) => {
   const { archived_by, archive_reason } = req.body;
 
   try {
@@ -278,6 +293,55 @@ router.delete('/:id', async (req, res) => {
   } catch (err) {
     console.error('Error archiving accession:', err);
     res.status(500).json({ message: 'Failed to archive accession' });
+  }
+});
+
+// ─── Restore archived accession ────────────────────────────────────────────────
+// PATCH /api/accessions/:id/restore
+router.patch('/:id/restore', async (req, res) => {
+  try {
+    const [result] = await pool.query(
+      `UPDATE accessions SET
+        is_archived = 0,
+        archived_at = NULL,
+        archived_by = NULL,
+        archive_reason = NULL
+       WHERE id = ? AND is_archived = 1`,
+      [req.params.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        message: 'Accession not found or not archived',
+      });
+    }
+
+    res.json({ message: 'Accession restored successfully' });
+  } catch (err) {
+    console.error('Error restoring accession:', err);
+    res.status(500).json({ message: 'Failed to restore accession' });
+  }
+});
+
+// ─── Delete accession permanently ──────────────────────────────────────────────
+// DELETE /api/accessions/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    const [result] = await pool.query(
+      `DELETE FROM accessions WHERE id = ?`,
+      [req.params.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        message: 'Accession not found',
+      });
+    }
+
+    res.json({ message: 'Accession deleted permanently' });
+  } catch (err) {
+    console.error('Error deleting accession:', err);
+    res.status(500).json({ message: 'Failed to delete accession' });
   }
 });
 

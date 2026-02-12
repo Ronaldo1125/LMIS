@@ -251,7 +251,6 @@ const EditBookModal = ({ isOpen, onClose, onSubmit, editBook, setEditBook, categ
               </label>
               <input
                 type="text"
-                required
                 value={editBook.author}
                 onChange={(e) => setEditBook({ ...editBook, author: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
@@ -304,7 +303,6 @@ const EditBookModal = ({ isOpen, onClose, onSubmit, editBook, setEditBook, categ
               </label>
               <input
                 type="text"
-                required
                 value={editBook.publisher}
                 onChange={(e) => setEditBook({ ...editBook, publisher: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
@@ -382,7 +380,6 @@ const EditBookModal = ({ isOpen, onClose, onSubmit, editBook, setEditBook, categ
               </label>
               <input
                 type="text"
-                required
                 value={editBook.isbn}
                 onChange={(e) => setEditBook({ ...editBook, isbn: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"

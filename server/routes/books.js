@@ -245,9 +245,11 @@ router.get('/meta/stats', authMiddleware, async (req, res) => {
     );
 
     const [publisherRows] = await pool.query(
-      `SELECT COALESCE(NULLIF(publisher, ''), 'Unknown') as publisher, COUNT(*) as count
+      `SELECT publisher, COUNT(*) as count
        FROM books
        WHERE is_archived = FALSE
+       AND publisher IS NOT NULL
+       AND publisher != ''
        GROUP BY publisher
        ORDER BY count DESC
        LIMIT 1`
@@ -297,10 +299,10 @@ router.post('/', authMiddleware, roleMiddleware('admin','librarian'), async (req
       copies
     } = req.body;
 
-    // Validation
-    if (!category || !title || !author || !publisher || !isbn) {
+    // Validation - ONLY category and title are required
+    if (!category || !title) {
       return res.status(400).json({ 
-        message: 'Required fields: category, title, author, publisher, isbn' 
+        message: 'Required fields: category, title' 
       });
     }
 
@@ -317,17 +319,17 @@ router.post('/', authMiddleware, roleMiddleware('admin','librarian'), async (req
       category,
       call_number || null,
       title,
-      author,
+      author || null,        // ✅ Changed to allow null
       editor || null,
       edition || null,
       publication || null,
-      publisher,
+      publisher || null,     // ✅ Changed to allow null
       date_of_publication || null,
       extent || null,
       dimensions || null,
       other_physical_details || null,
       accompanying_material || null,
-      isbn,
+      isbn || null,          // ✅ Changed to allow null
       issn || null,
       notes_area || null,
       subjects || null,

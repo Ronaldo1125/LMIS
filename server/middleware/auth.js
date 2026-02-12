@@ -31,13 +31,22 @@ const authMiddleware = (req, res, next) => {
 };
 
 // Middleware to check user rol// auth.js
-const roleMiddleware = (allowedRoles) => {  // remove the ...
+const roleMiddleware = (...allowedRoles) => {  // Add the ... rest operator
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Authentication required' });
     }
+    
+    // Add debug logging
+    console.log('User role:', req.user.role);
+    console.log('Allowed roles:', allowedRoles);
+    
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Access denied. Insufficient permissions.' });
+      return res.status(403).json({ 
+        message: 'Access denied. Insufficient permissions.',
+        requiredRoles: allowedRoles,
+        userRole: req.user.role
+      });
     }
     next();
   };
