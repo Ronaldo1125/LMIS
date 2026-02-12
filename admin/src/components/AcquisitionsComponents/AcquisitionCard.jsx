@@ -34,7 +34,9 @@ const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
             {title}
           </h3>
           <p className="text-sm text-gray-600">by {author}</p>
-          <p className="text-xs text-gray-500">Acquired: {formatDate(acquisitionDate)}</p>
+          <p className="text-xs text-gray-500">
+            Acquired: {formatDate(acquisitionDate)}
+          </p>
         </div>
 
         {/* Arrow */}
@@ -45,7 +47,12 @@ const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </div>
       </div>
@@ -55,7 +62,7 @@ const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
   // GRID VIEW
   return (
     <div
-      className="bg-white overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:scale-[1.01] group"
+      className="bg-white overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:scale-[1.01] group flex flex-col h-full"
       onClick={() => onViewDetails(acquisition)}
     >
       {/* Image */}
@@ -76,11 +83,16 @@ const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
       </div>
 
       {/* Content */}
-      <div className="p-3">
-        <h3 className="text-sm font-semibold text-[#154A9A] leading-snug tracking-tight mb-1 line-clamp-2">
-          {title}
-        </h3>
-        <p className="text-xs text-gray-600">{author}</p>
+      <div className="p-3 flex flex-col justify-between flex-grow min-h-[90px]">
+        <div>
+          <h3 className="font-semibold text-[#154A9A] leading-snug tracking-tight mb-1 line-clamp-2 text-[0.95rem]">
+            {title}
+          </h3>
+
+          <p className="text-xs text-gray-600 line-clamp-1">
+            {author}
+          </p>
+        </div>
 
         {/* View Details */}
         <button
@@ -97,7 +109,12 @@ const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
       </div>

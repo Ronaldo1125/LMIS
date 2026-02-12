@@ -12,7 +12,7 @@ const Acquisitions = () => {
   const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Sample data - replace with your actual data source
+  // Sample data
   const acquisitionsData = [
     {
       id: 1,
@@ -58,22 +58,19 @@ const Acquisitions = () => {
     }
   ];
 
-  // Filter and sort logic
   const filteredAndSortedAcquisitions = useMemo(() => {
-    // First filter by search query
     let filtered = acquisitionsData;
-    
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = acquisitionsData.filter(book => 
-        book.title.toLowerCase().includes(query) || 
+      filtered = acquisitionsData.filter(book =>
+        book.title.toLowerCase().includes(query) ||
         book.author.toLowerCase().includes(query)
       );
     }
-    
-    // Then sort
+
     const sorted = [...filtered];
-    
+
     if (sortBy === 'alphabetical') {
       sorted.sort((a, b) => {
         const comparison = a.title.localeCompare(b.title);
@@ -86,29 +83,26 @@ const Acquisitions = () => {
         return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
       });
     }
-    
+
     return sorted;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy, sortOrder, searchQuery]);
 
   const handleSortChange = (newSortBy) => {
     if (sortBy === newSortBy) {
-      // Toggle sort order if clicking the same sort option
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(newSortBy);
-      setSortOrder('desc'); // Default to descending for new sort
+      setSortOrder('desc');
     }
   };
 
-  // ESC key to clear search
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && searchQuery) {
         setSearchQuery('');
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [searchQuery]);
@@ -125,7 +119,7 @@ const Acquisitions = () => {
             <h1 className="text-2xl font-bold text-gray-800">Acquisitions</h1>
             <p className="text-sm text-gray-600">
               {filteredAndSortedAcquisitions.length}{' '}
-              {filteredAndSortedAcquisitions.length === 1 ? 'book' : 'books'} 
+              {filteredAndSortedAcquisitions.length === 1 ? 'book' : 'books'}
               {searchQuery && ' found'}
             </p>
           </div>
@@ -133,8 +127,8 @@ const Acquisitions = () => {
       </div>
 
       <div className="px-6">
-        {/* Controls */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
+        {/* Sticky Controls */}
+        <div className="sticky top-0 z-40 bg-gray-50 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
           <div className="flex flex-col sm:flex-row gap-6">
             <SortControls
               sortBy={sortBy}
@@ -146,8 +140,8 @@ const Acquisitions = () => {
               onViewChange={setViewMode}
             />
           </div>
-          
-          <SearchBar 
+
+          <SearchBar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
           />
