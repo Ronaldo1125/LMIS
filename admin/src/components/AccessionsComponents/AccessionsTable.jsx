@@ -1,10 +1,11 @@
 import {
   ClipboardDocumentCheckIcon,
   PencilSquareIcon,
-  ArchiveBoxIcon
+  ArchiveBoxIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline'
 
-const AccessionsTable = ({ accessions, onArchive, onEdit, onView }) => {
+const AccessionsTable = ({ accessions, onArchive, onDelete, onEdit, onView }) => {
   const renderValue = (value) => {
     if (value === null || value === undefined || value === '') return '-'
     return value
@@ -102,11 +103,18 @@ const AccessionsTable = ({ accessions, onArchive, onEdit, onView }) => {
                       <PencilSquareIcon className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={(e) => { e.stopPropagation(); onArchive && onArchive(item.id) }}
+                      onClick={(e) => { e.stopPropagation(); onArchive && onArchive(item) }}
                       className="p-2 text-gray-500 hover:text-amber-600 rounded-sm transition-colors bg-transparent hover:bg-transparent"
                       title="Archive"
                     >
                       <ArchiveBoxIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDelete && onDelete(item) }}
+                      className="p-2 text-gray-500 hover:text-red-600 rounded-sm transition-colors bg-transparent hover:bg-transparent"
+                      title="Delete"
+                    >
+                      <TrashIcon className="w-5 h-5" />
                     </button>
                   </div>
                 </td>

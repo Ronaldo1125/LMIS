@@ -8,6 +8,7 @@ import AddAccessionModal from './AccessionsComponents/AddAccessionModal'
 import ViewAccessionModal from './AccessionsComponents/ViewAccessionModal'
 import EditAccessionModal from './AccessionsComponents/EditAccessionModal'
 import ArchivesModal from './AccessionsComponents/ArchivesModal'
+import ConfirmationModal from './AccessionsComponents/ConfirmationModal'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -54,6 +55,14 @@ const Accessions = () => {
   const [selectedAccession, setSelectedAccession] = useState(null)
   const [newAccession, setNewAccession] = useState(emptyAccessionForm)
   const [editAccession, setEditAccession] = useState({ id: null, ...emptyAccessionForm })
+
+  // Confirmation modal state
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    type: 'archive', // 'archive' or 'delete'
+    item: null,
+    loading: false
+  })
 
   const fetchAccessions = useCallback(async () => {
     try {
@@ -116,16 +125,92 @@ const Accessions = () => {
     }
   }
 
-  const handleArchiveAccession = async (id) => {
-    if (!confirm('Archive this accession?')) return
-    try {
-      await axios.delete(`${API_BASE}/accessions/${id}`, {
-        headers: getAuthHeaders(),
-        data: { archived_by: 'admin' },
+  // Open archive confirmation modal
+  const handleArchiveClick = (item) => {
+    setModalState({
+      isOpen: true,
+      type: 'archive',
+      item: item,
+      loading: false
+    })
+  }
+
+  // Open delete confirmation modal
+  const handleDeleteClick = (item) => {
+    setModalState({
+      isOpen: true,
+      type: 'delete',
+      item: item,
+      loading: false
+    })
+  }
+
+  // Close confirmation modal
+  const handleModalClose = () => {
+    if (!modalState.loading) {
+      setModalState({
+        isOpen: false,
+        type: 'archive',
+        item: null,
+        loading: false
       })
-      fetchAccessions()
+    }
+  }
+
+  // Confirm archive action
+  const handleConfirmArchive = async () => {
+    if (!modalState.item) return
+
+    setModalState(prev => ({ ...prev, loading: true }))
+
+    try {
+      await axios.patch(
+        `${API_BASE}/accessions/${modalState.item.id}/archive`,
+        { archived_by: 'admin' },
+        { headers: getAuthHeaders() }
+      )
+
+      // Remove from list
+      setAccessions(prev => prev.filter(acc => acc.id !== modalState.item.id))
+      
+      // Close modal
+      setModalState({
+        isOpen: false,
+        type: 'archive',
+        item: null,
+        loading: false
+      })
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to archive accession.')
+      setModalState(prev => ({ ...prev, loading: false }))
+    }
+  }
+
+  // Confirm delete action
+  const handleConfirmDelete = async () => {
+    if (!modalState.item) return
+
+    setModalState(prev => ({ ...prev, loading: true }))
+
+    try {
+      await axios.delete(
+        `${API_BASE}/accessions/${modalState.item.id}`,
+        { headers: getAuthHeaders() }
+      )
+
+      // Remove from list
+      setAccessions(prev => prev.filter(acc => acc.id !== modalState.item.id))
+      
+      // Close modal
+      setModalState({
+        isOpen: false,
+        type: 'delete',
+        item: null,
+        loading: false
+      })
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete accession.')
+      setModalState(prev => ({ ...prev, loading: false }))
     }
   }
 
@@ -240,7 +325,8 @@ const Accessions = () => {
         ) : (
           <AccessionsTable
             accessions={filteredAccessions}
-            onArchive={handleArchiveAccession}
+            onArchive={handleArchiveClick}
+            onDelete={handleDeleteClick}
             onEdit={handleEditAccession}
             onView={handleViewAccession}
           />
@@ -283,6 +369,16 @@ const Accessions = () => {
         onClose={() => setIsArchivesOpen(false)}
         archivedAccessions={archivedAccessions}
         onRestore={handleRestoreAccession}
+      />
+
+      {/* Confirmation Modal for Archive and Delete */}
+      <ConfirmationModal
+        isOpen={modalState.isOpen}
+        onClose={handleModalClose}
+        onConfirm={modalState.type === 'archive' ? handleConfirmArchive : handleConfirmDelete}
+        type={modalState.type}
+        itemName={modalState.item?.accession_no}
+        loading={modalState.loading}
       />
     </div>
   )

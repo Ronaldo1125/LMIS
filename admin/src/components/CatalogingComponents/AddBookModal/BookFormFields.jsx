@@ -42,7 +42,6 @@ const BookFormFields = ({ formData, onChange, categories, loading }) => {
         onChange={handleChange('author')}
         placeholder="Author name"
         disabled={loading}
-        required
       />
 
       <FormInput
@@ -75,7 +74,6 @@ const BookFormFields = ({ formData, onChange, categories, loading }) => {
         onChange={handleChange('publisher')}
         placeholder="Publisher name"
         disabled={loading}
-        required
       />
 
       <FormInput
@@ -128,7 +126,6 @@ const BookFormFields = ({ formData, onChange, categories, loading }) => {
         onChange={handleChange('isbn')}
         placeholder="978-X-XXX-XXXXX-X"
         disabled={loading}
-        required
       />
 
       <FormInput

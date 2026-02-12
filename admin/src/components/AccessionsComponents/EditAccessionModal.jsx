@@ -12,6 +12,9 @@ const FormField = ({ label, required, children, colSpan }) => (
 const inputClass =
   'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-colors bg-white'
 
+const readOnlyInputClass =
+  'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600 cursor-not-allowed'
+
 const EditAccessionModal = ({ isOpen, onClose, onSubmit, editAccession, setEditAccession }) => {
   if (!isOpen) return null
 
@@ -61,84 +64,166 @@ const EditAccessionModal = ({ isOpen, onClose, onSubmit, editAccession, setEditA
             </div>
           </div>
 
-          {/* ── Bibliographic Details ──────────────────────────────────────── */}
+          {/* ── Bibliographic Details (Read-only) ──────────────────────────── */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-100 pb-2">
               Bibliographic Details
+              <span className="ml-2 text-xs font-normal text-blue-500 normal-case tracking-normal">
+                — from catalog (read-only)
+              </span>
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <FormField label="Title" required colSpan={2}>
                 <input
                   type="text"
-                  required
                   value={editAccession.title}
-                  onChange={set('title')}
-                  className={inputClass}
+                  readOnly
+                  className={readOnlyInputClass}
                 />
               </FormField>
 
               <FormField label="Author">
-                <input type="text" value={editAccession.author} onChange={set('author')} className={inputClass} />
+                <input
+                  type="text"
+                  value={editAccession.author}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="Editor">
-                <input type="text" value={editAccession.editor} onChange={set('editor')} className={inputClass} />
+                <input
+                  type="text"
+                  value={editAccession.editor}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="Edition">
-                <input type="text" value={editAccession.edition} onChange={set('edition')} className={inputClass} placeholder="e.g. 3rd edition" />
+                <input
+                  type="text"
+                  value={editAccession.edition}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="Publication">
-                <input type="text" value={editAccession.publication} onChange={set('publication')} className={inputClass} placeholder="Place of publication" />
+                <input
+                  type="text"
+                  value={editAccession.publication}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="Publisher">
-                <input type="text" value={editAccession.publisher} onChange={set('publisher')} className={inputClass} />
+                <input
+                  type="text"
+                  value={editAccession.publisher}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="Date of Publication">
-                <input type="date" value={editAccession.date_of_publication} onChange={set('date_of_publication')} className={inputClass} />
+                <input
+                  type="date"
+                  value={editAccession.date_of_publication}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="Extent">
-                <input type="text" value={editAccession.extent} onChange={set('extent')} className={inputClass} placeholder="e.g. 320 p." />
+                <input
+                  type="text"
+                  value={editAccession.extent}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="Dimensions">
-                <input type="text" value={editAccession.dimensions} onChange={set('dimensions')} className={inputClass} placeholder="e.g. 23 cm" />
+                <input
+                  type="text"
+                  value={editAccession.dimensions}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="ISBN">
-                <input type="text" value={editAccession.isbn} onChange={set('isbn')} className={inputClass} />
+                <input
+                  type="text"
+                  value={editAccession.isbn}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="ISSN">
-                <input type="text" value={editAccession.issn} onChange={set('issn')} className={inputClass} />
+                <input
+                  type="text"
+                  value={editAccession.issn}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="Other Physical Details" colSpan={2}>
-                <input type="text" value={editAccession.other_physical_details} onChange={set('other_physical_details')} className={inputClass} placeholder="Illustrations, maps, etc." />
+                <input
+                  type="text"
+                  value={editAccession.other_physical_details}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="Accompanying Material" colSpan={2}>
-                <input type="text" value={editAccession.accompanying_material} onChange={set('accompanying_material')} className={inputClass} />
+                <input
+                  type="text"
+                  value={editAccession.accompanying_material}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="Subjects" colSpan={2}>
-                <input type="text" value={editAccession.subjects} onChange={set('subjects')} className={inputClass} />
+                <input
+                  type="text"
+                  value={editAccession.subjects}
+                  readOnly
+                  className={readOnlyInputClass}
+                />
               </FormField>
 
               <FormField label="Notes Area" colSpan={2}>
                 <textarea
                   rows={3}
                   value={editAccession.notes_area}
-                  onChange={set('notes_area')}
-                  className={inputClass}
+                  readOnly
+                  className={readOnlyInputClass}
                 />
               </FormField>
 
+            </div>
+          </div>
+
+          {/* ── Info Note ──────────────────────────────────────────────────── */}
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="flex items-start gap-2">
+              <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-blue-800">Bibliographic data is locked</p>
+                <p className="text-xs text-blue-600 mt-1">
+                  To update bibliographic details, edit the original book record in the catalog. Accession records reference the catalog and cannot modify book data directly.
+                </p>
+              </div>
             </div>
           </div>
 
