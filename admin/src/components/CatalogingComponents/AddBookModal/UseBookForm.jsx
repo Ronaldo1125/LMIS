@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+import api from '../../../utils/api' // ✅ Import configured axios (adjust path based on your folder structure)
 
 const initialFormState = {
   category: '',
@@ -38,10 +36,7 @@ export const useBookForm = (isOpen) => {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await axios.get(`${API_URL}/books/meta/categories`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await api.get('/books/meta/categories')
       setCategories(response.data)
     } catch (err) {
       console.error('Error fetching categories:', err)
@@ -60,8 +55,6 @@ export const useBookForm = (isOpen) => {
     setError('')
 
     try {
-      const token = localStorage.getItem('authToken')
-      
       const bookData = {
         category: formData.category,
         call_number: formData.callNumber,
@@ -83,9 +76,7 @@ export const useBookForm = (isOpen) => {
         copies: parseInt(formData.copies)
       }
 
-      const response = await axios.post(`${API_URL}/books`, bookData, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await api.post('/books', bookData)
 
       // Return the bookId from the response for file uploads
       const bookId = response.data.bookId

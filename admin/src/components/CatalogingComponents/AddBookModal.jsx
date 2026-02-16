@@ -1,13 +1,11 @@
 import { useState } from 'react'
-import axios from 'axios'
+import api from '../../utils/api' // ✅ Import configured axios
 import ModalHeader from './AddBookModal/ModalHeader'
 import ErrorAlert from './AddBookModal/ErrorAlert'
 import BookFormFields from './AddBookModal/BookFormFields'
 import FormActions from './AddBookModal/FormActions'
 import FileUploadSection from './AddBookModal/FileUploadSection'
 import { useBookForm } from './AddBookModal/UseBookForm'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const AddBookModal = ({ isOpen, onClose, onBookAdded }) => {
   const {
@@ -101,15 +99,12 @@ const AddBookModal = ({ isOpen, onClose, onBookAdded }) => {
         })
         formData.append('setPrimary', 'true') // Set first file as primary
 
-        const token = localStorage.getItem('authToken')
-        
         try {
-          const response = await axios.post(
-            `${API_URL}/uploads/${bookId}`,
+          const response = await api.post(
+            `/uploads/${bookId}`,
             formData,
             {
               headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'multipart/form-data'
               }
             }

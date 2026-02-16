@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   BookOpenIcon, 
   DocumentTextIcon, 
@@ -6,7 +6,8 @@ import {
   ArchiveBoxIcon, 
   AcademicCapIcon, 
   ScaleIcon, 
-  BookmarkIcon, 
+  BookmarkIcon,
+  QuestionMarkCircleIcon,
   XMarkIcon,
   ChevronDownIcon,
   ChevronUpIcon
@@ -16,45 +17,147 @@ const CollectionByCategory = () => {
   const [hoveredCategory, setHoveredCategory] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [expandedCategories, setExpandedCategories] = useState({})
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const categories = [
-    { name: 'Books', icon: BookOpenIcon, count: 1247, color: 'var(--dark-blue-1)' },
-    { 
-      name: 'Reports', 
-      icon: DocumentTextIcon, 
-      count: 389, 
-      color: '#64748b',
-      subcategories: [
-        { name: 'Annual Reports', count: 120 },
-        { name: 'Special Reports', count: 45 }
-      ]
-    },
-    { 
-      name: 'Periodicals', 
-      icon: NewspaperIcon, 
-      count: 542, 
-      color: 'var(--secondary-1-medium)',
-      subcategories: [
-        { name: 'Magazines', count: 200 },
-        { name: 'Newspapers', count: 180 },
-        { name: 'Journals', count: 162 }
-      ]
-    },
-    { name: 'Sourcebook', icon: ArchiveBoxIcon, count: 210, color: 'var(--secondary-3-medium)' },
-    { name: 'Thesis/Research papers', icon: AcademicCapIcon, count: 156, color: 'var(--dark-blue-1)' },
-    { name: 'Statute/Law/Legal Documents', icon: ScaleIcon, count: 98, color: '#64748b' },
-    { name: 'Guides/Manuals', icon: BookmarkIcon, count: 75, color: 'var(--secondary-1-medium)' },
-    { 
-      name: 'Reference Materials', 
-      icon: BookOpenIcon, 
-      count: 320, 
-      color: 'var(--secondary-3-medium)',
-      subcategories: [
-        { name: 'Encyclopedia', count: 150 },
-        { name: 'Atlas', count: 170 }
-      ]
+  // Icon mapping for categories
+  const categoryIcons = {
+    'Books': BookOpenIcon,
+    'Reports': DocumentTextIcon,
+    'Periodicals': NewspaperIcon,
+    'Sourcebook': ArchiveBoxIcon,
+    'Thesis/Research papers': AcademicCapIcon,
+    'Statute/Law/Legal Documents': ScaleIcon,
+    'Guides/Manuals': BookmarkIcon,
+    'Reference Materials': BookOpenIcon,
+    'Uncategorized': QuestionMarkCircleIcon
+  }
+
+  // Color mapping for categories
+  const categoryColors = {
+    'Books': 'var(--dark-blue-1)',
+    'Reports': '#64748b',
+    'Periodicals': 'var(--secondary-1-medium)',
+    'Sourcebook': 'var(--secondary-3-medium)',
+    'Thesis/Research papers': 'var(--dark-blue-1)',
+    'Statute/Law/Legal Documents': '#64748b',
+    'Guides/Manuals': 'var(--secondary-1-medium)',
+    'Reference Materials': 'var(--secondary-3-medium)',
+    'Uncategorized': '#94a3b8'
+  }
+
+  useEffect(() => {
+    fetchCategoryData()
+  }, [])
+
+  const fetchCategoryData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Fetch all categories from backend
+      const categoriesResponse = await fetch('http://localhost:5000/api/books/meta/categories', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+
+      if (!categoriesResponse.ok) {
+        throw new Error('Failed to fetch categories')
+      }
+
+      const categoriesData = await categoriesResponse.json()
+
+      // Fetch all books to count by category
+      const booksResponse = await fetch('http://localhost:5000/api/books?limit=999999&showArchived=false', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+
+      if (!booksResponse.ok) {
+        throw new Error('Failed to fetch books')
+      }
+
+      const booksData = await booksResponse.json()
+      const books = booksData.books || []
+
+      // Count books by category and subcategory
+      const categoryCounts = {}
+      const subcategoryCounts = {}
+      let uncategorizedCount = 0
+
+      books.forEach(book => {
+        if (!book.category || book.category.trim() === '') {
+          uncategorizedCount++
+        } else {
+          // Find the category in the hierarchical structure
+          const categoryMatch = categoriesData.find(cat => 
+            cat.id === book.category || cat.name === book.category
+          )
+
+          if (categoryMatch) {
+            if (categoryMatch.parent_id) {
+              // It's a subcategory
+              const parentCategory = categoriesData.find(cat => cat.id === categoryMatch.parent_id)
+              if (parentCategory) {
+                categoryCounts[parentCategory.name] = (categoryCounts[parentCategory.name] || 0) + 1
+                const subKey = `${parentCategory.name}::${categoryMatch.name}`
+                subcategoryCounts[subKey] = (subcategoryCounts[subKey] || 0) + 1
+              }
+            } else {
+              // It's a parent category
+              categoryCounts[categoryMatch.name] = (categoryCounts[categoryMatch.name] || 0) + 1
+            }
+          } else {
+            // Category not found in database, count as the category name directly
+            categoryCounts[book.category] = (categoryCounts[book.category] || 0) + 1
+          }
+        }
+      })
+
+      // Build category hierarchy with counts
+      const parentCategories = categoriesData.filter(cat => !cat.parent_id)
+      const formattedCategories = parentCategories.map(parent => {
+        const subcategories = categoriesData
+          .filter(cat => cat.parent_id === parent.id)
+          .map(sub => ({
+            name: sub.name,
+            count: subcategoryCounts[`${parent.name}::${sub.name}`] || 0
+          }))
+          .filter(sub => sub.count > 0) // Only show subcategories with items
+
+        return {
+          name: parent.name,
+          icon: categoryIcons[parent.name] || BookOpenIcon,
+          count: categoryCounts[parent.name] || 0,
+          color: categoryColors[parent.name] || '#64748b',
+          subcategories: subcategories.length > 0 ? subcategories : undefined
+        }
+      }).filter(cat => cat.count > 0) // Only show categories with items
+
+      // Add uncategorized if there are any
+      if (uncategorizedCount > 0) {
+        formattedCategories.push({
+          name: 'Uncategorized',
+          icon: QuestionMarkCircleIcon,
+          count: uncategorizedCount,
+          color: '#94a3b8'
+        })
+      }
+
+      // Sort by count (descending)
+      formattedCategories.sort((a, b) => b.count - a.count)
+
+      setCategories(formattedCategories)
+    } catch (err) {
+      console.error('Error fetching category data:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
   // Calculate total items across all categories
   const totalItems = categories.reduce((sum, cat) => sum + cat.count, 0)
@@ -66,6 +169,45 @@ const CollectionByCategory = () => {
     }))
   }
 
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-full">
+        <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--dark-blue-1)' }}>
+          Collection by Category
+        </h2>
+        <div className="flex items-center justify-center flex-grow">
+          <div className="text-gray-500">Loading categories...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-full">
+        <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--dark-blue-1)' }}>
+          Collection by Category
+        </h2>
+        <div className="flex items-center justify-center flex-grow">
+          <div className="text-red-500">Error: {error}</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (categories.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-full">
+        <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--dark-blue-1)' }}>
+          Collection by Category
+        </h2>
+        <div className="flex items-center justify-center flex-grow">
+          <div className="text-gray-500">No categories found</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-full">
       <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--dark-blue-1)' }}>
@@ -74,7 +216,7 @@ const CollectionByCategory = () => {
 
       {/* Front view cards */}
       <div className="space-y-3 flex-grow">
-        {categories.slice(0,4).map((cat, index) => {
+        {categories.slice(0, 4).map((cat, index) => {
           const Icon = cat.icon
           const isHovered = hoveredCategory === index
           return (

@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../../utils/api' // ✅ Import configured axios
 import { XMarkIcon, ArrowUturnLeftIcon, EyeIcon } from '@heroicons/react/24/outline'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const ArchivesModal = ({ isOpen, onClose, onRestore }) => {
   const [archivedBooks, setArchivedBooks] = useState([])
@@ -22,10 +20,8 @@ const ArchivesModal = ({ isOpen, onClose, onRestore }) => {
     try {
       setLoading(true)
       setError('')
-      const token = localStorage.getItem('authToken')
       
-      const response = await axios.get(`${API_URL}/books`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get('/books', {
         params: { 
           showArchived: 'true',
           limit: 100 // Get all archived books

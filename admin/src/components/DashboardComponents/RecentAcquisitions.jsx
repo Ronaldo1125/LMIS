@@ -1,68 +1,79 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
 const RecentAcquisitions = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [acquisitions, setAcquisitions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const recentAcquisitions = [
-    {
-      title: 'Digital Transformation in Public Libraries',
-      type: 'Book',
-      author: 'Dr. Maria Santos',
-      date: '2026-01-28',
-      category: 'Books',
-      color: 'var(--dark-blue-1)'
-    },
-    {
-      title: 'Annual Climate Report 2025',
-      type: 'Report',
-      author: 'Environmental Council',
-      date: '2026-01-25',
-      category: 'Reports',
-      color: '#64748b'
-    },
-    {
-      title: 'Journal of Information Science - Feb 2026',
-      type: 'Periodical',
-      author: 'Various Authors',
-      date: '2026-01-22',
-      category: 'Periodicals',
-      color: 'var(--secondary-1-medium)'
-    },
-    {
-      title: 'Atlas of Global History',
-      type: 'Reference Material',
-      author: 'World History Institute',
-      date: '2026-01-20',
-      category: 'Reference Materials',
-      color: 'var(--secondary-3-medium)'
-    },
-    {
-      title: 'Legal Statutes Compilation 2026',
-      type: 'Law Document',
-      author: 'National Law Commission',
-      date: '2026-01-18',
-      category: 'Statute/Law/Legal Documents',
-      color: '#64748b'
-    },
-    {
-      title: 'Research on Renewable Energy',
-      type: 'Thesis',
-      author: 'Engr. Juan Dela Cruz',
-      date: '2026-01-15',
-      category: 'Thesis/Research Papers',
-      color: 'var(--dark-blue-1)'
-    },
-    {
-      title: 'Library User Guide 2026',
-      type: 'Manual',
-      author: 'Library Staff',
-      date: '2026-01-12',
-      category: 'Guides/Manuals',
-      color: 'var(--secondary-1-medium)'
+  // Category color mapping
+  const categoryColors = {
+    'Books': 'var(--dark-blue-1)',
+    'Reports': '#64748b',
+    'Periodicals': 'var(--secondary-1-medium)',
+    'Sourcebook': 'var(--secondary-3-medium)',
+    'Thesis/Research papers': 'var(--dark-blue-1)',
+    'Statute/Law/Legal Documents': '#64748b',
+    'Guides/Manuals': 'var(--secondary-1-medium)',
+    'Reference Materials': 'var(--secondary-3-medium)',
+    'Uncategorized': '#94a3b8'
+  }
+
+  // Category type mapping
+  const categoryTypes = {
+    'Books': 'Book',
+    'Reports': 'Report',
+    'Periodicals': 'Periodical',
+    'Sourcebook': 'Sourcebook',
+    'Thesis/Research papers': 'Thesis',
+    'Statute/Law/Legal Documents': 'Law Document',
+    'Guides/Manuals': 'Manual',
+    'Reference Materials': 'Reference Material',
+    'Uncategorized': 'Uncategorized'
+  }
+
+  useEffect(() => {
+    fetchAcquisitions()
+  }, [])
+
+  const fetchAcquisitions = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await fetch('http://localhost:5000/api/acquisitions', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch acquisitions')
+      }
+
+      const data = await response.json()
+      
+      // Map the data to include color and type based on category
+      const formattedAcquisitions = (data.data || []).map(item => ({
+        title: item.title,
+        type: categoryTypes[item.category] || 'Other',
+        author: item.author || 'Unknown Author',
+        date: item.date_accessioned,
+        category: item.category || 'Uncategorized',
+        color: categoryColors[item.category] || '#94a3b8',
+        id: item.id
+      }))
+
+      setAcquisitions(formattedAcquisitions)
+    } catch (err) {
+      console.error('Error fetching acquisitions:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
   const formatDate = (dateString) => {
     const date = new Date(dateString)
@@ -73,7 +84,8 @@ const RecentAcquisitions = () => {
     if (diffDays === 0) return 'Today'
     if (diffDays === 1) return 'Yesterday'
     if (diffDays < 7) return `${diffDays} days ago`
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    if (diffDays < 14) return `${diffDays} days ago`
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
   const openModal = () => {
@@ -86,6 +98,45 @@ const RecentAcquisitions = () => {
     setTimeout(() => setIsModalOpen(false), 400)
   }
 
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-full">
+        <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--dark-blue-1)' }}>
+          Recent Acquisitions
+        </h2>
+        <div className="flex items-center justify-center flex-grow">
+          <div className="text-gray-500">Loading acquisitions...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-full">
+        <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--dark-blue-1)' }}>
+          Recent Acquisitions
+        </h2>
+        <div className="flex items-center justify-center flex-grow">
+          <div className="text-red-500">Error: {error}</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (acquisitions.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-full">
+        <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--dark-blue-1)' }}>
+          Recent Acquisitions
+        </h2>
+        <div className="flex items-center justify-center flex-grow">
+          <div className="text-gray-500">No recent acquisitions found</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col h-full relative">
       <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--dark-blue-1)' }}>
@@ -94,8 +145,8 @@ const RecentAcquisitions = () => {
 
       {/* Preview — EXACTLY SAME (NO IMAGE, NO SIZE CHANGE) */}
       <div className="space-y-4 flex-grow">
-        {recentAcquisitions.slice(0, 4).map((item, index) => (
-          <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
+        {acquisitions.slice(0, 4).map((item, index) => (
+          <div key={item.id || index} className="bg-white p-4 rounded-lg border border-gray-200">
             <h3 className="text-sm font-semibold text-gray-900">
               {item.title}
             </h3>
@@ -111,7 +162,7 @@ const RecentAcquisitions = () => {
         className="mt-4 px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 hover:scale-105 active:scale-95"
         style={{ background: '#64748b' }}
       >
-        View More
+        View More ({acquisitions.length} total)
       </button>
 
       {/* Modal — SAME SIZE */}
@@ -136,9 +187,14 @@ const RecentAcquisitions = () => {
 
             {/* Header */}
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-bold" style={{ color: 'var(--dark-blue-1)' }}>
-                Recent Acquisitions
-              </h2>
+              <div>
+                <h2 className="text-xl font-bold" style={{ color: 'var(--dark-blue-1)' }}>
+                  Recent Acquisitions
+                </h2>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {acquisitions.length} items acquired in the last 14 days
+                </p>
+              </div>
               <button
                 onClick={closeModal}
                 className="p-2 hover:bg-gray-100 rounded-lg"
@@ -149,9 +205,9 @@ const RecentAcquisitions = () => {
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {recentAcquisitions.map((item, index) => (
+              {acquisitions.map((item, index) => (
                 <div
-                  key={index}
+                  key={item.id || index}
                   className="p-4 rounded-lg border flex gap-4"
                   style={{ borderColor: item.color }}
                 >

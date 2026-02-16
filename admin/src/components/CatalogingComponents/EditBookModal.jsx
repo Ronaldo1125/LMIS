@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../../utils/api' // ✅ Import configured axios
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { Trash2, CheckCircle, FileText, File, Loader } from 'lucide-react'
 import FileUploadSection from './AddBookModal/FileUploadSection'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const EditBookModal = ({ isOpen, onClose, onSubmit, editBook, setEditBook, categories }) => {
   const [selectedFiles, setSelectedFiles] = useState([])
@@ -30,10 +28,7 @@ const EditBookModal = ({ isOpen, onClose, onSubmit, editBook, setEditBook, categ
   const fetchExistingFiles = async (bookId) => {
     setLoadingFiles(true)
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await axios.get(`${API_URL}/uploads/book/${bookId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await api.get(`/uploads/book/${bookId}`)
       setExistingFiles(response.data)
     } catch (err) {
       console.error('Error fetching existing files:', err)
@@ -93,10 +88,7 @@ const EditBookModal = ({ isOpen, onClose, onSubmit, editBook, setEditBook, categ
 
     setDeletingFile(prev => ({ ...prev, [uploadId]: true }))
     try {
-      const token = localStorage.getItem('authToken')
-      await axios.delete(`${API_URL}/uploads/${uploadId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await api.delete(`/uploads/${uploadId}`)
       setExistingFiles(prev => prev.filter(f => f.id !== uploadId))
     } catch (err) {
       console.error('Error deleting file:', err)
@@ -108,10 +100,7 @@ const EditBookModal = ({ isOpen, onClose, onSubmit, editBook, setEditBook, categ
 
   const handleSetPrimary = async (uploadId) => {
     try {
-      const token = localStorage.getItem('authToken')
-      await axios.patch(`${API_URL}/uploads/${uploadId}/set-primary`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await api.patch(`/uploads/${uploadId}/set-primary`, {})
       // Refresh files to reflect new primary
       fetchExistingFiles(editBook.id)
     } catch (err) {
@@ -139,10 +128,8 @@ const EditBookModal = ({ isOpen, onClose, onSubmit, editBook, setEditBook, categ
           formData.append('setPrimary', 'true')
         }
 
-        const token = localStorage.getItem('authToken')
-        await axios.post(`${API_URL}/uploads/${editBook.id}`, formData, {
+        await api.post(`/uploads/${editBook.id}`, formData, {
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
           }
         })
@@ -201,6 +188,7 @@ const EditBookModal = ({ isOpen, onClose, onSubmit, editBook, setEditBook, categ
 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* All your form fields stay exactly the same */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Category *

@@ -1,7 +1,5 @@
 import { useState, useRef } from 'react'
-import axios from 'axios'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+import api from '../../utils/api' // ✅ Import configured axios
 
 const ImportBooksModal = ({ isOpen, onClose, onImported }) => {
   const [file, setFile] = useState(null)
@@ -61,13 +59,11 @@ const ImportBooksModal = ({ isOpen, onClose, onImported }) => {
     setResult(null)
 
     try {
-      const token = localStorage.getItem('authToken')
       const formData = new FormData()
       formData.append('file', file)
 
-      const res = await axios.post(`${API_URL}/books/import`, formData, {
+      const res = await api.post('/books/import', formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       })

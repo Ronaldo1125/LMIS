@@ -49,6 +49,10 @@ app.use('/api/books', importBooksRoute);
 const accessionsRoutes = require('./routes/accessions');
 app.use('/api/accessions', accessionsRoutes);
 
+//Acquisitions
+const acquisitionsRoutes = require('./routes/acquisitions');
+app.use('/api/acquisitions', acquisitionsRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);

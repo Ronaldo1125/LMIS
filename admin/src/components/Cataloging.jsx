@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import axios from 'axios'
+import api from '../utils/api' // ✅ Use the configured axios instance
 import { BookOpen } from 'lucide-react'
 import StatsOverview from './CatalogingComponents/StatsOverview'
 import SearchAndFilter from './CatalogingComponents/SearchAndFilter'
@@ -9,8 +9,6 @@ import ViewBookModal from './CatalogingComponents/ViewBookModal'
 import EditBookModal from './CatalogingComponents/EditBookModal'
 import ArchivesModal from './CatalogingComponents/ArchivesModal'
 import ImportBooksModal from './CatalogingComponents/ImportBooksModal'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const Cataloging = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -73,7 +71,6 @@ const Cataloging = () => {
     try {
       setLoading(true)
       setError('')
-      const token = localStorage.getItem('authToken')
 
       const params = {
         page: currentPage,
@@ -82,10 +79,7 @@ const Cataloging = () => {
         category: selectedCategory !== 'all' ? selectedCategory : ''
       }
 
-      const response = await axios.get(`${API_URL}/books`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params
-      })
+      const response = await api.get('/books', { params })
 
       setBooks(response.data.books)
       setTotalPages(response.data.pagination.totalPages)
@@ -99,10 +93,7 @@ const Cataloging = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await axios.get(`${API_URL}/books/meta/stats`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await api.get('/books/meta/stats')
       setCatalogStats(response.data)
     } catch (err) {
       console.error('Error fetching stats:', err)
@@ -131,10 +122,8 @@ const Cataloging = () => {
 
   const handleDeleteBook = async (id) => {
     try {
-      const token = localStorage.getItem('authToken')
-      const headers = { Authorization: `Bearer ${token}` }
-      await axios.delete(`${API_URL}/uploads/book/${id}`, { headers })
-      await axios.delete(`${API_URL}/books/${id}`, { headers })
+      await api.delete(`/uploads/book/${id}`)
+      await api.delete(`/books/${id}`)
       fetchBooks()
       fetchStats()
     } catch (err) {
@@ -145,12 +134,7 @@ const Cataloging = () => {
 
   const handleArchiveBook = async (id, reason) => {
     try {
-      const token = localStorage.getItem('authToken')
-      await axios.patch(
-        `${API_URL}/books/${id}/archive`,
-        { reason },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      await api.patch(`/books/${id}/archive`, { reason })
       fetchBooks()
       fetchStats()
     } catch (err) {
@@ -161,12 +145,7 @@ const Cataloging = () => {
 
   const handleUnarchiveBook = async (id) => {
     try {
-      const token = localStorage.getItem('authToken')
-      await axios.patch(
-        `${API_URL}/books/${id}/unarchive`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      await api.patch(`/books/${id}/unarchive`, {})
       fetchBooks()
       fetchStats()
     } catch (err) {
@@ -204,8 +183,6 @@ const Cataloging = () => {
 
   const handleUpdateBook = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-
       const bookData = {
         category: editBook.category,
         call_number: editBook.callNumber,
@@ -227,9 +204,7 @@ const Cataloging = () => {
         copies: parseInt(editBook.copies)
       }
 
-      await axios.put(`${API_URL}/books/${editBook.id}`, bookData, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await api.put(`/books/${editBook.id}`, bookData)
 
       setIsEditModalOpen(false)
       setEditBook({
@@ -249,10 +224,7 @@ const Cataloging = () => {
 
   const handleViewBook = async (book) => {
     try {
-      const token = localStorage.getItem('authToken')
-      const response = await axios.get(`${API_URL}/books/${book.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await api.get(`/books/${book.id}`)
       setSelectedBook(response.data)
       setIsViewModalOpen(true)
     } catch (err) {
