@@ -15,20 +15,39 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Username and password are required' });
     }
 
+    // First, check if user exists (without is_active filter)
     const [users] = await pool.query(
-      'SELECT * FROM adminpanel_users WHERE username = ? AND is_active = TRUE',
+      'SELECT * FROM adminpanel_users WHERE username = ?',
       [username]
     );
 
     if (users.length === 0) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid username or password' });
     }
 
     const user = users[0];
 
+    // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    // Check if account is inactive
+    if (!user.is_active) {
+      if (user.role === 'librarian') {
+        return res.status(403).json({ 
+          message: 'Your librarian account is currently inactive. Please contact an administrator to activate your account.' 
+        });
+      } else if (user.role === 'patron') {
+        return res.status(403).json({ 
+          message: 'Your account has been deactivated. Please contact an administrator for assistance.' 
+        });
+      } else {
+        return res.status(403).json({ 
+          message: 'Your account is inactive. Please contact an administrator.' 
+        });
+      }
     }
 
     // Update last login timestamp
@@ -55,13 +74,14 @@ router.post('/login', async (req, res) => {
         id: user.id,
         username: user.username,
         full_name: user.full_name,
-        role: user.role
+        role: user.role,
+        is_active: user.is_active
       }
     });
 
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error during login' });
+    res.status(500).json({ message: 'An error occurred during login. Please try again.' });
   }
 });
 
@@ -77,7 +97,7 @@ router.post('/logout', authMiddleware, (req, res) => {
 router.get('/verify', authMiddleware, async (req, res) => {
   try {
     const [users] = await pool.query(
-      'SELECT id, username, full_name, role, last_login FROM adminpanel_users WHERE id = ? AND is_active = TRUE',
+      'SELECT id, username, full_name, role, is_active, last_login FROM adminpanel_users WHERE id = ?',
       [req.user.id]
     );
 
@@ -85,9 +105,26 @@ router.get('/verify', authMiddleware, async (req, res) => {
       return res.status(401).json({ message: 'User not found' });
     }
 
+    const user = users[0];
+
+    // Check if user is still active
+    if (!user.is_active) {
+      return res.status(403).json({ 
+        message: 'Your account has been deactivated',
+        requiresLogout: true 
+      });
+    }
+
     res.json({
       valid: true,
-      user: users[0]
+      user: {
+        id: user.id,
+        username: user.username,
+        full_name: user.full_name,
+        role: user.role,
+        is_active: user.is_active,
+        last_login: user.last_login
+      }
     });
 
   } catch (error) {

@@ -33,7 +33,7 @@ function AccountLogin({ onLoginSuccess }) {
     }
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,13 +47,23 @@ function AccountLogin({ onLoginSuccess }) {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed')
+        // Handle different error statuses with appropriate messages
+        if (response.status === 403) {
+          // Account inactive - show the specific message from backend
+          throw new Error(data.message || 'Your account is inactive. Please contact an administrator.')
+        } else if (response.status === 401) {
+          // Invalid credentials
+          throw new Error(data.message || 'Invalid username or password')
+        } else {
+          // Other errors
+          throw new Error(data.message || 'Login failed. Please try again.')
+        }
       }
 
       // Store authentication token and user data
       localStorage.setItem('authToken', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
-      localStorage.setItem('userRole', data.user.role) // Add this line to store role
+      localStorage.setItem('userRole', data.user.role)
 
       // Store notification data for dashboard
       const notificationData = {
@@ -69,7 +79,8 @@ function AccountLogin({ onLoginSuccess }) {
       }
 
     } catch (err) {
-      setError(err.message || 'An error occurred during login')
+      console.error('Login error:', err)
+      setError(err.message || 'An error occurred during login. Please try again.')
     } finally {
       setIsLoading(false)
     }

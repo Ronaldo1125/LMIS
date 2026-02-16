@@ -58,6 +58,10 @@ function UserManagement() {
       setUsers(response.data.users)
     } catch (error) {
       console.error('Error fetching users:', error)
+      if (error.response?.status === 401) {
+        alert('Session expired. Please login again.')
+        // Redirect to login or handle as needed
+      }
     } finally {
       setLoading(false)
     }
@@ -91,6 +95,7 @@ function UserManagement() {
     return matchesSearch && matchesRole && matchesStatus
   })
 
+  // Map backend data to frontend format with proper isActiveLibrarian flag
   const usersWithActiveFlag = filteredUsers.map(user => ({
     id: user.id,
     name: user.full_name,
@@ -98,7 +103,8 @@ function UserManagement() {
     role: user.role.charAt(0).toUpperCase() + user.role.slice(1),
     status: user.is_active ? 'Active' : 'Inactive',
     dateAdded: user.created_at || user.date_added || new Date().toISOString(),
-    isActiveLibrarian: user.role === 'librarian' && user.is_active
+    // Use the computed field from backend
+    isActiveLibrarian: user.is_active_librarian === 1
   }))
 
   const handleAddStaff = async (staffData) => {
@@ -113,6 +119,7 @@ function UserManagement() {
         headers: { Authorization: `Bearer ${token}` }
       })
       setShowAddStaffModal(false)
+      alert('Staff member added successfully!')
       fetchUsers()
       fetchStats()
     } catch (error) {
@@ -133,6 +140,7 @@ function UserManagement() {
         headers: { Authorization: `Bearer ${token}` }
       })
       setShowAddLibrarianModal(false)
+      alert('Librarian added successfully! Remember to set them as active if needed.')
       fetchUsers()
       fetchStats()
     } catch (error) {
@@ -156,7 +164,7 @@ function UserManagement() {
       )
       setShowResetPasswordModal(false)
       setSelectedUser(null)
-      alert('Password reset successfully')
+      alert('Password reset successfully!')
     } catch (error) {
       console.error('Error resetting password:', error)
       alert(error.response?.data?.message || 'Error resetting password')
@@ -178,6 +186,7 @@ function UserManagement() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       )
+      alert('Account deactivated successfully!')
       fetchUsers()
       fetchStats()
     } catch (error) {
@@ -192,6 +201,13 @@ function UserManagement() {
       return
     }
 
+    const confirmMessage = 
+      'Set this librarian as the active librarian?\n\n' +
+      'This will automatically deactivate the current active librarian.\n' +
+      'Only ONE librarian can be active at a time.'
+
+    if (!confirm(confirmMessage)) return
+
     try {
       const token = localStorage.getItem('authToken')
       await axios.put(
@@ -199,6 +215,7 @@ function UserManagement() {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       )
+      alert('Active librarian set successfully!')
       fetchUsers()
     } catch (error) {
       console.error('Error setting active librarian:', error)
@@ -257,10 +274,10 @@ function UserManagement() {
       </div>
 
       <div className="px-6">
-       
+        {/* Stats Cards */}
         <StatsCards stats={stats} />
 
-        
+        {/* Search and Filters */}
         <div className="sticky top-0 z-20 bg-gray-50 py-4">
           <SearchBar
             searchQuery={searchQuery}
@@ -275,7 +292,7 @@ function UserManagement() {
           />
         </div>
 
-       
+        {/* Users Table */}
         <UsersTable
           users={usersWithActiveFlag}
           onResetPassword={handleOpenResetPassword}
@@ -285,6 +302,7 @@ function UserManagement() {
         />
       </div>
 
+      {/* Modals */}
       {showAddStaffModal && (
         <AddStaffModal
           onClose={() => setShowAddStaffModal(false)}

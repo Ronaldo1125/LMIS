@@ -1,30 +1,30 @@
-import { Key, UserX, CheckCircle, Circle, Crown } from 'lucide-react'
+import { Key, UserX, CheckCircle, Circle, Crown, AlertCircle } from 'lucide-react'
 
-function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLibrarian }) {
+function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLibrarian, isAdmin }) {
   const getRoleBadgeStyle = (role) => {
     switch (role) {
       case 'Staff':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-50 text-blue-700 border border-blue-200'
       case 'Librarian':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-purple-50 text-purple-700 border border-purple-200'
       case 'Patron':
-        return 'bg-orange-100 text-orange-800'
+        return 'bg-orange-50 text-orange-700 border border-orange-200'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gray-50 text-gray-700 border border-gray-200'
     }
   }
 
   const getStatusBadge = (status) => {
     if (status === 'Active') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
           <CheckCircle size={14} />
           Active
         </span>
       )
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium bg-slate-50 text-slate-600 border border-slate-200">
         <Circle size={14} />
         Inactive
       </span>
@@ -32,71 +32,105 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
   }
 
   const renderActions = (user) => {
+    // Patron actions
     if (user.role === 'Patron') {
       return (
         <div className="flex gap-2">
-          <button
-            onClick={() => onResetPassword(user)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0F61F7] text-white hover:bg-[#0D52D1] transition-colors"
-          >
-            <Key size={14} />
-            Reset Password
-          </button>
-          {user.status === 'Active' && (
-            <button
-              onClick={() => onDeactivateAccount(user.id)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
-            >
-              <UserX size={14} />
-              Deactivate
-            </button>
+          {isAdmin && (
+            <>
+              <button
+                onClick={() => onResetPassword(user)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                <Key size={14} />
+                Reset Password
+              </button>
+              {user.status === 'Active' && (
+                <button
+                  onClick={() => onDeactivateAccount(user.id)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-colors"
+                >
+                  <UserX size={14} />
+                  Deactivate
+                </button>
+              )}
+            </>
           )}
+          {!isAdmin && <span className="text-xs text-gray-500">No actions available</span>}
         </div>
       )
     }
 
+    // Librarian actions
     if (user.role === 'Librarian') {
       return (
-        <div className="flex gap-2">
-          {!user.isActiveLibrarian && (
-            <button
-              onClick={() => onSetActiveLibrarian(user.id)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
-            >
-              <Crown size={14} />
-              Set Active
-            </button>
-          )}
-          {user.isActiveLibrarian && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-400 to-yellow-500 text-white shadow-md">
-              <Crown size={14} />
-              Active Librarian
-            </span>
+        <div className="flex gap-2 items-center">
+          {user.isActiveLibrarian ? (
+            // Active Librarian Badge - Professional Style
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold bg-amber-600 text-white shadow-sm">
+              <Crown size={16} className="fill-white" />
+              <span>Active Librarian</span>
+            </div>
+          ) : (
+            <>
+              {isAdmin ? (
+                <div className="flex items-center gap-2">
+                  {/* Set Active Button - Professional Style */}
+                  <button
+                    onClick={() => onSetActiveLibrarian(user.id)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm"
+                    title="Set as active librarian (will deactivate current active librarian)"
+                  >
+                    <Crown size={16} />
+                    <span>Set as Active</span>
+                  </button>
+                  {/* Inactive Badge */}
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-slate-50 text-slate-600 border border-slate-200">
+                    <AlertCircle size={12} />
+                    Inactive
+                  </span>
+                </div>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-slate-50 text-slate-600 border border-slate-200">
+                  <AlertCircle size={14} />
+                  Inactive Librarian
+                </span>
+              )}
+            </>
           )}
         </div>
       )
     }
 
+    // Staff actions
     if (user.role === 'Staff') {
       return (
-        <button
-          onClick={() => onResetPassword(user)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0F61F7] text-white hover:bg-[#0D52D1] transition-colors"
-        >
-          <Key size={14} />
-          Reset Password
-        </button>
+        <div className="flex gap-2">
+          {isAdmin ? (
+            <button
+              onClick={() => onResetPassword(user)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              <Key size={14} />
+              Reset Password
+            </button>
+          ) : (
+            <span className="text-xs text-gray-500">No actions available</span>
+          )}
+        </div>
       )
     }
+
+    return null
   }
 
   if (users.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm p-12 text-center border border-gray-200">
         <div className="text-gray-400 mb-4">
           <Circle size={64} className="mx-auto opacity-50" />
         </div>
-        <h3 className="text-xl font-semibold text-[#154A9A] mb-2">
+        <h3 className="text-xl font-semibold text-slate-800 mb-2">
           No users found
         </h3>
         <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
@@ -105,27 +139,27 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+            <tr className="bg-slate-50 border-b border-gray-200">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                Email
+              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                Email/Username
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                 Role
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                 Date Added
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -134,7 +168,9 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
             {users.map((user, index) => (
               <tr 
                 key={user.id} 
-                className="hover:bg-gray-50 transition-colors"
+                className={`hover:bg-slate-50 transition-colors ${
+                  user.role === 'Librarian' && user.isActiveLibrarian ? 'bg-amber-50/40' : ''
+                }`}
                 style={{ 
                   animation: `fadeIn 0.3s ease-out ${index * 0.05}s both`
                 }}
@@ -142,24 +178,29 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm relative"
                       style={{
-                        background: getAvatarGradient(user.name)
+                        backgroundColor: getAvatarColor(user.name)
                       }}
                     >
-                      {user.name.split(' ').map(n => n[0]).join('')}
+                      {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      {user.isActiveLibrarian && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full border-2 border-white flex items-center justify-center">
+                          <Crown size={10} className="text-white fill-white" />
+                        </div>
+                      )}
                     </div>
-                    <div className="font-semibold text-[#154A9A]">
+                    <div className="font-medium text-slate-800">
                       {user.name}
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
+                <td className="px-6 py-4 text-sm text-slate-600">
                   {user.email}
                 </td>
                 <td className="px-6 py-4">
                   <span 
-                    className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getRoleBadgeStyle(user.role)}`}
+                    className={`inline-block px-3 py-1 rounded-md text-xs font-medium ${getRoleBadgeStyle(user.role)}`}
                   >
                     {user.role}
                   </span>
@@ -167,7 +208,7 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
                 <td className="px-6 py-4">
                   {getStatusBadge(user.status)}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
+                <td className="px-6 py-4 text-sm text-slate-600">
                   {new Date(user.dateAdded).toLocaleDateString('en-US', { 
                     year: 'numeric', 
                     month: 'short', 
@@ -199,20 +240,20 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
   )
 }
 
-// Helper function to generate gradient colors based on name
-function getAvatarGradient(name) {
-  const gradients = [
-    'linear-gradient(135deg, #0F61F7, #0D52D1)',
-    'linear-gradient(135deg, #3F1BD2, #2E1499)',
-    'linear-gradient(135deg, #FFA602, #E69500)',
-    'linear-gradient(135deg, #FF6B6B, #E85555)',
-    'linear-gradient(135deg, #4ECDC4, #44B8B0)',
-    'linear-gradient(135deg, #9B59B6, #8E44AD)',
-    'linear-gradient(135deg, #3498DB, #2980B9)',
-    'linear-gradient(135deg, #1ABC9C, #16A085)'
+// Helper function to generate solid colors based on name
+function getAvatarColor(name) {
+  const colors = [
+    '#3b82f6', // Blue
+    '#6366f1', // Indigo
+    '#8b5cf6', // Violet
+    '#ec4899', // Pink
+    '#f59e0b', // Amber
+    '#10b981', // Emerald
+    '#06b6d4', // Cyan
+    '#64748b'  // Slate
   ]
-  const index = name.charCodeAt(0) % gradients.length
-  return gradients[index]
+  const index = name.charCodeAt(0) % colors.length
+  return colors[index]
 }
 
 export default UsersTable

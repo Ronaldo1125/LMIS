@@ -44,7 +44,11 @@ router.get(
           full_name, 
           role, 
           is_active, 
-          created_at
+          created_at,
+          CASE 
+            WHEN role = 'librarian' AND is_active = 1 THEN 1
+            ELSE 0
+          END as is_active_librarian
         FROM adminpanel_users
         WHERE role != 'admin'
       `;
@@ -179,6 +183,7 @@ router.post(
 
       const passwordHash = await bcrypt.hash(password, 10);
 
+      // New librarians are created as inactive by default
       const [result] = await pool.query(
         `
         INSERT INTO adminpanel_users
@@ -232,10 +237,16 @@ router.put(
 
       const passwordHash = await bcrypt.hash(password, 10);
 
-      await pool.query(
+      const [result] = await pool.query(
         'UPDATE adminpanel_users SET password_hash = ? WHERE id = ? AND role != "admin"',
         [passwordHash, id]
       );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          message: 'User not found or cannot reset admin password'
+        });
+      }
 
       res.json({ message: 'Password reset successfully' });
     } catch (error) {
@@ -257,10 +268,16 @@ router.put(
     try {
       const { id } = req.params;
 
-      await pool.query(
+      const [result] = await pool.query(
         'UPDATE adminpanel_users SET is_active = FALSE WHERE id = ? AND role = "patron"',
         [id]
       );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          message: 'Patron not found'
+        });
+      }
 
       res.json({ message: 'Account deactivated successfully' });
     } catch (error) {
@@ -287,7 +304,21 @@ router.put(
       await connection.beginTransaction();
 
       try {
-        // Deactivate all other librarians
+        // First, verify the user is a librarian
+        const [user] = await connection.query(
+          'SELECT id, role FROM adminpanel_users WHERE id = ?',
+          [id]
+        );
+
+        if (user.length === 0 || user[0].role !== 'librarian') {
+          await connection.rollback();
+          connection.release();
+          return res.status(400).json({
+            message: 'User is not a librarian'
+          });
+        }
+
+        // Deactivate all librarians
         await connection.query(
           'UPDATE adminpanel_users SET is_active = FALSE WHERE role = "librarian"'
         );

@@ -10,7 +10,7 @@ function SearchBar({
   setStatusFilter,
   onAddStaff,
   onAddLibrarian,
-  currentUserRole // Add this prop
+  isAdmin // Changed from currentUserRole
 }) {
   const searchInputRef = useRef(null)
   const roleDropdownRef = useRef(null)
@@ -20,9 +20,6 @@ function SearchBar({
 
   const roles = ['All', 'Staff', 'Librarian', 'Patron']
   const statuses = ['All', 'Active', 'Inactive']
-
-  // Check if user is admin
-  const isAdmin = currentUserRole === 'admin'
 
   useEffect(() => {
     const onKeyDown = (event) => {
