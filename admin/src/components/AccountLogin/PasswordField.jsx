@@ -18,7 +18,7 @@ function PasswordField({ value, showPassword, onShowPasswordToggle, onChange }) 
           required
           value={value}
           onChange={onChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all pr-12"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all pr-12 no-password-reveal"
           placeholder="Enter your password"
         />
         <button
@@ -34,6 +34,19 @@ function PasswordField({ value, showPassword, onShowPasswordToggle, onChange }) 
           )}
         </button>
       </div>
+
+      <style>{`
+        .no-password-reveal::-ms-reveal,
+        .no-password-reveal::-ms-clear {
+          display: none;
+        }
+        .no-password-reveal::-webkit-credentials-auto-fill-button,
+        .no-password-reveal::-webkit-textfield-decoration-container {
+          display: none !important;
+          visibility: hidden;
+          pointer-events: none;
+        }
+      `}</style>
     </div>
   )
 }

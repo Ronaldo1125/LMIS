@@ -64,7 +64,7 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
     // Librarian actions
     if (user.role === 'Librarian') {
       return (
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           {user.isActiveLibrarian ? (
             // Active Librarian Badge - Professional Style
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold bg-amber-600 text-white shadow-sm">
@@ -74,7 +74,7 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
           ) : (
             <>
               {isAdmin ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {/* Set Active Button - Professional Style */}
                   <button
                     onClick={() => onSetActiveLibrarian(user.id)}
@@ -97,6 +97,16 @@ function UsersTable({ users, onResetPassword, onDeactivateAccount, onSetActiveLi
                 </span>
               )}
             </>
+          )}
+          {/* Reset Password - Admin only, available for all librarians */}
+          {isAdmin && (
+            <button
+              onClick={() => onResetPassword(user)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm"
+            >
+              <Key size={14} />
+              Reset Password
+            </button>
           )}
         </div>
       )

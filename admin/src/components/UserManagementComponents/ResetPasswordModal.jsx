@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Key, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { X, Key, Eye, EyeOff } from 'lucide-react'
 
 function ResetPasswordModal({ user, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -14,7 +14,6 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
@@ -22,21 +21,19 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
 
   const validate = () => {
     const newErrors = {}
-    
+
     if (!formData.newPassword) {
       newErrors.newPassword = 'New password is required'
-    } else if (formData.newPassword.length < 8) {
-      newErrors.newPassword = 'Password must be at least 8 characters'
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.newPassword)) {
-      newErrors.newPassword = 'Password must contain uppercase, lowercase, and number'
+    } else if (formData.newPassword.length < 6) {
+      newErrors.newPassword = 'Password must be at least 6 characters'
     }
-    
+
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm password'
     } else if (formData.newPassword !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match'
     }
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -49,18 +46,17 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
   }
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
-      onClick={onClose}
       style={{ animation: 'fadeIn 0.2s ease-out' }}
     >
-      <div 
+      <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         style={{ animation: 'slideUp 0.3s ease-out' }}
       >
         {/* Header */}
-        <div 
+        <div
           className="px-8 py-6 text-white relative overflow-hidden"
           style={{ background: 'var(--secondary-3-light)' }}
         >
@@ -85,23 +81,6 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-8">
           <div className="space-y-6">
-            {/* Password Requirements */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <div className="flex items-start gap-2">
-                <AlertCircle size={18} className="text-blue-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-blue-900 mb-1" style={{ fontFamily: '"Inter", sans-serif' }}>
-                    Password Requirements:
-                  </p>
-                  <ul className="text-sm text-blue-700 space-y-1" style={{ fontFamily: '"Inter", sans-serif' }}>
-                    <li>• At least 8 characters long</li>
-                    <li>• Contains uppercase and lowercase letters</li>
-                    <li>• Contains at least one number</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
             {/* New Password */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2" style={{ fontFamily: '"Inter", sans-serif' }}>
@@ -114,7 +93,7 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
                   name="newPassword"
                   value={formData.newPassword}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all pr-12 ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all pr-12 no-password-reveal ${
                     errors.newPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                   }`}
                   placeholder="Enter new password"
@@ -143,7 +122,7 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all pr-12 ${
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all pr-12 no-password-reveal ${
                     errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                   }`}
                   placeholder="Confirm new password"
@@ -190,7 +169,7 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        
+
         @keyframes slideUp {
           from {
             opacity: 0;
@@ -200,6 +179,20 @@ function ResetPasswordModal({ user, onClose, onSubmit }) {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+
+        /* Remove Edge/IE native password reveal eye */
+        .no-password-reveal::-ms-reveal,
+        .no-password-reveal::-ms-clear {
+          display: none;
+        }
+
+        /* Remove Chrome/Safari native password reveal eye */
+        .no-password-reveal::-webkit-credentials-auto-fill-button,
+        .no-password-reveal::-webkit-textfield-decoration-container {
+          display: none !important;
+          visibility: hidden;
+          pointer-events: none;
         }
       `}</style>
     </div>
