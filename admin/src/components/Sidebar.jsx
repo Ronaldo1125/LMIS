@@ -57,16 +57,21 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView }) => {
 
       <div className="h-full flex flex-col">
         {/* Logo Section */}
-        <div className="p-4 border-b border-white border-opacity-10 flex items-center justify-center">
+        <div className={`p-4 border-b border-white border-opacity-10 flex items-center ${isOpen ? 'justify-start' : 'justify-center'}`}>
           <img 
             src="/LOGO.svg" 
             alt="LMIS Logo" 
             className="w-12 h-12 flex-shrink-0" 
             style={{ filter: 'brightness(0) invert(1)' }} 
           />
-          <h1 className={`text-xl font-bold whitespace-nowrap transition-all duration-300 ${isOpen ? 'opacity-100 ml-3' : 'opacity-0 w-0 overflow-hidden'}`}>
-            LMIS
-          </h1>
+          <div className={`flex flex-col ml-3 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
+            <h1 className="text-sm font-bold whitespace-nowrap leading-tight">
+              Library Management
+            </h1>
+            <p className="text-[10px] text-white text-opacity-70 whitespace-nowrap leading-tight">
+              Information System
+            </p>
+          </div>
         </div>
 
         {/* Navigation */}
