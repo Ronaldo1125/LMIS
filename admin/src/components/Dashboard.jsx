@@ -9,9 +9,8 @@ import MostDownloadedStats from './DashboardComponents/MostDownloadedStats'
 import WebsiteAnalytics from './DashboardComponents/WebsiteAnalytics'
 import LoginNotification from './DashboardComponents/LoginNotification'
 
-
-
-const Dashboard = () => {
+// ✅ Accept user and setCurrentView from App.jsx
+const Dashboard = ({ user, setCurrentView }) => {
   const [isSticky, setIsSticky] = useState(false)
 
   useEffect(() => {
@@ -48,9 +47,9 @@ const Dashboard = () => {
       {/* Login Success Notification */}
       <LoginNotification />
 
-      {/* Header */}
+      {/* Header — ✅ forward both props so navigation and account details work */}
       <div className={`sticky top-0 z-30 bg-white ${isSticky ? 'shadow-md' : ''}`}>
-        <DashboardHeader />
+        <DashboardHeader user={user} setCurrentView={setCurrentView} />
       </div>
 
       {/* Stats Grid */}
