@@ -27,8 +27,6 @@ const getInitialAuthState = () => {
   }
 }
 
-// Normalize whatever shape comes back from the API/JWT into a consistent object
-// so every component can rely on: id, username, full_name, email, role
 const normalizeUser = (raw) => {
   if (!raw) return null
   return {
@@ -45,8 +43,22 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const initialAuth = getInitialAuthState()
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuth.isAuthenticated)
-  // Normalize on load so the shape is always consistent
   const [user, setUser] = useState(() => normalizeUser(initialAuth.user))
+
+  // ── Dark mode ──────────────────────────────────────────────
+  const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark')
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (dark) {
+      root.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      root.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }, [dark])
+  // ───────────────────────────────────────────────────────────
 
   useEffect(() => {
     const pageTitles = {
@@ -66,7 +78,6 @@ function App() {
     const normalized = normalizeUser(userData)
     setIsAuthenticated(true)
     setUser(normalized)
-    // Keep localStorage in sync with the normalized shape
     localStorage.setItem('user', JSON.stringify(normalized))
   }
 
@@ -83,7 +94,6 @@ function App() {
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        // ✅ Pass setCurrentView and user so DashboardHeader can navigate
         return <Dashboard user={user} setCurrentView={setCurrentView} />
       case 'cataloging':
         return <Cataloging />
@@ -96,7 +106,7 @@ function App() {
       case 'security':
         return <Security />
       case 'profile':
-        return <MyProfile user={user} setCurrentView={setCurrentView} />
+        return <MyProfile user={user} setCurrentView={setCurrentView} dark={dark} setDark={setDark} />
       case 'help':
         return <HelpSupport setCurrentView={setCurrentView} />
       case 'logout':
@@ -112,7 +122,7 @@ function App() {
   }
 
   return (
-    <div className="flex flex-row h-screen" style={{ backgroundColor: '#f8fafc' }}>
+    <div className="flex flex-row h-screen dark:bg-gray-800" style={{ backgroundColor: '#f8fafc' }}>
       <Sidebar
         isOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
