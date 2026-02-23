@@ -38,7 +38,7 @@ const emptyAccessionForm = {
   subjects: '',
 }
 
-const Accessions = () => {
+const Accessions = ({ dark }) => {
   const [accessions, setAccessions] = useState([])
   const [archivedAccessions, setArchivedAccessions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -278,28 +278,47 @@ const Accessions = () => {
     setIsArchivesOpen(true)
   }
 
+  const pageBg       = dark ? '#0a1628' : '#f1f5f9'
+  const headerBg     = dark ? '#0d1d35' : '#ffffff'
+  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
+  const cardBg       = dark ? '#0f1f38' : '#ffffff'
+  const border       = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary  = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary = dark ? '#6b8cae' : '#64748b'
+  const iconBoxBg    = dark ? 'rgba(30,64,175,0.15)' : '#dbeafe'
+  const iconColor    = dark ? '#93c5fd' : '#2563eb'
+  const errorBg      = dark ? 'rgba(220,38,38,0.1)' : '#fef2f2'
+  const errorBorder  = dark ? 'rgba(220,38,38,0.2)' : '#fecaca'
+  const errorText    = dark ? '#fca5a5' : '#dc2626'
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
+    <div style={{ minHeight: '100vh', background: pageBg, transition: 'background 0.45s ease' }}>
       {/* Header */}
-      <div className="bg-white dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 px-6 py-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
-            <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+      <div style={{
+        background: headerBg,
+        borderBottom: `1px solid ${headerBorder}`,
+        padding: '1rem 1.5rem',
+        marginBottom: '1.5rem',
+        transition: 'background 0.45s ease, border-color 0.45s ease',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ padding: '0.5rem', background: iconBoxBg, borderRadius: '0.5rem', transition: 'background 0.45s ease' }}>
+            <Package style={{ width: '1.5rem', height: '1.5rem', color: iconColor }} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Accessions</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: textPrimary, margin: 0, transition: 'color 0.45s ease' }}>Accessions</h1>
+            <p style={{ fontSize: '0.875rem', color: textSecondary, margin: 0, transition: 'color 0.45s ease' }}>
               Track new acquisitions and intake workflow
             </p>
           </div>
         </div>
       </div>
 
-      <div className="px-6">
-        <StatsOverview accessions={accessions} />
+      <div style={{ padding: '0 1.5rem' }}>
+        <StatsOverview accessions={accessions} dark={dark} />
 
         {/* ✅ Sticky Search and Filter */}
-        <div className="sticky top-0 z-20 bg-gray-50 dark:bg-gray-800 pb-4 transition-colors duration-300">
+        <div style={{ position: 'sticky', top: 0, zIndex: 20, background: pageBg, paddingBottom: '1rem', transition: 'background 0.45s ease' }}>
           <SearchAndFilter
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
@@ -308,19 +327,20 @@ const Accessions = () => {
             statuses={statuses}
             onAddClick={() => setIsAddModalOpen(true)}
             onArchiveClick={handleOpenArchives}
+            dark={dark}
           />
         </div>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
+          <div style={{ marginBottom: '1rem', padding: '1rem', background: errorBg, border: `1px solid ${errorBorder}`, color: errorText, borderRadius: '0.5rem', fontSize: '0.875rem' }}>
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-300">Loading accessions...</p>
+          <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '0.75rem', padding: '2rem', textAlign: 'center', transition: 'background 0.45s ease' }}>
+            <div style={{ display: 'inline-block', width: '2rem', height: '2rem', borderRadius: '50%', border: `2px solid transparent`, borderBottomColor: iconColor, animation: 'spin 0.8s linear infinite', marginBottom: '1rem' }} />
+            <p style={{ color: textSecondary, margin: 0 }}>Loading accessions...</p>
           </div>
         ) : (
           <AccessionsTable
@@ -329,6 +349,7 @@ const Accessions = () => {
             onDelete={handleDeleteClick}
             onEdit={handleEditAccession}
             onView={handleViewAccession}
+            dark={dark}
           />
         )}
       </div>
@@ -342,6 +363,7 @@ const Accessions = () => {
         onSubmit={handleAddAccession}
         newAccession={newAccession}
         setNewAccession={setNewAccession}
+        dark={dark}
       />
 
       <ViewAccessionModal
@@ -351,6 +373,7 @@ const Accessions = () => {
           setSelectedAccession(null)
         }}
         accession={selectedAccession}
+        dark={dark}
       />
 
       <EditAccessionModal
@@ -362,6 +385,7 @@ const Accessions = () => {
         onSubmit={handleUpdateAccession}
         editAccession={editAccession}
         setEditAccession={setEditAccession}
+        dark={dark}
       />
 
       <ArchivesModal
@@ -369,6 +393,7 @@ const Accessions = () => {
         onClose={() => setIsArchivesOpen(false)}
         archivedAccessions={archivedAccessions}
         onRestore={handleRestoreAccession}
+        dark={dark}
       />
 
       {/* Confirmation Modal for Archive and Delete */}
@@ -379,6 +404,7 @@ const Accessions = () => {
         type={modalState.type}
         itemName={modalState.item?.accession_no}
         loading={modalState.loading}
+        dark={dark}
       />
     </div>
   )

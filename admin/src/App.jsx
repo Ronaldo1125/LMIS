@@ -27,6 +27,8 @@ const getInitialAuthState = () => {
   }
 }
 
+// Normalize whatever shape comes back from the API/JWT into a consistent object
+// so every component can rely on: id, username, full_name, email, role
 const normalizeUser = (raw) => {
   if (!raw) return null
   return {
@@ -43,6 +45,7 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const initialAuth = getInitialAuthState()
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuth.isAuthenticated)
+  // Normalize on load so the shape is always consistent
   const [user, setUser] = useState(() => normalizeUser(initialAuth.user))
 
   // ── Dark mode ──────────────────────────────────────────────
@@ -78,6 +81,7 @@ function App() {
     const normalized = normalizeUser(userData)
     setIsAuthenticated(true)
     setUser(normalized)
+    // Keep localStorage in sync with the normalized shape
     localStorage.setItem('user', JSON.stringify(normalized))
   }
 
@@ -94,26 +98,27 @@ function App() {
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard user={user} setCurrentView={setCurrentView} />
+        // ✅ Pass setCurrentView and user so DashboardHeader can navigate
+        return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
       case 'cataloging':
-        return <Cataloging />
+        return <Cataloging dark={dark} />
       case 'accessions':
-        return <Accessions />
+        return <Accessions dark={dark} />
       case 'user-management':
-        return <UserManagement />
+        return <UserManagement dark={dark} />
       case 'acquisitions':
-        return <Acquisitions />
+        return <Acquisitions dark={dark} />
       case 'security':
-        return <Security />
+        return <Security dark={dark} />
       case 'profile':
         return <MyProfile user={user} setCurrentView={setCurrentView} dark={dark} setDark={setDark} />
       case 'help':
-        return <HelpSupport setCurrentView={setCurrentView} />
+        return <HelpSupport setCurrentView={setCurrentView} dark={dark} />
       case 'logout':
         handleLogout()
         return null
       default:
-        return <Dashboard user={user} setCurrentView={setCurrentView} />
+        return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
     }
   }
 
@@ -122,15 +127,29 @@ function App() {
   }
 
   return (
-    <div className="flex flex-row h-screen dark:bg-gray-800" style={{ backgroundColor: '#f8fafc' }}>
+    <div
+      style={{
+        display: 'flex', flexDirection: 'row', height: '100vh',
+        background: dark ? '#0a1628' : '#f8fafc',
+        transition: 'background 0.45s ease',
+      }}
+    >
       <Sidebar
         isOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         currentView={currentView}
         setCurrentView={setCurrentView}
         user={user}
+        dark={dark}
       />
-      <main className="flex-1 overflow-x-hidden overflow-y-auto pl-6">
+      <main style={{
+        flex: 1,
+        overflowX: 'hidden',
+        overflowY: 'auto',
+        paddingLeft: '1.5rem',
+        background: dark ? '#0a1628' : '#f8fafc',
+        transition: 'background 0.45s ease',
+      }}>
         {renderView()}
       </main>
     </div>

@@ -78,34 +78,21 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
   // ─── Color system ─────────────────────────────────────────────────────────
   // Light: clean white/slate  |  Dark: deep navy blues
   const C = {
-    // Page & card backgrounds
-    pageBg:   dark ? '#0a1628' : '#f1f5f9',
-    cardBg:   dark ? '#0f1f38' : '#ffffff',
-    insetBg:  dark ? '#081422' : '#f8fafc',
-
-    // Borders
-    border:   dark ? '#1a3356' : '#e2e8f0',
-
-    // Text
+    pageBg:        dark ? '#0a1628' : '#f1f5f9',
+    cardBg:        dark ? '#0f1f38' : '#ffffff',
+    insetBg:       dark ? '#081422' : '#f8fafc',
+    border:        dark ? '#1a3356' : '#e2e8f0',
     textPrimary:   dark ? '#dde8f5' : '#1e293b',
     textSecondary: dark ? '#6b8cae' : '#64748b',
     textMuted:     dark ? '#2e4d70' : '#94a3b8',
-
-    // Input
-    inputBg:  dark ? '#081422' : '#ffffff',
-
-    // Banner gradient
+    inputBg:       dark ? '#081422' : '#ffffff',
     banner: dark
       ? 'linear-gradient(135deg, #0d2145 0%, #0f1f38 100%)'
       : 'linear-gradient(135deg, var(--dark-blue-1) 0%, var(--dark-blue-2) 100%)',
-
-    // Toggle pill — amber in light, matches --dark-blue-1 accent in dark
     pillBg:   dark ? 'var(--dark-blue-1)' : '#f59e0b',
     pillGlow: dark
       ? '0 0 20px rgba(30, 64, 175, 0.7), 0 0 6px rgba(30,64,175,0.4)'
       : '0 0 18px rgba(245,158,11,0.45)',
-
-    // Icon box in toggle row
     iconBoxBg:   dark ? 'rgba(30,64,175,0.18)' : 'rgba(245,158,11,0.14)',
     iconBoxGlow: dark ? '0 0 14px rgba(30,64,175,0.35)' : '0 0 14px rgba(245,158,11,0.28)',
   }
@@ -215,7 +202,6 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
 
         {/* ── Customize ─────────────────────────────────────────────── */}
         <div style={{ ...cardStyle, padding: '1.5rem', marginBottom: '1.25rem' }}>
-          {/* Section header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
             <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.75rem', background: 'rgba(30,64,175,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <PaintBrushIcon style={{ width: '1.25rem', height: '1.25rem', color: 'var(--dark-blue-1)' }} />
@@ -229,8 +215,6 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
           {/* Toggle row */}
           <div style={{ ...insetCell, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.875rem 1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-
-              {/* Animated icon box */}
               <div style={{
                 width: '2.25rem', height: '2.25rem', borderRadius: '0.75rem', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -280,7 +264,6 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                 transition: 'background 0.45s ease, box-shadow 0.45s ease',
               }}
             >
-              {/* Stars (dark mode only) */}
               {[
                 { top: '28%', left: '14%', size: '2px',   delay: '0s'    },
                 { top: '58%', left: '25%', size: '1.5px', delay: '0.1s'  },
@@ -295,8 +278,6 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                   transition: `opacity 0.35s ease ${s.delay}, transform 0.35s ease ${s.delay}`,
                 }} />
               ))}
-
-              {/* Thumb */}
               <span style={{
                 position: 'relative', zIndex: 10,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',

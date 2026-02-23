@@ -10,7 +10,7 @@ import axios from 'axios'
 
 const API_URL = 'http://localhost:5000/api/adminpanel-users'
 
-function UserManagement() {
+function UserManagement({ dark }) {
   const [users, setUsers] = useState([])
   const [stats, setStats] = useState({ staff: 0, librarians: 0, patrons: 0 })
   const [loading, setLoading] = useState(true)
@@ -232,12 +232,21 @@ function UserManagement() {
     setShowResetPasswordModal(true)
   }
 
+  const pageBg       = dark ? '#0a1628' : '#f1f5f9'
+  const headerBg     = dark ? '#0d1d35' : '#ffffff'
+  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
+  const cardBg       = dark ? '#0f1f38' : '#ffffff'
+  const textPrimary  = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary = dark ? '#6b8cae' : '#64748b'
+  const iconBoxBg    = dark ? 'rgba(30,64,175,0.15)' : '#dbeafe'
+  const iconColor    = dark ? '#93c5fd' : '#2563eb'
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-800 flex items-center justify-center transition-colors duration-300">
-        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-8 text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+      <div style={{ minHeight: '100vh', background: pageBg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.45s ease' }}>
+        <div style={{ background: cardBg, borderRadius: '0.75rem', padding: '2rem', textAlign: 'center', border: `1px solid ${dark ? '#1a3356' : '#e2e8f0'}` }}>
+          <div style={{ display: 'inline-block', width: '2rem', height: '2rem', borderRadius: '50%', border: `2px solid transparent`, borderBottomColor: iconColor, animation: 'spin 0.8s linear infinite', marginBottom: '1rem' }} />
+          <p style={{ color: textSecondary, margin: 0 }}>Loading...</p>
         </div>
       </div>
     )
@@ -245,26 +254,32 @@ function UserManagement() {
 
   if (!canView) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-800 flex items-center justify-center transition-colors duration-300">
-        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-12 text-center max-w-md">
-          <div className="text-red-500 text-xl font-semibold mb-2">Access Denied</div>
-          <div className="text-gray-600 dark:text-gray-300">You don't have permission to view this page.</div>
+      <div style={{ minHeight: '100vh', background: pageBg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.45s ease' }}>
+        <div style={{ background: cardBg, borderRadius: '0.75rem', padding: '3rem', textAlign: 'center', maxWidth: '28rem', border: `1px solid ${dark ? '#1a3356' : '#e2e8f0'}` }}>
+          <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#ef4444', marginBottom: '0.5rem' }}>Access Denied</div>
+          <div style={{ color: textSecondary }}>You don't have permission to view this page.</div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
+    <div style={{ minHeight: '100vh', background: pageBg, transition: 'background 0.45s ease' }}>
       {/* Header */}
-      <div className="bg-white dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 px-6 py-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
-            <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+      <div style={{
+        background: headerBg,
+        borderBottom: `1px solid ${headerBorder}`,
+        padding: '1rem 1.5rem',
+        marginBottom: '1.5rem',
+        transition: 'background 0.45s ease, border-color 0.45s ease',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ padding: '0.5rem', background: iconBoxBg, borderRadius: '0.5rem', transition: 'background 0.45s ease' }}>
+            <Users style={{ width: '1.5rem', height: '1.5rem', color: iconColor }} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">User Management</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: textPrimary, margin: 0, transition: 'color 0.45s ease' }}>User Management</h1>
+            <p style={{ fontSize: '0.875rem', color: textSecondary, margin: 0, transition: 'color 0.45s ease' }}>
               {isAdmin
                 ? 'Manage library staff, librarians, and patrons'
                 : 'View library staff, librarians, and patrons'}
@@ -273,12 +288,12 @@ function UserManagement() {
         </div>
       </div>
 
-      <div className="px-6">
+      <div style={{ padding: '0 1.5rem' }}>
         {/* Stats Cards */}
-        <StatsCards stats={stats} />
+        <StatsCards stats={stats} dark={dark} />
 
         {/* Search and Filters */}
-        <div className="sticky top-0 z-20 bg-gray-50 dark:bg-gray-800 py-4 transition-colors duration-300">
+        <div style={{ position: 'sticky', top: 0, zIndex: 20, background: pageBg, paddingBottom: '1rem', paddingTop: '0.5rem', transition: 'background 0.45s ease' }}>
           <SearchBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -289,6 +304,7 @@ function UserManagement() {
             onAddStaff={() => setShowAddStaffModal(true)}
             onAddLibrarian={() => setShowAddLibrarianModal(true)}
             isAdmin={isAdmin}
+            dark={dark}
           />
         </div>
 
@@ -299,6 +315,7 @@ function UserManagement() {
           onDeactivateAccount={handleDeactivateAccount}
           onSetActiveLibrarian={handleSetActiveLibrarian}
           isAdmin={isAdmin}
+          dark={dark}
         />
       </div>
 
@@ -307,6 +324,7 @@ function UserManagement() {
         <AddStaffModal
           onClose={() => setShowAddStaffModal(false)}
           onSubmit={handleAddStaff}
+          dark={dark}
         />
       )}
 
@@ -314,6 +332,7 @@ function UserManagement() {
         <AddLibrarianModal
           onClose={() => setShowAddLibrarianModal(false)}
           onSubmit={handleAddLibrarian}
+          dark={dark}
         />
       )}
 
@@ -325,6 +344,7 @@ function UserManagement() {
             setSelectedUser(null)
           }}
           onSubmit={handleResetPassword}
+          dark={dark}
         />
       )}
     </div>

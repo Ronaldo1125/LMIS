@@ -9,11 +9,9 @@ import {
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon
 } from '@heroicons/react/24/outline'
-import { useState } from 'react'
 
-const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, onLogout }) => {
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-
+const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }) => {
+  // Main navigation items
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
     { id: 'cataloging', label: 'Cataloging', icon: BookOpenIcon },
@@ -23,161 +21,181 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, onLogo
     { id: 'security', label: 'Security', icon: ShieldCheckIcon },
   ]
 
+  // Footer items (only Logout now)
   const footerItems = [
     { id: 'logout', label: 'Logout', icon: ArrowRightOnRectangleIcon },
   ]
 
+  // Dark mode sidebar colors — deep navy matching MyProfile
+  const sidebarBg     = dark ? '#0a1628' : '#154A9A'
+  const activeBg      = dark ? '#1a3356' : '#0F61F7'
+  const hoverBg       = dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.10)'
+  const borderColor   = dark ? '#1a3356' : 'rgba(255,255,255,0.10)'
+  const toggleBtnBg   = dark ? '#0f1f38' : '#ffffff'
+  const toggleBtnBorder = dark ? '#1a3356' : '#e2e8f0'
+  const toggleIconColor = dark ? '#93c5fd' : '#374151'
+
   return (
-    <>
-      <aside
-        className={`flex-shrink-0 bg-[#154A9A] dark:bg-gray-900 text-white transition-all duration-300 relative ${
-          isOpen ? 'w-64' : 'w-20'
-        }`}
-        style={{ boxShadow: '2px 0 10px rgba(0,0,0,0.1)' }}
+    <aside
+      style={{
+        flexShrink: 0,
+        background: sidebarBg,
+        color: '#ffffff',
+        width: isOpen ? '16rem' : '5rem',
+        transition: 'width 0.3s ease, background 0.45s ease',
+        position: 'relative',
+        boxShadow: dark ? '2px 0 20px rgba(0,0,0,0.4)' : '2px 0 10px rgba(0,0,0,0.1)',
+      }}
+    >
+      {/* Toggle Button */}
+      <button
+        onClick={() => setIsSidebarOpen(!isOpen)}
+        style={{
+          position: 'absolute', right: 0, top: '50%',
+          transform: 'translate(50%, -50%)',
+          background: toggleBtnBg,
+          border: `1px solid ${toggleBtnBorder}`,
+          borderRadius: '50%',
+          width: '2rem', height: '2rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', zIndex: 10,
+          boxShadow: dark ? '0 2px 12px rgba(0,0,0,0.5)' : '0 2px 6px rgba(0,0,0,0.15)',
+          transition: 'background 0.45s ease, border-color 0.45s ease, box-shadow 0.45s ease',
+          padding: 0,
+        }}
+        title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
       >
-        {/* Toggle Button */}
-        <button
-          onClick={() => setIsSidebarOpen(!isOpen)}
-          className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 
-                     bg-white dark:bg-gray-700 rounded-full p-1 transition-all z-10 
-                     hover:bg-gray-100 dark:hover:bg-gray-600 hover:shadow-md active:scale-95 
-                     flex items-center justify-center border border-gray-200 dark:border-gray-600
-                     focus:outline-none focus:ring-0"
-          style={{ boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)', width: '32px', height: '32px' }}
-          title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-        >
-          {isOpen ? (
-            <ChevronDoubleLeftIcon className="w-5 h-5 text-gray-700 dark:text-gray-200" />
-          ) : (
-            <ChevronDoubleRightIcon className="w-5 h-5 text-gray-700 dark:text-gray-200" />
-          )}
-        </button>
+        {isOpen ? (
+          <ChevronDoubleLeftIcon style={{ width: '1.25rem', height: '1.25rem', color: toggleIconColor }} />
+        ) : (
+          <ChevronDoubleRightIcon style={{ width: '1.25rem', height: '1.25rem', color: toggleIconColor }} />
+        )}
+      </button>
 
-        <div className="h-full flex flex-col">
-          {/* Logo Section */}
-          <div className={`p-4 border-b border-white border-opacity-10 dark:border-gray-700 flex items-center ${isOpen ? 'justify-start' : 'justify-center'}`}>
-            <img
-              src="/LOGO.svg"
-              alt="LMIS Logo"
-              className="w-12 h-12 flex-shrink-0"
-              style={{ filter: 'brightness(0) invert(1)' }}
-            />
-            <div className={`flex flex-col ml-3 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
-              <h1 className="text-sm font-bold whitespace-nowrap leading-tight">Library Management</h1>
-              <p className="text-[10px] text-white text-opacity-70 whitespace-nowrap leading-tight">Information System</p>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            {menuItems.map((item) => {
-              const Icon = item.icon
-              const isActive = currentView === item.id
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setCurrentView(item.id)}
-                  className={`w-full flex items-center px-4 py-3 rounded-lg transition-all group ${
-                    isActive
-                      ? 'bg-[#0F61F7] dark:bg-gray-600 text-white shadow-lg'
-                      : 'text-white text-opacity-70 hover:text-opacity-100 hover:bg-white hover:bg-opacity-10 dark:hover:bg-gray-700'
-                  } ${isOpen ? 'space-x-3' : 'justify-center'}`}
-                  title={item.label}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className={`text-sm font-medium whitespace-nowrap transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
-                    {item.label}
-                  </span>
-                </button>
-              )
-            })}
-          </nav>
-
-          {/* Footer */}
-          <div className="p-4 border-t border-white border-opacity-10 dark:border-gray-700 space-y-2">
-            {footerItems.map((item) => {
-              const Icon = item.icon
-              const isActive = currentView === item.id
-              const isLogout = item.id === 'logout'
-
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => isLogout ? setShowLogoutConfirm(true) : setCurrentView(item.id)}
-                  className={`w-full flex items-center px-4 py-2 rounded-lg transition-all group ${
-                    isActive
-                      ? 'bg-[#0F61F7] dark:bg-gray-600 text-white shadow-lg'
-                      : `text-white text-opacity-70 hover:text-opacity-100 ${isLogout ? 'hover:bg-red-500 hover:bg-opacity-20' : 'hover:bg-white hover:bg-opacity-10 dark:hover:bg-gray-700'}`
-                  } ${isOpen ? 'space-x-3' : 'justify-center'}`}
-                  title={item.label}
-                >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className={`text-sm font-medium whitespace-nowrap transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>
-                    {item.label}
-                  </span>
-                </button>
-              )
-            })}
-
-            {/* Version Info */}
-            <div className={`text-[10px] text-white text-opacity-60 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
-              <p>© 2026 LMIS DEPDev</p>
-              <p>Version 1.0.0</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Logout confirmation modal */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setShowLogoutConfirm(false)}
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Logo Section */}
+        <div style={{
+          padding: '1rem',
+          borderBottom: `1px solid ${borderColor}`,
+          display: 'flex', alignItems: 'center',
+          justifyContent: isOpen ? 'flex-start' : 'center',
+          transition: 'border-color 0.45s ease',
+        }}>
+          <img
+            src="/LOGO.svg"
+            alt="LMIS Logo"
+            style={{ width: '3rem', height: '3rem', flexShrink: 0, filter: 'brightness(0) invert(1)' }}
           />
-
-          {/* Dialog */}
-          <div className="relative bg-white rounded-xl shadow-2xl w-80 p-6 flex flex-col items-center gap-4"
-            style={{ animation: 'fadeInScale 0.18s ease-out' }}>
-            {/* Icon */}
-            <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
-              <ArrowRightOnRectangleIcon className="w-7 h-7 text-red-500" />
-            </div>
-
-            <div className="text-center">
-              <h3 className="text-base font-semibold text-gray-900">Log out of LMIS?</h3>
-              <p className="mt-1 text-sm text-gray-500">You'll need to sign in again to access your account.</p>
-            </div>
-
-            <div className="flex gap-3 w-full mt-1">
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowLogoutConfirm(false)
-                  onLogout?.()
-                }}
-                className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
-              >
-                Log Out
-              </button>
-            </div>
+          <div style={{
+            display: 'flex', flexDirection: 'column', marginLeft: '0.75rem',
+            opacity: isOpen ? 1 : 0,
+            width: isOpen ? 'auto' : 0,
+            overflow: 'hidden',
+            transition: 'opacity 0.3s ease, width 0.3s ease',
+          }}>
+            <h1 style={{ fontSize: '0.875rem', fontWeight: 700, whiteSpace: 'nowrap', lineHeight: 1.2, margin: 0 }}>
+              Library Management
+            </h1>
+            <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', lineHeight: 1.2, margin: 0 }}>
+              Information System
+            </p>
           </div>
         </div>
-      )}
 
-      <style>{`
-        @keyframes fadeInScale {
-          from { opacity: 0; transform: scale(0.93); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
-    </>
+        {/* Navigation */}
+        <nav style={{ flex: 1, padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto' }}>
+          {menuItems.map((item) => {
+            const Icon = item.icon
+            const isActive = currentView === item.id
+            return (
+              <button
+                key={item.id}
+                onClick={() => setCurrentView(item.id)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '0.5rem',
+                  background: isActive ? activeBg : 'transparent',
+                  color: isActive ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                  border: 'none', cursor: 'pointer',
+                  justifyContent: isOpen ? 'flex-start' : 'center',
+                  gap: isOpen ? '0.75rem' : 0,
+                  boxShadow: isActive && dark ? '0 2px 12px rgba(0,0,0,0.3)' : isActive ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
+                  transition: 'background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease',
+                }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = hoverBg }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+                title={item.label}
+              >
+                <Icon style={{ width: '1.25rem', height: '1.25rem', flexShrink: 0 }} />
+                <span style={{
+                  fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap',
+                  opacity: isOpen ? 1 : 0,
+                  width: isOpen ? 'auto' : 0,
+                  overflow: 'hidden',
+                  transition: 'opacity 0.3s ease, width 0.3s ease',
+                }}>
+                  {item.label}
+                </span>
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div style={{ padding: '1rem', borderTop: `1px solid ${borderColor}`, display: 'flex', flexDirection: 'column', gap: '0.5rem', transition: 'border-color 0.45s ease' }}>
+          {footerItems.map((item) => {
+            const Icon = item.icon
+            const isActive = currentView === item.id
+            const isLogout = item.id === 'logout'
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => setCurrentView(item.id)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  background: isActive ? activeBg : 'transparent',
+                  color: 'rgba(255,255,255,0.7)',
+                  border: 'none', cursor: 'pointer',
+                  justifyContent: isOpen ? 'flex-start' : 'center',
+                  gap: isOpen ? '0.75rem' : 0,
+                  transition: 'background 0.2s ease, color 0.2s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = isLogout ? 'rgba(239,68,68,0.2)' : hoverBg }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+                title={item.label}
+              >
+                <Icon style={{ width: '1.25rem', height: '1.25rem', flexShrink: 0 }} />
+                <span style={{
+                  fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap',
+                  opacity: isOpen ? 1 : 0,
+                  width: isOpen ? 'auto' : 0,
+                  overflow: 'hidden',
+                  transition: 'opacity 0.3s ease, width 0.3s ease',
+                }}>
+                  {item.label}
+                </span>
+              </button>
+            )
+          })}
+
+          {/* Version Info */}
+          <div style={{
+            fontSize: '0.625rem', color: 'rgba(255,255,255,0.6)',
+            opacity: isOpen ? 1 : 0,
+            height: isOpen ? 'auto' : 0,
+            overflow: 'hidden',
+            transition: 'opacity 0.3s ease, height 0.3s ease',
+          }}>
+            <p style={{ margin: 0 }}>© 2026 LMIS DEPDev</p>
+            <p style={{ margin: 0 }}>Version 1.0.0</p>
+          </div>
+        </div>
+      </div>
+    </aside>
   )
 }
 

@@ -43,6 +43,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Silky full-page dark mode transitions ──────────────────── */
+*, *::before, *::after {
+  transition: background-color 0.45s ease, border-color 0.45s ease, color 0.3s ease, box-shadow 0.45s ease;
+}
+/* ─────────────────────────────────────────────────────────── */
+
 * {
   margin: 0;
   padding: 0;
@@ -100,24 +106,24 @@ button:focus-visible {
 
 /* ── Dark Mode Global Overrides ────────────────────────────── */
 .dark body {
-  background-color: #1f2937; /* gray-800 */
+  background-color: #0a1628;
 }
 
 /* Buttons */
 .dark button {
-  background-color: #374151; /* gray-700 */
-  color: #f9fafb; /* gray-50 */
-  border-color: #4b5563; /* gray-600 */
+  background-color: #0f1f38;
+  color: #dde8f5;
+  border-color: #1a3356;
 }
 
 .dark button:hover {
-  background-color: #4b5563; /* gray-600 */
-  border-color: #6b7280; /* gray-500 */
+  background-color: #1a3356;
+  border-color: #2e4d70;
 }
 
 .dark button:focus,
 .dark button:focus-visible {
-  outline: 4px auto #6b7280;
+  outline: 4px auto #2e4d70;
 }
 
 /* Scrollbar */
@@ -126,64 +132,69 @@ button:focus-visible {
 }
 
 .dark ::-webkit-scrollbar-track {
-  background: #1f2937;
+  background: #0a1628;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: #1a3356;
   border-radius: 4px;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+  background: #2e4d70;
 }
 
 /* Input autofill fix in dark mode */
 .dark input:-webkit-autofill,
 .dark input:-webkit-autofill:hover,
 .dark input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px #374151 inset;
-  -webkit-text-fill-color: #f9fafb;
-  caret-color: #f9fafb;
+  -webkit-box-shadow: 0 0 0px 1000px #081422 inset;
+  -webkit-text-fill-color: #dde8f5;
+  caret-color: #dde8f5;
 }
 
 /* Placeholder text */
 .dark ::placeholder {
-  color: #9ca3af; /* gray-400 */
+  color: #2e4d70;
 }
 
 /* Text selection highlight */
 .dark ::selection {
-  background-color: #1d4ed8; /* blue-700 */
-  color: #ffffff;
+  background-color: #1a3356;
+  color: #dde8f5;
 }
 
 /* Links */
 .dark a {
-  color: #60a5fa; /* blue-400 */
+  color: #93c5fd;
 }
 
 .dark a:hover {
-  color: #93c5fd; /* blue-300 */
+  color: #dde8f5;
 }
 
 /* Horizontal rules */
 .dark hr {
-  border-color: #374151; /* gray-700 */
+  border-color: #1a3356;
 }
 
 /* Tables */
 .dark table {
-  border-color: #374151;
+  border-color: #1a3356;
 }
 
 .dark th {
-  background-color: #374151;
-  color: #f9fafb;
+  background-color: #0f1f38;
+  color: #dde8f5;
 }
 
 .dark td {
-  border-color: #4b5563;
-  color: #e5e7eb;
+  border-color: #1a3356;
+  color: #dde8f5;
+}
+
+/* Spinner animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 /* ─────────────────────────────────────────────────────────── */
