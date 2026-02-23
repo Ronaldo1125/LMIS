@@ -97,3 +97,93 @@ button:focus,
 button:focus-visible {
   outline: 4px auto var(--secondary-2-light);
 }
+
+/* ── Dark Mode Global Overrides ────────────────────────────── */
+.dark body {
+  background-color: #1f2937; /* gray-800 */
+}
+
+/* Buttons */
+.dark button {
+  background-color: #374151; /* gray-700 */
+  color: #f9fafb; /* gray-50 */
+  border-color: #4b5563; /* gray-600 */
+}
+
+.dark button:hover {
+  background-color: #4b5563; /* gray-600 */
+  border-color: #6b7280; /* gray-500 */
+}
+
+.dark button:focus,
+.dark button:focus-visible {
+  outline: 4px auto #6b7280;
+}
+
+/* Scrollbar */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Input autofill fix in dark mode */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #374151 inset;
+  -webkit-text-fill-color: #f9fafb;
+  caret-color: #f9fafb;
+}
+
+/* Placeholder text */
+.dark ::placeholder {
+  color: #9ca3af; /* gray-400 */
+}
+
+/* Text selection highlight */
+.dark ::selection {
+  background-color: #1d4ed8; /* blue-700 */
+  color: #ffffff;
+}
+
+/* Links */
+.dark a {
+  color: #60a5fa; /* blue-400 */
+}
+
+.dark a:hover {
+  color: #93c5fd; /* blue-300 */
+}
+
+/* Horizontal rules */
+.dark hr {
+  border-color: #374151; /* gray-700 */
+}
+
+/* Tables */
+.dark table {
+  border-color: #374151;
+}
+
+.dark th {
+  background-color: #374151;
+  color: #f9fafb;
+}
+
+.dark td {
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+/* ─────────────────────────────────────────────────────────── */

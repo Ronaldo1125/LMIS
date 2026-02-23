@@ -31,19 +31,19 @@ const Security = () => {
   const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
       
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-5">
+      <div className="bg-white dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 px-6 py-5">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Shield className="w-6 h-6 text-blue-600" />
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
+            <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
               Security Management
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Monitor and control system security
             </p>
           </div>
@@ -51,9 +51,9 @@ const Security = () => {
       </div>
 
       {/* Sticky Tabs */}
-      <div className="sticky top-0 z-40 bg-gray-50">
+      <div className="sticky top-0 z-40 bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
         <div className="px-6 py-4">
-          <div className="bg-white rounded-xl shadow-sm p-1 flex w-full border border-gray-200">
+          <div className="bg-white dark:bg-gray-700 rounded-xl shadow-sm p-1 flex w-full border border-gray-200 dark:border-gray-600">
             {tabs.map(tab => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
@@ -65,7 +65,7 @@ const Security = () => {
                   className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-100' 
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
                   }`}
                 >
                   <Icon className="w-4 h-4" />

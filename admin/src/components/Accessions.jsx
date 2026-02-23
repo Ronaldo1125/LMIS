@@ -279,16 +279,16 @@ const Accessions = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
+      <div className="bg-white dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 px-6 py-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Package className="w-6 h-6 text-blue-600" />
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
+            <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Accessions</h1>
-            <p className="text-sm text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Accessions</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Track new acquisitions and intake workflow
             </p>
           </div>
@@ -299,7 +299,7 @@ const Accessions = () => {
         <StatsOverview accessions={accessions} />
 
         {/* ✅ Sticky Search and Filter */}
-        <div className="sticky top-0 z-20 bg-gray-50 pb-4">
+        <div className="sticky top-0 z-20 bg-gray-50 dark:bg-gray-800 pb-4 transition-colors duration-300">
           <SearchAndFilter
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
@@ -312,15 +312,15 @@ const Accessions = () => {
         </div>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+          <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-8 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-            <p className="text-gray-600">Loading accessions...</p>
+            <p className="text-gray-600 dark:text-gray-300">Loading accessions...</p>
           </div>
         ) : (
           <AccessionsTable

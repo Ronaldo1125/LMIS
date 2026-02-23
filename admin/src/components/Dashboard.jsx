@@ -43,12 +43,12 @@ const Dashboard = ({ user, setCurrentView }) => {
   ]
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 min-h-screen bg-white dark:bg-gray-800 transition-colors duration-300">
       {/* Login Success Notification */}
       <LoginNotification />
 
       {/* Header — ✅ forward both props so navigation and account details work */}
-      <div className={`sticky top-0 z-30 bg-white ${isSticky ? 'shadow-md' : ''}`}>
+      <div className={`sticky top-0 z-30 bg-white dark:bg-gray-800 ${isSticky ? 'shadow-md' : ''} transition-colors duration-300`}>
         <DashboardHeader user={user} setCurrentView={setCurrentView} />
       </div>
 

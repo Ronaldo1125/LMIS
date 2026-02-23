@@ -234,10 +234,10 @@ function UserManagement() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-800 flex items-center justify-center transition-colors duration-300">
+        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-8 text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
         </div>
       </div>
     )
@@ -245,26 +245,26 @@ function UserManagement() {
 
   if (!canView) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-sm p-12 text-center max-w-md">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-800 flex items-center justify-center transition-colors duration-300">
+        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-12 text-center max-w-md">
           <div className="text-red-500 text-xl font-semibold mb-2">Access Denied</div>
-          <div className="text-gray-600">You don't have permission to view this page.</div>
+          <div className="text-gray-600 dark:text-gray-300">You don't have permission to view this page.</div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
+      <div className="bg-white dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 px-6 py-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Users className="w-6 h-6 text-blue-600" />
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
+            <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
-            <p className="text-sm text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">User Management</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {isAdmin
                 ? 'Manage library staff, librarians, and patrons'
                 : 'View library staff, librarians, and patrons'}
@@ -278,7 +278,7 @@ function UserManagement() {
         <StatsCards stats={stats} />
 
         {/* Search and Filters */}
-        <div className="sticky top-0 z-20 bg-gray-50 py-4">
+        <div className="sticky top-0 z-20 bg-gray-50 dark:bg-gray-800 py-4 transition-colors duration-300">
           <SearchBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
