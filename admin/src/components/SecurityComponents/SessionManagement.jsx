@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Monitor, LogOut, MapPin, Chrome, Smartphone, AlertTriangle, RefreshCw } from 'lucide-react'
 
-const SessionManagement = () => {
+const SessionManagement = ({ dark }) => {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentSessionId, setCurrentSessionId] = useState(null)
@@ -86,143 +86,224 @@ const SessionManagement = () => {
 
   const getDeviceIcon = (device) => {
     if (device.toLowerCase().includes('mobile') || device.toLowerCase().includes('android') || device.toLowerCase().includes('iphone')) {
-      return <Smartphone className="w-5 h-5 text-gray-600" />
+      return <Smartphone style={{ width: '1.25rem', height: '1.25rem', color: iconColor }} />
     }
-    return <Monitor className="w-5 h-5 text-gray-600" />
+    return <Monitor style={{ width: '1.25rem', height: '1.25rem', color: iconColor }} />
   }
 
-  const getBrowserIcon = (Chrome) => {
-    // You can add more browser icons as needed
-    return <Chrome className="w-5 h-5 text-gray-600" />
+  // ── Colors ────────────────────────────────────────────────
+  const cardBg        = dark ? '#0f1f38' : '#ffffff'
+  const border        = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary   = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary = dark ? '#6b8cae' : '#64748b'
+  const textMuted     = dark ? '#2e4d70' : '#94a3b8'
+  const iconColor     = dark ? '#93c5fd' : '#2563eb'
+
+  // Current session highlight
+  const currentCardBg     = dark ? 'rgba(22,163,74,0.08)' : '#f0fdf4'
+  const currentCardBorder = dark ? 'rgba(22,163,74,0.35)' : '#22c55e'
+
+  // Suspicious session highlight
+  const suspiciousBg     = dark ? 'rgba(234,179,8,0.08)' : '#fefce8'
+  const suspiciousBorder = dark ? 'rgba(234,179,8,0.25)' : '#fde047'
+  const suspiciousText   = dark ? '#fde047' : '#854d0e'
+  const suspiciousIcon   = dark ? '#fde047' : '#ca8a04'
+
+  const statCardStyle = {
+    background: cardBg,
+    border: `1px solid ${border}`,
+    borderRadius: '0.75rem',
+    padding: '1rem',
+    transition: 'background 0.45s ease, border-color 0.45s ease',
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <Monitor className="w-7 h-7" />
+    <div style={{ padding: '1.5rem' }}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: textPrimary, display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+          <Monitor style={{ width: '1.75rem', height: '1.75rem', color: iconColor }} />
           Session Management
         </h1>
-        <p className="text-gray-600 mt-1">Monitor and manage active user sessions</p>
+        <p style={{ color: textSecondary, marginTop: '0.25rem', fontSize: '0.875rem' }}>
+          Monitor and manage active user sessions
+        </p>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 mb-6">
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
         <button
           onClick={fetchSessions}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            background: '#2563eb', color: '#ffffff',
+            border: 'none', borderRadius: '0.5rem', cursor: 'pointer',
+            fontSize: '0.875rem', fontWeight: 500,
+            transition: 'background 0.2s ease',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = '#1d4ed8'}
+          onMouseLeave={e => e.currentTarget.style.background = '#2563eb'}
         >
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw style={{ width: '1rem', height: '1rem' }} />
           Refresh
         </button>
         <button
           onClick={terminateAllOtherSessions}
-          className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            background: dark ? 'rgba(239,68,68,0.15)' : '#ef4444',
+            color: dark ? '#fca5a5' : '#ffffff',
+            border: dark ? '1px solid rgba(239,68,68,0.3)' : 'none',
+            borderRadius: '0.5rem', cursor: 'pointer',
+            fontSize: '0.875rem', fontWeight: 500,
+            transition: 'background 0.2s ease',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.25)' : '#dc2626'}
+          onMouseLeave={e => e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.15)' : '#ef4444'}
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut style={{ width: '1rem', height: '1rem' }} />
           Terminate All Other Sessions
         </button>
       </div>
 
       {/* Sessions Grid */}
       {loading ? (
-        <div className="bg-white shadow-sm p-8 text-center border border-gray-200">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading sessions...</p>
+        <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '0.75rem', padding: '2rem', textAlign: 'center' }}>
+          <div style={{ display: 'inline-block', width: '3rem', height: '3rem', borderRadius: '50%', border: `2px solid transparent`, borderBottomColor: iconColor, animation: 'spin 0.8s linear infinite' }} />
+          <p style={{ marginTop: '1rem', color: textSecondary }}>Loading sessions...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
           {sessions.length > 0 ? (
-            sessions.map((session) => (
-              <div
-                key={session.id}
-                className={`bg-white shadow-sm p-5 border-2 ${
-                  session.id === currentSessionId
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-200'
-                }`}
-              >
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    {getDeviceIcon(session.device)}
-                    <div>
-                      <h3 className="font-semibold text-gray-800">{session.user}</h3>
-                      <p className="text-sm text-gray-600">{session.device}</p>
+            sessions.map((session) => {
+              const isCurrent = session.id === currentSessionId
+              return (
+                <div
+                  key={session.id}
+                  style={{
+                    background: isCurrent ? currentCardBg : cardBg,
+                    border: `2px solid ${isCurrent ? currentCardBorder : border}`,
+                    borderRadius: '0.75rem',
+                    padding: '1.25rem',
+                    transition: 'background 0.45s ease, border-color 0.45s ease',
+                  }}
+                >
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      {getDeviceIcon(session.device)}
+                      <div>
+                        <h3 style={{ fontWeight: 600, color: textPrimary, margin: 0, fontSize: '0.9375rem' }}>{session.user}</h3>
+                        <p style={{ fontSize: '0.8125rem', color: textSecondary, margin: 0 }}>{session.device}</p>
+                      </div>
+                    </div>
+                    {isCurrent && (
+                      <span style={{
+                        padding: '0.2rem 0.625rem',
+                        background: dark ? 'rgba(22,163,74,0.2)' : '#dcfce7',
+                        color: dark ? '#86efac' : '#15803d',
+                        fontSize: '0.7rem', fontWeight: 700,
+                        borderRadius: '999px',
+                        flexShrink: 0,
+                      }}>
+                        Current
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Session Details */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: textSecondary }}>
+                      <Chrome style={{ width: '1rem', height: '1rem', color: textMuted, flexShrink: 0 }} />
+                      <span>{session.browser}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: textSecondary }}>
+                      <MapPin style={{ width: '1rem', height: '1rem', color: textMuted, flexShrink: 0 }} />
+                      <span>{session.location}</span>
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: textSecondary }}>
+                      <span style={{ fontWeight: 500, color: textPrimary }}>IP: </span>
+                      {session.ipAddress}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: textSecondary }}>
+                      <span style={{ fontWeight: 500, color: textPrimary }}>Login: </span>
+                      {new Date(session.loginTime).toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: textSecondary }}>
+                      <span style={{ fontWeight: 500, color: textPrimary }}>Last Active: </span>
+                      {new Date(session.lastActive).toLocaleString()}
                     </div>
                   </div>
-                  {session.id === currentSessionId && (
-                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                      Current
-                    </span>
+
+                  {/* Warning for suspicious activity */}
+                  {session.suspicious && (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      padding: '0.625rem 0.875rem',
+                      background: suspiciousBg,
+                      border: `1px solid ${suspiciousBorder}`,
+                      borderRadius: '0.5rem',
+                      marginBottom: '1rem',
+                    }}>
+                      <AlertTriangle style={{ width: '1.125rem', height: '1.125rem', color: suspiciousIcon, flexShrink: 0 }} />
+                      <p style={{ fontSize: '0.8125rem', color: suspiciousText, margin: 0 }}>Unusual activity detected</p>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  {!isCurrent && (
+                    <button
+                      onClick={() => terminateSession(session.id)}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        gap: '0.5rem', padding: '0.5rem 1rem',
+                        background: dark ? 'rgba(239,68,68,0.12)' : '#ef4444',
+                        color: dark ? '#fca5a5' : '#ffffff',
+                        border: dark ? '1px solid rgba(239,68,68,0.25)' : 'none',
+                        borderRadius: '0.5rem', cursor: 'pointer',
+                        fontSize: '0.875rem', fontWeight: 500,
+                        transition: 'background 0.2s ease',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.22)' : '#dc2626'}
+                      onMouseLeave={e => e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.12)' : '#ef4444'}
+                    >
+                      <LogOut style={{ width: '1rem', height: '1rem' }} />
+                      Terminate Session
+                    </button>
                   )}
                 </div>
-
-                {/* Session Details */}
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    {getBrowserIcon(session.browser)}
-                    <span>{session.browser}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4" />
-                    <span>{session.location}</span>
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">IP:</span> {session.ipAddress}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">Login:</span> {new Date(session.loginTime).toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">Last Active:</span> {new Date(session.lastActive).toLocaleString()}
-                  </div>
-                </div>
-
-                {/* Warning for suspicious activity */}
-                {session.suspicious && (
-                  <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 mb-4">
-                    <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0" />
-                    <p className="text-sm text-yellow-800">Unusual activity detected</p>
-                  </div>
-                )}
-
-                {/* Actions */}
-                {session.id !== currentSessionId && (
-                  <button
-                    onClick={() => terminateSession(session.id)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Terminate Session
-                  </button>
-                )}
-              </div>
-            ))
+              )
+            })
           ) : (
-            <div className="col-span-2 bg-white shadow-sm p-12 text-center border border-gray-200">
-              <Monitor className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <p className="text-gray-500">No active sessions found</p>
+            <div style={{
+              gridColumn: '1 / -1',
+              background: cardBg, border: `1px solid ${border}`,
+              borderRadius: '0.75rem', padding: '3rem',
+              textAlign: 'center',
+            }}>
+              <Monitor style={{ width: '4rem', height: '4rem', margin: '0 auto 1rem', color: textMuted }} />
+              <p style={{ color: textSecondary, margin: 0 }}>No active sessions found</p>
             </div>
           )}
         </div>
       )}
 
       {/* Summary Stats */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white shadow-sm p-4 border border-gray-200">
-          <p className="text-sm text-gray-600 mb-1">Total Sessions</p>
-          <p className="text-2xl font-bold text-gray-800">{sessions.length}</p>
+      <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
+        <div style={statCardStyle}>
+          <p style={{ fontSize: '0.875rem', color: textSecondary, margin: '0 0 0.25rem' }}>Total Sessions</p>
+          <p style={{ fontSize: '1.5rem', fontWeight: 700, color: textPrimary, margin: 0 }}>{sessions.length}</p>
         </div>
-        <div className="bg-white shadow-sm p-4 border border-gray-200">
-          <p className="text-sm text-gray-600 mb-1">Suspicious Sessions</p>
-          <p className="text-2xl font-bold text-yellow-600">
+        <div style={statCardStyle}>
+          <p style={{ fontSize: '0.875rem', color: textSecondary, margin: '0 0 0.25rem' }}>Suspicious Sessions</p>
+          <p style={{ fontSize: '1.5rem', fontWeight: 700, color: dark ? '#fde047' : '#ca8a04', margin: 0 }}>
             {sessions.filter(s => s.suspicious).length}
           </p>
         </div>
-        <div className="bg-white shadow-sm p-4 border border-gray-200">
-          <p className="text-sm text-gray-600 mb-1">Active Users</p>
-          <p className="text-2xl font-bold text-green-600">
+        <div style={statCardStyle}>
+          <p style={{ fontSize: '0.875rem', color: textSecondary, margin: '0 0 0.25rem' }}>Active Users</p>
+          <p style={{ fontSize: '1.5rem', fontWeight: 700, color: dark ? '#86efac' : '#15803d', margin: 0 }}>
             {new Set(sessions.map(s => s.user)).size}
           </p>
         </div>
@@ -280,4 +361,3 @@ const getMockSessions = () => [
 ]
 
 export default SessionManagement
-

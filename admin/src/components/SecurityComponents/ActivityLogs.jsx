@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Activity, Search, Filter, Download, Calendar, User, FileText } from 'lucide-react'
 
-const ActivityLogs = () => {
+const ActivityLogs = ({ dark }) => {
   const [logs, setLogs] = useState([])
   const [filteredLogs, setFilteredLogs] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -93,51 +93,95 @@ const ActivityLogs = () => {
     a.click()
   }
 
-  const getTypeColor = (type) => {
-    const colors = {
-      login: 'bg-green-100 text-green-800',
-      logout: 'bg-gray-100 text-gray-800',
-      create: 'bg-blue-100 text-blue-800',
-      update: 'bg-yellow-100 text-yellow-800',
-      delete: 'bg-red-100 text-red-800',
-      access: 'bg-purple-100 text-purple-800',
-      security: 'bg-orange-100 text-orange-800'
+  const getTypeStyle = (type) => {
+    if (dark) {
+      const styles = {
+        login:    { background: 'rgba(34,197,94,0.15)',  color: '#86efac' },
+        logout:   { background: 'rgba(148,163,184,0.12)', color: '#94a3b8' },
+        create:   { background: 'rgba(59,130,246,0.15)', color: '#93c5fd' },
+        update:   { background: 'rgba(234,179,8,0.15)',  color: '#fde047' },
+        delete:   { background: 'rgba(239,68,68,0.15)',  color: '#fca5a5' },
+        access:   { background: 'rgba(168,85,247,0.15)', color: '#d8b4fe' },
+        security: { background: 'rgba(249,115,22,0.15)', color: '#fdba74' },
+      }
+      return styles[type] || { background: 'rgba(148,163,184,0.12)', color: '#94a3b8' }
     }
-    return colors[type] || 'bg-gray-100 text-gray-800'
+    const styles = {
+      login:    { background: '#dcfce7', color: '#166534' },
+      logout:   { background: '#f1f5f9', color: '#475569' },
+      create:   { background: '#dbeafe', color: '#1e40af' },
+      update:   { background: '#fef9c3', color: '#854d0e' },
+      delete:   { background: '#fee2e2', color: '#991b1b' },
+      access:   { background: '#f3e8ff', color: '#6b21a8' },
+      security: { background: '#ffedd5', color: '#9a3412' },
+    }
+    return styles[type] || { background: '#f1f5f9', color: '#475569' }
+  }
+
+  // ── Colors ────────────────────────────────────────────────
+  const cardBg       = dark ? '#0f1f38' : '#ffffff'
+  const border       = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary  = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary = dark ? '#6b8cae' : '#64748b'
+  const textMuted    = dark ? '#2e4d70' : '#94a3b8'
+  const inputBg      = dark ? '#081422' : '#ffffff'
+  const inputBorder  = dark ? '#1a3356' : '#e2e8f0'
+  const theadBg      = dark ? '#081422' : '#f8fafc'
+  const rowHover     = dark ? '#0d1d35' : '#f8fafc'
+  const divider      = dark ? '#1a3356' : '#e2e8f0'
+  const iconColor    = dark ? '#93c5fd' : '#2563eb'
+
+  const inputStyle = {
+    width: '100%',
+    paddingLeft: '2.5rem',
+    paddingRight: '1rem',
+    paddingTop: '0.5rem',
+    paddingBottom: '0.5rem',
+    border: `1px solid ${inputBorder}`,
+    borderRadius: '0.5rem',
+    background: inputBg,
+    color: textPrimary,
+    fontSize: '0.875rem',
+    outline: 'none',
+    transition: 'border-color 0.2s ease, background 0.45s ease',
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <Activity className="w-7 h-7" />
+    <div style={{ padding: '1.5rem' }}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: textPrimary, display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+          <Activity style={{ width: '1.75rem', height: '1.75rem', color: iconColor }} />
           Activity Logs
         </h1>
-        <p className="text-gray-600 mt-1">Monitor and track all system activities</p>
+        <p style={{ color: textSecondary, marginTop: '0.25rem', fontSize: '0.875rem' }}>Monitor and track all system activities</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white shadow-sm p-4 mb-6 border border-gray-200">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div style={{
+        background: cardBg, border: `1px solid ${border}`,
+        borderRadius: '0.75rem', padding: '1rem', marginBottom: '1.5rem',
+        transition: 'background 0.45s ease, border-color 0.45s ease',
+      }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div style={{ position: 'relative' }}>
+            <Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: textMuted, width: '1.25rem', height: '1.25rem' }} />
             <input
               type="text"
               placeholder="Search logs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              style={inputStyle}
             />
           </div>
 
           {/* Type Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div style={{ position: 'relative' }}>
+            <Filter style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: textMuted, width: '1.25rem', height: '1.25rem' }} />
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              style={{ ...inputStyle, appearance: 'none' }}
             >
               <option value="all">All Types</option>
               <option value="login">Login</option>
@@ -151,22 +195,31 @@ const ActivityLogs = () => {
           </div>
 
           {/* Date Range */}
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div style={{ position: 'relative' }}>
+            <Calendar style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: textMuted, width: '1.25rem', height: '1.25rem' }} />
             <input
               type="date"
               value={dateRange.start}
               onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              style={inputStyle}
             />
           </div>
 
-          <div className="flex gap-2">
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
               onClick={exportLogs}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                gap: '0.5rem', padding: '0.5rem 1rem',
+                background: '#2563eb', color: '#ffffff',
+                border: 'none', borderRadius: '0.5rem', cursor: 'pointer',
+                fontSize: '0.875rem', fontWeight: 500,
+                transition: 'background 0.2s ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#1d4ed8'}
+              onMouseLeave={e => e.currentTarget.style.background = '#2563eb'}
             >
-              <Download className="w-4 h-4" />
+              <Download style={{ width: '1rem', height: '1rem' }} />
               Export
             </button>
             <button
@@ -175,7 +228,15 @@ const ActivityLogs = () => {
                 setFilterType('all')
                 setDateRange({ start: '', end: '' })
               }}
-              className="px-4 py-2 border border-gray-300 hover:bg-gray-50 transition-colors"
+              style={{
+                padding: '0.5rem 1rem',
+                background: inputBg, color: textSecondary,
+                border: `1px solid ${border}`, borderRadius: '0.5rem', cursor: 'pointer',
+                fontSize: '0.875rem',
+                transition: 'background 0.2s ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = dark ? '#1a3356' : '#f1f5f9'}
+              onMouseLeave={e => e.currentTarget.style.background = inputBg}
             >
               Clear
             </button>
@@ -184,71 +245,76 @@ const ActivityLogs = () => {
       </div>
 
       {/* Logs Table */}
-      <div className="bg-white shadow-sm overflow-hidden border border-gray-200">
+      <div style={{
+        background: cardBg, border: `1px solid ${border}`,
+        borderRadius: '0.75rem', overflow: 'hidden',
+        transition: 'background 0.45s ease, border-color 0.45s ease',
+      }}>
         {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading activity logs...</p>
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <div style={{ display: 'inline-block', width: '3rem', height: '3rem', borderRadius: '50%', border: `2px solid transparent`, borderBottomColor: iconColor, animation: 'spin 0.8s linear infinite' }} />
+            <p style={{ marginTop: '1rem', color: textSecondary }}>Loading activity logs...</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Timestamp
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Action
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    IP Address
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Details
-                  </th>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: theadBg, borderBottom: `1px solid ${divider}` }}>
+                  {['Timestamp', 'User', 'Action', 'Type', 'IP Address', 'Details'].map(h => (
+                    <th key={h} style={{
+                      padding: '0.75rem 1.5rem', textAlign: 'left',
+                      fontSize: '0.75rem', fontWeight: 600,
+                      color: textMuted, textTransform: 'uppercase', letterSpacing: '0.05em',
+                    }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {filteredLogs.length > 0 ? (
                   filteredLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr
+                      key={log.id}
+                      style={{ borderBottom: `1px solid ${divider}`, transition: 'background 0.15s ease', cursor: 'default' }}
+                      onMouseEnter={e => e.currentTarget.style.background = rowHover}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap', fontSize: '0.875rem', color: textPrimary }}>
                         {new Date(log.timestamp).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm font-medium text-gray-900">{log.user}</span>
+                      <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <User style={{ width: '1rem', height: '1rem', color: textMuted }} />
+                          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: textPrimary }}>{log.user}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap', fontSize: '0.875rem', color: textPrimary }}>
                         {log.action}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-semibold ${getTypeColor(log.type)}`}>
+                      <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
+                        <span style={{
+                          ...getTypeStyle(log.type),
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '999px',
+                          fontSize: '0.75rem', fontWeight: 600,
+                        }}>
                           {log.type}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap', fontSize: '0.875rem', color: textSecondary }}>
                         {log.ipAddress}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 max-w-md truncate">
+                      <td style={{ padding: '1rem 1.5rem', fontSize: '0.875rem', color: textSecondary, maxWidth: '24rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {log.details}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                      <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                      <p>No activity logs found</p>
+                    <td colSpan="6" style={{ padding: '3rem 1.5rem', textAlign: 'center', color: textSecondary }}>
+                      <FileText style={{ width: '3rem', height: '3rem', margin: '0 auto 0.75rem', color: textMuted }} />
+                      <p style={{ margin: 0 }}>No activity logs found</p>
                     </td>
                   </tr>
                 )}
@@ -260,7 +326,7 @@ const ActivityLogs = () => {
 
       {/* Pagination Info */}
       {filteredLogs.length > 0 && (
-        <div className="mt-4 text-sm text-gray-600 text-center">
+        <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: textSecondary, textAlign: 'center' }}>
           Showing {filteredLogs.length} of {logs.length} logs
         </div>
       )}
@@ -318,4 +384,3 @@ const getMockLogs = () => [
 ]
 
 export default ActivityLogs
-
