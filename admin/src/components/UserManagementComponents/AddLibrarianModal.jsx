@@ -1,7 +1,56 @@
 import { useState } from 'react'
 import { X, User, Lock, UserCircle } from 'lucide-react'
 
-function AddLibrarianModal({ onClose, onSubmit }) {
+function AddLibrarianModal({ onClose, onSubmit, dark = false }) {
+  // ── Colors ────────────────────────────────────────────────
+  const cardBg       = dark ? '#0f1f38' : '#ffffff'
+  const border       = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary  = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary = dark ? '#6b8cae' : '#64748b'
+  const textMuted    = dark ? '#2e4d70' : '#94a3b8'
+  const inputBg      = dark ? '#081422' : '#ffffff'
+  const inputBorder  = dark ? '#1a3356' : '#e2e8f0'
+  const headerBg     = dark ? '#12294a' : '#2563eb'
+  const headerText   = dark ? '#dde8f5' : '#ffffff'
+  const cancelBg     = dark ? '#1a3356' : '#f3f4f6'
+  const cancelHover  = dark ? '#2e4d70' : '#fef2f2'
+  const cancelText   = dark ? '#dde8f5' : '#dc2626'
+  const submitBg     = dark ? '#2563eb' : '#2563eb'
+  const submitHover  = dark ? '#1d4ed8' : '#1d4ed8'
+  const submitText   = '#ffffff'
+
+  const inputStyle = {
+    width: '100%',
+    paddingLeft: '1rem',
+    paddingRight: '1rem',
+    paddingTop: '0.75rem',
+    paddingBottom: '0.75rem',
+    border: `1px solid ${inputBorder}`,
+    borderRadius: '0.5rem',
+    background: inputBg,
+    color: textPrimary,
+    fontSize: '1rem',
+    outline: 'none',
+    transition: 'border-color 0.2s ease, background 0.45s ease',
+    fontFamily: 'inherit',
+  }
+
+  const labelStyle = {
+    fontFamily: 'inherit',
+    color: textSecondary,
+    fontWeight: 600,
+    fontSize: '0.95rem',
+    marginBottom: '0.5rem',
+    display: 'block',
+  }
+
+  const errorStyle = {
+    color: '#f87171',
+    fontWeight: 600,
+    fontSize: '0.95rem',
+    marginTop: '0.25rem',
+  }
+
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -110,32 +159,44 @@ const handleSubmit = async (e) => {
 }
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
       onClick={onClose}
-      style={{ animation: 'fadeIn 0.2s ease-out' }}
+      style={{
+        background: dark ? 'rgba(10,18,32,0.85)' : 'rgba(0,0,0,0.5)',
+        animation: 'fadeIn 0.2s ease-out',
+      }}
     >
-      <div 
-        className="bg-white shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-        style={{ 
+      <div
+        className="shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden"
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: cardBg,
+          border: `1.5px solid ${border}`,
+          borderRadius: '1rem',
           animation: 'slideUp 0.3s ease-out',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)'
+          boxShadow: dark
+            ? '0 25px 50px -12px rgba(16, 37, 70, 0.65)'
+            : '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+          color: textPrimary,
         }}
       >
         {/* Header */}
-        <div 
-          className="px-8 py-6 text-white relative overflow-hidden"
-          style={{ background: 'var(--dark-blue-1)' }}
+        <div
+          className="px-8 py-6 relative overflow-hidden"
+          style={{ background: headerBg, color: headerText }}
         >
           <div className="relative flex items-center justify-between">
-            <h2 className="text-2xl font-bold" style={{ fontFamily: 'inherit' }}>
+            <h2 className="text-2xl font-bold" style={{ fontFamily: 'inherit', color: headerText }}>
               Add New Librarian
             </h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white hover:bg-opacity-20 transition-all"
+              className="p-2 transition-all"
               disabled={isSubmitting}
+              style={{ background: 'transparent', color: headerText, borderRadius: '0.5rem', border: 'none', cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.background = dark ? '#1a3356' : '#f1f5f9'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               <X size={24} />
             </button>
@@ -147,8 +208,8 @@ const handleSubmit = async (e) => {
           <div className="space-y-6">
             {/* Full Name */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2" style={{ fontFamily: '"Inter", sans-serif' }}>
-                <UserCircle size={16} className="inline mr-2" />
+              <label style={labelStyle}>
+                <UserCircle size={16} style={{ marginRight: 8, verticalAlign: 'middle', color: textMuted }} />
                 Full Name *
               </label>
               <input
@@ -157,19 +218,23 @@ const handleSubmit = async (e) => {
                 value={formData.full_name}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
-                  errors.full_name ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
-                } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                style={{
+                  ...inputStyle,
+                  borderColor: errors.full_name ? '#f87171' : inputBorder,
+                  background: errors.full_name ? (dark ? '#2e1a1a' : '#fef2f2') : inputBg,
+                  opacity: isSubmitting ? 0.5 : 1,
+                  cursor: isSubmitting ? 'not-allowed' : 'auto',
+                }}
                 placeholder="Enter full name"
-                style={{ fontFamily: '"Inter", sans-serif' }}
+                autoComplete="off"
               />
-              {errors.full_name && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.full_name}</p>}
+              {errors.full_name && <p style={errorStyle}>{errors.full_name}</p>}
             </div>
 
             {/* Username */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2" style={{ fontFamily: '"Inter", sans-serif' }}>
-                <User size={16} className="inline mr-2" />
+              <label style={labelStyle}>
+                <User size={16} style={{ marginRight: 8, verticalAlign: 'middle', color: textMuted }} />
                 Username *
               </label>
               <input
@@ -178,20 +243,23 @@ const handleSubmit = async (e) => {
                 value={formData.username}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
-                  errors.username ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
-                } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                style={{
+                  ...inputStyle,
+                  borderColor: errors.username ? '#f87171' : inputBorder,
+                  background: errors.username ? (dark ? '#2e1a1a' : '#fef2f2') : inputBg,
+                  opacity: isSubmitting ? 0.5 : 1,
+                  cursor: isSubmitting ? 'not-allowed' : 'auto',
+                }}
                 placeholder="Enter username"
-                style={{ fontFamily: '"Inter", sans-serif' }}
                 autoComplete="off"
               />
-              {errors.username && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.username}</p>}
+              {errors.username && <p style={errorStyle}>{errors.username}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2" style={{ fontFamily: '"Inter", sans-serif' }}>
-                <Lock size={16} className="inline mr-2" />
+              <label style={labelStyle}>
+                <Lock size={16} style={{ marginRight: 8, verticalAlign: 'middle', color: textMuted }} />
                 Password *
               </label>
               <input
@@ -200,20 +268,23 @@ const handleSubmit = async (e) => {
                 value={formData.password}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
-                  errors.password ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
-                } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                style={{
+                  ...inputStyle,
+                  borderColor: errors.password ? '#f87171' : inputBorder,
+                  background: errors.password ? (dark ? '#2e1a1a' : '#fef2f2') : inputBg,
+                  opacity: isSubmitting ? 0.5 : 1,
+                  cursor: isSubmitting ? 'not-allowed' : 'auto',
+                }}
                 placeholder="Enter password (min. 6 characters)"
-                style={{ fontFamily: '"Inter", sans-serif' }}
                 autoComplete="new-password"
               />
-              {errors.password && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.password}</p>}
+              {errors.password && <p style={errorStyle}>{errors.password}</p>}
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2" style={{ fontFamily: '"Inter", sans-serif' }}>
-                <Lock size={16} className="inline mr-2" />
+              <label style={labelStyle}>
+                <Lock size={16} style={{ marginRight: 8, verticalAlign: 'middle', color: textMuted }} />
                 Confirm Password *
               </label>
               <input
@@ -222,20 +293,23 @@ const handleSubmit = async (e) => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-3 focus:outline-none focus:ring-2 transition-all ${
-                  errors.confirmPassword ? 'bg-red-50 focus:ring-red-500' : 'bg-gray-100 focus:ring-purple-500'
-                } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                style={{
+                  ...inputStyle,
+                  borderColor: errors.confirmPassword ? '#f87171' : inputBorder,
+                  background: errors.confirmPassword ? (dark ? '#2e1a1a' : '#fef2f2') : inputBg,
+                  opacity: isSubmitting ? 0.5 : 1,
+                  cursor: isSubmitting ? 'not-allowed' : 'auto',
+                }}
                 placeholder="Confirm password"
-                style={{ fontFamily: '"Inter", sans-serif' }}
                 autoComplete="new-password"
               />
-              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && <p style={errorStyle}>{errors.confirmPassword}</p>}
             </div>
 
             {/* Submit Error */}
             {errors.submit && (
-              <div className="p-4 bg-red-50 shadow-sm">
-                <p className="text-red-600 text-sm font-semibold">{errors.submit}</p>
+              <div style={{ padding: '1rem', background: dark ? '#2e1a1a' : '#fef2f2', borderRadius: '0.5rem', marginTop: 8 }}>
+                <p style={{ color: '#dc2626', fontWeight: 600, fontSize: '1rem' }}>{errors.submit}</p>
               </div>
             )}
           </div>
@@ -246,19 +320,52 @@ const handleSubmit = async (e) => {
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2 font-semibold text-gray-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed cancel-button shadow-sm"
-              style={{ fontFamily: '"Inter", sans-serif' }}
+              style={{
+                flex: 1,
+                padding: '0.75rem 1rem',
+                fontWeight: 600,
+                fontFamily: 'inherit',
+                background: cancelBg,
+                color: dark ? textSecondary : '#374151',
+                border: `1px solid ${border}`,
+                borderRadius: '0.5rem',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                opacity: isSubmitting ? 0.5 : 1,
+                transition: 'background 0.2s, color 0.2s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = cancelHover;
+                e.currentTarget.style.color = cancelText;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = cancelBg;
+                e.currentTarget.style.color = dark ? textSecondary : '#374151';
+              }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2 font-semibold text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               style={{
-                background: 'var(--dark-blue-1)',
-                fontFamily: 'inherit'
+                flex: 1,
+                padding: '0.75rem 1rem',
+                fontWeight: 600,
+                fontFamily: 'inherit',
+                background: submitBg,
+                color: submitText,
+                border: 'none',
+                borderRadius: '0.5rem',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                opacity: isSubmitting ? 0.5 : 1,
+                boxShadow: dark
+                  ? '0 2px 8px rgba(37, 99, 235, 0.15)'
+                  : '0 2px 8px rgba(37, 99, 235, 0.15)',
+                transition: 'background 0.2s, transform 0.15s',
+                transform: isSubmitting ? 'none' : 'scale(1)',
               }}
+              onMouseEnter={e => e.currentTarget.style.background = submitHover}
+              onMouseLeave={e => e.currentTarget.style.background = submitBg}
             >
               {isSubmitting ? 'Creating...' : 'Add Librarian'}
             </button>
@@ -271,7 +378,6 @@ const handleSubmit = async (e) => {
           from { opacity: 0; }
           to { opacity: 1; }
         }
-        
         @keyframes slideUp {
           from {
             opacity: 0;
@@ -281,16 +387,6 @@ const handleSubmit = async (e) => {
             opacity: 1;
             transform: translateY(0);
           }
-        }
-
-        .cancel-button {
-          background-color: #f3f4f6 !important;
-        }
-
-        .cancel-button:hover:not(:disabled) {
-          background-color: #fef2f2 !important;
-          color: #dc2626 !important;
-          box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2) !important;
         }
       `}</style>
     </div>
