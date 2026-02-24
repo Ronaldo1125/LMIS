@@ -53,6 +53,9 @@ app.use('/api/accessions', accessionsRoutes);
 const acquisitionsRoutes = require('./routes/acquisitions');
 app.use('/api/acquisitions', acquisitionsRoutes);
 
+const newsAnnouncementsRoutes = require('./routes/newsAnnouncements');
+app.use('/api', newsAnnouncementsRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
