@@ -14,7 +14,8 @@ const SearchAndFilter = ({
   setSelectedStatus,
   statuses,
   onAddClick,
-  onArchiveClick
+  onArchiveClick,
+  dark
 }) => {
   const searchInputRef = useRef(null)
   const dropdownRef = useRef(null)
@@ -59,13 +60,53 @@ const SearchAndFilter = ({
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
 
+  // ── Colors ────────────────────────────────────────────────
+  const containerBg     = dark ? '#0f1f38' : '#ffffff'
+  const containerBorder = dark ? '#1a3356' : '#e5e7eb'
+  const inputBg         = dark ? '#081422' : '#ffffff'
+  const inputBorder     = dark ? '#1a3356' : '#d1d5db'
+  const inputText       = dark ? '#dde8f5' : '#111827'
+  const iconColor       = dark ? '#6b8cae' : '#9ca3af'
+  const funnelColor     = dark ? '#6b8cae' : '#4b5563'
+  const dropdownBg      = dark ? '#0f1f38' : '#ffffff'
+  const dropdownBorder  = dark ? '#1a3356' : '#e5e7eb'
+  const dropdownText    = dark ? '#dde8f5' : '#374151'
+  const dropdownHover   = dark ? '#0d1d35' : '#f9fafb'
+  const archiveBg       = dark ? '#0f1f38' : '#ffffff'
+  const archiveBorder   = dark ? '#1a3356' : '#d1d5db'
+  const archiveText     = dark ? '#6b8cae' : '#374151'
+  const archiveHover    = dark ? '#1a3356' : '#f9fafb'
+  const addBg           = dark ? '#1a3356' : '#e5e7eb'
+  const addText         = dark ? '#dde8f5' : '#1f2937'
+  const addHover        = dark ? '#2e4d70' : '#d1d5db'
+
+  const inputStyle = {
+    width: '100%',
+    paddingLeft: '2.5rem', paddingRight: searchTerm ? '2.5rem' : '1rem',
+    paddingTop: '0.5rem', paddingBottom: '0.5rem',
+    border: `1px solid ${inputBorder}`,
+    borderRadius: '0.5rem',
+    background: inputBg, color: inputText,
+    fontSize: '0.875rem', outline: 'none',
+    transition: 'border-color 0.2s ease, background 0.45s ease',
+    boxSizing: 'border-box',
+  }
+
   return (
-    <div className="bg-white p-6 shadow-sm border border-gray-100 mb-6">
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+    <div style={{
+      background: containerBg,
+      border: `1px solid ${containerBorder}`,
+      borderRadius: '0.75rem',
+      padding: '1rem 1.5rem',
+      marginBottom: '1.5rem',
+      boxShadow: dark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.05)',
+      transition: 'background 0.45s ease, border-color 0.45s ease',
+    }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', justifyContent: 'space-between' }}>
 
         {/* Search */}
-        <div className="relative flex-1 w-full md:max-w-md">
-          <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '28rem' }}>
+          <MagnifyingGlassIcon style={{ width: '1.25rem', height: '1.25rem', color: iconColor, position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
           <input
             ref={searchInputRef}
             type="text"
@@ -73,57 +114,67 @@ const SearchAndFilter = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             aria-label="Search accessions"
-            className="
-              w-full pl-10 pr-10 py-2
-              border border-gray-300 bg-white
-              focus:outline-none focus:ring-0 focus:border-gray-300
-            "
+            style={inputStyle}
+            onFocus={e => e.target.style.borderColor = '#2563eb'}
+            onBlur={e => e.target.style.borderColor = inputBorder}
           />
           {searchTerm && (
             <button
               type="button"
               onClick={() => setSearchTerm('')}
-              className="
-                absolute right-3 top-1/2 -translate-y-1/2
-                text-gray-400 hover:text-gray-600
-                bg-transparent border-0 p-0
-                focus:outline-none focus:ring-0
-              "
               aria-label="Clear search"
               title="Clear search"
+              style={{
+                position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                color: iconColor, transition: 'color 0.2s ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = inputText}
+              onMouseLeave={e => e.currentTarget.style.color = iconColor}
             >
-              <XMarkIcon className="w-4 h-4" />
+              <XMarkIcon style={{ width: '1rem', height: '1rem' }} />
             </button>
           )}
         </div>
 
         {/* Status Filter */}
-        <div className="flex items-center gap-3 w-full md:w-auto" ref={dropdownRef}>
-          <FunnelIcon className="w-5 h-5 text-gray-600" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }} ref={dropdownRef}>
+          <FunnelIcon style={{ width: '1.25rem', height: '1.25rem', color: funnelColor, flexShrink: 0 }} />
 
-          <div className="relative w-full md:w-64">
+          <div style={{ position: 'relative', width: '16rem' }}>
             <button
               type="button"
               onClick={() => setIsStatusOpen(prev => !prev)}
-              className="
-                w-full px-4 py-2
-                border border-gray-300
-                text-left bg-white
-                flex items-center justify-between
-                focus:outline-none focus:ring-0
-              "
               aria-haspopup="listbox"
               aria-expanded={isStatusOpen}
+              style={{
+                width: '100%', padding: '0.5rem 1rem',
+                border: `1px solid ${inputBorder}`,
+                borderRadius: '0.5rem',
+                background: inputBg, color: inputText,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                cursor: 'pointer', fontSize: '0.875rem', outline: 'none',
+                transition: 'background 0.45s ease, border-color 0.45s ease',
+              }}
             >
-              <span className="truncate text-gray-800">
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {selectedStatus === 'all' ? 'All Statuses' : selectedStatus}
               </span>
-              <span className="text-gray-400">▾</span>
+              <span style={{ color: iconColor, fontSize: '0.75rem' }}>▾</span>
             </button>
 
             {isStatusOpen && (
-              <div className="absolute z-20 mt-2 w-full border border-gray-200 bg-white shadow-lg">
-                <div className="max-h-64 overflow-y-auto py-2 text-sm">
+              <div style={{
+                position: 'absolute', zIndex: 20, marginTop: '0.25rem',
+                width: '100%',
+                background: dropdownBg,
+                border: `1px solid ${dropdownBorder}`,
+                borderRadius: '0.5rem',
+                boxShadow: dark ? '0 8px 24px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.1)',
+                overflow: 'hidden',
+                transition: 'background 0.45s ease',
+              }}>
+                <div style={{ maxHeight: '16rem', overflowY: 'auto', padding: '0.25rem 0', fontSize: '0.875rem' }}>
                   {statuses.map(status => (
                     <button
                       key={status}
@@ -132,12 +183,16 @@ const SearchAndFilter = ({
                         setSelectedStatus(status)
                         setIsStatusOpen(false)
                       }}
-                      className="
-                        w-full text-left px-4 py-2
-                        bg-white hover:bg-gray-50
-                        text-gray-700
-                        focus:outline-none focus:ring-0
-                      "
+                      style={{
+                        width: '100%', textAlign: 'left',
+                        padding: '0.5rem 1rem',
+                        background: 'transparent', color: dropdownText,
+                        border: 'none', cursor: 'pointer',
+                        transition: 'background 0.15s ease',
+                        outline: 'none',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = dropdownHover}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
                       {status === 'all' ? 'All Statuses' : status}
                     </button>
@@ -149,38 +204,43 @@ const SearchAndFilter = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button
             onClick={onArchiveClick}
-            className="
-              flex items-center gap-2 px-6 py-2
-              text-gray-700 bg-white
-              border border-gray-300 shadow-sm
-              hover:bg-gray-50 hover:shadow-md
-              transition-all
-              w-full md:w-auto justify-center
-              focus:outline-none focus:ring-0
-            "
             title="View archived accessions"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+              padding: '0.5rem 1.25rem',
+              background: archiveBg, color: archiveText,
+              border: `1px solid ${archiveBorder}`,
+              borderRadius: '0.5rem', cursor: 'pointer',
+              fontSize: '0.875rem', fontWeight: 500,
+              transition: 'background 0.2s ease, box-shadow 0.2s ease',
+              boxShadow: dark ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = archiveHover}
+            onMouseLeave={e => e.currentTarget.style.background = archiveBg}
           >
-            <ArchiveBoxIcon className="w-5 h-5 text-gray-600" />
-            <span className="font-medium">Archives</span>
+            <ArchiveBoxIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+            Archives
           </button>
 
           <button
             onClick={onAddClick}
-            className="
-              flex items-center gap-2 px-6 py-2
-              text-gray-800 bg-gray-200
-              shadow-sm hover:bg-gray-300 hover:shadow-md
-              transition-all
-              w-full md:w-auto justify-center
-              focus:outline-none focus:ring-0
-            "
             title="Add new accession"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+              padding: '0.5rem 1.25rem',
+              background: addBg, color: addText,
+              border: 'none', borderRadius: '0.5rem', cursor: 'pointer',
+              fontSize: '0.875rem', fontWeight: 500,
+              transition: 'background 0.2s ease',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = addHover}
+            onMouseLeave={e => e.currentTarget.style.background = addBg}
           >
-            <PlusIcon className="w-5 h-5 text-gray-700" />
-            <span className="font-medium">Add Accession</span>
+            <PlusIcon style={{ width: '1.25rem', height: '1.25rem' }} />
+            Add Accession
           </button>
         </div>
 
@@ -190,6 +250,3 @@ const SearchAndFilter = ({
 }
 
 export default SearchAndFilter
-
-
-

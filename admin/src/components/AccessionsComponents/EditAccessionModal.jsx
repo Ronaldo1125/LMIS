@@ -1,246 +1,284 @@
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
-const FormField = ({ label, required, children, colSpan }) => (
+const FormField = ({ label, required, children, colSpan, dark }) => (
   <div className={colSpan === 2 ? 'md:col-span-2' : ''}>
-    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-      {label} {required && <span className="text-red-400">*</span>}
+    <label
+      className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+      style={{
+        color: dark ? '#2e4d70' : '#6b7280',
+      }}
+    >
+      {label} {required && <span style={{ color: '#f87171' }}>*</span>}
     </label>
     {children}
   </div>
 )
 
-const inputClass =
-  'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-colors bg-white'
-
-const readOnlyInputClass =
-  'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600 cursor-not-allowed'
-
-const EditAccessionModal = ({ isOpen, onClose, onSubmit, editAccession, setEditAccession }) => {
+const EditAccessionModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  editAccession,
+  setEditAccession,
+  dark,
+}) => {
   if (!isOpen) return null
 
   const set = (field) => (e) =>
     setEditAccession({ ...editAccession, [field]: e.target.value })
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+  // ── COLORS (MATCHED WITH ADD MODAL) ───────────────────────
+  const modalBg = dark ? '#0f1f38' : '#ffffff'
+  const headerBg = dark ? '#0d1d35' : '#ffffff'
+  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
+  const border = dark ? '#1a3356' : '#e5e7eb'
+  const textPrimary = dark ? '#dde8f5' : '#1f2937'
+  const textSecondary = dark ? '#6b8cae' : '#6b7280'
+  const inputBg = dark ? '#081422' : '#ffffff'
+  const inputBorder = dark ? '#1a3356' : '#d1d5db'
+  const readOnlyBg = dark ? '#060f1c' : '#f8fafc'
+  const readOnlyText = dark ? '#2e4d70' : '#6b7280'
 
+  // ── INPUT STYLES ──────────────────────────────────────────
+  const inputClass = {
+    width: '100%',
+    padding: '0.5rem 0.75rem',
+    border: `1px solid ${inputBorder}`,
+    borderRadius: '0.5rem',
+    fontSize: '0.875rem',
+    background: inputBg,
+    color: textPrimary,
+    outline: 'none',
+  }
+
+  const readOnlyInputClass = {
+    width: '100%',
+    padding: '0.5rem 0.75rem',
+    border: `1px solid ${dark ? '#0f1f38' : '#e2e8f0'}`,
+    borderRadius: '0.5rem',
+    fontSize: '0.875rem',
+    background: readOnlyBg,
+    color: readOnlyText,
+    cursor: 'not-allowed',
+  }
+
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4 z-50"
+      style={{ background: 'rgba(0,0,0,0.7)' }}
+    >
+      <div
+        className="rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        style={{
+          background: modalBg,
+          border: dark ? `1px solid ${headerBorder}` : 'none',
+        }}
+      >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
-          <h2 className="text-2xl font-bold" style={{ color: 'var(--dark-blue-1)' }}>
+        <div
+          className="sticky top-0 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10"
+          style={{
+            background: headerBg,
+            borderBottom: `1px solid ${headerBorder}`,
+          }}
+        >
+          <h2
+            className="text-2xl font-bold"
+            style={{ color: 'var(--dark-blue-1)' }}
+          >
             Edit Accession
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <XMarkIcon className="w-6 h-6 text-gray-600" />
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg transition-colors"
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = dark
+                ? '#1a3356'
+                : '#f1f5f9')
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = 'transparent')
+            }
+          >
+            <XMarkIcon
+              className="w-6 h-6"
+              style={{ color: textSecondary }}
+            />
           </button>
         </div>
 
         <div className="p-6 space-y-6">
-
-          {/* ── Accession Info ─────────────────────────────────────────────── */}
+          {/* Accession Info */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-100 pb-2">
+            <h3
+              className="text-xs font-bold uppercase tracking-widest mb-3 pb-2"
+              style={{
+                color: dark ? '#2e4d70' : '#9ca3af',
+                borderBottom: `1px solid ${border}`,
+              }}
+            >
               Accession Info
             </h3>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField label="Accession Number" required>
+              <FormField label="Accession Number" required dark={dark}>
                 <input
                   type="text"
                   required
                   value={editAccession.accession_no}
                   onChange={set('accession_no')}
-                  className={inputClass}
+                  style={inputClass}
                 />
               </FormField>
-              <FormField label="Date Accessioned" required>
+
+              <FormField label="Date Accessioned" required dark={dark}>
                 <input
                   type="date"
                   required
                   value={editAccession.date_accessioned}
                   onChange={set('date_accessioned')}
-                  className={inputClass}
+                  style={inputClass}
                 />
               </FormField>
             </div>
           </div>
 
-          {/* ── Bibliographic Details (Read-only) ──────────────────────────── */}
+          {/* Bibliographic */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-100 pb-2">
+            <h3
+              className="text-xs font-bold uppercase tracking-widest mb-3 pb-2"
+              style={{
+                color: dark ? '#2e4d70' : '#9ca3af',
+                borderBottom: `1px solid ${border}`,
+              }}
+            >
               Bibliographic Details
-              <span className="ml-2 text-xs font-normal text-blue-500 normal-case tracking-normal">
+              <span
+                style={{
+                  marginLeft: '0.5rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 400,
+                  color: dark ? '#93c5fd' : '#3b82f6',
+                  textTransform: 'none',
+                }}
+              >
                 — from catalog (read-only)
               </span>
             </h3>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <FormField label="Title" required colSpan={2}>
-                <input
-                  type="text"
-                  value={editAccession.title}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Title" required colSpan={2} dark={dark}>
+                <input type="text" value={editAccession.title} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Author">
-                <input
-                  type="text"
-                  value={editAccession.author}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Author" dark={dark}>
+                <input type="text" value={editAccession.author} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Editor">
-                <input
-                  type="text"
-                  value={editAccession.editor}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Editor" dark={dark}>
+                <input type="text" value={editAccession.editor} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Edition">
-                <input
-                  type="text"
-                  value={editAccession.edition}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Edition" dark={dark}>
+                <input type="text" value={editAccession.edition} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Publication">
-                <input
-                  type="text"
-                  value={editAccession.publication}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Publication" dark={dark}>
+                <input type="text" value={editAccession.publication} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Publisher">
-                <input
-                  type="text"
-                  value={editAccession.publisher}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Publisher" dark={dark}>
+                <input type="text" value={editAccession.publisher} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Date of Publication">
-                <input
-                  type="date"
-                  value={editAccession.date_of_publication}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Date of Publication" dark={dark}>
+                <input type="date" value={editAccession.date_of_publication} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Extent">
-                <input
-                  type="text"
-                  value={editAccession.extent}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Extent" dark={dark}>
+                <input type="text" value={editAccession.extent} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Dimensions">
-                <input
-                  type="text"
-                  value={editAccession.dimensions}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Dimensions" dark={dark}>
+                <input type="text" value={editAccession.dimensions} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="ISBN">
-                <input
-                  type="text"
-                  value={editAccession.isbn}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="ISBN" dark={dark}>
+                <input type="text" value={editAccession.isbn} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="ISSN">
-                <input
-                  type="text"
-                  value={editAccession.issn}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="ISSN" dark={dark}>
+                <input type="text" value={editAccession.issn} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Other Physical Details" colSpan={2}>
-                <input
-                  type="text"
-                  value={editAccession.other_physical_details}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Other Physical Details" colSpan={2} dark={dark}>
+                <input type="text" value={editAccession.other_physical_details} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Accompanying Material" colSpan={2}>
-                <input
-                  type="text"
-                  value={editAccession.accompanying_material}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Accompanying Material" colSpan={2} dark={dark}>
+                <input type="text" value={editAccession.accompanying_material} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Subjects" colSpan={2}>
-                <input
-                  type="text"
-                  value={editAccession.subjects}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Subjects" colSpan={2} dark={dark}>
+                <input type="text" value={editAccession.subjects} readOnly style={readOnlyInputClass} />
               </FormField>
 
-              <FormField label="Notes Area" colSpan={2}>
-                <textarea
-                  rows={3}
-                  value={editAccession.notes_area}
-                  readOnly
-                  className={readOnlyInputClass}
-                />
+              <FormField label="Notes Area" colSpan={2} dark={dark}>
+                <textarea rows={3} value={editAccession.notes_area} readOnly style={readOnlyInputClass} />
               </FormField>
-
             </div>
           </div>
 
-          {/* ── Info Note ──────────────────────────────────────────────────── */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="flex items-start gap-2">
-              <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              <div>
-                <p className="text-sm font-medium text-blue-800">Bibliographic data is locked</p>
-                <p className="text-xs text-blue-600 mt-1">
-                  To update bibliographic details, edit the original book record in the catalog. Accession records reference the catalog and cannot modify book data directly.
-                </p>
-              </div>
-            </div>
+          {/* Info */}
+          <div
+            className="rounded-lg p-4"
+            style={{
+              border: `1px solid ${dark ? '#1a3356' : '#bfdbfe'}`,
+              background: dark ? 'rgba(30,64,175,0.1)' : '#eff6ff',
+            }}
+          >
+            <p
+              className="text-sm font-medium"
+              style={{ color: dark ? '#93c5fd' : '#1d4ed8' }}
+            >
+              Bibliographic data is locked
+            </p>
+            <p
+              className="text-xs mt-1"
+              style={{ color: dark ? '#6b8cae' : '#3b82f6' }}
+            >
+              To update bibliographic details, edit the original book record in the catalog.
+            </p>
           </div>
 
-          {/* ── Actions ────────────────────────────────────────────────────── */}
-          <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
+          {/* Actions */}
+          <div
+            className="flex gap-3 justify-end pt-2"
+            style={{ borderTop: `1px solid ${border}` }}
+          >
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+              style={{
+                padding: '0.5rem 1.5rem',
+                border: `1px solid ${inputBorder}`,
+                color: textSecondary,
+                borderRadius: '0.5rem',
+                background: 'transparent',
+              }}
             >
               Cancel
             </button>
+
             <button
               type="button"
               onClick={onSubmit}
-              className="px-6 py-2 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-medium text-sm"
-              style={{ backgroundColor: 'var(--secondary-3-medium)' }}
+              style={{
+                padding: '0.5rem 1.5rem',
+                color: '#fff',
+                borderRadius: '0.5rem',
+                background: 'var(--secondary-3-medium)',
+              }}
             >
               Save Changes
             </button>
