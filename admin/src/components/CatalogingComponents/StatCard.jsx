@@ -1,29 +1,58 @@
-const StatCard = ({ label, value, subValue, icon, color = 'var(--dark-blue-1)', bgColor = 'var(--secondary-3-light)' }) => {
+import { Users, UserCog, BookUser } from 'lucide-react'
+
+function StatsCards({ stats }) {
+  const cards = [
+    {
+      title: 'Staff Members',
+      count: stats.staff,
+      icon: Users,
+      bgColor: 'bg-blue-50',
+      iconColor: 'text-[#0F61F7]',
+      borderColor: 'border-l-[#0F61F7]'
+    },
+    {
+      title: 'Librarians',
+      count: stats.librarians,
+      icon: UserCog,
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-[#3F1BD2]',
+      borderColor: 'border-l-[#3F1BD2]'
+    },
+    {
+      title: 'Patrons',
+      count: stats.patrons,
+      icon: BookUser,
+      bgColor: 'bg-orange-50',
+      iconColor: 'text-[#FFA602]',
+      borderColor: 'border-l-[#FFA602]'
+    }
+  ]
+
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-      <div className="flex items-center gap-4">
-        <div 
-          className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0" 
-          style={{ backgroundColor: bgColor }}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+      {cards.map((card, index) => (
+        <div
+          key={index}
+          className={`bg-white p-3 rounded-lg shadow-sm border border-gray-100 border-l-4 ${card.borderColor} 
+            flex gap-2.5 items-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
         >
-          {typeof icon === 'string' ? (
-            <span className="text-2xl">{icon}</span>
-          ) : (
-            <div style={{ color }}>{icon}</div>
-          )}
+          <div className={`w-8 h-8 ${card.bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
+            <card.icon className={`w-4 h-4 ${card.iconColor}`} strokeWidth={2} />
+          </div>
+          <div className="flex-1">
+            <p className="text-[9px] font-medium text-gray-600 mb-0.5">
+              {card.title}
+            </p>
+            <h3 className="text-lg font-bold text-[#154A9A]">
+              {card.count.toLocaleString()}
+            </h3>
+          </div>
         </div>
-        <div className="flex-1">
-          <p className="text-sm text-gray-600 mb-1">{label}</p>
-          <p className="text-1xl font-bold" style={{ color }}>
-            {value}
-          </p>
-          {subValue && (
-            <p className="text-xs text-gray-500 mt-1">{subValue}</p>
-          )}
-        </div>
-      </div>
+      ))}
     </div>
   )
 }
 
-export default StatCard
+export default StatsCards
+
+

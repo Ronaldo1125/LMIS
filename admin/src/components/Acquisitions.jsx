@@ -1,78 +1,67 @@
 import { useState, useMemo, useEffect } from 'react';
+import { BookMarked, AlertCircle } from 'lucide-react';
 import ViewToggle from './AcquisitionsComponents/ViewToggle';
 import SortControls from './AcquisitionsComponents/SortControls';
 import SearchBar from './AcquisitionsComponents/SearchBar';
 import AcquisitionsList from './AcquisitionsComponents/AcquisitionsList';
 import AcquisitionsGrid from './AcquisitionsComponents/AcquisitionsGrid';
+import api from '../utils/api'; // Import your API util
 
 const Acquisitions = () => {
-  const [viewMode, setViewMode] = useState('grid'); // 'list' or 'grid'
-  const [sortBy, setSortBy] = useState('date'); // 'alphabetical' or 'date'
-  const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
+  const [viewMode, setViewMode] = useState('grid');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // State for API data
+  const [acquisitionsData, setAcquisitionsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Sample data - replace with your actual data source
-  const acquisitionsData = [
-    {
-      id: 1,
-      title: "The Midnight Library",
-      author: "Matt Haig",
-      coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=600&fit=crop",
-      acquisitionDate: "2024-01-15"
-    },
-    {
-      id: 2,
-      title: "Atomic Habits",
-      author: "James Clear",
-      coverImage: "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=600&fit=crop",
-      acquisitionDate: "2024-02-03"
-    },
-    {
-      id: 3,
-      title: "Project Hail Mary",
-      author: "Andy Weir",
-      coverImage: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=400&h=600&fit=crop",
-      acquisitionDate: "2024-01-28"
-    },
-    {
-      id: 4,
-      title: "Educated",
-      author: "Tara Westover",
-      coverImage: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop",
-      acquisitionDate: "2024-02-01"
-    },
-    {
-      id: 5,
-      title: "The Seven Husbands of Evelyn Hugo",
-      author: "Taylor Jenkins Reid",
-      coverImage: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop",
-      acquisitionDate: "2024-01-20"
-    },
-    {
-      id: 6,
-      title: "Dune",
-      author: "Frank Herbert",
-      coverImage: "https://images.unsplash.com/photo-1621351183012-e2f9972dd9bf?w=400&h=600&fit=crop",
-      acquisitionDate: "2024-01-10"
-    }
-  ];
+  // Fetch acquisitions from API
+  useEffect(() => {
+    const fetchAcquisitions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  // Filter and sort logic
+        const response = await api.get('/acquisitions');
+
+        const transformedData = response.data.data.map(item => ({
+        id: item.accession_id,
+        accessionNo: item.accession_no,
+        title: item.title,
+        author: item.author,
+        coverImage: `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1544947950-fa07a98d237f' : '1495446815901-a7297e633e8d'}?w=400&h=600&fit=crop`,
+        acquisitionDate: item.date_accessioned
+        // isbn, publisher, publicationYear are not in the view
+      }));
+        setAcquisitionsData(transformedData);
+      } catch (err) {
+        console.error('Error fetching acquisitions:', err);
+        setError(err.response?.data?.message || 'Failed to load acquisitions');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAcquisitions();
+  }, []);
+
   const filteredAndSortedAcquisitions = useMemo(() => {
-    // First filter by search query
     let filtered = acquisitionsData;
-    
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = acquisitionsData.filter(book => 
-        book.title.toLowerCase().includes(query) || 
-        book.author.toLowerCase().includes(query)
+      filtered = acquisitionsData.filter(book =>
+        book.title.toLowerCase().includes(query) ||
+        book.author.toLowerCase().includes(query) ||
+        (book.accessionNo && book.accessionNo.toLowerCase().includes(query))
       );
     }
-    
-    // Then sort
+
     const sorted = [...filtered];
-    
+
     if (sortBy === 'alphabetical') {
       sorted.sort((a, b) => {
         const comparison = a.title.localeCompare(b.title);
@@ -85,92 +74,130 @@ const Acquisitions = () => {
         return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
       });
     }
-    
+
     return sorted;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortBy, sortOrder, searchQuery]);
+  }, [acquisitionsData, sortBy, sortOrder, searchQuery]);
 
   const handleSortChange = (newSortBy) => {
     if (sortBy === newSortBy) {
-      // Toggle sort order if clicking the same sort option
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(newSortBy);
-      setSortOrder('desc'); // Default to descending for new sort
+      setSortOrder('desc');
     }
   };
 
-  // ESC key to clear search
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && searchQuery) {
         setSearchQuery('');
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [searchQuery]);
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading acquisitions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-sm p-8 max-w-md text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Error Loading Data</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                       transition-colors duration-200 font-medium"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 min-h-screen">
-      {/* Header (Matched with Accessions) */}
-      <div className="mb-8">
-        <h1
-          className="text-3xl font-bold mb-2"
-          style={{ color: 'var(--dark-blue-1)' }}
-        >
-          Acquisitions
-        </h1>
-        <p className="text-gray-600">
-          {filteredAndSortedAcquisitions.length}{' '}
-          {filteredAndSortedAcquisitions.length === 1 ? 'book' : 'books'} 
-          {searchQuery && ' found'}
-        </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <BookMarked className="w-6 h-6 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Recent Acquisitions</h1>
+            <p className="text-sm text-gray-600">
+              {filteredAndSortedAcquisitions.length}{' '}
+              {filteredAndSortedAcquisitions.length === 1 ? 'book' : 'books'}
+              {searchQuery && ' found'} • Last 14 days
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
-        <div className="flex flex-col sm:flex-row gap-6">
-          <SortControls
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSortChange={handleSortChange}
-          />
-          <ViewToggle
-            viewMode={viewMode}
-            onViewChange={setViewMode}
+      <div className="px-6">
+        {/* Sticky Controls */}
+        <div className="sticky top-0 z-40 bg-gray-50 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
+          <div className="flex flex-col sm:flex-row gap-6">
+            <SortControls
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSortChange={handleSortChange}
+            />
+            <ViewToggle
+              viewMode={viewMode}
+              onViewChange={setViewMode}
+            />
+          </div>
+
+          <SearchBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
           />
         </div>
-        
-        <SearchBar 
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-      </div>
 
-      {/* Content */}
-      <div>
-        {filteredAndSortedAcquisitions.length > 0 ? (
-          viewMode === 'grid' ? (
-            <AcquisitionsGrid acquisitions={filteredAndSortedAcquisitions} />
+        {/* Content */}
+        <div>
+          {filteredAndSortedAcquisitions.length > 0 ? (
+            viewMode === 'grid' ? (
+              <AcquisitionsGrid acquisitions={filteredAndSortedAcquisitions} />
+            ) : (
+              <AcquisitionsList acquisitions={filteredAndSortedAcquisitions} />
+            )
           ) : (
-            <AcquisitionsList acquisitions={filteredAndSortedAcquisitions} />
-          )
-        ) : (
-          <div className="text-center py-16">
-            <p className="text-gray-500 text-lg font-normal tracking-normal">
-              No books found matching "{searchQuery}"
-            </p>
-            <button
-              onClick={() => setSearchQuery('')}
-              className="mt-4 px-6 py-2 bg-[#154A9A] text-white rounded-lg hover:bg-[#154A9A]/90 
-                         transition-colors duration-200 font-medium tracking-normal"
-            >
-              Clear Search
-            </button>
-          </div>
-        )}
+            <div className="bg-white rounded-lg shadow-sm p-16 text-center">
+              <p className="text-gray-500 text-lg font-normal tracking-normal">
+                {searchQuery 
+                  ? `No books found matching "${searchQuery}"`
+                  : 'No acquisitions in the last 14 days'
+                }
+              </p>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                             transition-colors duration-200 font-medium tracking-normal"
+                >
+                  Clear Search
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ const authMiddleware = (req, res, next) => {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-this');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Add user info to request
     req.user = decoded;
@@ -30,17 +30,24 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// Middleware to check user role
-const roleMiddleware = (...allowedRoles) => {
+// Middleware to check user rol// auth.js
+const roleMiddleware = (...allowedRoles) => {  // Add the ... rest operator
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Authentication required' });
     }
-
+    
+    // Add debug logging
+    console.log('User role:', req.user.role);
+    console.log('Allowed roles:', allowedRoles);
+    
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Access denied. Insufficient permissions.' });
+      return res.status(403).json({ 
+        message: 'Access denied. Insufficient permissions.',
+        requiredRoles: allowedRoles,
+        userRole: req.user.role
+      });
     }
-
     next();
   };
 };

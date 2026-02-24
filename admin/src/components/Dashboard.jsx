@@ -7,16 +7,16 @@ import CollectionByCategory from './DashboardComponents/CollectionByCategory'
 import RecentAcquisitions from './DashboardComponents/RecentAcquisitions'
 import MostDownloadedStats from './DashboardComponents/MostDownloadedStats'
 import WebsiteAnalytics from './DashboardComponents/WebsiteAnalytics'
-import LoginNotification from './DashboardComponents/LoginNotification' 
+import LoginNotification from './DashboardComponents/LoginNotification'
 
-const Dashboard = () => {
+// ✅ Accept user and setCurrentView from App.jsx
+const Dashboard = ({ user, setCurrentView, dark }) => {
   const [isSticky, setIsSticky] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
       setIsSticky(window.scrollY > 20)
     }
-
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -42,19 +42,28 @@ const Dashboard = () => {
     },
   ]
 
+  const pageBg  = dark ? '#0a1628' : '#f1f5f9'
+  const headerBg = dark ? '#0d1d35' : '#ffffff'
+  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
+
   return (
-    <div className="p-6">
+    <div style={{ padding: '1.5rem', minHeight: '100vh', background: pageBg, transition: 'background 0.45s ease' }}>
       {/* Login Success Notification */}
       <LoginNotification />
-      
-      {/* Header */}
-      <DashboardHeader />
-      
-      {/* Spacer when header is sticky */}
-      {isSticky && <div className="h-[88px] mb-6" />}
+
+      {/* Header — ✅ forward both props so navigation and account details work */}
+      <div style={{
+        position: 'sticky', top: 0, zIndex: 30,
+        background: headerBg,
+        borderBottom: isSticky ? `1px solid ${headerBorder}` : 'none',
+        boxShadow: isSticky ? (dark ? '0 4px 24px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.08)') : 'none',
+        transition: 'background 0.45s ease, box-shadow 0.3s ease, border-color 0.45s ease',
+      }}>
+        <DashboardHeader user={user} setCurrentView={setCurrentView} />
+      </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" style={{ marginTop: '1.5rem' }}>
         {stats.map((stat, index) => (
           <StatCard
             key={index}
@@ -62,24 +71,27 @@ const Dashboard = () => {
             value={stat.value}
             icon={stat.icon}
             colorVar={stat.colorVar}
+            dark={dark}
           />
         ))}
-        
-        {/* Date & Time Card */}
-        <DateTimeCard />
+        <DateTimeCard dark={dark} />
       </div>
 
-      {/* Collection & Acquisitions Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CollectionByCategory />
-        <RecentAcquisitions />
+      {/* Collection & Acquisitions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{ marginTop: '1.5rem' }}>
+        <CollectionByCategory dark={dark} />
+        <RecentAcquisitions dark={dark} />
       </div>
-      
+
       {/* Download Stats */}
-      <MostDownloadedStats />     
-      
-      {/* Website Charts */}
-      <WebsiteAnalytics />    
+      <div style={{ marginTop: '1.5rem' }}>
+        <MostDownloadedStats dark={dark} />
+      </div>
+
+      {/* Website Analytics */}
+      <div style={{ marginTop: '1.5rem' }}>
+        <WebsiteAnalytics dark={dark} />
+      </div>
     </div>
   )
 }

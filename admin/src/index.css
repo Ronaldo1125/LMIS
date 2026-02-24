@@ -43,6 +43,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Silky full-page dark mode transitions ──────────────────── */
+*, *::before, *::after {
+  transition: background-color 0.45s ease, border-color 0.45s ease, color 0.3s ease, box-shadow 0.45s ease;
+}
+/* ─────────────────────────────────────────────────────────── */
+
 * {
   margin: 0;
   padding: 0;
@@ -98,18 +104,97 @@ button:focus-visible {
   outline: 4px auto var(--secondary-2-light);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: var(--dark-blue-4);
-    background-color: #9f9d9d;
-  }
-  a:hover {
-    color: var(--dark-blue-2);
-  }
-  button {
-    background-color: var(--dark-blue-1);
-  }
-  button:hover {
-    background-color: var(--dark-blue-3);
-  }
+/* ── Dark Mode Global Overrides ────────────────────────────── */
+.dark body {
+  background-color: #0a1628;
 }
+
+/* Buttons */
+.dark button {
+  background-color: #0f1f38;
+  color: #dde8f5;
+  border-color: #1a3356;
+}
+
+.dark button:hover {
+  background-color: #1a3356;
+  border-color: #2e4d70;
+}
+
+.dark button:focus,
+.dark button:focus-visible {
+  outline: 4px auto #2e4d70;
+}
+
+/* Scrollbar */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #0a1628;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #1a3356;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #2e4d70;
+}
+
+/* Input autofill fix in dark mode */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #081422 inset;
+  -webkit-text-fill-color: #dde8f5;
+  caret-color: #dde8f5;
+}
+
+/* Placeholder text */
+.dark ::placeholder {
+  color: #2e4d70;
+}
+
+/* Text selection highlight */
+.dark ::selection {
+  background-color: #1a3356;
+  color: #dde8f5;
+}
+
+/* Links */
+.dark a {
+  color: #93c5fd;
+}
+
+.dark a:hover {
+  color: #dde8f5;
+}
+
+/* Horizontal rules */
+.dark hr {
+  border-color: #1a3356;
+}
+
+/* Tables */
+.dark table {
+  border-color: #1a3356;
+}
+
+.dark th {
+  background-color: #0f1f38;
+  color: #dde8f5;
+}
+
+.dark td {
+  border-color: #1a3356;
+  color: #dde8f5;
+}
+
+/* Spinner animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+/* ─────────────────────────────────────────────────────────── */

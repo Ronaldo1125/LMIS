@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import api from '../utils/api' // ✅ Use the configured axios instance
+import { BookOpen } from 'lucide-react'
 import StatsOverview from './CatalogingComponents/StatsOverview'
 import SearchAndFilter from './CatalogingComponents/SearchAndFilter'
 import BooksTable from './CatalogingComponents/BooksTable'
@@ -6,139 +8,26 @@ import AddBookModal from './CatalogingComponents/AddBookModal'
 import ViewBookModal from './CatalogingComponents/ViewBookModal'
 import EditBookModal from './CatalogingComponents/EditBookModal'
 import ArchivesModal from './CatalogingComponents/ArchivesModal'
+import ImportBooksModal from './CatalogingComponents/ImportBooksModal'
 
-const Cataloging = () => {
+const Cataloging = ({ dark }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isArchivesOpen, setIsArchivesOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [selectedBook, setSelectedBook] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [books, setBooks] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [catalogStats, setCatalogStats] = useState(null)
+
   const [editBook, setEditBook] = useState({
     id: null,
-    category: '',
-    callNumber: '',
-    title: '',
-    author: '',
-    editor: '',
-    edition: '',
-    publication: '',
-    isbn: '',
-    issn: '',
-    publisher: '',
-    dateOfPublication: '',
-    extent: '',
-    otherPhysicalDetails: '',
-    dimensions: '',
-    accompanyingMaterial: '',
-    notesArea: '',
-    subjects: '',
-    copies: '',
-    available: '',
-    status: '',
-    year: '',
-  })
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [books, setBooks] = useState([
-    {
-      id: 1,
-      title: 'National Budget Overview 2025',
-      author: 'Department of Finance',
-      isbn: '978-0-0001-2025-1',
-      category: 'Annual Reports',
-      publisher: 'Govt Printing Office',
-      year: 2025,
-      copies: 12,
-      available: 9,
-      status: 'Available'
-    },
-    {
-      id: 2,
-      title: 'Public Health Special Bulletin: Influenza Trends',
-      author: 'Ministry of Health',
-      isbn: '978-0-0002-2024-8',
-      category: 'Special Reports',
-      publisher: 'Govt Health Publications',
-      year: 2024,
-      copies: 7,
-      available: 4,
-      status: 'Available'
-    },
-    {
-      id: 3,
-      title: 'Official Gazette — January Issue',
-      author: 'Government Communications Office',
-      isbn: '978-0-0003-2026-3',
-      category: 'Newspapers',
-      publisher: 'Govt Gazette Press',
-      year: 2026,
-      copies: 15,
-      available: 0,
-      status: 'Not Available'
-    },
-    {
-      id: 4,
-      title: 'Statistical Yearbook 2024',
-      author: 'National Statistics Bureau',
-      isbn: '978-0-0004-2024-2',
-      category: 'Sourcebook',
-      publisher: 'Govt Statistical Office',
-      year: 2024,
-      copies: 10,
-      available: 6,
-      status: 'Available'
-    },
-    {
-      id: 5,
-      title: 'Coastal Erosion Assessment',
-      author: 'Department of Environment',
-      isbn: '978-0-0005-2023-9',
-      category: 'Thesis/Research papers',
-      publisher: 'Govt Research Series',
-      year: 2023,
-      copies: 5,
-      available: 3,
-      status: 'Available'
-    },
-    {
-      id: 6,
-      title: 'Administrative Procedure Act (Revised)',
-      author: 'Office of the Attorney General',
-      isbn: '978-0-0006-2022-6',
-      category: 'Statute/Law/Legal Documents',
-      publisher: 'Govt Legal Press',
-      year: 2022,
-      copies: 8,
-      available: 8,
-      status: 'Available'
-    },
-    {
-      id: 7,
-      title: 'Public Procurement Manual',
-      author: 'Department of Procurement',
-      isbn: '978-0-0007-2021-4',
-      category: 'Guides/Manuals',
-      publisher: 'Govt Service Press',
-      year: 2021,
-      copies: 6,
-      available: 1,
-      status: 'Available'
-    },
-    {
-      id: 8,
-      title: 'National Atlas of Infrastructure',
-      author: 'Ministry of Works',
-      isbn: '978-0-0008-2020-0',
-      category: 'Atlas',
-      publisher: 'Govt Mapping Agency',
-      year: 2020,
-      copies: 4,
-      available: 2,
-      status: 'Available'
-    },
-  ])
-
-  const [newBook, setNewBook] = useState({
     category: '',
     callNumber: '',
     title: '',
@@ -178,71 +67,98 @@ const Cataloging = () => {
     'Atlas'
   ]
 
-  const archivedBooks = books.filter(book => book.status === 'Archived')
+  const fetchBooks = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError('')
 
-  const filteredBooks = books.filter(book => {
-    if (book.status === 'Archived') return false
-    const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         book.isbn.includes(searchTerm)
-    const matchesCategory = selectedCategory === 'all' || book.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+      const params = {
+        page: currentPage,
+        limit: 10,
+        search: searchTerm,
+        category: selectedCategory !== 'all' ? selectedCategory : ''
+      }
 
-  const handleAddBook = (e) => {
-    e.preventDefault()
-    const publicationYear = newBook.dateOfPublication
-      ? new Date(newBook.dateOfPublication).getFullYear()
-      : null
-    const bookToAdd = {
-      id: books.length + 1,
-      ...newBook,
-      year: publicationYear,
-      copies: parseInt(newBook.copies),
-      available: parseInt(newBook.copies),
-      status: 'Available'
+      const response = await api.get('/books', { params })
+
+      setBooks(response.data.books)
+      setTotalPages(response.data.pagination.totalPages)
+    } catch (err) {
+      console.error('Error fetching books:', err)
+      setError('Failed to load books. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setBooks([...books, bookToAdd])
-    setNewBook({
-      category: '',
-      callNumber: '',
-      title: '',
-      author: '',
-      editor: '',
-      edition: '',
-      publication: '',
-      isbn: '',
-      issn: '',
-      publisher: '',
-      dateOfPublication: '',
-      extent: '',
-      otherPhysicalDetails: '',
-      dimensions: '',
-      accompanyingMaterial: '',
-      notesArea: '',
-      subjects: '',
-      copies: '',
-    })
-    setIsAddModalOpen(false)
+  }, [currentPage, searchTerm, selectedCategory])
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await api.get('/books/meta/stats')
+      setCatalogStats(response.data)
+    } catch (err) {
+      console.error('Error fetching stats:', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchBooks()
+  }, [fetchBooks])
+
+  useEffect(() => {
+    fetchStats()
+  }, [fetchStats])
+
+  const handleBookAdded = () => {
+    setCurrentPage(1)
+    fetchBooks()
+    fetchStats()
   }
 
-  const handleArchiveBook = (id) => {
-    setBooks(books.map(book => (
-      book.id === id ? { ...book, status: 'Archived' } : book
-    )))
+  const handleImported = () => {
+    setCurrentPage(1)
+    fetchBooks()
+    fetchStats()
   }
 
-  const handleRestoreBook = (id) => {
-    setBooks(books.map(book => (
-      book.id === id ? { ...book, status: 'Available' } : book
-    )))
+  const handleDeleteBook = async (id) => {
+    try {
+      await api.delete(`/uploads/book/${id}`)
+      await api.delete(`/books/${id}`)
+      fetchBooks()
+      fetchStats()
+    } catch (err) {
+      console.error('Error deleting book:', err)
+      setError('Failed to delete book. Please try again.')
+    }
+  }
+
+  const handleArchiveBook = async (id, reason) => {
+    try {
+      await api.patch(`/books/${id}/archive`, { reason })
+      fetchBooks()
+      fetchStats()
+    } catch (err) {
+      console.error('Error archiving book:', err)
+      setError(err.response?.data?.message || 'Failed to archive book. Please try again.')
+    }
+  }
+
+  const handleUnarchiveBook = async (id) => {
+    try {
+      await api.patch(`/books/${id}/unarchive`, {})
+      fetchBooks()
+      fetchStats()
+    } catch (err) {
+      console.error('Error unarchiving book:', err)
+      setError('Failed to unarchive book. Please try again.')
+    }
   }
 
   const handleEditBook = (book) => {
     setEditBook({
       id: book.id,
       category: book.category || '',
-      callNumber: book.callNumber || '',
+      callNumber: book.call_number || '',
       title: book.title || '',
       author: book.author || '',
       editor: book.editor || '',
@@ -251,67 +167,70 @@ const Cataloging = () => {
       isbn: book.isbn || '',
       issn: book.issn || '',
       publisher: book.publisher || '',
-      dateOfPublication: book.dateOfPublication || '',
+      dateOfPublication: book.date_of_publication
+        ? book.date_of_publication.split('T')[0]
+        : '',
       extent: book.extent || '',
-      otherPhysicalDetails: book.otherPhysicalDetails || '',
+      otherPhysicalDetails: book.other_physical_details || '',
       dimensions: book.dimensions || '',
-      accompanyingMaterial: book.accompanyingMaterial || '',
-      notesArea: book.notesArea || '',
+      accompanyingMaterial: book.accompanying_material || '',
+      notesArea: book.notes_area || '',
       subjects: book.subjects || '',
       copies: book.copies ?? '',
-      available: book.available ?? '',
-      status: book.status || '',
-      year: book.year ?? '',
     })
     setIsEditModalOpen(true)
   }
 
-  const handleUpdateBook = () => {
-    const publicationYear = editBook.dateOfPublication
-      ? new Date(editBook.dateOfPublication).getFullYear()
-      : editBook.year || null
+  const handleUpdateBook = async () => {
+    try {
+      const bookData = {
+        category: editBook.category,
+        call_number: editBook.callNumber,
+        title: editBook.title,
+        author: editBook.author,
+        editor: editBook.editor,
+        edition: editBook.edition,
+        publication: editBook.publication,
+        publisher: editBook.publisher,
+        date_of_publication: editBook.dateOfPublication || null,
+        extent: editBook.extent,
+        dimensions: editBook.dimensions,
+        other_physical_details: editBook.otherPhysicalDetails,
+        accompanying_material: editBook.accompanyingMaterial,
+        isbn: editBook.isbn,
+        issn: editBook.issn,
+        notes_area: editBook.notesArea,
+        subjects: editBook.subjects,
+        copies: parseInt(editBook.copies)
+      }
 
-    const copiesCount = editBook.copies === '' ? null : parseInt(editBook.copies, 10)
-    const availableCount = editBook.available === '' ? null : parseInt(editBook.available, 10)
+      await api.put(`/books/${editBook.id}`, bookData)
 
-    const updatedBook = {
-      ...editBook,
-      year: publicationYear,
-      copies: copiesCount,
-      available: availableCount ?? copiesCount,
+      setIsEditModalOpen(false)
+      setEditBook({
+        id: null, category: '', callNumber: '', title: '', author: '',
+        editor: '', edition: '', publication: '', isbn: '', issn: '',
+        publisher: '', dateOfPublication: '', extent: '', otherPhysicalDetails: '',
+        dimensions: '', accompanyingMaterial: '', notesArea: '', subjects: '', copies: '',
+      })
+
+      fetchBooks()
+      fetchStats()
+    } catch (err) {
+      console.error('Error updating book:', err)
+      setError('Failed to update book. Please try again.')
     }
-
-    setBooks(books.map(book => (book.id === updatedBook.id ? updatedBook : book)))
-    setIsEditModalOpen(false)
-    setEditBook({
-      id: null,
-      category: '',
-      callNumber: '',
-      title: '',
-      author: '',
-      editor: '',
-      edition: '',
-      publication: '',
-      isbn: '',
-      issn: '',
-      publisher: '',
-      dateOfPublication: '',
-      extent: '',
-      otherPhysicalDetails: '',
-      dimensions: '',
-      accompanyingMaterial: '',
-      notesArea: '',
-      subjects: '',
-      copies: '',
-      available: '',
-      status: '',
-      year: '',
-    })
   }
 
-  const handleViewBook = (book) => {
-    setSelectedBook(book)
-    setIsViewModalOpen(true)
+  const handleViewBook = async (book) => {
+    try {
+      const response = await api.get(`/books/${book.id}`)
+      setSelectedBook(response.data)
+      setIsViewModalOpen(true)
+    } catch (err) {
+      console.error('Error fetching book details:', err)
+      setError('Failed to load book details.')
+    }
   }
 
   const handleCloseViewModal = () => {
@@ -319,52 +238,131 @@ const Cataloging = () => {
     setSelectedBook(null)
   }
 
+  const pageBg       = dark ? '#0a1628' : '#f1f5f9'
+  const headerBg     = dark ? '#0d1d35' : '#ffffff'
+  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
+  const cardBg       = dark ? '#0f1f38' : '#ffffff'
+  const border       = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary  = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary = dark ? '#6b8cae' : '#64748b'
+  const iconBoxBg    = dark ? 'rgba(30,64,175,0.15)' : '#dbeafe'
+  const iconColor    = dark ? '#93c5fd' : '#2563eb'
+  const errorBg      = dark ? 'rgba(220,38,38,0.1)' : '#fef2f2'
+  const errorBorder  = dark ? 'rgba(220,38,38,0.2)' : '#fecaca'
+  const errorText    = dark ? '#fca5a5' : '#dc2626'
+  const btnBg        = dark ? '#0f1f38' : '#ffffff'
+  const btnHover     = dark ? '#1a3356' : '#f1f5f9'
+
   return (
-    <div className="p-6 min-h-screen" style={{ backgroundColor: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', background: pageBg, transition: 'background 0.45s ease' }}>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--dark-blue-1)' }}>
-          Cataloging
-        </h1>
-        <p className="text-gray-600">Manage and organize your library collection</p>
+      <div style={{
+        background: headerBg,
+        borderBottom: `1px solid ${headerBorder}`,
+        padding: '1rem 1.5rem',
+        marginBottom: '1.5rem',
+        transition: 'background 0.45s ease, border-color 0.45s ease',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ padding: '0.5rem', background: iconBoxBg, borderRadius: '0.5rem', transition: 'background 0.45s ease' }}>
+            <BookOpen style={{ width: '1.5rem', height: '1.5rem', color: iconColor }} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: textPrimary, margin: 0, transition: 'color 0.45s ease' }}>Cataloging</h1>
+            <p style={{ fontSize: '0.875rem', color: textSecondary, margin: 0, transition: 'color 0.45s ease' }}>Manage and organize your library collection</p>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Cards - Now Horizontal */}
-      <StatsOverview books={books} />
+      <div style={{ padding: '0 1.5rem' }}>
+        {error && (
+          <div style={{ marginBottom: '1.5rem', padding: '1rem', background: errorBg, border: `1px solid ${errorBorder}`, borderRadius: '0.5rem' }}>
+            <p style={{ color: errorText, fontSize: '0.875rem', margin: 0 }}>{error}</p>
+          </div>
+        )}
 
-      {/* Search and Filter Controls */}
-      <SearchAndFilter
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        categories={categories}
-        onAddClick={() => setIsAddModalOpen(true)}
-        onArchiveClick={() => setIsArchivesOpen(true)}
-      />
+        <StatsOverview stats={catalogStats} dark={dark} />
 
-      {/* Books Table */}
-      <BooksTable
-        books={filteredBooks}
-        onArchive={handleArchiveBook}
-        onEdit={handleEditBook}
-        onView={handleViewBook}
-      />
+        
+        <div style={{ position: 'sticky', top: 0, zIndex: 40, background: pageBg, transition: 'background 0.45s ease' }}>
+          <SearchAndFilter
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            categories={categories}
+            onAddClick={() => setIsAddModalOpen(true)}
+            onArchiveClick={() => setIsArchivesOpen(true)}
+            onImportClick={() => setIsImportOpen(true)}
+            dark={dark}
+          />
+        </div>
 
-      {/* Add Book Modal */}
+        {loading ? (
+          <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '0.75rem', padding: '2rem', textAlign: 'center', transition: 'background 0.45s ease' }}>
+            <div style={{ display: 'inline-block', width: '2rem', height: '2rem', borderRadius: '50%', border: `2px solid transparent`, borderBottomColor: iconColor, animation: 'spin 0.8s linear infinite' }} />
+            <p style={{ marginTop: '1rem', color: textSecondary }}>Loading books...</p>
+          </div>
+        ) : (
+          <>
+            <BooksTable
+              books={books}
+              onEdit={handleEditBook}
+              onView={handleViewBook}
+              onDelete={handleDeleteBook}
+              onArchive={handleArchiveBook}
+              dark={dark}
+            />
+
+            {totalPages > 1 && (
+              <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: '0.5rem 1rem', background: btnBg, border: `1px solid ${border}`,
+                    color: textPrimary, borderRadius: '0.5rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    opacity: currentPage === 1 ? 0.5 : 1, transition: 'background 0.2s ease',
+                  }}
+                  onMouseEnter={e => { if (currentPage !== 1) e.currentTarget.style.background = btnHover }}
+                  onMouseLeave={e => { e.currentTarget.style.background = btnBg }}
+                >
+                  Previous
+                </button>
+                <span style={{ padding: '0.5rem 1rem', color: textPrimary, background: btnBg, border: `1px solid ${border}`, borderRadius: '0.5rem' }}>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: '0.5rem 1rem', background: btnBg, border: `1px solid ${border}`,
+                    color: textPrimary, borderRadius: '0.5rem', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    opacity: currentPage === totalPages ? 0.5 : 1, transition: 'background 0.2s ease',
+                  }}
+                  onMouseEnter={e => { if (currentPage !== totalPages) e.currentTarget.style.background = btnHover }}
+                  onMouseLeave={e => { e.currentTarget.style.background = btnBg }}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
       <AddBookModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleAddBook}
-        newBook={newBook}
-        setNewBook={setNewBook}
-        categories={categories}
+        onBookAdded={handleBookAdded}
+        dark={dark}
       />
 
       <ViewBookModal
         isOpen={isViewModalOpen}
         onClose={handleCloseViewModal}
         book={selectedBook}
+        dark={dark}
       />
 
       <EditBookModal
@@ -374,13 +372,21 @@ const Cataloging = () => {
         editBook={editBook}
         setEditBook={setEditBook}
         categories={categories}
+        dark={dark}
       />
 
       <ArchivesModal
         isOpen={isArchivesOpen}
         onClose={() => setIsArchivesOpen(false)}
-        archivedBooks={archivedBooks}
-        onRestore={handleRestoreBook}
+        onRestore={handleUnarchiveBook}
+        dark={dark}
+      />
+
+      <ImportBooksModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        onImported={handleImported}
+        dark={dark}
       />
     </div>
   )
