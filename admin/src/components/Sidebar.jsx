@@ -7,7 +7,8 @@ import {
   ArrowRightOnRectangleIcon,
   ClipboardDocumentCheckIcon,
   ChevronDoubleLeftIcon,
-  ChevronDoubleRightIcon
+  ChevronDoubleRightIcon,
+  NewspaperIcon
 } from '@heroicons/react/24/outline'
 
 const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }) => {
@@ -17,6 +18,7 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
     { id: 'cataloging', label: 'Cataloging', icon: BookOpenIcon },
     { id: 'accessions', label: 'Accessions', icon: DocumentPlusIcon },
     { id: 'acquisitions', label: 'Acquisitions', icon: ClipboardDocumentCheckIcon },
+    { id: 'news', label: 'Announcements', icon: NewspaperIcon },
     { id: 'user-management', label: 'User Management', icon: UsersIcon },
     { id: 'security', label: 'Security', icon: ShieldCheckIcon },
   ]

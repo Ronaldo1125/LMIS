@@ -9,6 +9,7 @@ import Security from './components/Security'
 import AccountLogin from './components/AccountLogin'
 import MyProfile from './pages/MyProfile'
 import HelpSupport from './pages/HelpSupport'
+import NewsAnnouncements from './components/NewsAnnouncements'
 
 const getInitialAuthState = () => {
   const token = localStorage.getItem('authToken')
@@ -70,6 +71,7 @@ function App() {
       accessions:       'Accessions',
       acquisitions:     'Acquisitions',
       'user-management':'User Management',
+      'news': 'News and Announcements',
       security:         'Security',
       profile:          'My Profile',
       help:             'Help & Support',
@@ -108,6 +110,8 @@ function App() {
         return <UserManagement dark={dark} />
       case 'acquisitions':
         return <Acquisitions dark={dark} />
+      case 'news':
+      return <NewsAnnouncements dark={dark} />
       case 'security':
         return <Security dark={dark} />
       case 'profile':
