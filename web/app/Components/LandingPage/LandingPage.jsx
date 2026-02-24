@@ -1,56 +1,125 @@
-import React from 'react';
-import Nav from '../Nav/Nav';
-import '../../globals.css';
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import Nav from "../Nav/Nav";
+import "../../globals.css";
 
 const LandingPage = () => {
+  const [query, setQuery] = useState("");
+  const router = useRouter();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (query.trim()) {
+      router.push(`/course-search?query=${encodeURIComponent(query.trim())}`);
+    }
+  };
+
   return (
-    <div className="landing-page bg-white min-h-screen">
-      <Nav />
-      <div className="container mx-auto flex items-center h-full">
-        <div className="w-1/2 mt-16 ml-0"> {/* Added margin-left to ensure content is fully aligned to the left edge */}
-          <h1 className="text-5xl font-bold text-gray-900 leading-tight">
-            Discover Knowledge, <br /> Preserve Heritage
-          </h1>
-          <p className="text-lg text-gray-600 mt-4">
-            Access thousands of knowledge products, and institutional archives through our digital library system.
-          </p>
-          <div className="mt-6 flex items-center space-x-4">
-            <input
-              type="text"
-              className="border border-gray-300 rounded-md px-4 py-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Search by title, author, ISBN, or keyword..."
-            />
-            <select className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>All Materials</option>
-              <option>Books</option>
-              <option>Journals</option>
-              <option>Magazines</option>
-            </select>
-            <select className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>All Years</option>
-              <option>2026</option>
-              <option>2025</option>
-              <option>2024</option>
-            </select>
-            <button className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600">SEARCH</button>
-          </div>
-          <div className="mt-8 flex space-x-8 text-center">
-            <div>
-              <p className="text-2xl font-bold text-gray-900">2,450 +</p>
-              <p className="text-gray-600">Resources Cataloged</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">518</p>
-              <p className="text-gray-600">Downloads</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">67</p>
-              <p className="text-gray-600">New This Month</p>
+    <section className="relative w-full h-[80vh] min-h-[520px] 2xl:min-h-[640px] overflow-hidden bg-black">
+      {/* Background image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/assets/other/hj.png')" }}
+      />
+
+      {/* Left fade overlay (like screenshot) */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/35 to-transparent" />
+        {/* subtle overall dim (very light) */}
+        <div className="absolute inset-0 bg-black/10" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 h-full">
+        <Nav />
+
+        {/* HERO COPY (LEFT EDGE) */}
+        <div className="h-full flex items-center">
+          <div
+            className="
+              w-full
+              px-6 sm:px-10 lg:px-16 2xl:px-24
+              pb-10
+            "
+          >
+            <div className="max-w-[720px] 2xl:max-w-[860px]">
+              {/* Headline */}
+              <h1
+                className="
+                  text-white
+                  font-inter 
+                  leading-[1.05]
+                  tracking-tight
+                  text-[44px] sm:text-[56px] lg:text-[64px] 2xl:text-[78px]
+                "
+              >
+                Depdev Digital
+                <br />
+                E-Library
+              </h1>
+
+              {/* Red underline */}
+              <div className="mt-6 h-[4px] w-[64px] bg-[#c23b2a]" />
+
+              {/* Subtext */}
+              <p
+                className="
+                  mt-7
+                  text-white/90
+                  text-[15px] sm:text-[16px] lg:text-[18px] 2xl:text-[20px]
+                  leading-relaxed
+                  max-w-[560px] 2xl:max-w-[640px]
+                "
+              >
+                Your comprehensive digital library for academic resources, 
+                research papers, and educational materials
+              </p>
+
+              {/* Optional: Search (keep if you want it on hero) */}
+              <form onSubmit={handleSearch} className="mt-10 max-w-[640px] 2xl:max-w-[760px]">
+                <div className="flex w-full overflow-hidden border border-white/25 bg-white/95 backdrop-blur-sm">
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search by title, author, subject, ISBN..."
+                    className="
+                      h-[54px] 2xl:h-[62px]
+                      w-full
+                      px-5 2xl:px-6
+                      text-[15px] 2xl:text-[17px]
+                      text-black
+                      placeholder:text-black/45
+                      outline-none
+                      bg-transparent
+                    "
+                  />
+                  <button
+                    type="submit"
+                    className="
+                      h-[54px] 2xl:h-[62px]
+                      px-6 2xl:px-8
+                      bg-blue-800
+                      text-white
+                      font-semibold
+                      hover:brightness-95 active:brightness-90
+                    "
+                  >
+                    Search
+                  </button>
+                </div>
+              </form>
+
+              {/* Footnote (optional) */}
+              <p className="mt-6 text-white/70 text-[12px] 2xl:text-[13px]">
+                *Empowering education through digital innovation
+              </p>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
