@@ -1,58 +1,128 @@
+import { useState } from 'react'
 import { Users, UserCog, BookUser } from 'lucide-react'
 
-function StatsCards({ stats }) {
+function StatsCards({ stats, dark }) {
+  const [hoveredIndex, setHoveredIndex] = useState(null)
+
   const cards = [
     {
       title: 'Staff Members',
       count: stats.staff,
       icon: Users,
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-[#0F61F7]',
-      borderColor: 'border-l-[#0F61F7]'
+      lightBg: '#eff6ff', // bg-blue-50
+      darkBg: 'rgba(15, 97, 247, 0.15)',
+      iconColor: '#0F61F7',
+      borderColor: '#0F61F7'
     },
     {
       title: 'Librarians',
       count: stats.librarians,
       icon: UserCog,
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-[#3F1BD2]',
-      borderColor: 'border-l-[#3F1BD2]'
+      lightBg: '#faf5ff', // bg-purple-50
+      darkBg: 'rgba(63, 27, 210, 0.15)',
+      iconColor: '#3F1BD2',
+      borderColor: '#3F1BD2'
     },
     {
       title: 'Patrons',
       count: stats.patrons,
       icon: BookUser,
-      bgColor: 'bg-orange-50',
-      iconColor: 'text-[#FFA602]',
-      borderColor: 'border-l-[#FFA602]'
+      lightBg: '#fff7ed', // bg-orange-50
+      darkBg: 'rgba(255, 166, 2, 0.15)',
+      iconColor: '#FFA602',
+      borderColor: '#FFA602'
     }
   ]
 
+  // ── Colors ────────────────────────────────────────────────
+  const cardBg       = dark ? '#0f1f38' : '#ffffff'
+  const cardBorder   = dark ? '#1a3356' : '#f3f4f6'
+  const textPrimary  = dark ? '#dde8f5' : '#154A9A'
+  const textSecondary = dark ? '#6b8cae' : '#4b5563'
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
-      {cards.map((card, index) => (
-        <div
-          key={index}
-          className={`bg-white p-3 rounded-lg shadow-sm border border-gray-100 border-l-4 ${card.borderColor} 
-            flex gap-2.5 items-center hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
-        >
-          <div className={`w-8 h-8 ${card.bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
-            <card.icon className={`w-4 h-4 ${card.iconColor}`} strokeWidth={2} />
+    <div style={{ 
+      display: 'grid', 
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+      gap: '0.75rem', 
+      marginBottom: '1.25rem' 
+    }}>
+      {cards.map((card, index) => {
+        const Icon = card.icon
+        const isHovered = hoveredIndex === index
+
+        return (
+          <div
+            key={index}
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
+            style={{
+              background: cardBg,
+              padding: '0.75rem',
+              borderRadius: '0.5rem',
+              border: `1px solid ${cardBorder}`,
+              borderLeft: `4px solid ${card.borderColor}`,
+              boxShadow: isHovered 
+                ? (dark ? '0 10px 20px rgba(0,0,0,0.4)' : '0 10px 15px -3px rgba(0,0,0,0.1)') 
+                : (dark ? '0 4px 6px rgba(0,0,0,0.2)' : '0 1px 3px rgba(0,0,0,0.05)'),
+              display: 'flex',
+              gap: '0.625rem',
+              alignItems: 'center',
+              transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+              transition: 'all 0.45s cubic-bezier(0.16, 1, 0.3, 1), background 0.45s ease, border-color 0.45s ease',
+              cursor: 'default'
+            }}
+          >
+            {/* Icon Container */}
+            <div style={{
+              width: '2rem',
+              height: '2rem',
+              background: dark ? card.darkBg : card.lightBg,
+              borderRadius: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              transition: 'background 0.45s ease'
+            }}>
+              <Icon 
+                style={{ 
+                  width: '1rem', 
+                  height: '1rem', 
+                  color: card.iconColor 
+                }} 
+                strokeWidth={2.5} 
+              />
+            </div>
+
+            {/* Text Content */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{
+                margin: 0,
+                fontSize: '10px',
+                fontWeight: 600,
+                color: textSecondary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.025em',
+                marginBottom: '0.125rem'
+              }}>
+                {card.title}
+              </p>
+              <h3 style={{
+                margin: 0,
+                fontSize: '1.125rem',
+                fontWeight: 800,
+                color: textPrimary,
+                transition: 'color 0.45s ease'
+              }}>
+                {card.count.toLocaleString()}
+              </h3>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="text-[9px] font-medium text-gray-600 mb-0.5">
-              {card.title}
-            </p>
-            <h3 className="text-lg font-bold text-[#154A9A]">
-              {card.count.toLocaleString()}
-            </h3>
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
 
 export default StatsCards
-
-
