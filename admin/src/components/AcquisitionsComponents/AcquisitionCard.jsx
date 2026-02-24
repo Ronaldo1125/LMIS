@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
+const AcquisitionCard = ({ acquisition, viewMode, onViewDetails, dark = false }) => {
   const { title, author, coverImage, acquisitionDate } = acquisition;
 
   const formatDate = (dateString) => {
@@ -15,11 +15,11 @@ const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
   if (viewMode === 'list') {
     return (
       <div
-        className="flex gap-4 p-4 bg-white shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer hover:translate-x-1 group"
+        className={`flex gap-4 p-4 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:translate-x-1 group rounded-xl border ${dark ? 'bg-[#0a1628] border-[#1a3356]' : 'bg-white border-gray-200'}`}
         onClick={() => onViewDetails(acquisition)}
       >
         {/* Cover */}
-        <div className="flex-shrink-0 w-16 h-[100px] overflow-hidden shadow bg-gray-100">
+        <div className={`flex-shrink-0 w-16 h-[100px] overflow-hidden shadow ${dark ? 'bg-[#1a3356]' : 'bg-gray-100'}`}> 
           <img
             src={coverImage}
             alt={`Cover of ${title}`}
@@ -30,19 +30,15 @@ const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
 
         {/* Info */}
         <div className="flex-1 flex flex-col justify-center gap-1">
-          <h3 className="text-base font-semibold text-[#154A9A] leading-tight tracking-tight">
-            {title}
-          </h3>
-          <p className="text-sm text-gray-600">by {author}</p>
-          <p className="text-xs text-gray-500">
-            Acquired: {formatDate(acquisitionDate)}
-          </p>
+          <h3 className={`text-base font-semibold leading-tight tracking-tight ${dark ? 'text-[#93c5fd]' : 'text-[#154A9A]'}`}>{title}</h3>
+          <p className={`text-sm ${dark ? 'text-gray-300' : 'text-gray-600'}`}>by {author}</p>
+          <p className={`text-xs ${dark ? 'text-gray-400' : 'text-gray-500'}`}>Acquired: {formatDate(acquisitionDate)}</p>
         </div>
 
         {/* Arrow */}
         <div className="flex items-center">
           <svg
-            className="w-5 h-5 text-[#154A9A] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            className={`w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${dark ? 'text-[#93c5fd]' : 'text-[#154A9A]'}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -62,11 +58,11 @@ const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
   // GRID VIEW
   return (
     <div
-      className="bg-white overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:scale-[1.01] group flex flex-col h-full"
+      className={`overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:scale-[1.01] group flex flex-col h-full rounded-xl border ${dark ? 'bg-[#0a1628] border-[#1a3356]' : 'bg-white border-gray-200'}`}
       onClick={() => onViewDetails(acquisition)}
     >
       {/* Image */}
-      <div className="relative w-full aspect-[2/3] overflow-hidden bg-gray-100">
+      <div className={`relative w-full aspect-[2/3] overflow-hidden ${dark ? 'bg-[#1a3356]' : 'bg-gray-100'}`}> 
         <img
           src={coverImage}
           alt={`Cover of ${title}`}
@@ -85,18 +81,13 @@ const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
       {/* Content */}
       <div className="p-3 flex flex-col justify-between flex-grow min-h-[90px]">
         <div>
-          <h3 className="font-semibold text-[#154A9A] leading-snug tracking-tight mb-1 line-clamp-2 text-[0.95rem]">
-            {title}
-          </h3>
-
-          <p className="text-xs text-gray-600 line-clamp-1">
-            {author}
-          </p>
+          <h3 className={`font-semibold leading-snug tracking-tight mb-1 line-clamp-2 text-[0.95rem] ${dark ? 'text-[#93c5fd]' : 'text-[#154A9A]'}`}>{title}</h3>
+          <p className={`text-xs line-clamp-1 ${dark ? 'text-gray-300' : 'text-gray-600'}`}>{author}</p>
         </div>
 
         {/* View Details */}
         <button
-          className="mt-2 text-xs text-[#154A9A] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1"
+          className={`mt-2 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1 ${dark ? 'text-[#93c5fd]' : 'text-[#154A9A]'}`}
           onClick={(e) => {
             e.stopPropagation();
             onViewDetails(acquisition);
@@ -104,7 +95,7 @@ const AcquisitionCard = ({ acquisition, viewMode, onViewDetails }) => {
         >
           View Details
           <svg
-            className="w-4 h-4"
+            className={`w-4 h-4 ${dark ? 'text-[#93c5fd]' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
