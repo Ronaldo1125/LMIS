@@ -12,12 +12,12 @@ const LandingPage = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/course-search?query=${encodeURIComponent(query.trim())}`);
+      router.push(`/search?query=${encodeURIComponent(query.trim())}`);
     }
   };
 
   return (
-    <section className="relative w-full h-[80vh] min-h-[520px] 2xl:min-h-[640px] overflow-hidden bg-black">
+    <section className="relative w-full h-[80vh] min-h-[520px] lg:min-h-[640px] overflow-hidden bg-black">
       {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -26,9 +26,9 @@ const LandingPage = () => {
 
       {/* Left fade overlay (like screenshot) */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
         {/* subtle overall dim (very light) */}
-        <div className="absolute inset-0 bg-black/10" />
+        <div className="absolute inset-0 bg-black/5" />
       </div>
 
       {/* Content */}
@@ -40,19 +40,19 @@ const LandingPage = () => {
           <div
             className="
               w-full
-              px-6 sm:px-10 lg:px-16 2xl:px-24
+              px-6 md:px-10 lg:px-16
               pb-10
             "
           >
-            <div className="max-w-[720px] 2xl:max-w-[860px]">
+            <div className="max-w-[640px] md:max-w-[680px] lg:max-w-[720px]">
               {/* Headline */}
               <h1
                 className="
                   text-white
-                  font-inter 
+                 
                   leading-[1.05]
                   tracking-tight
-                  text-[44px] sm:text-[56px] lg:text-[64px] 2xl:text-[78px]
+                  text-[46px] md:text-[56px] lg:text-[76px]
                 "
               >
                 Depdev Digital
@@ -68,9 +68,9 @@ const LandingPage = () => {
                 className="
                   mt-7
                   text-white/90
-                  text-[15px] sm:text-[16px] lg:text-[18px] 2xl:text-[20px]
+                  text-[15px] md:text-[16px] lg:text-[18px]
                   leading-relaxed
-                  max-w-[560px] 2xl:max-w-[640px]
+                  max-w-[480px] md:max-w-[520px] lg:max-w-[560px]
                 "
               >
                 Your comprehensive digital library for academic resources, 
@@ -78,17 +78,17 @@ const LandingPage = () => {
               </p>
 
               {/* Optional: Search (keep if you want it on hero) */}
-              <form onSubmit={handleSearch} className="mt-10 max-w-[640px] 2xl:max-w-[760px]">
-                <div className="flex w-full overflow-hidden border border-white/25 bg-white/95 backdrop-blur-sm">
+              <form onSubmit={handleSearch} className="mt-10 max-w-[580px] md:max-w-[620px] lg:max-w-[640px]">
+                <div className="flex w-full overflow-hidden bg-white/95 backdrop-blur-sm">
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search by title, author, subject, ISBN..."
                     className="
-                      h-[54px] 2xl:h-[62px]
+                      h-[54px] md:h-[58px] lg:h-[62px]
                       w-full
-                      px-5 2xl:px-6
-                      text-[15px] 2xl:text-[17px]
+                      px-5 md:px-6 lg:px-8
+                      text-[15px] md:text-[16px] lg:text-[17px]
                       text-black
                       placeholder:text-black/45
                       outline-none
@@ -98,8 +98,8 @@ const LandingPage = () => {
                   <button
                     type="submit"
                     className="
-                      h-[54px] 2xl:h-[62px]
-                      px-6 2xl:px-8
+                      h-[54px] md:h-[58px] lg:h-[62px]
+                      px-6 md:px-7 lg:px-8
                       bg-blue-800
                       text-white
                       font-semibold
@@ -112,12 +112,17 @@ const LandingPage = () => {
               </form>
 
               {/* Footnote (optional) */}
-              <p className="mt-6 text-white/70 text-[12px] 2xl:text-[13px]">
+              <p className="mt-6 text-white/70 text-[12px] md:text-[13px]">
                 *Empowering education through digital innovation
               </p>
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* SCROLL TO DISCOVER - Bottom Right */}
+      <div className="absolute bottom-8 right-8 text-white text-sm font-bold tracking-wider md:text-base lg:text-lg">
+        (SCROLL TO DISCOVER)
       </div>
     </section>
   );

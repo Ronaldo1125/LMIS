@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, ChevronRight, ChevronLeft } from "lucide-react";
 
 const BOOK_COLORS = [
   "#1a3a6e",
@@ -21,26 +21,37 @@ const BOOK_COLORS = [
 ];
 
 const sampleBooks = [
-  { rank: 1,  title: "Community Development in an Uncertain World", author: "Ife & Tesoriero",       edition: "4th Edition · 2016", label: "Community Development",        badge: "Available" },
-  { rank: 2,  title: "Understanding Social Policy",                 author: "Alcock et al.",          edition: "9th Edition · 2021", label: "Social Policy & Practice",     badge: "Available" },
-  { rank: 3,  title: "Research Design: Qualitative & Mixed",        author: "Creswell",               edition: "5th Edition · 2018", label: "Research Methods",             badge: "eBook"     },
-  { rank: 4,  title: "Collaborative Planning: Shaping Places",      author: "Healey",                 edition: "2nd Edition · 2006", label: "Urban Planning",               badge: "Available" },
-  { rank: 5,  title: "Geographies of Development",                  author: "Potter et al.",          edition: "3rd Edition · 2008", label: "Development Studies",          badge: "eBook"     },
-  { rank: 6,  title: "Participatory Action Research in Practice",   author: "Kindon, Pain & Kesby",   edition: "1st Edition · 2007", label: "Research Methods",             badge: "Available" },
-  { rank: 7,  title: "Social Innovation and Impact Measurement",    author: "Mulgan",                 edition: "1st Edition · 2019", label: "Social Work",                  badge: "eBook"     },
-  { rank: 8,  title: "Youth Development Frameworks",                author: "Eccles & Gootman",       edition: "1st Edition · 2002", label: "Education",                    badge: "Available" },
-  { rank: 9,  title: "Intersectionality in Public Policy",          author: "Hankivsky",              edition: "2nd Edition · 2021", label: "Policy Studies",               badge: "Available" },
-  { rank: 10, title: "Sustainable Development Goals Handbook",      author: "UN Global Compact",      edition: "2025 Edition",       label: "Development Studies",          badge: "eBook"     },
+  { rank: 1, id: 1, title: "Community Development in an Uncertain World", author: "Ife & Tesoriero", edition: "4th Edition · 2016", label: "Community Development", badge: "Available", year: 2016, coverImage: "/assets/BooksImages/2.avif" },
+  { rank: 2, id: 2, title: "Understanding Social Policy", author: "Alcock et al.", edition: "9th Edition · 2021", label: "Social Policy & Practice", badge: "Available", year: 2021, coverImage: "/assets/BooksImages/200.png" },
+  { rank: 3, id: 3, title: "Research Design: Qualitative & Mixed", author: "Creswell", edition: "5th Edition · 2018", label: "Research Methods", badge: "eBook", year: 2018, coverImage: "/assets/BooksImages/3.jpg" },
+  { rank: 4, id: 4, title: "Collaborative Planning: Shaping Places", author: "Healey", edition: "2nd Edition · 2006", label: "Urban Planning", badge: "Available", year: 2006, coverImage: "/assets/BooksImages/4.png" },
+  { rank: 5, id: 5, title: "Geographies of Development", author: "Potter et al.", edition: "3rd Edition · 2008", label: "Development Studies", badge: "eBook", year: 2008, coverImage: "/assets/BooksImages/2.avif" },
+  { rank: 6, id: 6, title: "Participatory Action Research in Practice", author: "Kindon, Pain & Kesby", edition: "1st Edition · 2007", label: "Research Methods", badge: "Available", year: 2007, coverImage: "/assets/BooksImages/200.png" },
+  { rank: 7, id: 7, title: "Social Innovation and Impact Measurement", author: "Mulgan", edition: "1st Edition · 2019", label: "Social Work", badge: "eBook", year: 2019, coverImage: "/assets/BooksImages/3.jpg" },
+  { rank: 8, id: 8, title: "Youth Development Frameworks", author: "Eccles & Gootman", edition: "1st Edition · 2002", label: "Education", badge: "Available", year: 2002, coverImage: "/assets/BooksImages/4.png" },
+  { rank: 9, id: 9, title: "Intersectionality in Public Policy", author: "Hankivsky", edition: "2nd Edition · 2021", label: "Policy Studies", badge: "Available", year: 2021, coverImage: "/assets/BooksImages/2.avif" },
+  { rank: 10, id: 10, title: "Sustainable Development Goals Handbook", author: "UN Global Compact", edition: "2025 Edition", label: "Development Studies", badge: "eBook", year: 2025, coverImage: "/assets/BooksImages/200.png" },
 ];
 
 const FrequentlySearched = () => {
   const [visibleCount, setVisibleCount] = useState(10);
   const [isGridView, setIsGridView] = useState(true);
+  const [page, setPage] = useState(0);
 
-  const visible = sampleBooks.slice(0, visibleCount);
+  const itemsPerPage = 10;
+  const maxPage = Math.ceil(sampleBooks.length / itemsPerPage) - 1;
+
+  const handlePrev = () => setPage(prev => Math.max(0, prev - 1));
+  const handleNext = () => setPage(prev => Math.min(maxPage, prev + 1));
+
+  const handleBookClick = (book) => {
+    console.log('Clicked book:', book);
+  };
+
+  const visible = sampleBooks.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#fff" }}>
+    <div style={{ background: "#fff", maxWidth: 1440, margin: "0 auto" }}>
 
       {/* Section Header */}
       <div style={{
@@ -48,95 +59,140 @@ const FrequentlySearched = () => {
         alignItems: "center",
         justifyContent: "space-between",
         padding: "48px 48px 24px",
-        marginBottom: 32,
-        maxWidth: 1600,
+        maxWidth: 1440,
         marginLeft: "auto",
         marginRight: "auto",
       }}>
         <h2 style={{
-          fontFamily: "'Playfair Display', serif",
-          fontSize: 32,
-          fontWeight: 700,
+          fontSize: 29,
+          fontWeight: 600,
           color: "#003087",
           margin: 0,
         }}>
           Most Searched Books
         </h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Arrows */}
+          <div style={{ width: 12 }} />
+          <button
+            onClick={handlePrev}
+            disabled={page === 0}
+            style={{
+              width: 40,
+              height: 36,
+              borderRadius: 12,
+              border: "1px solid #d1d8e8",
+              background: "#fff",
+              cursor: page === 0 ? "not-allowed" : "pointer",
+              opacity: page === 0 ? 0.5 : 1,
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={page === maxPage}
+            style={{
+              width: 40,
+              height: 36,
+              borderRadius: 12,
+              border: "1px solid #d1d8e8",
+              background: "#fff",
+              cursor: page === maxPage ? "not-allowed" : "pointer",
+              opacity: page === maxPage ? 0.5 : 1,
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
 
       {/* GRID VIEW */}
       {isGridView && (
-        <div style={{
-          maxWidth: 1600,
-          margin: "0 auto",
-          padding: "0 48px",
-          display: "grid",
-          gridTemplateColumns: "repeat(6, 1fr)",
-          gap: 32,
-          marginBottom: 40,
-        }}>
+        <div
+          style={{
+            maxWidth: 1440,
+            margin: "0 auto",
+            padding: "0 48px 56px",
+            display: "grid",
+            gridTemplateColumns: "repeat(6, 1fr)",
+            gap: 18,
+          }}
+        >
           {visible.map((book) => (
             <div
               key={book.rank}
-              style={{ cursor: "pointer" }}
-              onMouseOver={(e) => (e.currentTarget.style.transform = "translateY(-3px)")}
-              onMouseOut={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+              onClick={() => handleBookClick(book)}
+              style={{
+                cursor: "pointer",
+                border: "1px solid #e6ecf7",
+                borderRadius:5,
+                overflow: "hidden",
+              
+              }}
+             
             >
-              {/* Book Cover */}
-              <div style={{
-                background: BOOK_COLORS[(book.rank - 1) % BOOK_COLORS.length],
-                borderRadius: 4,
-                marginBottom: 10,
-                aspectRatio: "2/3",
-                display: "flex",
-                alignItems: "flex-end",
-                padding: 12,
-                position: "relative",
-                transition: "transform 0.15s",
-              }}>
-                {/* Rank Badge */}
-                <div style={{
-                  position: "absolute", top: 10, left: 10,
-                  width: 24, height: 24,
-                  background: "rgba(255,255,255,0.2)",
-                  borderRadius: "50%",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 11, fontWeight: 700, color: "#fff",
-                }}>
-                  {book.rank}
-                </div>
+              {/* Cover */}
+              <div style={{ aspectRatio: "3/4", background: "#f6f8ff" }}>
+                <img
+                  src={book.coverImage}
+                  alt={book.title}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+              </div>
 
-                {/* Label + Author */}
-                <div>
-                  <div style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontSize: 13, fontWeight: 700,
-                    color: "rgba(255,255,255,0.95)",
-                    lineHeight: 1.3,
-                  }}>
-                    {book.label}
-                  </div>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
+              {/* Minimal Info (ONLY Title, Author, Year) */}
+              <div style={{ padding: "12px 12px 14px" }}>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#111827",
+                    lineHeight: 1.25,
+                    marginBottom: 6,
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {book.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#4b5563",
+                    lineHeight: 1.2,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 10,
+                  }}
+                >
+                  <span
+                    style={{
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      flex: 1,
+                    }}
+                    title={book.author}
+                  >
                     {book.author}
+                  </span>
+                  <span style={{ color: "#6b7280", fontWeight: 600 }}>
+                    {book.year}
                   </span>
                 </div>
               </div>
-
-              {/* Title */}
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, lineHeight: 1.3, color: "#111827" }}>
-                {book.title}
-              </div>
-              {/* Edition */}
-              <div style={{ fontSize: 11, color: "#6b7280" }}>{book.edition}</div>
-              {/* Badge */}
-              <span style={{
-                display: "inline-block",
-                fontSize: 10, fontWeight: 600,
-                padding: "2px 7px", borderRadius: 3, marginTop: 6,
-                background: "#e8f0fb", color: "#003087",
-              }}>
-                {book.badge}
-              </span>
             </div>
           ))}
         </div>
@@ -144,103 +200,101 @@ const FrequentlySearched = () => {
 
       {/* LIST VIEW */}
       {!isGridView && (
-        <div style={{
-          maxWidth: 1600,
-          margin: "0 auto",
-          padding: "0 48px",
-          border: "1px solid #d1d8e8",
-          borderRadius: 6,
-          overflow: "hidden",
-          marginBottom: 40,
-        }}>
-          {visible.map((book, i) => (
+        <div
+          style={{
+            maxWidth: 1440,
+            margin: "0 auto",
+            padding: "0 48px 56px",
+            border: "1px solid #e6ecf7",
+            borderRadius: 14,
+            overflow: "hidden",
+            background: "#fff",
+          }}
+        >
+          {visible.map((book, index) => (
             <div
               key={book.rank}
+              onClick={() => handleBookClick(book)}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 20,
-                padding: "16px 24px",
-                borderBottom: i < visible.length - 1 ? "1px solid #d1d8e8" : "none",
+                gap: 14,
+                padding: "14px 16px",
+                borderBottom:
+                  index < visible.length - 1 ? "1px solid #eef2ff" : "none",
                 cursor: "pointer",
-                background: "#fff",
                 transition: "background 0.15s",
               }}
-              onMouseOver={(e) => (e.currentTarget.style.background = "#f4f7fd")}
+              onMouseOver={(e) => (e.currentTarget.style.background = "#f7faff")}
               onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
             >
-              {/* Rank */}
-              <div style={{
-                width: 28, height: 28, borderRadius: "50%",
-                background: "#003087",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 11, fontWeight: 700, color: "#fff", flexShrink: 0,
-              }}>
-                {book.rank}
+              <div
+                style={{
+                  width: 44,
+                  height: 58,
+                  borderRadius: 10,
+                  overflow: "hidden",
+                  flexShrink: 0,
+                  border: "1px solid #e6ecf7",
+                  background: "#f6f8ff",
+                }}
+              >
+                <img
+                  src={book.coverImage}
+                  alt={book.title}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
               </div>
 
-              {/* Mini cover */}
-              <div style={{
-                width: 36, height: 50, borderRadius: 3,
-                background: BOOK_COLORS[(book.rank - 1) % BOOK_COLORS.length],
-                flexShrink: 0,
-              }} />
-
-              {/* Info */}
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#111827", lineHeight: 1.3 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#111827",
+                    lineHeight: 1.25,
+                    marginBottom: 4,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                  title={book.title}
+                >
                   {book.title}
                 </div>
-                <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-                  {book.author} · {book.edition}
+
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#4b5563",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                  }}
+                >
+                  <span
+                    style={{
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      flex: 1,
+                    }}
+                    title={book.author}
+                  >
+                    {book.author}
+                  </span>
+                  <span style={{ fontWeight: 700, color: "#6b7280" }}>
+                    {book.year}
+                  </span>
                 </div>
               </div>
 
-              {/* Badge */}
-              <span style={{
-                fontSize: 10, fontWeight: 600,
-                padding: "3px 9px", borderRadius: 3,
-                background: "#e8f0fb", color: "#003087",
-                flexShrink: 0,
-              }}>
-                {book.badge}
-              </span>
+              <ChevronRight size={18} style={{ opacity: 0.5 }} />
             </div>
           ))}
         </div>
       )}
-
-      {/* Load More */}
-      {visibleCount < sampleBooks.length && (
-        <div style={{ textAlign: "center", paddingBottom: 64 }}>
-          <button
-            onClick={() => setVisibleCount((v) => v + 5)}
-            style={{
-              background: "#fff",
-              border: "1px solid #003087",
-              color: "#003087",
-              padding: "10px 28px",
-              borderRadius: 6,
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-              letterSpacing: "0.02em",
-              transition: "background 0.15s, color 0.15s",
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = "#003087";
-              e.currentTarget.style.color = "#fff";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = "#fff";
-              e.currentTarget.style.color = "#003087";
-            }}
-          >
-            Load More
-          </button>
-        </div>
-      )}
-
     </div>
   );
 };

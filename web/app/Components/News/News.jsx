@@ -11,6 +11,7 @@ const newsData = [
     date: "February 18, 2025",
     size: "large",
     bg: "#dce8f5",
+    image: "/assets/NewsImages/news1.jpg"
   },
   {
     category: "Workshop",
@@ -19,6 +20,7 @@ const newsData = [
     date: "February 10, 2025",
     size: "small",
     bg: "#e0ecf8",
+    image: "/assets/NewsImages/news2.jpg"
   },
   {
     category: "Collection Update",
@@ -27,6 +29,7 @@ const newsData = [
     date: "January 28, 2025",
     size: "small",
     bg: "#d6e5f5",
+    image: "/assets/NewsImages/news3.jpg"
   },
   {
     category: "Announcement",
@@ -35,6 +38,7 @@ const newsData = [
     date: "January 15, 2025",
     size: "large",
     bg: "#dce8f5",
+    image: "/assets/NewsImages/news4.jpg"
   },
   {
     category: "Event",
@@ -43,15 +47,17 @@ const newsData = [
     date: "January 5, 2025",
     size: "small",
     bg: "#e0ecf8",
+    image: "/assets/NewsImages/news5.jpg"
   },
   {
     category: "Collection Update",
     title: "New Thesis and Research Paper Submissions Now Open",
-    excerpt: "Graduate students can now submit their theses digitally through the library portal for archiving.",
+    excerpt: "Graduate students can now submit their thesis and research papers digitally through our new portal.",
     date: "December 20, 2024",
     size: "small",
     bg: "#d6e5f5",
-  },
+    image: "/assets/NewsImages/news6.jpg"
+  }
 ];
 
 // Group news into slides of 3 (1 large + 2 small)
@@ -82,18 +88,17 @@ const News = () => {
         alignItems: "center",
         justifyContent: "space-between",
         padding: "48px 48px 24px",
-        marginBottom: 32,
-        maxWidth: 1600,
+        maxWidth: 1440,
         marginLeft: "auto",
         marginRight: "auto",
       }}>
         <h2 style={{
-          fontSize: 32,
-          fontWeight: 700,
+          fontSize: 29,
+          fontWeight: 600,
           color: "#003087",
           margin: 0,
         }}>
-          Library News
+          Depdev 5 News
         </h2>
 
         {/* Arrows + View All */}
@@ -146,7 +151,7 @@ const News = () => {
 
       {/* News Grid — 2fr 1fr 1fr */}
       <div style={{
-        maxWidth: 1600,
+        maxWidth: 1440,
         margin: "0 auto",
         padding: "0 48px",
         display: "grid",
@@ -159,17 +164,29 @@ const News = () => {
             key={item.title}
             style={{ cursor: "pointer" }}
           >
-            {/* Image placeholder */}
+            {/* Image */}
             <div style={{
               background: item.bg,
-              borderRadius: 6,
               marginBottom: 18,
               aspectRatio: "16/9",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              overflow: "hidden",
             }}>
-              <NewsIcon />
+              <img 
+                src={item.image} 
+                alt={item.title}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+                onError={(e) => {
+                  e.target.style.display = "none";
+                  e.target.parentElement.innerHTML = '<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#0057b8" strokeWidth="1.2" opacity="0.35"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>';
+                }}
+              />
             </div>
 
             {/* Category */}
