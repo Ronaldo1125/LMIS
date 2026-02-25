@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, LayoutGrid, List } from "lucide-react";
+import React, { useState } from "react";
+import { LayoutGrid, List } from "lucide-react";
 
 const BOOK_COLORS = [
   "#1a3a6e",
@@ -40,8 +40,7 @@ const sampleBooks = [
     dimensions: "6.1 x 0.9 x 9.2 inches",
     weight: "1.8 pounds",
     format: "Paperback",
-    location: "Main Library, Shelf A-12",
-    coverImage: "/assets/BooksImages/2.avif"
+    location: "Main Library, Shelf A-12"
   },
   { 
     id: 2,
@@ -62,8 +61,7 @@ const sampleBooks = [
     dimensions: "6.5 x 1.2 x 9.5 inches",
     weight: "2.3 pounds",
     format: "Hardcover",
-    location: "Main Library, Shelf B-08",
-    coverImage: "/assets/BooksImages/3.jpg"
+    location: "Main Library, Shelf B-08"
   },
   { 
     id: 3,
@@ -84,8 +82,7 @@ const sampleBooks = [
     dimensions: "6.0 x 0.8 x 9.0 inches",
     weight: "1.4 pounds",
     format: "Paperback",
-    location: "Main Library, Shelf C-15",
-    coverImage: "/assets/BooksImages/4.png"
+    location: "Main Library, Shelf C-15"
   },
   { 
     id: 4,
@@ -106,8 +103,7 @@ const sampleBooks = [
     dimensions: "6.1 x 1.0 x 9.1 inches",
     weight: "1.7 pounds",
     format: "Paperback",
-    location: "Main Library, Shelf D-22",
-    coverImage: "/assets/BooksImages/2.avif"
+    location: "Main Library, Shelf D-22"
   },
   { 
     id: 5,
@@ -128,8 +124,7 @@ const sampleBooks = [
     dimensions: "6.2 x 0.9 x 9.3 inches",
     weight: "1.6 pounds",
     format: "Paperback",
-    location: "Main Library, Shelf E-07",
-    coverImage: "/assets/BooksImages/3.jpg"
+    location: "Main Library, Shelf E-07"
   },
   { 
     id: 6,
@@ -150,8 +145,7 @@ const sampleBooks = [
     dimensions: "6.0 x 0.7 x 8.9 inches",
     weight: "1.3 pounds",
     format: "Paperback",
-    location: "Main Library, Shelf C-18",
-    coverImage: "/assets/BooksImages/4.png"
+    location: "Main Library, Shelf C-18"
   },
   { 
     id: 7,
@@ -172,8 +166,7 @@ const sampleBooks = [
     dimensions: "5.8 x 0.8 x 8.7 inches",
     weight: "1.2 pounds",
     format: "Hardcover",
-    location: "Main Library, Shelf F-11",
-    coverImage: "/assets/BooksImages/2.avif"
+    location: "Main Library, Shelf F-11"
   },
   { 
     id: 8,
@@ -194,8 +187,7 @@ const sampleBooks = [
     dimensions: "6.0 x 0.4 x 8.9 inches",
     weight: "0.8 pounds",
     format: "Paperback",
-    location: "Main Library, Shelf G-03",
-    coverImage: "/assets/BooksImages/3.jpg"
+    location: "Main Library, Shelf G-03"
   },
   { 
     id: 9,
@@ -216,8 +208,7 @@ const sampleBooks = [
     dimensions: "6.1 x 0.8 x 9.0 inches",
     weight: "1.1 pounds",
     format: "Paperback",
-    location: "Main Library, Shelf H-14",
-    coverImage: "/assets/BooksImages/4.png"
+    location: "Main Library, Shelf H-14"
   },
   { 
     id: 10,
@@ -238,101 +229,51 @@ const sampleBooks = [
     dimensions: "6.3 x 1.1 x 9.4 inches",
     weight: "2.0 pounds",
     format: "Paperback",
-    location: "Main Library, Shelf E-19",
-    coverImage: "/assets/BooksImages/2.avif"
+    location: "Main Library, Shelf E-19"
   },
 ];
 
-
-const RecentAdditions = () => {
+const RelatedBooks = ({ currentBook }) => {
+  const [visibleCount, setVisibleCount] = useState(6);
   const [isGridView, setIsGridView] = useState(true);
 
-  // slider behavior (paginate)
-  const GRID_PAGE_SIZE = 6;   // 6 cards visible in grid per "page"
-  const LIST_PAGE_SIZE = 5;   // 5 rows visible in list per "page"
-  const pageSize = isGridView ? GRID_PAGE_SIZE : LIST_PAGE_SIZE;
+  // Filter books by category or show first 4 as related
+  const relatedBooks = sampleBooks
+    .filter(book => book.category === currentBook?.category || book.id <= 6)
+    .slice(0, visibleCount);
 
-  const [page, setPage] = useState(0);
-  const maxPage = Math.max(0, Math.ceil(sampleBooks.length / pageSize) - 1);
-
-  const visible = useMemo(() => {
-    const start = page * pageSize;
-    return sampleBooks.slice(start, start + pageSize);
-  }, [page, pageSize]);
-
-  const handlePrev = () => setPage((p) => Math.max(0, p - 1));
-  const handleNext = () => setPage((p) => Math.min(maxPage, p + 1));
+  const visible = relatedBooks;
 
   const handleBookClick = (book) => {
+    // Navigate to book details page
     window.location.href = `/book/${book.id}`;
   };
 
   return (
     <div style={{ background: "#fff" }}>
-      {/* Header */}
-      <div
-        style={{
-          maxWidth: 1440,
-          margin: "0 auto",
-          padding: "44px 48px 18px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 16,
-        }}
-      >
-        <h2
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            color: "#003087",
-            margin: 0,
-            letterSpacing: "-0.01em",
-          }}
-        >
-          Recent Additions
-        </h2>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Arrows */}
-          <div style={{ width: 12 }} />
-          <button
-            onClick={handlePrev}
-            disabled={page === 0}
-            style={{
-              width: 40,
-              height: 36,
-              borderRadius: 12,
-              border: "1px solid #d1d8e8",
-              background: "#fff",
-              cursor: page === 0 ? "not-allowed" : "pointer",
-              opacity: page === 0 ? 0.5 : 1,
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            onClick={handleNext}
-            disabled={page === maxPage}
-            style={{
-              width: 40,
-              height: 36,
-              borderRadius: 12,
-              border: "1px solid #d1d8e8",
-              background: "#fff",
-              cursor: page === maxPage ? "not-allowed" : "pointer",
-              opacity: page === maxPage ? 0.5 : 1,
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
+      {/* Section Header */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "48px 48px 24px",
+        marginBottom: 0,
+        maxWidth: 1440,
+        marginLeft: "auto",
+        marginRight: "auto",
+      }}>
+        <h2 style={{
+          fontSize: 29,
+          fontWeight: 600,
+          color: "#003087",
+          margin: 0,
+        }}>
+          Related Books
+        </h2>
       </div>
 
+     
       {/* GRID VIEW */}
       {isGridView && (
         <div
@@ -521,4 +462,4 @@ const RecentAdditions = () => {
   );
 };
 
-export default RecentAdditions;
+export default RelatedBooks;

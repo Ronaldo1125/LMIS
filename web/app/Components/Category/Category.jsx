@@ -18,17 +18,22 @@ export default function Category() {
   const categories = useMemo(() => rawCategories, []);
 
   return (
-    <section className="w-full bg-white">
-      <div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8 lg:px-12 py-14 sm:py-16">
+    <section className="w-full bg-white pt-15">
+      <div style={{
+        maxWidth: 1440,
+        marginLeft: "auto",
+        marginRight: "auto",
+        padding: "48px 48px 24px",
+      }}>
         {/* Title */}
         <div className="text-center">
-          <h2 className="font-serif text-[40px] sm:text-[56px] leading-[1.05] tracking-tight text-black">
+          <h2 className="text-[40px] sm:text-[56px] font-medium leading-[1.05] tracking-tight text-black" >
             Browse Categories
           </h2>
 
           <p className="mt-4 text-[14px] sm:text-[16px] text-black/60 max-w-[760px] mx-auto leading-relaxed">
             Explore thousands of government publications, research materials, journals, and reference documents
-            available in the DEPDEV Region V e-Library.
+            available in DEPDEV Region V e-Library.
           </p>
         </div>
 

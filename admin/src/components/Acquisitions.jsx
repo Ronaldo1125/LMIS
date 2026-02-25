@@ -26,8 +26,6 @@ const Acquisitions = ({ dark }) => {
   const textSecondary = dark ? '#6b8cae' : '#64748b'
   const iconBoxBg     = dark ? 'rgba(30,64,175,0.15)' : '#dbeafe'
   const iconColor     = dark ? '#93c5fd' : '#2563eb'
-  const errorBg       = dark ? 'rgba(220,38,38,0.1)' : '#fef2f2'
-  const errorBorder   = dark ? 'rgba(220,38,38,0.2)' : '#fecaca'
   const errorText     = dark ? '#fca5a5' : '#dc2626'
 
   useEffect(() => {
@@ -37,13 +35,27 @@ const Acquisitions = ({ dark }) => {
         setError(null);
         const response = await api.get('/acquisitions');
         const transformedData = response.data.data.map(item => ({
-          id: item.accession_id,
-          accessionNo: item.accession_no,
-          title: item.title,
-          author: item.author,
-          coverImage: `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1544947950-fa07a98d237f' : '1495446815901-a7297e633e8d'}?w=400&h=600&fit=crop`,
-          acquisitionDate: item.date_accessioned,
-        }));
+  id: item.id,
+  accession_no: item.accession_no,
+  date_accessioned: item.date_accessioned,
+  title: item.title,
+  author: item.author,
+  editor: item.editor,
+  edition: item.edition,
+  publication: item.publication,
+  publisher: item.publisher,
+  date_of_publication: item.date_of_publication,
+  isbn: item.isbn,
+  issn: item.issn,
+  subjects: item.subjects,
+  extent: item.extent,
+  dimensions: item.dimensions,
+  other_physical_details: item.other_physical_details,
+  accompanying_material: item.accompanying_material,
+  notes_area: item.notes_area,
+  coverImage: `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1544947950-fa07a98d237f' : '1495446815901-a7297e633e8d'}?w=400&h=600&fit=crop`,
+  acquisitionDate: item.date_accessioned,
+}));
         setAcquisitionsData(transformedData);
       } catch (err) {
         console.error('Error fetching acquisitions:', err);
@@ -154,7 +166,7 @@ const Acquisitions = ({ dark }) => {
             <p style={{ fontSize: '0.875rem', color: textSecondary, margin: 0, transition: 'color 0.45s ease' }}>
               {filteredAndSortedAcquisitions.length}{' '}
               {filteredAndSortedAcquisitions.length === 1 ? 'book' : 'books'}
-              {searchQuery && ' found'} • Last 14 days
+              {searchQuery && ' found'} • Last 15 Acquisitions
             </p>
           </div>
         </div>
