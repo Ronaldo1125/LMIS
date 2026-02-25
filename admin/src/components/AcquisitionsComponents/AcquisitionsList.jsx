@@ -2,15 +2,18 @@ import React, { useState } from 'react';
 import AcquisitionCard from './AcquisitionCard';
 import BookDetailsModal from './BookDetailsModal';
 
-const AcquisitionsList = ({ acquisitions }) => {
+const AcquisitionsList = ({ acquisitions, dark = false }) => {
   const [selectedBook, setSelectedBook] = useState(null);
 
   if (acquisitions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        {/* Empty state */}
-        <h2 className="text-2xl font-bold text-[#154A9A] mb-2">No Acquisitions Yet</h2>
-        <p className="text-base text-slate-600">Books acquired will appear here</p>
+        <h2 className={`text-2xl font-bold mb-2 ${dark ? 'text-[#93c5fd]' : 'text-[#154A9A]'}`}>
+          No Acquisitions Yet
+        </h2>
+        <p className={`text-base ${dark ? 'text-[#6b8cae]' : 'text-slate-600'}`}>
+          Books acquired will appear here
+        </p>
       </div>
     );
   }
@@ -27,6 +30,7 @@ const AcquisitionsList = ({ acquisitions }) => {
             acquisition={acquisition}
             viewMode="list"
             onViewDetails={(book) => setSelectedBook(book)}
+            dark={dark}
           />
         </div>
       ))}
@@ -35,6 +39,7 @@ const AcquisitionsList = ({ acquisitions }) => {
         <BookDetailsModal
           book={selectedBook}
           onClose={() => setSelectedBook(null)}
+          dark={dark}
         />
       )}
     </div>

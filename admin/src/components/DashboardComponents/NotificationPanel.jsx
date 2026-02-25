@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 const getNotificationIcon = (type) => {
@@ -27,17 +27,19 @@ const getNotificationIcon = (type) => {
   }
 }
 
-const getNotificationColor = (type) => {
-  switch (type) {
-    case 'success': return 'bg-green-50 text-green-600'
-    case 'warning': return 'bg-yellow-50 text-yellow-600'
-    default: return 'bg-blue-50 text-blue-600'
-  }
-}
-
-const NotificationPanel = ({ isOpen, onClose, notifications, isSticky }) => {
+const NotificationPanel = ({ isOpen, onClose, notifications, isSticky, dark }) => {
   const panelRef = useRef(null)
+  const [isAnimating, setIsAnimating] = useState(false)
   const unreadCount = notifications.filter((n) => !n.read).length
+
+  // Handle local animation state for smooth entry/exit
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => setIsAnimating(true), 10)
+    } else {
+      setIsAnimating(false)
+    }
+  }, [isOpen])
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -49,67 +51,160 @@ const NotificationPanel = ({ isOpen, onClose, notifications, isSticky }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen, onClose])
 
-  if (!isOpen) return null
+  // ── Colors ────────────────────────────────────────────────
+  const panelBg      = dark ? '#0f1f38' : '#ffffff'
+  const panelBorder  = dark ? '#1a3356' : '#e2e8f0'
+  const headerBg     = dark ? '#0d1d35' : '#f8fafc'
+  const textPrimary  = dark ? '#dde8f5' : '#111827'
+  const textSecondary = dark ? '#6b8cae' : '#4b5563'
+  const textMuted     = dark ? '#2e4d70' : '#9ca3af'
+  const itemHover    = dark ? '#1a3356' : '#f8fafc'
+  const unreadBg     = dark ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff'
+  const closeHover   = dark ? '#1a3356' : '#f1f5f9'
+
+  const getNotificationStyles = (type) => {
+    switch (type) {
+      case 'success': return { bg: dark ? 'rgba(34, 197, 94, 0.15)' : '#f0fdf4', text: '#22c55e' }
+      case 'warning': return { bg: dark ? 'rgba(234, 179, 8, 0.15)' : '#fefce8', text: '#eab308' }
+      default: return { bg: dark ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff', text: '#3b82f6' }
+    }
+  }
+
+  if (!isOpen && !isAnimating) return null
 
   return (
     <div
       ref={panelRef}
-      className="fixed mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-[100] overflow-hidden"
-      style={{ right: '1rem', top: isSticky ? '4.5rem' : '5.5rem' }}
+      style={{
+        position: 'fixed',
+        right: '1rem',
+        top: isSticky ? '4.5rem' : '5.5rem',
+        width: '24rem',
+        background: panelBg,
+        border: `1px solid ${panelBorder}`,
+        borderRadius: '0.75rem',
+        boxShadow: dark ? '0 10px 40px rgba(0,0,0,0.5)' : '0 10px 25px -5px rgba(0,0,0,0.1)',
+        zIndex: 100,
+        overflow: 'hidden',
+        opacity: isAnimating ? 1 : 0,
+        transform: isAnimating ? 'translateY(0) scale(1)' : 'translateY(-10px) scale(0.95)',
+        transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.45s ease, border-color 0.45s ease',
+        transformOrigin: 'top right'
+      }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '1rem',
+        borderBottom: `1px solid ${panelBorder}`,
+        background: headerBg,
+        transition: 'background 0.45s ease'
+      }}>
         <div>
-          <h3 className="font-semibold text-gray-900">Notifications</h3>
+          <h3 style={{ margin: 0, fontWeight: 700, fontSize: '0.875rem', color: textPrimary }}>Notifications</h3>
           {unreadCount > 0 && (
-            <p className="text-xs text-gray-500 mt-0.5">{unreadCount} unread</p>
+            <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: '#3b82f6', fontWeight: 600 }}>
+              {unreadCount} unread
+            </p>
           )}
         </div>
-        <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded transition-colors">
-          <XMarkIcon className="w-5 h-5 text-gray-500" />
+        <button 
+          onClick={onClose} 
+          style={{ 
+            padding: '0.375rem', 
+            background: 'transparent', 
+            border: 'none', 
+            borderRadius: '0.5rem', 
+            cursor: 'pointer',
+            transition: 'background 0.2s ease'
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = closeHover}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        >
+          <XMarkIcon style={{ width: '1.25rem', height: '1.25rem', color: textSecondary }} />
         </button>
       </div>
 
       {/* List */}
-      <div className="max-h-96 overflow-y-auto">
+      <div style={{ maxHeight: '24rem', overflowY: 'auto' }}>
         {notifications.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">
-            <BellIcon className="w-10 h-10 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">No notifications yet</p>
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <BellIcon style={{ width: '2.5rem', height: '2.5rem', margin: '0 auto 0.5rem', color: textMuted, opacity: 0.5 }} />
+            <p style={{ fontSize: '0.875rem', color: textSecondary }}>No notifications yet</p>
           </div>
         ) : (
-          notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${
-                !notification.read ? 'bg-blue-50' : ''
-              }`}
-            >
-              <div className="flex gap-3">
-                <div
-                  className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${getNotificationColor(notification.type)}`}
-                >
-                  {getNotificationIcon(notification.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-semibold text-sm text-gray-900">{notification.title}</h4>
-                    {!notification.read && (
-                      <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-1.5" />
-                    )}
+          notifications.map((notification) => {
+            const colors = getNotificationStyles(notification.type)
+            return (
+              <div
+                key={notification.id}
+                style={{
+                  padding: '1rem',
+                  borderBottom: `1px solid ${panelBorder}`,
+                  background: !notification.read ? unreadBg : 'transparent',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s ease'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = itemHover}
+                onMouseLeave={e => e.currentTarget.style.background = !notification.read ? unreadBg : 'transparent'}
+              >
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <div
+                    style={{
+                      flexShrink: 0,
+                      width: '2.5rem',
+                      height: '2.5rem',
+                      borderRadius: '0.625rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: colors.bg,
+                      color: colors.text
+                    }}
+                  >
+                    {getNotificationIcon(notification.type)}
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
-                  <p className="text-xs text-gray-400 mt-2">{notification.time}</p>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: '0.5rem' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: textPrimary }}>
+                        {notification.title}
+                      </h4>
+                      {!notification.read && (
+                        <span style={{ flexShrink: 0, width: '0.5rem', height: '0.5rem', background: '#3b82f6', borderRadius: '9999px', marginTop: '0.375rem' }} />
+                      )}
+                    </div>
+                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: textSecondary, lineHeight: '1.25rem' }}>
+                      {notification.message}
+                    </p>
+                    <p style={{ margin: '0.5rem 0 0', fontSize: '0.7rem', color: textMuted }}>
+                      {notification.time}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            )
+          })
         )}
       </div>
 
       {/* Footer */}
-      <div className="p-3 bg-gray-50 border-t border-gray-200 text-center">
-        <button className="text-sm text-[var(--dark-blue-2)] font-semibold hover:text-[var(--dark-blue-1)] transition-colors">
+      <div style={{
+        padding: '0.75rem',
+        background: headerBg,
+        borderTop: `1px solid ${panelBorder}`,
+        textAlign: 'center'
+      }}>
+        <button style={{
+          fontSize: '0.875rem',
+          color: dark ? '#60a5fa' : 'var(--dark-blue-2)',
+          fontWeight: 600,
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          transition: 'color 0.2s ease'
+        }}>
           View all notifications
         </button>
       </div>

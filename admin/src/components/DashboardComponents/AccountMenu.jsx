@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 
 const getRoleLabel = (r) => {
   switch (r) {
@@ -10,14 +10,24 @@ const getRoleLabel = (r) => {
   }
 }
 
-const AccountMenu = ({ isOpen, onClose, user, isSticky, onMyProfile, onHelpSupport }) => {
+const AccountMenu = ({ isOpen, onClose, user, isSticky, onMyProfile, onHelpSupport, dark }) => {
   const menuRef = useRef(null)
+  const [isAnimating, setIsAnimating] = useState(false)
 
   const fullName = user?.full_name || user?.username || 'Unknown'
   const username = user?.username || ''
   const role = user?.role || ''
   const email = user?.email || `${username}@lmis-dro5.gov`
   const avatarLetter = fullName.charAt(0).toUpperCase()
+
+  // Sync animation state with isOpen
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => setIsAnimating(true), 10)
+    } else {
+      setIsAnimating(false)
+    }
+  }, [isOpen])
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -29,24 +39,61 @@ const AccountMenu = ({ isOpen, onClose, user, isSticky, onMyProfile, onHelpSuppo
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen, onClose])
 
-  if (!isOpen) return null
+  // ── Colors (Matching previous components) ──────────────────
+  const menuBg       = dark ? '#0f1f38' : '#ffffff'
+  const menuBorder   = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary  = dark ? '#dde8f5' : '#374151'
+  const textSecondary = dark ? '#6b8cae' : '#6b7280'
+  const itemHover    = dark ? '#1a3356' : '#f9fafb'
+  const bannerBg     = dark 
+    ? 'linear-gradient(135deg, #0d1d35 0%, #1a3356 100%)' 
+    : 'linear-gradient(135deg, var(--dark-blue-1) 0%, var(--dark-blue-2) 100%)'
+
+  if (!isOpen && !isAnimating) return null
 
   return (
     <div
       ref={menuRef}
-      className="fixed mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-[100] overflow-hidden"
-      style={{ right: '1rem', top: isSticky ? '4.5rem' : '5.5rem' }}
+      style={{
+        position: 'fixed',
+        right: '1rem',
+        top: isSticky ? '4.5rem' : '5.5rem',
+        width: '16rem',
+        background: menuBg,
+        border: `1px solid ${menuBorder}`,
+        borderRadius: '0.75rem',
+        boxShadow: dark ? '0 10px 40px rgba(0,0,0,0.5)' : '0 10px 25px -5px rgba(0,0,0,0.1)',
+        zIndex: 100,
+        overflow: 'hidden',
+        opacity: isAnimating ? 1 : 0,
+        transform: isAnimating ? 'translateY(0) scale(1)' : 'translateY(-10px) scale(0.95)',
+        transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.45s ease, border-color 0.45s ease',
+        transformOrigin: 'top right'
+      }}
     >
       {/* Profile banner */}
-      <div className="p-4 bg-gradient-to-br from-[var(--dark-blue-1)] to-[var(--dark-blue-2)]">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-lg">{avatarLetter}</span>
+      <div style={{ padding: '1.25rem', background: bannerBg, transition: 'background 0.45s ease' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ 
+            width: '3rem', height: '3rem', borderRadius: '9999px', 
+            background: 'rgba(255, 255, 255, 0.2)', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, border: '1px solid rgba(255, 255, 255, 0.1)'
+          }}>
+            <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.125rem' }}>{avatarLetter}</span>
           </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-white text-sm truncate">{fullName}</h4>
-            <p className="text-xs text-white/70 truncate">{email}</p>
-            <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-white/20 text-white/90 text-xs font-medium">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h4 style={{ margin: 0, fontWeight: 600, color: '#ffffff', fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {fullName}
+            </h4>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {email}
+            </p>
+            <span style={{ 
+              display: 'inline-block', marginTop: '0.375rem', padding: '0.125rem 0.5rem', 
+              borderRadius: '9999px', background: 'rgba(255, 255, 255, 0.15)', 
+              color: '#ffffff', fontSize: '0.625rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.025em'
+            }}>
               {getRoleLabel(role)}
             </span>
           </div>
@@ -54,28 +101,43 @@ const AccountMenu = ({ isOpen, onClose, user, isSticky, onMyProfile, onHelpSuppo
       </div>
 
       {/* Menu items */}
-      <div className="py-2">
+      <div style={{ padding: '0.5rem 0' }}>
         <button
           onClick={onMyProfile}
-          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+          style={{
+            width: '100%', padding: '0.625rem 1rem', background: 'transparent', border: 'none',
+            display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer',
+            textAlign: 'left', transition: 'background 0.2s ease'
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = itemHover}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style={{ width: '1.25rem', height: '1.25rem', color: textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          My Profile
+          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: textPrimary }}>My Profile</span>
         </button>
+
         <button
           onClick={onHelpSupport}
-          className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+          style={{
+            width: '100%', padding: '0.625rem 1rem', background: 'transparent', border: 'none',
+            display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer',
+            textAlign: 'left', transition: 'background 0.2s ease'
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = itemHover}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style={{ width: '1.25rem', height: '1.25rem', color: textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Help & Support
+          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: textPrimary }}>Help & Support</span>
         </button>
       </div>
+
+      
     </div>
   )
 }

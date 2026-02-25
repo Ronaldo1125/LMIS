@@ -16,7 +16,8 @@ const SearchAndFilter = ({
   categories,
   onAddClick,
   onArchiveClick,
-  onImportClick
+  onImportClick,
+  dark
 }) => {
   const searchInputRef = useRef(null)
   const dropdownRef = useRef(null)
@@ -27,11 +28,19 @@ const SearchAndFilter = ({
     'Reference Materials': false
   })
 
+  // ── Colors ────────────────────────────────────────────────
+  const containerBg   = dark ? '#0f1f38' : '#ffffff'
+  const borderCol     = dark ? '#1a3356' : '#e2e8f0'
+  const inputBg       = dark ? '#0d1d35' : '#ffffff'
+  const textPrimary   = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary = dark ? '#6b8cae' : '#64748b'
+  const dropdownBg    = dark ? '#162a4a' : '#ffffff'
+
   const searchPlaceholder = useMemo(() => {
     const placeholders = [
       'Search by title, author, or ISBN...',
-      'Try "climate change", "atlas", or "policy"...',
-      'Looking for a phrase? Use quotes like "water scarcity".'
+      'Try "climate change" or "atlas"...',
+      'Press "/" to focus search'
     ]
     return placeholders[new Date().getDate() % placeholders.length]
   }, [])
@@ -42,285 +51,202 @@ const SearchAndFilter = ({
       Periodicals: ['Magazines', 'Newspapers', 'Journals'],
       'Reference Materials': ['Encyclopedia', 'Atlas']
     }
-
-    const standalone = [
-      'Books',
-      'Sourcebook',
-      'Thesis/Research papers',
-      'Statute/Law/Legal Documents',
-      'Guides/Manuals'
-    ]
-
+    const standalone = ['Books', 'Sourcebook', 'Thesis/Research papers', 'Statute/Law/Legal Documents', 'Guides/Manuals']
     const has = (value) => categories.includes(value)
-
+    
     const groups = Object.entries(groupMap)
       .filter(([label]) => has(label))
-      .map(([label, children]) => ({
-        label,
-        options: [label, ...children.filter(has)]
-      }))
+      .map(([label, children]) => ({ label, options: [label, ...children.filter(has)] }))
 
     const singles = standalone.filter(has)
-
     return { groups, singles }
   }, [categories])
 
   useEffect(() => {
-    const onKeyDown = (event) => {
-      const isSlash = event.key === '/'
-      const isEscape = event.key === 'Escape'
-      const activeTag = document.activeElement?.tagName?.toLowerCase()
-      const isTypingField = ['input', 'textarea', 'select'].includes(activeTag)
-
-      if (isEscape) setIsCategoryOpen(false)
-
-      if (isSlash && !isTypingField) {
-        event.preventDefault()
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setIsCategoryOpen(false)
+      if (e.key === '/' && !['input', 'textarea'].includes(document.activeElement?.tagName?.toLowerCase())) {
+        e.preventDefault()
         searchInputRef.current?.focus()
       }
     }
-
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
-
-  useEffect(() => {
-    const onClickOutside = (event) => {
-      if (!dropdownRef.current?.contains(event.target)) {
-        setIsCategoryOpen(false)
-      }
-    }
-
+    const onClickOutside = (e) => { if (!dropdownRef.current?.contains(e.target)) setIsCategoryOpen(false) }
     document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
+    return () => { window.removeEventListener('keydown', onKeyDown); document.removeEventListener('mousedown', onClickOutside); }
   }, [])
 
   return (
-    <div className="bg-white p-6 shadow-sm border border-gray-100 mb-6">
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-
-        {/* Search */}
-        <div className="relative flex-1 w-full md:max-w-md">
-          <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+    <div style={{
+      background: containerBg,
+      padding: '1.25rem',
+      borderRadius: '0.75rem',
+      border: `1px solid ${borderCol}`,
+      boxShadow: dark ? '0 10px 30px rgba(0,0,0,0.2)' : '0 1px 3px rgba(0,0,0,0.05)',
+      marginBottom: '1.5rem',
+      transition: 'all 0.45s ease'
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
+        
+        {/* Search Input */}
+        <div style={{ position: 'relative', flex: '1 1 300px' }}>
+          <MagnifyingGlassIcon style={{ 
+            width: '1.25rem', height: '1.25rem', 
+            position: 'absolute', left: '0.75rem', top: '50%', 
+            transform: 'translateY(-50%)', color: textSecondary 
+          }} />
           <input
             ref={searchInputRef}
             type="text"
             placeholder={searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            aria-label="Search catalog"
-            className="
-              w-full pl-10 pr-10 py-2
-              border border-gray-300 bg-white
-              focus:outline-none focus:ring-0 focus:border-gray-300
-            "
+            style={{
+              width: '100%', padding: '0.625rem 2.5rem 0.625rem 2.75rem',
+              background: inputBg, border: `1px solid ${borderCol}`,
+              borderRadius: '0.5rem', color: textPrimary, outline: 'none',
+              transition: 'all 0.2s ease'
+            }}
           />
           {searchTerm && (
-            <button
-              type="button"
+            <XMarkIcon 
               onClick={() => setSearchTerm('')}
-              className="
-                absolute right-3 top-1/2 -translate-y-1/2
-                text-gray-400 hover:text-gray-600
-                bg-transparent border-0 p-0
-                focus:outline-none focus:ring-0
-              "
-              aria-label="Clear search"
-              title="Clear search"
-            >
-              <XMarkIcon className="w-4 h-4" />
-            </button>
+              style={{ 
+                width: '1.125rem', height: '1.125rem', position: 'absolute', 
+                right: '0.75rem', top: '50%', transform: 'translateY(-50%)', 
+                cursor: 'pointer', color: textSecondary 
+              }} 
+            />
           )}
         </div>
 
-        {/* Category Filter */}
-        <div className="flex items-center gap-3 w-full md:w-auto" ref={dropdownRef}>
-          <FunnelIcon className="w-5 h-5 text-gray-600" />
-
-          <div className="relative w-full md:w-72">
+        {/* Category Dropdown */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 250px' }} ref={dropdownRef}>
+          <FunnelIcon style={{ width: '1.25rem', height: '1.25rem', color: textSecondary }} />
+          <div style={{ position: 'relative', width: '100%' }}>
             <button
-              type="button"
-              onClick={() => setIsCategoryOpen(prev => !prev)}
-              className="
-                w-full px-4 py-2
-                border border-gray-300
-                text-left bg-white
-                flex items-center justify-between
-                focus:outline-none focus:ring-0
-              "
-              aria-haspopup="listbox"
-              aria-expanded={isCategoryOpen}
+              onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+              style={{
+                width: '100%', padding: '0.625rem 1rem', background: inputBg,
+                border: `1px solid ${borderCol}`, borderRadius: '0.5rem',
+                textAlign: 'left', color: textPrimary, display: 'flex',
+                justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer'
+              }}
             >
-              <span className="truncate text-gray-800">
-                {selectedCategory === 'all'
-                  ? 'All Categories'
-                  : selectedCategory}
-              </span>
-              <span className="text-gray-400">▾</span>
+              <span style={{ fontSize: '0.875rem' }}>{selectedCategory === 'all' ? 'All Categories' : selectedCategory}</span>
+              <span style={{ color: textSecondary }}>▾</span>
             </button>
 
             {isCategoryOpen && (
-              <div className="absolute z-20 mt-2 w-full border border-gray-200 bg-white shadow-lg">
-                <div className="max-h-64 overflow-y-auto py-2 text-sm">
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedCategory('all')
-                      setIsCategoryOpen(false)
-                    }}
-                    className="
-                      w-full text-left px-4 py-2
-                      bg-white hover:bg-gray-50
-                      text-gray-700
-                      focus:outline-none focus:ring-0
-                    "
-                  >
-                    All Categories
-                  </button>
-
-                  {groupedCategories.groups.map(group => {
-                    const isOpen = openGroups[group.label]
-                    return (
-                      <div key={group.label} className="border-t border-gray-100">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenGroups(prev => ({
-                              ...prev,
-                              [group.label]: !prev[group.label]
-                            }))
-                          }
-                          className="
-                            w-full text-left px-4 py-2
-                            flex items-center justify-between
-                            text-gray-800 bg-white hover:bg-gray-50
-                            focus:outline-none focus:ring-0
-                          "
-                        >
-                          <span className="font-medium">{group.label}</span>
-                          <span className="text-gray-400">
-                            {isOpen ? '–' : '+'}
-                          </span>
-                        </button>
-
-                        {isOpen && (
-                          <div className="pb-2">
-                            {group.options.map(option => (
-                              <button
-                                key={option}
-                                type="button"
-                                onClick={() => {
-                                  setSelectedCategory(option)
-                                  setIsCategoryOpen(false)
-                                }}
-                                className="
-                                  w-full text-left px-6 py-2
-                                  bg-white hover:bg-gray-50
-                                  text-gray-600
-                                  focus:outline-none focus:ring-0
-                                "
-                              >
-                                {option === group.label
-                                  ? `All ${group.label}`
-                                  : option}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-
-                  {groupedCategories.singles.length > 0 && (
-                    <div className="border-t border-gray-100">
-                      {groupedCategories.singles.map(option => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => {
-                            setSelectedCategory(option)
-                            setIsCategoryOpen(false)
-                          }}
-                          className="
-                            w-full text-left px-4 py-2
-                            bg-white hover:bg-gray-50
-                            text-gray-700
-                            focus:outline-none focus:ring-0
-                          "
-                        >
-                          {option}
-                        </button>
+              <div style={{
+                position: 'absolute', top: '110%', left: 0, width: '100%',
+                background: dropdownBg, border: `1px solid ${borderCol}`,
+                borderRadius: '0.5rem', zIndex: 50, overflow: 'hidden',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.3)'
+              }}>
+                <div style={{ maxHeight: '16rem', overflowY: 'auto', padding: '0.5rem 0' }}>
+                  <FilterOption label="All Categories" onClick={() => { setSelectedCategory('all'); setIsCategoryOpen(false); }} dark={dark} />
+                  {groupedCategories.groups.map(group => (
+                    <div key={group.label}>
+                      <button
+                        onClick={() => setOpenGroups(p => ({ ...p, [group.label]: !p[group.label] }))}
+                        style={{
+                          width: '100%', padding: '0.625rem 1rem', textAlign: 'left',
+                          background: 'transparent', border: 'none', color: textPrimary,
+                          fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase',
+                          display: 'flex', justifyContent: 'space-between', cursor: 'pointer'
+                        }}
+                      >
+                        {group.label} <span>{openGroups[group.label] ? '–' : '+'}</span>
+                      </button>
+                      {openGroups[group.label] && group.options.map(opt => (
+                        <FilterOption key={opt} label={opt === group.label ? `All ${opt}` : opt} inset 
+                          onClick={() => { setSelectedCategory(opt); setIsCategoryOpen(false); }} dark={dark} />
                       ))}
                     </div>
-                  )}
-
+                  ))}
+                  {groupedCategories.singles.map(opt => (
+                    <FilterOption key={opt} label={opt} onClick={() => { setSelectedCategory(opt); setIsCategoryOpen(false); }} dark={dark} />
+                  ))}
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-
-          {/* Archives */}
-          <button
-            onClick={onArchiveClick}
-            className="
-              flex items-center gap-2 px-6 py-2
-              text-gray-700 bg-white
-              border border-gray-300 shadow-sm
-              hover:bg-gray-50 hover:shadow-md
-              transition-all
-              w-full md:w-auto justify-center
-              focus:outline-none focus:ring-0
-            "
-            title="View archived items"
-          >
-            <ArchiveBoxIcon className="w-5 h-5 text-gray-600" />
-            <span className="font-medium">Archives</span>
-          </button>
-
-          {/* Import Excel — sits between Archives and Add, visually distinct */}
-          <button
-            onClick={onImportClick}
-            className="
-              flex items-center gap-2 px-6 py-2
-              text-emerald-700 bg-white
-              border border-emerald-300 shadow-sm
-              hover:bg-emerald-50 hover:border-emerald-400 hover:shadow-md
-              transition-all
-              w-full md:w-auto justify-center
-              focus:outline-none focus:ring-0
-            "
-            title="Import books from Excel"
-          >
-            <ArrowUpTrayIcon className="w-5 h-5 text-emerald-600" />
-            <span className="font-medium">Import Excel</span>
-          </button>
-
-          {/* Add New Book */}
-          <button
-            onClick={onAddClick}
-            className="
-              flex items-center gap-2 px-6 py-2
-              text-gray-800 bg-gray-200
-              shadow-sm hover:bg-gray-300 hover:shadow-md
-              transition-all
-              w-full md:w-auto justify-center
-              focus:outline-none focus:ring-0
-            "
-            title="Add a new catalog item"
-          >
-            <PlusIcon className="w-5 h-5 text-gray-700" />
-            <span className="font-medium">Add New Book</span>
-          </button>
-
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <ActionButton onClick={onArchiveClick} icon={ArchiveBoxIcon} label="Archives" dark={dark} />
+          <ActionButton 
+            onClick={onImportClick} 
+            icon={ArrowUpTrayIcon} 
+            label="Import Excel" 
+            variant="emerald" 
+            dark={dark} 
+          />
+          <ActionButton 
+            onClick={onAddClick} 
+            icon={PlusIcon} 
+            label="Add New" 
+            variant="primary" 
+            dark={dark} 
+          />
         </div>
-
       </div>
     </div>
+  )
+}
+
+// ── Sub-components ──────────────────────────────────────────
+
+const FilterOption = ({ label, onClick, inset, dark }) => {
+  const [hover, setHover] = useState(false)
+  return (
+    <button
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onClick={onClick}
+      style={{
+        width: '100%', padding: `0.5rem ${inset ? '1.5rem' : '1rem'}`,
+        textAlign: 'left', fontSize: '0.875rem', cursor: 'pointer',
+        background: hover ? (dark ? '#1a3356' : '#f1f5f9') : 'transparent',
+        color: dark ? '#dde8f5' : '#1e293b', border: 'none', transition: 'all 0.2s'
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+const ActionButton = ({ onClick, icon: Icon, label, variant, dark }) => {
+  const [hover, setHover] = useState(false)
+  
+  const getColors = () => {
+    if (variant === 'primary') return { bg: dark ? '#154A9A' : '#1e293b', text: '#fff' }
+    if (variant === 'emerald') return { bg: dark ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5', text: dark ? '#34d399' : '#047857', border: dark ? '#059669' : '#10b981' }
+    return { bg: dark ? 'rgba(255,255,255,0.05)' : '#fff', text: dark ? '#6b8cae' : '#4b5563', border: dark ? '#1a3356' : '#d1d5db' }
+  }
+  
+  const colors = getColors()
+
+  return (
+    <button
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '0.5rem',
+        padding: '0.625rem 1.25rem', borderRadius: '0.5rem',
+        background: hover ? (variant === 'primary' ? '#1a3a6d' : colors.bg) : colors.bg,
+        border: variant === 'primary' ? 'none' : `1px solid ${colors.border || 'transparent'}`,
+        color: colors.text, cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
+        transition: 'all 0.2s ease', transform: hover ? 'translateY(-2px)' : 'none',
+        boxShadow: hover ? '0 4px 12px rgba(0,0,0,0.1)' : 'none'
+      }}
+    >
+      <Icon style={{ width: '1.125rem', height: '1.125rem' }} />
+      <span>{label}</span>
+    </button>
   )
 }
 

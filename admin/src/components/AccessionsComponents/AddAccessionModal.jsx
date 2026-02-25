@@ -9,22 +9,21 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-const FormField = ({ label, required, children, colSpan }) => (
+const FormField = ({ label, required, children, colSpan, dark }) => (
   <div className={colSpan === 2 ? 'md:col-span-2' : ''}>
-    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-      {label} {required && <span className="text-red-400">*</span>}
+    <label style={{
+      display: 'block', fontSize: '0.7rem', fontWeight: 600,
+      textTransform: 'uppercase', letterSpacing: '0.07em',
+      color: dark ? '#2e4d70' : '#6b7280',
+      marginBottom: '0.375rem',
+    }}>
+      {label} {required && <span style={{ color: '#f87171' }}>*</span>}
     </label>
     {children}
   </div>
 )
 
-const inputClass =
-  'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-colors bg-white'
-
-const readOnlyInputClass =
-  'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600 cursor-not-allowed'
-
-const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAccession }) => {
+const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAccession, dark }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
@@ -128,75 +127,165 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
     setNewAccession((prev) => ({
       ...prev,
       book_id: null,
-      title: '',
-      author: '',
-      editor: '',
-      edition: '',
-      publication: '',
-      publisher: '',
-      date_of_publication: '',
-      extent: '',
-      other_physical_details: '',
-      dimensions: '',
-      accompanying_material: '',
-      isbn: '',
-      issn: '',
-      notes_area: '',
-      subjects: '',
+      title: '', author: '', editor: '', edition: '', publication: '',
+      publisher: '', date_of_publication: '', extent: '', other_physical_details: '',
+      dimensions: '', accompanying_material: '', isbn: '', issn: '',
+      notes_area: '', subjects: '',
     }))
   }
 
   if (!isOpen) return null
 
+  // ── Colors ────────────────────────────────────────────────
+  const modalBg      = dark ? '#0f1f38' : '#ffffff'
+  const headerBg     = dark ? '#0d1d35' : '#ffffff'
+  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
+  const border       = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary  = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary = dark ? '#6b8cae' : '#64748b'
+  const textMuted    = dark ? '#2e4d70' : '#94a3b8'
+  const inputBg      = dark ? '#081422' : '#ffffff'
+  const inputBorder  = dark ? '#1a3356' : '#d1d5db'
+  const readOnlyBg   = dark ? '#060f1c' : '#f8fafc'
+  const readOnlyText = dark ? '#2e4d70' : '#6b7280'
+  const sectionDivider = dark ? '#1a3356' : '#f1f5f9'
+
+  // Search banner
+  const bannerBg     = dark ? 'rgba(30,64,175,0.1)' : '#eff6ff'
+  const bannerBorder = dark ? '#1a3356' : '#bfdbfe'
+  const bannerTitle  = dark ? '#93c5fd' : '#1d4ed8'
+  const bannerText   = dark ? '#6b8cae' : '#3b82f6'
+
+  // Dropdown
+  const dropdownBg   = dark ? '#0f1f38' : '#ffffff'
+  const dropdownBorder = dark ? '#1a3356' : '#e2e8f0'
+  const dropdownHover = dark ? '#0d1d35' : '#eff6ff'
+  const dropdownText = dark ? '#dde8f5' : '#1f2937'
+  const dropdownMuted = dark ? '#6b8cae' : '#6b7280'
+
+  // Warning banner
+  const warnBg      = dark ? 'rgba(217,119,6,0.1)' : '#fffbeb'
+  const warnBorder  = dark ? 'rgba(217,119,6,0.25)' : '#fde68a'
+  const warnTitle   = dark ? '#fde047' : '#92400e'
+  const warnText    = dark ? '#fbbf24' : '#b45309'
+
+  const inputStyle = {
+    width: '100%', padding: '0.5rem 0.75rem',
+    border: `1px solid ${inputBorder}`,
+    borderRadius: '0.5rem', fontSize: '0.875rem',
+    background: inputBg, color: textPrimary,
+    outline: 'none',
+    transition: 'border-color 0.2s ease, background 0.45s ease',
+    boxSizing: 'border-box',
+  }
+
+  const readOnlyStyle = {
+    width: '100%', padding: '0.5rem 0.75rem',
+    border: `1px solid ${dark ? '#0f1f38' : '#e2e8f0'}`,
+    borderRadius: '0.5rem', fontSize: '0.875rem',
+    background: readOnlyBg, color: readOnlyText,
+    cursor: 'not-allowed', outline: 'none',
+    boxSizing: 'border-box',
+  }
+
+  const sectionLabelStyle = {
+    fontSize: '0.7rem', fontWeight: 700,
+    textTransform: 'uppercase', letterSpacing: '0.1em',
+    color: textMuted,
+    marginBottom: '0.75rem',
+    paddingBottom: '0.5rem',
+    borderBottom: `1px solid ${sectionDivider}`,
+  }
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(0,0,0,0.7)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '1rem', zIndex: 50,
+    }}>
+      <div style={{
+        background: modalBg,
+        borderRadius: '1rem',
+        boxShadow: dark
+          ? '0 24px 64px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.03) inset'
+          : '0 24px 64px rgba(0,0,0,0.15)',
+        width: '100%', maxWidth: '48rem',
+        maxHeight: '90vh', overflowY: 'auto',
+        border: dark ? `1px solid ${headerBorder}` : 'none',
+        transition: 'background 0.45s ease',
+      }}>
 
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
-          <h2 className="text-2xl font-bold" style={{ color: 'var(--dark-blue-1)' }}>
+        <div style={{
+          position: 'sticky', top: 0, zIndex: 10,
+          background: headerBg,
+          borderBottom: `1px solid ${headerBorder}`,
+          padding: '1rem 1.5rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          borderRadius: '1rem 1rem 0 0',
+          transition: 'background 0.45s ease, border-color 0.45s ease',
+        }}>
+          <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--dark-blue-1)', margin: 0 }}>
             Add Accession
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <XMarkIcon className="w-6 h-6 text-gray-600" />
+          <button
+            onClick={onClose}
+            style={{ padding: '0.5rem', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s ease' }}
+            onMouseEnter={e => e.currentTarget.style.background = dark ? '#1a3356' : '#f1f5f9'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            <XMarkIcon style={{ width: '1.5rem', height: '1.5rem', color: textSecondary }} />
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="p-6 space-y-6">
+        <form onSubmit={onSubmit} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
           {/* ── Book Search Banner ─────────────────────────────────────────── */}
-          <div className="rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <SparklesIcon className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-semibold text-blue-700">
+          <div style={{
+            borderRadius: '0.75rem',
+            border: `2px dashed ${bannerBorder}`,
+            background: bannerBg,
+            padding: '1rem',
+            transition: 'background 0.45s ease, border-color 0.45s ease',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem' }}>
+              <SparklesIcon style={{ width: '1rem', height: '1rem', color: bannerTitle }} />
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: bannerTitle }}>
                 Select Cataloged Book
               </span>
               {autofilled && (
                 <button
                   type="button"
                   onClick={handleClearAutofill}
-                  className="ml-auto text-xs text-red-500 hover:text-red-700 underline"
+                  style={{ marginLeft: 'auto', fontSize: '0.75rem', color: dark ? '#fca5a5' : '#ef4444', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
                 >
                   Clear selection
                 </button>
               )}
             </div>
-            <p className="text-xs text-blue-500 mb-3">
+            <p style={{ fontSize: '0.75rem', color: bannerText, marginBottom: '0.75rem' }}>
               Search for a cataloged book to add to accessions. Bibliographic details will be locked from the catalog.
             </p>
-            <div className="relative" ref={searchRef}>
-              <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+
+            <div style={{ position: 'relative' }} ref={searchRef}>
+              <MagnifyingGlassIcon style={{ width: '1rem', height: '1rem', color: textMuted, position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
-                onFocus={() => searchQuery && setShowResults(true)}
                 placeholder="Search by title, author, call number, or ISBN..."
-                className="w-full pl-9 pr-4 py-2 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
+                style={{
+                  ...inputStyle,
+                  paddingLeft: '2.25rem',
+                  borderColor: dark ? '#1a3356' : '#93c5fd',
+                }}
+                onFocus={e => { if (searchQuery) setShowResults(true); e.target.style.borderColor = '#2563eb' }}
+                onBlur={e => e.target.style.borderColor = dark ? '#1a3356' : '#93c5fd'}
               />
               {autofilled && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-green-600 text-xs font-medium">
-                  <SparklesIcon className="w-3.5 h-3.5" />
+                <div style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.25rem', color: dark ? '#86efac' : '#16a34a', fontSize: '0.75rem', fontWeight: 500 }}>
+                  <SparklesIcon style={{ width: '0.875rem', height: '0.875rem' }} />
                   Selected
                 </div>
               )}
@@ -205,42 +294,54 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
               {showResults && (
                 <div
                   ref={resultsRef}
-                  className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
+                  style={{
+                    position: 'absolute', zIndex: 30, marginTop: '0.25rem',
+                    width: '100%',
+                    background: dropdownBg,
+                    border: `1px solid ${dropdownBorder}`,
+                    borderRadius: '0.75rem',
+                    boxShadow: dark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 24px rgba(0,0,0,0.12)',
+                    overflow: 'hidden',
+                    transition: 'background 0.45s ease',
+                  }}
                 >
                   {isSearching ? (
-                    <div className="px-4 py-3 text-sm text-gray-400 flex items-center gap-2">
-                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    <div style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: textMuted, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <svg style={{ width: '1rem', height: '1rem', animation: 'spin 0.8s linear infinite' }} fill="none" viewBox="0 0 24 24">
+                        <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                       </svg>
                       Searching catalog...
                     </div>
                   ) : searchResults.length === 0 ? (
-                    <div className="px-4 py-3 text-sm text-gray-400">
+                    <div style={{ padding: '0.75rem 1rem', fontSize: '0.875rem', color: textMuted }}>
                       No matching books found.
                     </div>
                   ) : (
-                    <ul className="max-h-56 overflow-y-auto divide-y divide-gray-100">
+                    <ul style={{ maxHeight: '14rem', overflowY: 'auto', listStyle: 'none', margin: 0, padding: 0 }}>
                       {searchResults.map((book) => (
-                        <li key={book.id}>
+                        <li key={book.id} style={{ borderBottom: `1px solid ${dropdownBorder}` }}>
                           <button
                             type="button"
                             onClick={() => handleSelectBook(book)}
-                            className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors"
+                            style={{
+                              width: '100%', textAlign: 'left',
+                              padding: '0.75rem 1rem',
+                              background: 'transparent', border: 'none', cursor: 'pointer',
+                              transition: 'background 0.15s ease',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = dropdownHover}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                           >
-                            <div className="flex items-start gap-3">
-                              <BookOpenIcon className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                              <BookOpenIcon style={{ width: '1rem', height: '1rem', color: bannerTitle, marginTop: '0.125rem', flexShrink: 0 }} />
                               <div>
-                                <p className="text-sm font-medium text-gray-800 line-clamp-1">
+                                <p style={{ fontSize: '0.875rem', fontWeight: 500, color: dropdownText, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                   {book.title}
                                 </p>
-                                <p className="text-xs text-gray-500 mt-0.5">
+                                <p style={{ fontSize: '0.75rem', color: dropdownMuted, margin: '0.25rem 0 0', display: 'flex', gap: '0.5rem' }}>
                                   {book.author && <span>{book.author}</span>}
-                                  {book.call_number && (
-                                    <span className="ml-2 text-blue-500">
-                                      {book.call_number}
-                                    </span>
-                                  )}
+                                  {book.call_number && <span style={{ color: bannerTitle }}>{book.call_number}</span>}
                                 </p>
                               </div>
                             </div>
@@ -256,27 +357,29 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
 
           {/* ── Accession-Specific Fields ──────────────────────────────────── */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-100 pb-2">
-              Accession Info
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField label="Accession Number" required>
+            <p style={sectionLabelStyle}>Accession Info</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <FormField label="Accession Number" required dark={dark}>
                 <input
                   type="text"
                   required
                   value={newAccession.accession_no}
                   onChange={(e) => setNewAccession({ ...newAccession, accession_no: e.target.value })}
                   placeholder={nextAccessionNo || 'e.g. 2026-0001'}
-                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = '#2563eb'}
+                  onBlur={e => e.target.style.borderColor = inputBorder}
                 />
               </FormField>
-              <FormField label="Date Accessioned" required>
+              <FormField label="Date Accessioned" required dark={dark}>
                 <input
                   type="date"
                   required
                   value={newAccession.date_accessioned}
                   onChange={(e) => setNewAccession({ ...newAccession, date_accessioned: e.target.value })}
-                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = '#2563eb'}
+                  onBlur={e => e.target.style.borderColor = inputBorder}
                 />
               </FormField>
             </div>
@@ -285,148 +388,83 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
           {/* ── Bibliographic Fields (Read-only when autofilled) ──────────── */}
           {autofilled && (
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 border-b border-gray-100 pb-2">
+              <p style={sectionLabelStyle}>
                 Bibliographic Details
-                <span className="ml-2 text-xs font-normal text-blue-500 normal-case tracking-normal">
+                <span style={{ marginLeft: '0.5rem', fontSize: '0.7rem', fontWeight: 400, color: bannerTitle, textTransform: 'none', letterSpacing: 'normal' }}>
                   — from catalog (read-only)
                 </span>
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
 
-                <FormField label="Title" required colSpan={2}>
-                  <input
-                    type="text"
-                    value={newAccession.title}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <FormField label="Title" required dark={dark}>
+                    <input type="text" value={newAccession.title} readOnly style={readOnlyStyle} />
+                  </FormField>
+                </div>
+
+                <FormField label="Author" dark={dark}>
+                  <input type="text" value={newAccession.author} readOnly style={readOnlyStyle} />
                 </FormField>
 
-                <FormField label="Author">
-                  <input
-                    type="text"
-                    value={newAccession.author}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
+                <FormField label="Editor" dark={dark}>
+                  <input type="text" value={newAccession.editor} readOnly style={readOnlyStyle} />
                 </FormField>
 
-                <FormField label="Editor">
-                  <input
-                    type="text"
-                    value={newAccession.editor}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
+                <FormField label="Edition" dark={dark}>
+                  <input type="text" value={newAccession.edition} readOnly style={readOnlyStyle} />
                 </FormField>
 
-                <FormField label="Edition">
-                  <input
-                    type="text"
-                    value={newAccession.edition}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
+                <FormField label="Publication" dark={dark}>
+                  <input type="text" value={newAccession.publication} readOnly style={readOnlyStyle} />
                 </FormField>
 
-                <FormField label="Publication">
-                  <input
-                    type="text"
-                    value={newAccession.publication}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
+                <FormField label="Publisher" dark={dark}>
+                  <input type="text" value={newAccession.publisher} readOnly style={readOnlyStyle} />
                 </FormField>
 
-                <FormField label="Publisher">
-                  <input
-                    type="text"
-                    value={newAccession.publisher}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
+                <FormField label="Date of Publication" dark={dark}>
+                  <input type="date" value={newAccession.date_of_publication} readOnly style={readOnlyStyle} />
                 </FormField>
 
-                <FormField label="Date of Publication">
-                  <input
-                    type="date"
-                    value={newAccession.date_of_publication}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
+                <FormField label="Extent" dark={dark}>
+                  <input type="text" value={newAccession.extent} readOnly style={readOnlyStyle} />
                 </FormField>
 
-                <FormField label="Extent">
-                  <input
-                    type="text"
-                    value={newAccession.extent}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
+                <FormField label="Dimensions" dark={dark}>
+                  <input type="text" value={newAccession.dimensions} readOnly style={readOnlyStyle} />
                 </FormField>
 
-                <FormField label="Dimensions">
-                  <input
-                    type="text"
-                    value={newAccession.dimensions}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
+                <FormField label="ISBN" dark={dark}>
+                  <input type="text" value={newAccession.isbn} readOnly style={readOnlyStyle} />
                 </FormField>
 
-                <FormField label="ISBN">
-                  <input
-                    type="text"
-                    value={newAccession.isbn}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
+                <FormField label="ISSN" dark={dark}>
+                  <input type="text" value={newAccession.issn} readOnly style={readOnlyStyle} />
                 </FormField>
 
-                <FormField label="ISSN">
-                  <input
-                    type="text"
-                    value={newAccession.issn}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
-                </FormField>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <FormField label="Other Physical Details" dark={dark}>
+                    <input type="text" value={newAccession.other_physical_details} readOnly style={readOnlyStyle} />
+                  </FormField>
+                </div>
 
-                <FormField label="Other Physical Details" colSpan={2}>
-                  <input
-                    type="text"
-                    value={newAccession.other_physical_details}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
-                </FormField>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <FormField label="Accompanying Material" dark={dark}>
+                    <input type="text" value={newAccession.accompanying_material} readOnly style={readOnlyStyle} />
+                  </FormField>
+                </div>
 
-                <FormField label="Accompanying Material" colSpan={2}>
-                  <input
-                    type="text"
-                    value={newAccession.accompanying_material}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
-                </FormField>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <FormField label="Subjects" dark={dark}>
+                    <input type="text" value={newAccession.subjects} readOnly style={readOnlyStyle} />
+                  </FormField>
+                </div>
 
-                <FormField label="Subjects" colSpan={2}>
-                  <input
-                    type="text"
-                    value={newAccession.subjects}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
-                </FormField>
-
-                <FormField label="Notes Area" colSpan={2}>
-                  <textarea
-                    rows={3}
-                    value={newAccession.notes_area}
-                    readOnly
-                    className={readOnlyInputClass}
-                  />
-                </FormField>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <FormField label="Notes Area" dark={dark}>
+                    <textarea rows={3} value={newAccession.notes_area} readOnly style={{ ...readOnlyStyle, resize: 'none' }} />
+                  </FormField>
+                </div>
 
               </div>
             </div>
@@ -434,14 +472,20 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
 
           {/* ── Warning when no book selected ──────────────────────────────── */}
           {!autofilled && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-              <div className="flex items-start gap-2">
-                <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <div style={{
+              borderRadius: '0.5rem',
+              border: `1px solid ${warnBorder}`,
+              background: warnBg,
+              padding: '1rem',
+              transition: 'background 0.45s ease, border-color 0.45s ease',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                <svg style={{ width: '1.25rem', height: '1.25rem', color: dark ? '#fbbf24' : '#d97706', flexShrink: 0, marginTop: '0.125rem' }} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
                 <div>
-                  <p className="text-sm font-medium text-amber-800">No Book Selected</p>
-                  <p className="text-xs text-amber-600 mt-1">
+                  <p style={{ fontSize: '0.875rem', fontWeight: 500, color: warnTitle, margin: 0 }}>No Book Selected</p>
+                  <p style={{ fontSize: '0.75rem', color: warnText, marginTop: '0.25rem' }}>
                     Please select a cataloged book from the search above to proceed. Accessions must be linked to existing catalog records.
                   </p>
                 </div>
@@ -450,23 +494,46 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
           )}
 
           {/* ── Actions ────────────────────────────────────────────────────── */}
-          <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
+          <div style={{
+            display: 'flex', gap: '0.75rem', justifyContent: 'flex-end',
+            paddingTop: '0.5rem',
+            borderTop: `1px solid ${border}`,
+          }}>
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+              style={{
+                padding: '0.5rem 1.5rem',
+                background: 'transparent',
+                border: `1px solid ${inputBorder}`,
+                color: textSecondary,
+                borderRadius: '0.5rem', cursor: 'pointer',
+                fontSize: '0.875rem', fontWeight: 500,
+                transition: 'background 0.2s ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = dark ? '#1a3356' : '#f1f5f9'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!autofilled}
-              className="px-6 py-2 text-white rounded-lg shadow-md hover:shadow-lg transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
-              style={{ backgroundColor: 'var(--secondary-3-medium)' }}
+              style={{
+                padding: '0.5rem 1.5rem',
+                background: autofilled ? 'var(--secondary-3-medium)' : (dark ? '#1a3356' : '#e5e7eb'),
+                color: autofilled ? '#ffffff' : (dark ? '#2e4d70' : '#9ca3af'),
+                border: 'none', borderRadius: '0.5rem',
+                cursor: autofilled ? 'pointer' : 'not-allowed',
+                fontSize: '0.875rem', fontWeight: 500,
+                boxShadow: autofilled ? '0 2px 8px rgba(255,166,0,0.3)' : 'none',
+                transition: 'background 0.2s ease, box-shadow 0.2s ease',
+              }}
             >
               Add Accession
             </button>
           </div>
+
         </form>
       </div>
     </div>

@@ -1,16 +1,31 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { XMarkIcon } from '@heroicons/react/24/outline'
-import { Download, FileText, File, CheckCircle, Loader } from 'lucide-react'
+import { 
+  Download, 
+  FileText, 
+  File, 
+  CheckCircle, 
+  Loader, 
+  Clock, 
+  Database, 
+  HardDrive 
+} from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
-// ─── BookFilesViewer (embedded) ───────────────────────────────────────────────
+// ─── BookFilesViewer (Embedded with Dark Mode) ───────────────────────────────
 
-const BookFilesViewer = ({ bookId }) => {
+const BookFilesViewer = ({ bookId, dark }) => {
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState({})
+
+  // Theme Constants
+  const textPrimary = dark ? 'text-[#dde8f5]' : 'text-slate-900'
+  const textSecondary = dark ? 'text-[#6b8cae]' : 'text-slate-500'
+  const rowBg = dark ? 'bg-[#162a4a]/50' : 'bg-slate-50'
+  const rowBorder = dark ? 'border-[#1a3356]' : 'border-slate-200'
 
   useEffect(() => {
     if (bookId) fetchFiles()
@@ -65,18 +80,13 @@ const BookFilesViewer = ({ bookId }) => {
 
   const getFileIcon = (fileType) => {
     const iconClass = 'w-6 h-6'
-    switch (fileType) {
-      case 'pdf':
-        return <FileText className={`${iconClass} text-red-500`} />
-      case 'epub':
-        return <FileText className={`${iconClass} text-green-500`} />
+    switch (fileType?.toLowerCase()) {
+      case 'pdf': return <FileText className={`${iconClass} text-red-400`} />
+      case 'epub': return <FileText className={`${iconClass} text-blue-400`} />
       case 'mobi':
-      case 'azw3':
-        return <FileText className={`${iconClass} text-orange-500`} />
-      case 'djvu':
-        return <File className={`${iconClass} text-purple-500`} />
-      default:
-        return <File className={`${iconClass} text-gray-500`} />
+      case 'azw3': return <FileText className={`${iconClass} text-orange-400`} />
+      case 'djvu': return <File className={`${iconClass} text-purple-400`} />
+      default: return <File className={`${iconClass} text-slate-400`} />
     }
   }
 
@@ -87,56 +97,71 @@ const BookFilesViewer = ({ bookId }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-6">
-        <Loader className="w-6 h-6 animate-spin text-blue-500" />
+      <div className="flex flex-col items-center justify-center py-10 space-y-3">
+        <Loader className="w-8 h-8 animate-spin text-blue-500" />
+        <p className={`text-sm font-medium ${textSecondary}`}>Scanning digital repository...</p>
       </div>
     )
   }
 
   if (files.length === 0) {
     return (
-      <div className="text-center py-6 text-gray-400 text-sm">
-        No digital files available for this book
+      <div className={`text-center py-10 rounded-xl border-2 border-dashed ${rowBorder} ${textSecondary} text-sm`}>
+        No digital assets currently linked to this record.
       </div>
     )
   }
 
   return (
-    <div>
-      <h3 className="text-sm font-semibold text-gray-700 mb-3">
-        Digital Files ({files.length})
-      </h3>
-      <div className="space-y-3">
+    <div className="animate-in fade-in duration-500">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className={`text-sm font-black uppercase tracking-widest flex items-center gap-2 ${textPrimary}`}>
+          <HardDrive className="w-4 h-4 text-blue-500" />
+          Digital Assets ({files.length})
+        </h3>
+      </div>
+      
+      <div className="space-y-4">
         {files.map((file) => (
           <div
             key={file.id}
-            className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg"
+            className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-2xl transition-all hover:shadow-lg ${rowBg} ${rowBorder}`}
           >
-            <div className="flex items-center space-x-3 min-w-0">
-              {getFileIcon(file.file_type)}
+            <div className="flex items-center space-x-4 min-w-0">
+              <div className={`p-3 rounded-xl ${dark ? 'bg-[#0d1d35]' : 'bg-white shadow-sm'} border ${rowBorder}`}>
+                {getFileIcon(file.file_type)}
+              </div>
+              
               <div className="min-w-0">
                 <div className="flex items-center space-x-2">
-                  <p className="text-sm font-medium text-gray-800 truncate">
+                  <p className={`text-sm font-bold truncate ${textPrimary}`}>
                     {file.original_name}
                   </p>
                   {file.is_primary && (
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <span className="flex-shrink-0 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] px-2 py-0.5 rounded-full font-black uppercase">
+                      Primary
+                    </span>
                   )}
                 </div>
-                <div className="flex items-center space-x-2 text-xs text-gray-400 mt-0.5 flex-wrap gap-y-0.5">
-                  <span>{formatFileSize(file.file_size)}</span>
-                  <span>·</span>
-                  <span>{file.file_type.toUpperCase()}</span>
+                
+                <div className={`flex items-center space-x-3 text-[11px] mt-1 font-medium ${textSecondary} flex-wrap`}>
+                  <span className="flex items-center gap-1 uppercase tracking-tight">
+                    <Database className="w-3 h-3" /> {formatFileSize(file.file_size)}
+                  </span>
+                  <span className="opacity-30">|</span>
+                  <span className="uppercase">{file.file_type}</span>
+                  <span className="opacity-30">|</span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> {formatDate(file.upload_date)}
+                  </span>
                   {file.download_count > 0 && (
                     <>
-                      <span>·</span>
-                      <span>
+                      <span className="opacity-30">|</span>
+                      <span className="text-blue-400">
                         {file.download_count} download{file.download_count !== 1 ? 's' : ''}
                       </span>
                     </>
                   )}
-                  <span>·</span>
-                  <span>Uploaded {formatDate(file.upload_date)}</span>
                 </div>
               </div>
             </div>
@@ -144,12 +169,12 @@ const BookFilesViewer = ({ bookId }) => {
             <button
               onClick={() => handleDownload(file.id, file.original_name)}
               disabled={downloading[file.id]}
-              className="ml-4 flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 text-sm"
+              className={`mt-4 sm:mt-0 flex items-center justify-center space-x-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:scale-100 text-sm font-bold`}
             >
               {downloading[file.id] ? (
                 <>
                   <Loader className="w-4 h-4 animate-spin" />
-                  <span>Downloading...</span>
+                  <span>Processing...</span>
                 </>
               ) : (
                 <>
@@ -165,10 +190,18 @@ const BookFilesViewer = ({ bookId }) => {
   )
 }
 
-// ─── ViewBookModal ────────────────────────────────────────────────────────────
+// ─── ViewBookModal (Long-form with Dark Mode) ──────────────────────────────────
 
-const ViewBookModal = ({ isOpen, onClose, book }) => {
+const ViewBookModal = ({ isOpen, onClose, book, dark }) => {
   if (!isOpen || !book) return null
+
+  // Theme Constants
+  const modalBg = dark ? 'bg-[#0f1f38]' : 'bg-white'
+  const headerBg = dark ? 'bg-[#0d1d35]' : 'bg-slate-50'
+  const borderCol = dark ? 'border-[#1a3356]' : 'border-slate-200'
+  const textPrimary = dark ? 'text-[#dde8f5]' : 'text-slate-900'
+  const textSecondary = dark ? 'text-[#6b8cae]' : 'text-slate-500'
+  const accentText = dark ? 'text-blue-400' : 'text-blue-600'
 
   const renderValue = (value) => {
     if (value === null || value === undefined || value === '') return '—'
@@ -176,80 +209,94 @@ const ViewBookModal = ({ isOpen, onClose, book }) => {
   }
 
   const details = [
-    { label: 'Category', value: book.category },
-    { label: 'Call Number', value: book.call_number },
-    { label: 'Title', value: book.title },
-    { label: 'Author', value: book.author },
-    { label: 'Editor', value: book.editor },
-    { label: 'Edition', value: book.edition },
-    { label: 'Publication', value: book.publication },
-    { label: 'Publisher', value: book.publisher },
-    { label: 'Date of Publication', value: book.date_of_publication },
-    { label: 'Extent of Item', value: book.extent },
-    { label: 'Dimensions', value: book.dimensions },
-    { label: 'Other Physical Details', value: book.other_physical_details },
-    { label: 'Accompanying Material', value: book.accompanying_material },
-    { label: 'ISBN', value: book.isbn },
-    { label: 'ISSN', value: book.issn },
-    { label: 'Notes Area', value: book.notes_area },
-    { label: 'Subjects', value: book.subjects },
-    { label: 'Copies', value: book.copies },
+    { label: 'Classification', value: book.category, icon: '📂' },
+    { label: 'Call Number', value: book.call_number, icon: '🏷️' },
+    { label: 'Full Title', value: book.title, fullWidth: true, icon: '📖' },
+    { label: 'Author', value: book.author, icon: '✍️' },
+    { label: 'Editor', value: book.editor, icon: '👓' },
+    { label: 'Edition', value: book.edition, icon: '🔄' },
+    { label: 'Place of Publication', value: book.publication, icon: '📍' },
+    { label: 'Publisher', value: book.publisher, icon: '🏢' },
+    { label: 'Date Published', value: book.date_of_publication, icon: '📅' },
+    { label: 'Extent / Pages', value: book.extent, icon: '📏' },
+    { label: 'Dimensions', value: book.dimensions, icon: '📐' },
+    { label: 'Physical Details', value: book.other_physical_details, icon: '🔍' },
+    { label: 'Accompanying Material', value: book.accompanying_material, icon: '💿' },
+    { label: 'ISBN (Standard #)', value: book.isbn, icon: '🔢' },
+    { label: 'ISSN', value: book.issn, icon: '🆔' },
+    { label: 'Total Copies', value: book.copies, icon: '📚' },
+    { label: 'Subjects / Keywords', value: book.subjects, fullWidth: true, icon: '🏷️' },
+    { label: 'Notes Area', value: book.notes_area, fullWidth: true, icon: '📝' },
   ]
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-hidden"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        className={`${modalBg} ${borderCol} border rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col animate-in zoom-in-95 duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <div>
-            <h2 className="text-2xl font-bold" style={{ color: 'var(--dark-blue-1)' }}>
-              Book Details
+        <div className={`sticky top-0 ${headerBg} border-b ${borderCol} px-8 py-5 flex items-center justify-between rounded-t-2xl z-10`}>
+          <div className="flex-1 min-w-0">
+            <h2 className={`text-2xl font-bold tracking-tight truncate ${textPrimary}`}>
+              Resource Overview
             </h2>
-            <p className="text-sm text-gray-500 mt-1">{renderValue(book.title)}</p>
+            <div className="flex items-center gap-2 mt-1">
+               <span className={`text-[11px] font-black uppercase tracking-widest ${accentText}`}>System Catalog ID:</span>
+               <span className={`text-[11px] font-mono ${textSecondary}`}>{book.id}</span>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className={`p-2 hover:bg-slate-500/10 rounded-xl transition-all ${textSecondary}`}
             aria-label="Close"
           >
-            <XMarkIcon className="w-6 h-6 text-gray-600" />
+            <XMarkIcon className="w-8 h-8" />
           </button>
         </div>
 
-        <div className="p-6 space-y-8">
-          {/* Book Details Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {details.map((item) => (
-              <div key={item.label}>
-                <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">
-                  {item.label}
-                </p>
-                <p className="text-sm text-gray-700">{renderValue(item.value)}</p>
-              </div>
-            ))}
-          </div>
+        <div className="p-8 overflow-y-auto custom-scrollbar space-y-10">
+          {/* Metadata Section */}
+          <section>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+              {details.map((item) => (
+                <div 
+                  key={item.label} 
+                  className={`${item.fullWidth ? 'md:col-span-2' : ''} border-b ${borderCol} pb-4`}
+                >
+                  <p className={`text-[10px] font-black uppercase tracking-[0.15em] mb-2 ${textSecondary} flex items-center gap-2`}>
+                    <span className="text-sm opacity-70">{item.icon}</span> {item.label}
+                  </p>
+                  <p className={`text-sm font-semibold leading-relaxed ${textPrimary}`}>
+                    {renderValue(item.value)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
 
           {/* Digital Files Section */}
-          <div className="border-t border-gray-200 pt-6">
-            <BookFilesViewer bookId={book.id} />
-          </div>
+          <section className={`pt-8 border-t ${borderCol}`}>
+            <BookFilesViewer bookId={book.id} dark={dark} />
+          </section>
+        </div>
 
-          {/* Footer */}
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-            >
-              Close
-            </button>
-          </div>
+        {/* Footer */}
+        <div className={`px-8 py-5 ${headerBg} border-t ${borderCol} flex justify-end rounded-b-2xl`}>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`px-8 py-2.5 rounded-xl border font-bold text-sm transition-all active:scale-95 ${
+              dark 
+                ? 'bg-[#162a4a] text-slate-300 border-[#1a3356] hover:bg-[#1a3356]' 
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            Close Viewport
+          </button>
         </div>
       </div>
     </div>

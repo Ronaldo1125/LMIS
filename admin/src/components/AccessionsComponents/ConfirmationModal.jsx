@@ -1,4 +1,4 @@
-import { XMarkIcon, ExclamationTriangleIcon, ArchiveBoxIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, ExclamationTriangleIcon, ArchiveBoxIcon, TrashIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
 
 const ConfirmationModal = ({ 
   isOpen, 
@@ -28,10 +28,18 @@ const ConfirmationModal = ({
       confirmButtonColor: 'bg-red-600 hover:bg-red-700',
       title: title || 'Delete Accession',
       message: message || `Are you sure you want to permanently delete this accession${itemName ? ` "${itemName}"` : ''}? This action cannot be undone.`
+    },
+    logout: {
+      icon: ArrowRightOnRectangleIcon,
+      iconColor: 'text-blue-600',
+      iconBgColor: 'bg-blue-100',
+      confirmButtonColor: 'bg-blue-600 hover:bg-blue-700',
+      title: title || 'Log Out',
+      message: message || 'Are you sure you want to log out?'
     }
   }
 
-  const currentConfig = config[type]
+  const currentConfig = config[type === 'logout' ? 'logout' : type]
   const Icon = currentConfig.icon
 
   return (
@@ -45,14 +53,7 @@ const ConfirmationModal = ({
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all">
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-            disabled={loading}
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button>
+          {/* Remove close (X) button */}
 
           {/* Content */}
           <div className="p-6">
@@ -71,15 +72,8 @@ const ConfirmationModal = ({
               {currentConfig.message}
             </p>
 
-            {/* Actions */}
+            {/* Actions: Yes/No buttons */}
             <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                disabled={loading}
-                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
               <button
                 onClick={onConfirm}
                 disabled={loading}
@@ -94,8 +88,15 @@ const ConfirmationModal = ({
                     Processing...
                   </span>
                 ) : (
-                  type === 'archive' ? 'Archive' : 'Delete'
+                  'Yes'
                 )}
+              </button>
+              <button
+                onClick={onClose}
+                disabled={loading}
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                No
               </button>
             </div>
           </div>

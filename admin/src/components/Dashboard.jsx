@@ -59,7 +59,7 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
         boxShadow: isSticky ? (dark ? '0 4px 24px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.08)') : 'none',
         transition: 'background 0.45s ease, box-shadow 0.3s ease, border-color 0.45s ease',
       }}>
-        <DashboardHeader user={user} setCurrentView={setCurrentView} />
+        <DashboardHeader user={user} setCurrentView={setCurrentView} dark={dark} />
       </div>
 
       {/* Stats Grid */}

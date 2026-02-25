@@ -11,7 +11,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-const WebsiteAnalytics = () => {
+const WebsiteAnalytics = ({ dark }) => {
   const [timeRange, setTimeRange] = useState('week');
 
   // Data organized by time range
@@ -37,14 +37,10 @@ const WebsiteAnalytics = () => {
         { hour: '9PM', users: 89 }
       ],
       metrics: {
-        pageViews: '12,847',
-        pageViewsChange: '+18.2%',
-        registrations: '234',
-        registrationsChange: '+12.5%',
-        searches: '1,687',
-        searchesChange: '+9.4%',
-        avgTime: '6m 45s',
-        avgTimeChange: '+2m 18s'
+        pageViews: '12,847', pageViewsChange: '+18.2%',
+        registrations: '234', registrationsChange: '+12.5%',
+        searches: '1,687', searchesChange: '+9.4%',
+        avgTime: '6m 45s', avgTimeChange: '+2m 18s'
       },
       topSearches: [
         { query: 'economic development plan', count: 234, trend: 'up' },
@@ -67,24 +63,16 @@ const WebsiteAnalytics = () => {
         { date: 'Week 4', views: 2612, downloads: 1989, searches: 2234 }
       ],
       hourlyData: [
-        { hour: '12AM', users: 89 },
-        { hour: '3AM', users: 56 },
-        { hour: '6AM', users: 167 },
-        { hour: '9AM', users: 1234 },
-        { hour: '12PM', users: 1876 },
-        { hour: '3PM', users: 1543 },
-        { hour: '6PM', users: 1098 },
-        { hour: '9PM', users: 678 }
+        { hour: '12AM', users: 89 }, { hour: '3AM', users: 56 },
+        { hour: '6AM', users: 167 }, { hour: '9AM', users: 1234 },
+        { hour: '12PM', users: 1876 }, { hour: '3PM', users: 1543 },
+        { hour: '6PM', users: 1098 }, { hour: '9PM', users: 678 }
       ],
       metrics: {
-        pageViews: '54,328',
-        pageViewsChange: '+24.7%',
-        registrations: '1,056',
-        registrationsChange: '+18.3%',
-        searches: '7,234',
-        searchesChange: '+15.8%',
-        avgTime: '8m 23s',
-        avgTimeChange: '+3m 45s'
+        pageViews: '54,328', pageViewsChange: '+24.7%',
+        registrations: '1,056', registrationsChange: '+18.3%',
+        searches: '7,234', searchesChange: '+15.8%',
+        avgTime: '8m 23s', avgTimeChange: '+3m 45s'
       },
       topSearches: [
         { query: 'digital transformation guide', count: 1876, trend: 'up' },
@@ -115,24 +103,16 @@ const WebsiteAnalytics = () => {
         { date: 'Dec', views: 13876, downloads: 9543, searches: 11876 }
       ],
       hourlyData: [
-        { hour: '12AM', users: 432 },
-        { hour: '3AM', users: 289 },
-        { hour: '6AM', users: 876 },
-        { hour: '9AM', users: 6543 },
-        { hour: '12PM', users: 9876 },
-        { hour: '3PM', users: 8234 },
-        { hour: '6PM', users: 5876 },
-        { hour: '9PM', users: 3654 }
+        { hour: '12AM', users: 432 }, { hour: '3AM', users: 289 },
+        { hour: '6AM', users: 876 }, { hour: '9AM', users: 6543 },
+        { hour: '12PM', users: 9876 }, { hour: '3PM', users: 8234 },
+        { hour: '6PM', users: 5876 }, { hour: '9PM', users: 3654 }
       ],
       metrics: {
-        pageViews: '687,432',
-        pageViewsChange: '+32.4%',
-        registrations: '14,567',
-        registrationsChange: '+28.9%',
-        searches: '98,234',
-        searchesChange: '+22.6%',
-        avgTime: '9m 54s',
-        avgTimeChange: '+4m 32s'
+        pageViews: '687,432', pageViewsChange: '+32.4%',
+        registrations: '14,567', registrationsChange: '+28.9%',
+        searches: '98,234', searchesChange: '+22.6%',
+        avgTime: '9m 54s', avgTimeChange: '+4m 32s'
       },
       topSearches: [
         { query: 'comprehensive development plan', count: 23456, trend: 'up' },
@@ -149,144 +129,157 @@ const WebsiteAnalytics = () => {
     }
   };
 
-  // Get current data based on selected time range
   const currentData = analyticsData[timeRange];
   const dailyActivityData = currentData.activityData;
   const hourlyTrafficData = currentData.hourlyData;
   const topSearches = currentData.topSearches;
   const deviceStats = currentData.deviceStats;
 
-  // User engagement metrics with dynamic data
+  // ── Colors ────────────────────────────────────────────────
+  const pageBg       = dark ? '#0a1628' : '#f1f5f9'
+  const cardBg       = dark ? '#0f1f38' : '#ffffff'
+  const cardBorder   = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary  = dark ? '#dde8f5' : '#154A9A'
+  const textSecondary = dark ? '#6b8cae' : '#4b5563'
+  const textMuted    = dark ? '#2e4d70' : '#6b7280'
+  const gridColor    = dark ? '#1a3356' : '#e5e7eb'
+  const axisColor    = dark ? '#2e4d70' : '#6b7280'
+  const tooltipBg    = dark ? '#0d1d35' : '#ffffff'
+  const tooltipBorder = dark ? '#1a3356' : '#e5e7eb'
+  const searchRowBg  = dark ? '#081422' : '#f3f4f6'
+  const searchRowHover = dark ? '#0d1d35' : '#e5e7eb'
+  const trackBg      = dark ? '#1a3356' : '#d1d5db'
+  const toggleBg     = dark ? '#081422' : '#ffffff'
+  const toggleBorder = dark ? '#1a3356' : '#e2e8f0'
+
+  const cardStyle = {
+    background: cardBg,
+    border: `1px solid ${cardBorder}`,
+    borderRadius: '0.75rem',
+    padding: '1.5rem',
+    boxShadow: dark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.06)',
+    transition: 'background 0.45s ease, border-color 0.45s ease',
+  }
+
   const engagementMetrics = [
-    { 
-      label: 'Total Page Views', 
-      value: currentData.metrics.pageViews, 
-      change: currentData.metrics.pageViewsChange,
-      isPositive: true,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-        </svg>
-      ),
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-[#0F61F7]',
-      borderColor: 'border-l-[#0F61F7]'
+    {
+      label: 'Total Page Views', value: currentData.metrics.pageViews,
+      change: currentData.metrics.pageViewsChange, isPositive: true,
+      iconBg: dark ? 'rgba(15,97,247,0.15)' : '#eff6ff',
+      iconColor: '#0F61F7', accent: '#0F61F7',
+      icon: <svg style={{ width: '1.5rem', height: '1.5rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
     },
-    { 
-      label: 'New Registrations', 
-      value: currentData.metrics.registrations, 
-      change: currentData.metrics.registrationsChange,
-      isPositive: true,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-        </svg>
-      ),
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-[#3F1BD2]',
-      borderColor: 'border-l-[#3F1BD2]'
+    {
+      label: 'New Registrations', value: currentData.metrics.registrations,
+      change: currentData.metrics.registrationsChange, isPositive: true,
+      iconBg: dark ? 'rgba(63,27,210,0.15)' : '#f5f3ff',
+      iconColor: '#3F1BD2', accent: '#3F1BD2',
+      icon: <svg style={{ width: '1.5rem', height: '1.5rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
     },
-    { 
-      label: 'Search Queries', 
-      value: currentData.metrics.searches, 
-      change: currentData.metrics.searchesChange,
-      isPositive: true,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      ),
-      bgColor: 'bg-yellow-50',
-      iconColor: 'text-[#FFD002]',
-      borderColor: 'border-l-[#FFD002]'
+    {
+      label: 'Search Queries', value: currentData.metrics.searches,
+      change: currentData.metrics.searchesChange, isPositive: true,
+      iconBg: dark ? 'rgba(255,208,2,0.12)' : '#fefce8',
+      iconColor: dark ? '#fde047' : '#ca8a04', accent: '#FFD002',
+      icon: <svg style={{ width: '1.5rem', height: '1.5rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
     },
-    { 
-      label: 'Avg. Time on Site', 
-      value: currentData.metrics.avgTime, 
-      change: currentData.metrics.avgTimeChange,
-      isPositive: true,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      ),
-      bgColor: 'bg-orange-50',
-      iconColor: 'text-[#FFA602]',
-      borderColor: 'border-l-[#FFA602]'
+    {
+      label: 'Avg. Time on Site', value: currentData.metrics.avgTime,
+      change: currentData.metrics.avgTimeChange, isPositive: true,
+      iconBg: dark ? 'rgba(255,166,2,0.15)' : '#fff7ed',
+      iconColor: dark ? '#fdba74' : '#ea580c', accent: '#FFA602',
+      icon: <svg style={{ width: '1.5rem', height: '1.5rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
     }
   ];
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div style={{ padding: '1.5rem', background: pageBg, minHeight: '100%', transition: 'background 0.45s ease' }}>
+
       {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-7 gap-4">
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.75rem' }}>
         <div>
-          <h2 className="text-[28px] font-bold text-[#154A9A] mb-1">
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 700, color: textPrimary, margin: 0, transition: 'color 0.45s ease' }}>
             Website Analytics Overview
           </h2>
-          <p className="text-sm text-gray-600">
+          <p style={{ fontSize: '0.875rem', color: textSecondary, margin: '0.25rem 0 0', transition: 'color 0.45s ease' }}>
             Real-time insights into library usage and engagement
           </p>
         </div>
-        <div className="flex gap-1.5 bg-white p-1 rounded-lg shadow-sm">
-          <button 
-            className={`px-5 py-2 rounded-md font-medium text-sm transition-all ${
-              timeRange === 'week' 
-                ? 'bg-[#0F61F7] text-white' 
-                : 'text-gray-600 hover:bg-gray-200 hover:text-[#154A9A]'
-            }`}
-            onClick={() => setTimeRange('week')}
-          >
-            Week
-          </button>
-          <button 
-            className={`px-5 py-2 rounded-md font-medium text-sm transition-all ${
-              timeRange === 'month' 
-                ? 'bg-[#0F61F7] text-white' 
-                : 'text-gray-600 hover:bg-gray-200 hover:text-[#154A9A]'
-            }`}
-            onClick={() => setTimeRange('month')}
-          >
-            Month
-          </button>
-          <button 
-            className={`px-5 py-2 rounded-md font-medium text-sm transition-all ${
-              timeRange === 'year' 
-                ? 'bg-[#0F61F7] text-white' 
-                : 'text-gray-600 hover:bg-gray-200 hover:text-[#154A9A]'
-            }`}
-            onClick={() => setTimeRange('year')}
-          >
-            Year
-          </button>
+
+        {/* Time range toggle */}
+        <div style={{
+          display: 'flex', gap: '0.375rem',
+          background: toggleBg,
+          border: `1px solid ${toggleBorder}`,
+          borderRadius: '0.5rem',
+          padding: '0.25rem',
+          boxShadow: dark ? 'none' : '0 1px 4px rgba(0,0,0,0.06)',
+          transition: 'background 0.45s ease, border-color 0.45s ease',
+        }}>
+          {['week', 'month', 'year'].map(range => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              style={{
+                padding: '0.5rem 1.25rem',
+                borderRadius: '0.375rem',
+                border: 'none', cursor: 'pointer',
+                fontSize: '0.875rem', fontWeight: 500,
+                background: timeRange === range ? '#0F61F7' : 'transparent',
+                color: timeRange === range ? '#ffffff' : textSecondary,
+                transition: 'background 0.2s ease, color 0.2s ease',
+              }}
+              onMouseEnter={e => { if (timeRange !== range) e.currentTarget.style.background = dark ? '#1a3356' : '#f1f5f9' }}
+              onMouseLeave={e => { if (timeRange !== range) e.currentTarget.style.background = 'transparent' }}
+            >
+              {range.charAt(0).toUpperCase() + range.slice(1)}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Engagement Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+      {/* Engagement Metric Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
         {engagementMetrics.map((metric, index) => (
-          <div 
-            key={index} 
-            className={`bg-white p-5 rounded-xl shadow-sm border-l-4 ${metric.borderColor} 
-              flex gap-4 items-center hover:shadow-md hover:-translate-y-1 transition-all duration-200`}
+          <div
+            key={index}
+            style={{
+              background: cardBg,
+              border: `1px solid ${cardBorder}`,
+              borderLeft: `4px solid ${metric.accent}`,
+              borderRadius: '0.75rem',
+              padding: '1.25rem',
+              display: 'flex', gap: '1rem', alignItems: 'center',
+              boxShadow: dark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.06)',
+              transition: 'background 0.45s ease, border-color 0.45s ease, transform 0.2s ease, box-shadow 0.2s ease',
+              cursor: 'default',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = dark ? '0 6px 24px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.1)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = dark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.06)' }}
           >
-            <div className={`w-[52px] h-[52px] ${metric.bgColor} rounded-lg flex items-center justify-center flex-shrink-0 ${metric.iconColor}`}>
+            <div style={{
+              width: '3.25rem', height: '3.25rem',
+              background: metric.iconBg, borderRadius: '0.5rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, color: metric.iconColor,
+              transition: 'background 0.45s ease',
+            }}>
               {metric.icon}
             </div>
-            <div className="flex-1">
-              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '0.7rem', fontWeight: 600, color: textMuted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 0.375rem' }}>
                 {metric.label}
               </p>
-              <h3 className="text-2xl font-bold text-[#154A9A] mb-1">
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: textPrimary, margin: '0 0 0.25rem', transition: 'color 0.45s ease' }}>
                 {metric.value}
               </h3>
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
-                metric.isPositive 
-                  ? 'text-green-600 bg-green-50' 
-                  : 'text-red-600 bg-red-50'
-              }`}>
-                {metric.isPositive ? '↑' : '↓'} {metric.change}
+              <span style={{
+                fontSize: '0.75rem', fontWeight: 600,
+                padding: '0.125rem 0.5rem', borderRadius: '0.25rem',
+                background: dark ? 'rgba(34,197,94,0.12)' : '#f0fdf4',
+                color: dark ? '#86efac' : '#16a34a',
+              }}>
+                ↑ {metric.change}
               </span>
             </div>
           </div>
@@ -294,167 +287,116 @@ const WebsiteAnalytics = () => {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-6">
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
+
         {/* Daily Activity Trend */}
-        <div className="xl:col-span-2 bg-white p-6 rounded-xl shadow-sm">
-          <div className="flex justify-between items-center mb-5">
-            <h3 className="text-lg font-semibold text-[#154A9A]">
+        <div style={cardStyle}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.0625rem', fontWeight: 600, color: textPrimary, margin: 0 }}>
               {timeRange === 'week' ? 'Daily Activity Trends' : timeRange === 'month' ? 'Weekly Activity Trends' : 'Monthly Activity Trends'}
             </h3>
-            <div className="flex gap-5">
-              <span className="flex items-center gap-1.5 text-xs text-gray-600 font-medium">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#0F61F7]"></span>
-                Views
-              </span>
-              <span className="flex items-center gap-1.5 text-xs text-gray-600 font-medium">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#3F1BD2]"></span>
-                Downloads
-              </span>
-              <span className="flex items-center gap-1.5 text-xs text-gray-600 font-medium">
-                <span className="w-2.5 h-2.5 rounded-full bg-gray-500"></span>
-                Searches
-              </span>
+            <div style={{ display: 'flex', gap: '1.25rem' }}>
+              {[['#0F61F7', 'Views'], ['#3F1BD2', 'Downloads'], [dark ? '#6b8cae' : '#6b7280', 'Searches']].map(([color, label]) => (
+                <span key={label} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', color: textSecondary, fontWeight: 500 }}>
+                  <span style={{ width: '0.625rem', height: '0.625rem', borderRadius: '50%', background: color, flexShrink: 0 }} />
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={dailyActivityData}>
               <defs>
                 <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0F61F7" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#0F61F7" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#0F61F7" stopOpacity={dark ? 0.2 : 0.3} />
+                  <stop offset="95%" stopColor="#0F61F7" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3F1BD2" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3F1BD2" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#3F1BD2" stopOpacity={dark ? 0.2 : 0.3} />
+                  <stop offset="95%" stopColor="#3F1BD2" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#6B7280"
-                style={{ fontSize: '12px' }}
-              />
-              <YAxis 
-                stroke="#6B7280"
-                style={{ fontSize: '12px' }}
-              />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="views" 
-                stroke="#0F61F7" 
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#colorViews)"
-              />
-              <Area 
-                type="monotone" 
-                dataKey="downloads" 
-                stroke="#3F1BD2" 
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#colorDownloads)"
-              />
-              <Line 
-                type="monotone" 
-                dataKey="searches" 
-                stroke="#6B7280" 
-                strokeWidth={2}
-                dot={{ fill: '#6B7280', r: 3 }}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <XAxis dataKey="date" stroke={axisColor} style={{ fontSize: '12px' }} />
+              <YAxis stroke={axisColor} style={{ fontSize: '12px' }} />
+              <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: '0.5rem', color: dark ? '#dde8f5' : '#1e293b', boxShadow: dark ? '0 4px 16px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.1)' }} />
+              <Area type="monotone" dataKey="views" stroke="#0F61F7" strokeWidth={2} fillOpacity={1} fill="url(#colorViews)" />
+              <Area type="monotone" dataKey="downloads" stroke="#3F1BD2" strokeWidth={2} fillOpacity={1} fill="url(#colorDownloads)" />
+              <Line type="monotone" dataKey="searches" stroke={dark ? '#6b8cae' : '#6B7280'} strokeWidth={2} dot={{ fill: dark ? '#6b8cae' : '#6B7280', r: 3 }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
         {/* Hourly Traffic Pattern */}
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <h3 className="text-lg font-semibold text-[#154A9A] mb-5">
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: '1.0625rem', fontWeight: 600, color: textPrimary, margin: '0 0 1.25rem' }}>
             Peak Usage Hours
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={hourlyTrafficData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" />
-              <XAxis 
-                dataKey="hour" 
-                stroke="#6B7280"
-                style={{ fontSize: '11px' }}
-              />
-              <YAxis 
-                stroke="#6B7280"
-                style={{ fontSize: '11px' }}
-              />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '8px'
-                }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="users" 
-                stroke="#0F61F7" 
-                strokeWidth={3}
-                dot={{ fill: '#0F61F7', r: 5 }}
-                activeDot={{ r: 7 }}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <XAxis dataKey="hour" stroke={axisColor} style={{ fontSize: '11px' }} />
+              <YAxis stroke={axisColor} style={{ fontSize: '11px' }} />
+              <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: '0.5rem', color: dark ? '#dde8f5' : '#1e293b' }} />
+              <Line type="monotone" dataKey="users" stroke="#0F61F7" strokeWidth={3} dot={{ fill: '#0F61F7', r: 5 }} activeDot={{ r: 7 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+
         {/* Top Search Queries */}
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <h3 className="text-lg font-semibold text-[#154A9A] mb-5">
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: '1.0625rem', fontWeight: 600, color: textPrimary, margin: '0 0 1.25rem' }}>
             Top Search Queries
           </h3>
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {topSearches.map((search, index) => (
-              <div 
-                key={index} 
-                className="flex justify-between items-center p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              <div
+                key={index}
+                style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '0.75rem', borderRadius: '0.5rem',
+                  background: searchRowBg,
+                  transition: 'background 0.15s ease',
+                  cursor: 'default',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = searchRowHover}
+                onMouseLeave={e => e.currentTarget.style.background = searchRowBg}
               >
-                <div className="flex items-center gap-3 flex-1">
-                  <span className="w-7 h-7 bg-[#0F61F7] text-white rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+                  <span style={{
+                    width: '1.75rem', height: '1.75rem',
+                    background: '#0F61F7', color: '#ffffff',
+                    borderRadius: '0.375rem',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.75rem', fontWeight: 700, flexShrink: 0,
+                  }}>
                     {index + 1}
                   </span>
-                  <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-medium text-[#154A9A]">
+                  <div>
+                    <p style={{ fontSize: '0.875rem', fontWeight: 500, color: textPrimary, margin: 0, transition: 'color 0.45s ease' }}>
                       {search.query}
                     </p>
-                    <span className="text-xs text-gray-500">
+                    <span style={{ fontSize: '0.75rem', color: textMuted }}>
                       {search.count.toLocaleString()} searches
                     </span>
                   </div>
                 </div>
-                <div className={`w-8 h-8 rounded-md flex items-center justify-center font-bold ${
-                  search.trend === 'up' 
-                    ? 'bg-green-50 text-green-600' 
-                    : search.trend === 'down' 
-                    ? 'bg-red-50 text-red-600' 
-                    : 'bg-gray-200 text-gray-500'
-                }`}>
+                <div style={{
+                  width: '2rem', height: '2rem', borderRadius: '0.375rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700,
+                  background: search.trend === 'up' ? (dark ? 'rgba(34,197,94,0.12)' : '#f0fdf4') : search.trend === 'down' ? (dark ? 'rgba(239,68,68,0.12)' : '#fef2f2') : (dark ? '#1a3356' : '#e5e7eb'),
+                  color: search.trend === 'up' ? (dark ? '#86efac' : '#16a34a') : search.trend === 'down' ? (dark ? '#fca5a5' : '#dc2626') : (dark ? '#6b8cae' : '#6b7280'),
+                }}>
                   {search.trend === 'up' ? (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
+                    <svg style={{ width: '1.25rem', height: '1.25rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
                   ) : search.trend === 'down' ? (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                    </svg>
+                    <svg style={{ width: '1.25rem', height: '1.25rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" /></svg>
                   ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
+                    <svg style={{ width: '1.25rem', height: '1.25rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                   )}
                 </div>
               </div>
@@ -463,31 +405,30 @@ const WebsiteAnalytics = () => {
         </div>
 
         {/* Device Breakdown */}
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <h3 className="text-lg font-semibold text-[#154A9A] mb-5">
+        <div style={cardStyle}>
+          <h3 style={{ fontSize: '1.0625rem', fontWeight: 600, color: textPrimary, margin: '0 0 1.25rem' }}>
             Access by Device
           </h3>
-          <div className="space-y-5">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {deviceStats.map((device, index) => (
-              <div key={index} className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-[#154A9A]">
+              <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: textPrimary, transition: 'color 0.45s ease' }}>
                     {device.device}
                   </span>
-                  <span className="text-base font-bold text-gray-600">
+                  <span style={{ fontSize: '1rem', fontWeight: 700, color: textSecondary }}>
                     {device.percentage}%
                   </span>
                 </div>
-                <div className="w-full h-2 bg-gray-300 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{ 
-                      width: `${device.percentage}%`,
-                      backgroundColor: device.color
-                    }}
-                  ></div>
+                <div style={{ width: '100%', height: '0.5rem', background: trackBg, borderRadius: '999px', overflow: 'hidden', transition: 'background 0.45s ease' }}>
+                  <div style={{
+                    height: '100%', borderRadius: '999px',
+                    width: `${device.percentage}%`,
+                    background: device.color,
+                    transition: 'width 0.5s ease',
+                  }} />
                 </div>
-                <span className="text-xs text-gray-500 font-medium">
+                <span style={{ fontSize: '0.75rem', fontWeight: 500, color: textMuted }}>
                   {device.count.toLocaleString()} users
                 </span>
               </div>
