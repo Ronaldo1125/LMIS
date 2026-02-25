@@ -10,6 +10,10 @@ import { useRouter } from "next/navigation";
 
 import { Search } from "lucide-react";
 
+import MobileNav from "./MobileNav";
+
+import Login from "../Auth/Login";
+import Register from "../Auth/Register";
 
 
 const Nav = () => {
@@ -19,6 +23,10 @@ const Nav = () => {
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [showLogin, setShowLogin] = useState(false);
+
+  const [showRegister, setShowRegister] = useState(false);
 
   const router = useRouter();
 
@@ -39,12 +47,12 @@ const Nav = () => {
 
 
   return (
-
     <>
-
-      {/* NAVBAR */}
-
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+      {/* Mobile Navigation */}
+      <MobileNav />
+      
+      {/* Desktop Navigation */}
+      <nav className="hidden lg:block fixed top-0 left-0 right-0 z-50 bg-white">
 
         <div className="w-full h-16 flex items-center">
 
@@ -262,6 +270,16 @@ const Nav = () => {
 
               <li>
 
+                <Link href="/about" className="hover:text-black/80 transition">
+
+                  About
+
+                </Link>
+
+              </li>
+
+              <li>
+
                 <Link href="/news" className="hover:text-black/80 transition">
 
                   News
@@ -276,57 +294,34 @@ const Nav = () => {
 
 
 
-          {/* RIGHT: SEARCH ICON + Login + Register (Register looks like Download) */}
+          {/* RIGHT: Login + Register (Register looks like Download) */}
 
           <div className="flex items-center px-4 sm:px-6 lg:px-8 min-w-[220px] justify-end">
 
-            {/* SEARCH ICON ONLY */}
-
-            <button className="text-black/70 hover:text-black transition-colors mr-6">
-
-              <Search size={20} />
-
-            </button>
 
 
-
-            <Link
-
-              href="/login"
-
+            <button
+              onClick={() => setShowLogin(true)}
               className="text-sm font-medium text-black hover:text-black/80 transition mr-6"
-
             >
-
               Login
-
-            </Link>
+            </button>
 
 
 
             {/* Register styled like the screenshot "Download" */}
 
-            <Link
-
-              href="/register"
-
+            <button
+              onClick={() => setShowRegister(true)}
               className="h-16 px-10 flex items-center justify-center text-white font-semibold backdrop-blur-sm hover:bg-[#143961]/80 transition"
-
               style={{
-
                 backgroundColor: 'rgb(25, 18, 101)',
-
                 width: '200px',
-
                 marginRight: '-32px'
-
               }}
-
             >
-
               Register
-
-            </Link>
+            </button>
 
           </div>
 
@@ -372,15 +367,26 @@ const Nav = () => {
 
       )}
 
+      {/* Login Modal */}
+      {showLogin && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <Login onClose={() => setShowLogin(false)} onSwitchToRegister={() => {setShowLogin(false); setShowRegister(true);}} />
+        </div>
+      )}
+
+      {/* Register Modal */}
+      {showRegister && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <Register onClose={() => setShowRegister(false)} onSwitchToLogin={() => {setShowRegister(false); setShowLogin(true);}} />
+        </div>
+      )}
+
     </>
 
   );
 
 };
 
-
-
 export default Nav;
-
 
 
