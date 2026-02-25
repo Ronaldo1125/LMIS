@@ -31,62 +31,37 @@ const SearchAndFilter = ({
   }, [])
 
   useEffect(() => {
-    const onKeyDown = (event) => {
-      const isSlash = event.key === '/'
-      const isEscape = event.key === 'Escape'
+    const onKeyDown = (e) => {
       const activeTag = document.activeElement?.tagName?.toLowerCase()
-      const isTypingField = ['input', 'textarea', 'select'].includes(activeTag)
-
-      if (isEscape) setIsStatusOpen(false)
-
-      if (isSlash && !isTypingField) {
-        event.preventDefault()
-        searchInputRef.current?.focus()
-      }
+      const isTyping = ['input', 'textarea', 'select'].includes(activeTag)
+      if (e.key === 'Escape') setIsStatusOpen(false)
+      if (e.key === '/' && !isTyping) { e.preventDefault(); searchInputRef.current?.focus() }
     }
-
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
   useEffect(() => {
-    const onClickOutside = (event) => {
-      if (!dropdownRef.current?.contains(event.target)) {
-        setIsStatusOpen(false)
-      }
-    }
-
+    const onClickOutside = (e) => { if (!dropdownRef.current?.contains(e.target)) setIsStatusOpen(false) }
     document.addEventListener('mousedown', onClickOutside)
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
 
-  // ── Colors ────────────────────────────────────────────────
-  const containerBg     = dark ? '#0f1f38' : '#ffffff'
-  const containerBorder = dark ? '#1a3356' : '#e5e7eb'
-  const inputBg         = dark ? '#081422' : '#ffffff'
-  const inputBorder     = dark ? '#1a3356' : '#d1d5db'
-  const inputText       = dark ? '#dde8f5' : '#111827'
-  const iconColor       = dark ? '#6b8cae' : '#9ca3af'
-  const funnelColor     = dark ? '#6b8cae' : '#4b5563'
-  const dropdownBg      = dark ? '#0f1f38' : '#ffffff'
-  const dropdownBorder  = dark ? '#1a3356' : '#e5e7eb'
-  const dropdownText    = dark ? '#dde8f5' : '#374151'
-  const dropdownHover   = dark ? '#0d1d35' : '#f9fafb'
-  const archiveBg       = dark ? '#0f1f38' : '#ffffff'
-  const archiveBorder   = dark ? '#1a3356' : '#d1d5db'
-  const archiveText     = dark ? '#6b8cae' : '#374151'
-  const archiveHover    = dark ? '#1a3356' : '#f9fafb'
-  const addBg           = dark ? '#1a3356' : '#e5e7eb'
-  const addText         = dark ? '#dde8f5' : '#1f2937'
-  const addHover        = dark ? '#2e4d70' : '#d1d5db'
+  // ── Colors — same tokens as ActivityLogs / SearchAndFilter (Cataloging) ──
+  const containerBg   = dark ? '#0f1f38' : '#ffffff'
+  const border        = dark ? '#1a3356' : '#e2e8f0'
+  const inputBg       = dark ? '#0d1d35' : '#ffffff'
+  const inputBorder   = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary   = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary = dark ? '#6b8cae' : '#64748b'
+  const dropdownBg    = dark ? '#162a4a' : '#ffffff'
 
   const inputStyle = {
     width: '100%',
-    paddingLeft: '2.5rem', paddingRight: searchTerm ? '2.5rem' : '1rem',
-    paddingTop: '0.5rem', paddingBottom: '0.5rem',
+    padding: '0.625rem 2.5rem 0.625rem 2.75rem',
     border: `1px solid ${inputBorder}`,
     borderRadius: '0.5rem',
-    background: inputBg, color: inputText,
+    background: inputBg, color: textPrimary,
     fontSize: '0.875rem', outline: 'none',
     transition: 'border-color 0.2s ease, background 0.45s ease',
     boxSizing: 'border-box',
@@ -95,107 +70,72 @@ const SearchAndFilter = ({
   return (
     <div style={{
       background: containerBg,
-      border: `1px solid ${containerBorder}`,
+      padding: '1.25rem',
       borderRadius: '0.75rem',
-      padding: '1rem 1.5rem',
+      border: `1px solid ${border}`,
+      boxShadow: dark ? '0 10px 30px rgba(0,0,0,0.2)' : '0 1px 3px rgba(0,0,0,0.05)',
       marginBottom: '1.5rem',
-      boxShadow: dark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.05)',
-      transition: 'background 0.45s ease, border-color 0.45s ease',
+      transition: 'all 0.45s ease',
     }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
 
         {/* Search */}
-        <div style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '28rem' }}>
-          <MagnifyingGlassIcon style={{ width: '1.25rem', height: '1.25rem', color: iconColor, position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
+        <div style={{ position: 'relative', flex: '1 1 220px' }}>
+          <MagnifyingGlassIcon style={{ width: '1.25rem', height: '1.25rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: textSecondary }} />
           <input
             ref={searchInputRef}
             type="text"
             placeholder={searchPlaceholder}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             aria-label="Search accessions"
             style={inputStyle}
-            onFocus={e => e.target.style.borderColor = '#2563eb'}
+            onFocus={e => e.target.style.borderColor = dark ? '#93c5fd' : '#154A9A'}
             onBlur={e => e.target.style.borderColor = inputBorder}
           />
           {searchTerm && (
-            <button
-              type="button"
+            <XMarkIcon
               onClick={() => setSearchTerm('')}
-              aria-label="Clear search"
-              title="Clear search"
-              style={{
-                position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                color: iconColor, transition: 'color 0.2s ease',
-              }}
-              onMouseEnter={e => e.currentTarget.style.color = inputText}
-              onMouseLeave={e => e.currentTarget.style.color = iconColor}
-            >
-              <XMarkIcon style={{ width: '1rem', height: '1rem' }} />
-            </button>
+              style={{ width: '1.125rem', height: '1.125rem', position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: textSecondary }}
+            />
           )}
         </div>
 
-        {/* Status Filter */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }} ref={dropdownRef}>
-          <FunnelIcon style={{ width: '1.25rem', height: '1.25rem', color: funnelColor, flexShrink: 0 }} />
-
-          <div style={{ position: 'relative', width: '16rem' }}>
+        {/* Status Dropdown */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 180px', position: 'relative' }} ref={dropdownRef}>
+          <FunnelIcon style={{ width: '1.25rem', height: '1.25rem', color: textSecondary, flexShrink: 0 }} />
+          <div style={{ position: 'relative', width: '100%' }}>
             <button
-              type="button"
-              onClick={() => setIsStatusOpen(prev => !prev)}
-              aria-haspopup="listbox"
-              aria-expanded={isStatusOpen}
+              onClick={() => setIsStatusOpen(p => !p)}
               style={{
-                width: '100%', padding: '0.5rem 1rem',
-                border: `1px solid ${inputBorder}`,
-                borderRadius: '0.5rem',
-                background: inputBg, color: inputText,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                cursor: 'pointer', fontSize: '0.875rem', outline: 'none',
-                transition: 'background 0.45s ease, border-color 0.45s ease',
+                width: '100%', padding: '0.625rem 1rem',
+                background: inputBg, border: `1px solid ${inputBorder}`,
+                borderRadius: '0.5rem', textAlign: 'left', color: textPrimary,
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                cursor: 'pointer', fontSize: '0.875rem',
               }}
             >
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {selectedStatus === 'all' ? 'All Statuses' : selectedStatus}
-              </span>
-              <span style={{ color: iconColor, fontSize: '0.75rem' }}>▾</span>
+              <span>{selectedStatus === 'all' ? 'All Statuses' : selectedStatus}</span>
+              <span style={{ color: textSecondary }}>▾</span>
             </button>
 
             {isStatusOpen && (
               <div style={{
-                position: 'absolute', zIndex: 20, marginTop: '0.25rem',
-                width: '100%',
-                background: dropdownBg,
-                border: `1px solid ${dropdownBorder}`,
-                borderRadius: '0.5rem',
-                boxShadow: dark ? '0 8px 24px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.1)',
-                overflow: 'hidden',
-                transition: 'background 0.45s ease',
+                position: 'absolute', top: '110%', left: 0, width: '100%',
+                background: dropdownBg, border: `1px solid ${border}`,
+                borderRadius: '0.5rem', zIndex: 50, overflow: 'hidden',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
               }}>
-                <div style={{ maxHeight: '16rem', overflowY: 'auto', padding: '0.25rem 0', fontSize: '0.875rem' }}>
+                <div style={{ maxHeight: '14rem', overflowY: 'auto', padding: '0.5rem 0' }}>
                   {statuses.map(status => (
-                    <button
+                    <StatusOption
                       key={status}
-                      type="button"
-                      onClick={() => {
-                        setSelectedStatus(status)
-                        setIsStatusOpen(false)
-                      }}
-                      style={{
-                        width: '100%', textAlign: 'left',
-                        padding: '0.5rem 1rem',
-                        background: 'transparent', color: dropdownText,
-                        border: 'none', cursor: 'pointer',
-                        transition: 'background 0.15s ease',
-                        outline: 'none',
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = dropdownHover}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      {status === 'all' ? 'All Statuses' : status}
-                    </button>
+                      label={status === 'all' ? 'All Statuses' : status}
+                      active={selectedStatus === status}
+                      onClick={() => { setSelectedStatus(status); setIsStatusOpen(false) }}
+                      dark={dark}
+                      textPrimary={textPrimary}
+                    />
                   ))}
                 </div>
               </div>
@@ -205,47 +145,69 @@ const SearchAndFilter = ({
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button
-            onClick={onArchiveClick}
-            title="View archived accessions"
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.5rem 1.25rem',
-              background: archiveBg, color: archiveText,
-              border: `1px solid ${archiveBorder}`,
-              borderRadius: '0.5rem', cursor: 'pointer',
-              fontSize: '0.875rem', fontWeight: 500,
-              transition: 'background 0.2s ease, box-shadow 0.2s ease',
-              boxShadow: dark ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = archiveHover}
-            onMouseLeave={e => e.currentTarget.style.background = archiveBg}
-          >
-            <ArchiveBoxIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-            Archives
-          </button>
-
-          <button
-            onClick={onAddClick}
-            title="Add new accession"
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.5rem 1.25rem',
-              background: addBg, color: addText,
-              border: 'none', borderRadius: '0.5rem', cursor: 'pointer',
-              fontSize: '0.875rem', fontWeight: 500,
-              transition: 'background 0.2s ease',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = addHover}
-            onMouseLeave={e => e.currentTarget.style.background = addBg}
-          >
-            <PlusIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-            Add Accession
-          </button>
+          <ActionButton onClick={onArchiveClick} icon={ArchiveBoxIcon} label="Archives" dark={dark} border={border} />
+          <ActionButton onClick={onAddClick} icon={PlusIcon} label="Add Accession" variant="primary" dark={dark} border={border} />
         </div>
 
       </div>
     </div>
+  )
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+const StatusOption = ({ label, active, onClick, dark, textPrimary }) => {
+  const [hover, setHover] = useState(false)
+  return (
+    <button
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onClick={onClick}
+      style={{
+        width: '100%', padding: '0.5rem 1rem', textAlign: 'left',
+        fontSize: '0.875rem', cursor: 'pointer', border: 'none',
+        background: hover
+          ? (dark ? '#1a3356' : '#f1f5f9')
+          : active ? (dark ? 'rgba(21,74,154,0.2)' : '#eff6ff') : 'transparent',
+        color: textPrimary,
+        fontWeight: active ? 600 : 400,
+        transition: 'all 0.15s',
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+const ActionButton = ({ onClick, icon: Icon, label, variant, dark, border }) => {
+  const [hover, setHover] = useState(false)
+
+  const getColors = () => {
+    if (variant === 'primary') return { bg: dark ? '#154A9A' : '#1e293b', text: '#fff', hoverBg: '#1a3a6d' }
+    return { bg: dark ? 'rgba(255,255,255,0.05)' : '#fff', text: dark ? '#6b8cae' : '#4b5563', hoverBg: dark ? '#1a3356' : '#f1f5f9' }
+  }
+
+  const c = getColors()
+
+  return (
+    <button
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '0.5rem',
+        padding: '0.625rem 1.25rem', borderRadius: '0.5rem',
+        background: hover ? c.hoverBg : c.bg,
+        border: variant === 'primary' ? 'none' : `1px solid ${border}`,
+        color: c.text, cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
+        transition: 'all 0.2s ease',
+        transform: hover ? 'translateY(-2px)' : 'none',
+        boxShadow: hover ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
+      }}
+    >
+      <Icon style={{ width: '1.125rem', height: '1.125rem' }} />
+      <span>{label}</span>
+    </button>
   )
 }
 

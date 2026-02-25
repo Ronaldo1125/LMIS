@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { KeyIcon, CheckIcon, ArrowLeftIcon, SunIcon, MoonIcon, PaintBrushIcon } from '@heroicons/react/24/outline'
 
 /*
-  Add this ONE line to your global CSS (index.css) for silky full-page transitions:
+  Add this to your global CSS (index.css) for smooth full-page transitions:
 
   *, *::before, *::after {
-    transition: background-color 0.45s ease, border-color 0.45s ease, color 0.3s ease, box-shadow 0.45s ease;
+    transition: background-color 0.4s ease, border-color 0.4s ease, color 0.3s ease, box-shadow 0.4s ease;
   }
 */
 
@@ -39,7 +39,7 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
         case 'admin':     return { background: 'rgba(168,85,247,0.15)', color: '#c084fc' }
         case 'librarian': return { background: 'rgba(59,130,246,0.15)', color: '#93c5fd' }
         case 'staff':     return { background: 'rgba(34,197,94,0.15)',  color: '#86efac' }
-        default:          return { background: 'rgba(148,163,184,0.12)', color: '#94a3b8' }
+        default:          return { background: 'rgba(180,180,180,0.1)', color: '#9ca3af' }
       }
     }
     switch (r) {
@@ -75,26 +75,39 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
     }
   }
 
-  // ─── Color system ─────────────────────────────────────────────────────────
-  // Light: clean white/slate  |  Dark: deep navy blues
+  // ─── VS Code-inspired dark gray color system ──────────────────────────────
+  // Light: clean white/slate  |  Dark: VS Code grays (#1e1e1e family)
   const C = {
-    pageBg:        dark ? '#0a1628' : '#f1f5f9',
-    cardBg:        dark ? '#0f1f38' : '#ffffff',
-    insetBg:       dark ? '#081422' : '#f8fafc',
-    border:        dark ? '#1a3356' : '#e2e8f0',
-    textPrimary:   dark ? '#dde8f5' : '#1e293b',
-    textSecondary: dark ? '#6b8cae' : '#64748b',
-    textMuted:     dark ? '#2e4d70' : '#94a3b8',
-    inputBg:       dark ? '#081422' : '#ffffff',
+    // Backgrounds — each layer slightly lighter (VS Code layering)
+    pageBg:  dark ? '#1e1e1e' : '#f1f5f9',   // VS Code editor bg
+    cardBg:  dark ? '#252526' : '#ffffff',    // VS Code sidebar bg
+    insetBg: dark ? '#2d2d2d' : '#f8fafc',   // VS Code input/panel bg
+
+    // Borders — subtle, not distracting
+    border:  dark ? '#3c3c3c' : '#e2e8f0',   // VS Code border color
+
+    // Text
+    textPrimary:   dark ? '#d4d4d4' : '#1e293b',  // VS Code default text
+    textSecondary: dark ? '#858585' : '#64748b',  // VS Code comment gray
+    textMuted:     dark ? '#555555' : '#94a3b8',
+
+    // Input
+    inputBg: dark ? '#3c3c3c' : '#ffffff',   // VS Code input bg
+
+    // Banner
     banner: dark
-      ? 'linear-gradient(135deg, #0d2145 0%, #0f1f38 100%)'
+      ? 'linear-gradient(135deg, #2d2d2d 0%, #252526 100%)'
       : 'linear-gradient(135deg, var(--dark-blue-1) 0%, var(--dark-blue-2) 100%)',
-    pillBg:   dark ? 'var(--dark-blue-1)' : '#f59e0b',
+
+    // Toggle pill — white/silver in dark, amber in light
+    pillBg:   dark ? '#c0c0c0' : '#f59e0b',
     pillGlow: dark
-      ? '0 0 20px rgba(30, 64, 175, 0.7), 0 0 6px rgba(30,64,175,0.4)'
+      ? '0 0 16px rgba(192,192,192,0.3), 0 2px 8px rgba(0,0,0,0.4)'
       : '0 0 18px rgba(245,158,11,0.45)',
-    iconBoxBg:   dark ? 'rgba(30,64,175,0.18)' : 'rgba(245,158,11,0.14)',
-    iconBoxGlow: dark ? '0 0 14px rgba(30,64,175,0.35)' : '0 0 14px rgba(245,158,11,0.28)',
+
+    // Icon box
+    iconBoxBg:   dark ? 'rgba(192,192,192,0.08)' : 'rgba(245,158,11,0.14)',
+    iconBoxGlow: dark ? '0 0 10px rgba(192,192,192,0.12)' : '0 0 14px rgba(245,158,11,0.28)',
   }
 
   const cardStyle = {
@@ -102,9 +115,9 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
     border: `1px solid ${C.border}`,
     borderRadius: '1.125rem',
     boxShadow: dark
-      ? '0 8px 32px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.02) inset'
+      ? '0 4px 24px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.03) inset'
       : '0 1px 8px rgba(0,0,0,0.05)',
-    transition: 'background 0.45s ease, border-color 0.45s ease, box-shadow 0.45s ease',
+    transition: 'background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease',
     overflow: 'hidden',
   }
 
@@ -113,7 +126,7 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
     border: `1px solid ${C.border}`,
     borderRadius: '0.75rem',
     padding: '0.875rem',
-    transition: 'background 0.45s ease, border-color 0.45s ease',
+    transition: 'background 0.4s ease, border-color 0.4s ease',
   }
 
   const inputBase = {
@@ -126,11 +139,11 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
     fontSize: '0.875rem',
     outline: 'none',
     boxSizing: 'border-box',
-    transition: 'background 0.45s ease, border-color 0.3s ease, box-shadow 0.3s ease',
+    transition: 'background 0.4s ease, border-color 0.3s ease, box-shadow 0.3s ease',
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: C.pageBg, padding: '1.5rem', transition: 'background 0.45s ease' }}>
+    <div style={{ minHeight: '100vh', background: C.pageBg, padding: '1.5rem', transition: 'background 0.4s ease' }}>
       <div style={{ maxWidth: '42rem', margin: '0 auto' }}>
 
         {/* Back */}
@@ -143,6 +156,8 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
             marginBottom: '1.5rem', padding: 0,
             transition: 'color 0.3s ease',
           }}
+          onMouseEnter={e => e.currentTarget.style.color = C.textPrimary}
+          onMouseLeave={e => e.currentTarget.style.color = C.textSecondary}
         >
           <ArrowLeftIcon style={{ width: '1rem', height: '1rem' }} />
           Back to Dashboard
@@ -151,7 +166,7 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
         {/* ── Profile Card ─────────────────────────────────────────── */}
         <div style={{ ...cardStyle, marginBottom: '1.25rem' }}>
           {/* Banner */}
-          <div style={{ height: '6rem', background: C.banner, transition: 'background 0.45s ease' }} />
+          <div style={{ height: '6rem', background: C.banner, transition: 'background 0.4s ease' }} />
 
           <div style={{ padding: '0 1.5rem 1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', marginTop: '-2.5rem', marginBottom: '1rem' }}>
@@ -159,22 +174,22 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
               <div style={{
                 width: '5rem', height: '5rem', borderRadius: '1rem', flexShrink: 0,
                 border: `4px solid ${C.cardBg}`,
-                boxShadow: dark ? '0 4px 20px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.12)',
+                boxShadow: dark ? '0 4px 16px rgba(0,0,0,0.6)' : '0 4px 12px rgba(0,0,0,0.12)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: 'linear-gradient(135deg, var(--dark-blue-1), var(--dark-blue-2))',
-                transition: 'border-color 0.45s ease, box-shadow 0.45s ease',
+                transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
               }}>
                 <span style={{ color: '#fff', fontWeight: 700, fontSize: '1.75rem', textTransform: 'uppercase' }}>
                   {fullName.charAt(0)}
                 </span>
               </div>
-              {/* Role badge */}
+              {/* Badge */}
               <div style={{ paddingBottom: '0.25rem' }}>
                 <span style={{
                   ...getRoleBadgeStyle(role),
                   borderRadius: '999px', padding: '0.2rem 0.75rem',
                   fontSize: '0.7rem', fontWeight: 600,
-                  transition: 'background 0.45s ease, color 0.3s ease',
+                  transition: 'background 0.4s ease, color 0.3s ease',
                 }}>
                   {getRoleLabel(role)}
                 </span>
@@ -215,6 +230,8 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
           {/* Toggle row */}
           <div style={{ ...insetCell, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.875rem 1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+
+              {/* Animated icon box */}
               <div style={{
                 width: '2.25rem', height: '2.25rem', borderRadius: '0.75rem', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -230,7 +247,7 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                     transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)',
                   }} />
                   <MoonIcon style={{
-                    position: 'absolute', inset: 0, width: '1.2rem', height: '1.2rem', color: '#93c5fd',
+                    position: 'absolute', inset: 0, width: '1.2rem', height: '1.2rem', color: '#d4d4d4',
                     opacity: dark ? 1 : 0,
                     transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0.3) rotate(-90deg)',
                     transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)',
@@ -261,32 +278,31 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                 background: C.pillBg,
                 boxShadow: C.pillGlow,
                 outline: 'none',
-                transition: 'background 0.45s ease, box-shadow 0.45s ease',
+                transition: 'background 0.4s ease, box-shadow 0.4s ease',
               }}
             >
-              {[
-                { top: '28%', left: '14%', size: '2px',   delay: '0s'    },
-                { top: '58%', left: '25%', size: '1.5px', delay: '0.1s'  },
-                { top: '20%', left: '36%', size: '2px',   delay: '0.18s' },
-              ].map((s, i) => (
-                <span key={i} style={{
-                  position: 'absolute', borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.75)',
-                  width: s.size, height: s.size, top: s.top, left: s.left,
-                  opacity: dark ? 1 : 0,
-                  transform: dark ? 'scale(1)' : 'scale(0)',
-                  transition: `opacity 0.35s ease ${s.delay}, transform 0.35s ease ${s.delay}`,
+              {/* Subtle shine overlay on silver pill */}
+              {dark && (
+                <span style={{
+                  position: 'absolute', inset: 0, borderRadius: '999px',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 60%)',
+                  pointerEvents: 'none',
                 }} />
-              ))}
+              )}
+
+              {/* Thumb */}
               <span style={{
                 position: 'relative', zIndex: 10,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 width: '1.4rem', height: '1.4rem', borderRadius: '50%',
-                background: '#ffffff',
-                boxShadow: '0 1px 5px rgba(0,0,0,0.3)',
+                background: dark ? '#1e1e1e' : '#ffffff',
+                boxShadow: dark
+                  ? '0 1px 4px rgba(0,0,0,0.6)'
+                  : '0 1px 5px rgba(0,0,0,0.25)',
                 transform: dark ? 'translateX(1.625rem)' : 'translateX(0)',
-                transition: 'transform 0.45s cubic-bezier(0.34,1.3,0.64,1)',
+                transition: 'transform 0.45s cubic-bezier(0.34,1.3,0.64,1), background 0.4s ease, box-shadow 0.4s ease',
               }}>
+                {/* Tiny icon in thumb */}
                 <span style={{ position: 'relative', width: '0.75rem', height: '0.75rem' }}>
                   <SunIcon style={{
                     position: 'absolute', inset: 0, width: '0.75rem', height: '0.75rem', color: '#f59e0b',
@@ -295,7 +311,7 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                     transition: 'all 0.3s ease',
                   }} />
                   <MoonIcon style={{
-                    position: 'absolute', inset: 0, width: '0.75rem', height: '0.75rem', color: 'var(--dark-blue-1)',
+                    position: 'absolute', inset: 0, width: '0.75rem', height: '0.75rem', color: '#c0c0c0',
                     opacity: dark ? 1 : 0,
                     transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0) rotate(-45deg)',
                     transition: 'all 0.3s ease',
@@ -334,7 +350,7 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                   style={inputBase}
                   placeholder={placeholder}
                   required
-                  onFocus={e => { e.target.style.borderColor = 'var(--dark-blue-1)'; e.target.style.boxShadow = '0 0 0 3px rgba(30,64,175,0.18)' }}
+                  onFocus={e => { e.target.style.borderColor = 'var(--dark-blue-1)'; e.target.style.boxShadow = '0 0 0 3px rgba(30,64,175,0.15)' }}
                   onBlur={e => { e.target.style.borderColor = C.border; e.target.style.boxShadow = 'none' }}
                 />
               </div>
@@ -343,7 +359,7 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
             {pwError && (
               <p style={{
                 fontSize: '0.875rem', margin: 0, borderRadius: '0.5rem', padding: '0.625rem 1rem',
-                color: dark ? '#fca5a5' : '#dc2626',
+                color: dark ? '#f87171' : '#dc2626',
                 background: dark ? 'rgba(220,38,38,0.1)' : '#fef2f2',
                 border: `1px solid ${dark ? 'rgba(220,38,38,0.2)' : '#fecaca'}`,
               }}>{pwError}</p>
@@ -371,11 +387,11 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                 color: '#fff', fontWeight: 600, fontSize: '0.875rem',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 opacity: loading ? 0.6 : 1,
-                boxShadow: '0 2px 12px rgba(30,64,175,0.4)',
+                boxShadow: '0 2px 12px rgba(30,64,175,0.35)',
                 transition: 'opacity 0.2s, transform 0.15s, box-shadow 0.2s',
               }}
-              onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 18px rgba(30,64,175,0.55)' } }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(30,64,175,0.4)' }}
+              onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 18px rgba(30,64,175,0.5)' } }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(30,64,175,0.35)' }}
             >
               {loading ? 'Updating...' : 'Update Password'}
             </button>
