@@ -11,12 +11,7 @@ import {
   NewspaperIcon
 } from '@heroicons/react/24/outline'
 
-import ConfirmationModal from '../components/AccessionsComponents/ConfirmationModal'
-import { useState } from 'react'
-
 const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }) => {
-  const [showLogoutModal, setShowLogoutModal] = useState(false)
-  const [logoutLoading, setLogoutLoading] = useState(false)
   // Main navigation items
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
@@ -156,90 +151,38 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
             const isActive = currentView === item.id
             const isLogout = item.id === 'logout'
 
-            if (isLogout) {
-              return (
-                      <button
-                        key={item.id}
-                        onClick={() => setShowLogoutModal(true)}
-                        style={{
-                          width: '100%', display: 'flex', alignItems: 'center',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '0.5rem',
-                          background: isActive ? activeBg : 'transparent',
-                          color: 'rgba(255,255,255,0.7)',
-                          border: 'none', cursor: 'pointer',
-                          justifyContent: isOpen ? 'flex-start' : 'center',
-                          gap: isOpen ? '0.75rem' : 0,
-                          transition: 'background 0.2s ease, color 0.2s ease',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.2)' }}
-                        onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
-                        title={item.label}
-                      >
-                        <Icon style={{ width: '1.25rem', height: '1.25rem', flexShrink: 0 }} />
-                        <span style={{
-                          fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap',
-                          opacity: isOpen ? 1 : 0,
-                          width: isOpen ? 'auto' : 0,
-                          overflow: 'hidden',
-                          transition: 'opacity 0.3s ease, width 0.3s ease',
-                        }}>
-                          {item.label}
-                        </span>
-                      </button>
-                    )
-                  }
-                  // ...existing code...
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setCurrentView(item.id)}
-                      style={{
-                        width: '100%', display: 'flex', alignItems: 'center',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '0.5rem',
-                        background: isActive ? activeBg : 'transparent',
-                        color: 'rgba(255,255,255,0.7)',
-                        border: 'none', cursor: 'pointer',
-                        justifyContent: isOpen ? 'flex-start' : 'center',
-                        gap: isOpen ? '0.75rem' : 0,
-                        transition: 'background 0.2s ease, color 0.2s ease',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = hoverBg }}
-                      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
-                      title={item.label}
-                    >
-                      <Icon style={{ width: '1.25rem', height: '1.25rem', flexShrink: 0 }} />
-                      <span style={{
-                        fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap',
-                        opacity: isOpen ? 1 : 0,
-                        width: isOpen ? 'auto' : 0,
-                        overflow: 'hidden',
-                        transition: 'opacity 0.3s ease, width 0.3s ease',
-                      }}>
-                        {item.label}
-                      </span>
-                    </button>
-                  )
-                })}
-
-          {/* Logout Confirmation Modal */}
-          <ConfirmationModal
-            isOpen={showLogoutModal}
-            onClose={() => setShowLogoutModal(false)}
-            onConfirm={async () => {
-              setLogoutLoading(true)
-              localStorage.removeItem('token')
-              sessionStorage.removeItem('token')
-              setLogoutLoading(false)
-              setShowLogoutModal(false)
-              window.location.href = '/login'
-            }}
-            title="Log Out"
-            message="Are you sure you want to log out?"
-            type="logout"
-            loading={logoutLoading}
-          />
+            return (
+              <button
+                key={item.id}
+                onClick={() => setCurrentView(item.id)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  background: isActive ? activeBg : 'transparent',
+                  color: 'rgba(255,255,255,0.7)',
+                  border: 'none', cursor: 'pointer',
+                  justifyContent: isOpen ? 'flex-start' : 'center',
+                  gap: isOpen ? '0.75rem' : 0,
+                  transition: 'background 0.2s ease, color 0.2s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = isLogout ? 'rgba(239,68,68,0.2)' : hoverBg }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+                title={item.label}
+              >
+                <Icon style={{ width: '1.25rem', height: '1.25rem', flexShrink: 0 }} />
+                <span style={{
+                  fontSize: '0.875rem', fontWeight: 500, whiteSpace: 'nowrap',
+                  opacity: isOpen ? 1 : 0,
+                  width: isOpen ? 'auto' : 0,
+                  overflow: 'hidden',
+                  transition: 'opacity 0.3s ease, width 0.3s ease',
+                }}>
+                  {item.label}
+                </span>
+              </button>
+            )
+          })}
 
           {/* Version Info */}
           <div style={{
