@@ -15,7 +15,6 @@ const NewsAnnouncements = ({ dark }) => {
   const pageBg        = dark ? '#07111f' : '#f1f5f9';
   const headerBg      = dark ? '#0d1b2e' : '#ffffff';
   const headerBorder  = dark ? '#1c2f4a' : '#e2e8f0';
-  const cardBg        = dark ? '#0f1f38' : '#ffffff';
   const border        = dark ? '#1c2f4a' : '#e2e8f0';
   const textPrimary   = dark ? '#e8edf5' : '#0f172a';
   const textSecondary = dark ? '#5a7a99' : '#64748b';
