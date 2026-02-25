@@ -15,7 +15,6 @@ const NewsAnnouncements = ({ dark }) => {
   const pageBg        = dark ? '#07111f' : '#f1f5f9';
   const headerBg      = dark ? '#0d1b2e' : '#ffffff';
   const headerBorder  = dark ? '#1c2f4a' : '#e2e8f0';
-  const cardBg        = dark ? '#0f1f38' : '#ffffff';
   const border        = dark ? '#1c2f4a' : '#e2e8f0';
   const textPrimary   = dark ? '#e8edf5' : '#0f172a';
   const textSecondary = dark ? '#5a7a99' : '#64748b';
@@ -57,24 +56,26 @@ const NewsAnnouncements = ({ dark }) => {
               <Megaphone style={{ width: '1.5rem', height: '1.5rem', color: iconColor }} />
             </div>
             <div>
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: textPrimary, margin: 0, transition: 'color 0.45s ease' }}>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: textPrimary, margin: 0, transition: 'color 0.45s ease', fontFamily: FONT_DISPLAY }}>
                 News & Announcements
               </h1>
-              <p style={{ fontSize: '0.875rem', color: textSecondary, margin: 0, transition: 'color 0.45s ease' }}>
+              <p style={{ fontSize: '0.875rem', color: textSecondary, margin: 0, transition: 'color 0.45s ease', fontFamily: FONT_BODY }}>
                 Publish external news links and send announcements to library patrons and staff
               </p>
             </div>
           </div>
         </div>
 
-        {/* ── Tab Bar + Content ─────────────────────────────────────────────── */}
-        <div style={{ padding: '1.5rem' }}>
+        {/* ── Body — aligned like Acquisitions ─────────────────────────────── */}
+        <div className="px-6">
           {/* Sticky tab bar */}
           <div style={{
-            position: 'sticky', top: 0, zIndex: 20,
-            background: pageBg, paddingBottom: '1rem',
+            position: 'sticky', top: 0, zIndex: 40,
+            background: pageBg, paddingTop: '1rem', paddingBottom: '1rem',
             transition: 'background 0.45s ease',
-          }}>
+          }}
+            className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8"
+          >
             <div style={{
               display: 'inline-flex',
               background: headerBg,
@@ -101,18 +102,6 @@ const NewsAnnouncements = ({ dark }) => {
                       color: isActive ? '#ffffff' : textMuted,
                       boxShadow: isActive ? '0 1px 6px rgba(21,74,154,0.35)' : 'none',
                       transition: 'all 0.18s ease',
-                    }}
-                    onMouseEnter={e => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.05)' : 'rgba(21,74,154,0.06)';
-                        e.currentTarget.style.color = textPrimary;
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = textMuted;
-                      }
                     }}
                   >
                     <Icon style={{ width: '0.9rem', height: '0.9rem' }} />
