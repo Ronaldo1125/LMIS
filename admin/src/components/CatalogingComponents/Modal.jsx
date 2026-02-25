@@ -1,5 +1,5 @@
 import { XMarkIcon } from '@heroicons/react/24/outline'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const Modal = ({ 
   isOpen, 
@@ -13,113 +13,221 @@ const Modal = ({
   showInput = false,
   inputPlaceholder = '',
   inputValue = '',
-  onInputChange
+  onInputChange,
+  dark
 }) => {
+  const [isAnimating, setIsAnimating] = useState(false)
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
+      setTimeout(() => setIsAnimating(true), 10)
     } else {
       document.body.style.overflow = 'unset'
+      setIsAnimating(false)
     }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
+    return () => { document.body.style.overflow = 'unset' }
   }, [isOpen])
 
-  if (!isOpen) return null
+  if (!isOpen && !isAnimating) return null
+
+  // ── Theme Styling ──────────────────────────────────────────
+  const modalBg      = dark ? '#0f1f38' : '#ffffff'
+  const modalBorder  = dark ? '#1a3356' : '#e2e8f0'
+  const footerBg     = dark ? '#0d1d35' : '#f8fafc'
+  const textPrimary  = dark ? '#dde8f5' : '#111827'
+  const textSecondary = dark ? '#6b8cae' : '#4b5563'
+  const inputBg      = dark ? '#0d1d35' : '#ffffff'
+  const inputBorder  = dark ? '#1a3356' : '#d1d5db'
 
   const colorStyles = {
     blue: {
-      button: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
-      icon: 'bg-blue-100',
-      iconColor: 'text-blue-600'
+      button: dark ? '#3b82f6' : '#2563eb',
+      buttonHover: dark ? '#2563eb' : '#1d4ed8',
+      iconBg: dark ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff',
+      iconColor: '#3b82f6'
     },
     red: {
-      button: 'bg-red-600 hover:bg-red-700 focus:ring-red-500',
-      icon: 'bg-red-100',
-      iconColor: 'text-red-600'
+      button: dark ? '#ef4444' : '#dc2626',
+      buttonHover: dark ? '#dc2626' : '#b91c1c',
+      iconBg: dark ? 'rgba(239, 68, 68, 0.15)' : '#fef2f2',
+      iconColor: '#ef4444'
     },
     amber: {
-      button: 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-500',
-      icon: 'bg-amber-100',
-      iconColor: 'text-amber-600'
+      button: dark ? '#f59e0b' : '#d97706',
+      buttonHover: dark ? '#d97706' : '#b45309',
+      iconBg: dark ? 'rgba(245, 158, 11, 0.15)' : '#fffbeb',
+      iconColor: '#f59e0b'
     }
   }
 
   const colors = colorStyles[confirmColor] || colorStyles.blue
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '1rem',
+      opacity: isAnimating ? 1 : 0,
+      transition: 'opacity 0.4s ease'
+    }}>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)',
+          transition: 'all 0.45s ease'
+        }}
         onClick={onClose}
       />
       
-      {/* Modal */}
-      <div className="relative z-10">
-        <div 
-          className="relative bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all"
-          onClick={(e) => e.stopPropagation()}
+      {/* Modal Card */}
+      <div 
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          background: modalBg,
+          border: `1px solid ${modalBorder}`,
+          borderRadius: '1rem',
+          maxWidth: '28rem',
+          width: '100%',
+          boxShadow: dark ? '0 25px 50px -12px rgba(0, 0, 0, 0.7)' : '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+          transform: isAnimating ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(10px)',
+          transition: 'all 0.45s cubic-bezier(0.16, 1, 0.3, 1), background 0.45s ease',
+          overflow: 'hidden'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            right: '1rem',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0.25rem',
+            borderRadius: '0.375rem',
+            color: textSecondary,
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = dark ? '#1a3356' : '#f3f4f6'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button>
+          <XMarkIcon style={{ width: '1.5rem', height: '1.5rem' }} />
+        </button>
 
-          {/* Content */}
-          <div className="p-6">
-            <div className="flex items-start gap-4">
-              <div className={`flex-shrink-0 w-12 h-12 rounded-full ${colors.icon} flex items-center justify-center`}>
-                <svg className={`w-6 h-6 ${colors.iconColor}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              
-              <div className="flex-1 mt-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {title}
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  {message}
-                </p>
+        {/* Content */}
+        <div style={{ padding: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'start', gap: '1rem' }}>
+            <div style={{
+              flexShrink: 0,
+              width: '3rem',
+              height: '3rem',
+              borderRadius: '9999px',
+              background: colors.iconBg,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.45s ease'
+            }}>
+              <svg style={{ width: '1.5rem', height: '1.5rem', color: colors.iconColor }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            
+            <div style={{ flex: 1, marginTop: '0.25rem' }}>
+              <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.125rem', fontWeight: 700, color: textPrimary }}>
+                {title}
+              </h3>
+              <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.875rem', color: textSecondary, lineHeight: '1.5' }}>
+                {message}
+              </p>
 
-                {showInput && (
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Reason (optional)
-                    </label>
-                    <textarea
-                      value={inputValue}
-                      onChange={(e) => onInputChange && onInputChange(e.target.value)}
-                      placeholder={inputPlaceholder}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                      rows="3"
-                    />
-                  </div>
-                )}
-              </div>
+              {showInput && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: textSecondary, textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                    Reason (optional)
+                  </label>
+                  <textarea
+                    value={inputValue}
+                    onChange={(e) => onInputChange && onInputChange(e.target.value)}
+                    placeholder={inputPlaceholder}
+                    rows="3"
+                    style={{
+                      width: '100%',
+                      padding: '0.625rem',
+                      background: inputBg,
+                      border: `1px solid ${inputBorder}`,
+                      borderRadius: '0.5rem',
+                      color: textPrimary,
+                      fontSize: '0.875rem',
+                      outline: 'none',
+                      resize: 'none',
+                      transition: 'all 0.2s ease'
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="bg-gray-50 px-6 py-4 flex gap-3 justify-end rounded-b-lg">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
-            >
-              {cancelText}
-            </button>
-            <button
-              onClick={onConfirm}
-              className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.button} transition-colors`}
-            >
-              {confirmText}
-            </button>
-          </div>
+        {/* Actions */}
+        <div style={{
+          background: footerBg,
+          padding: '1rem 1.5rem',
+          display: 'flex',
+          gap: '0.75rem',
+          justifyContent: 'flex-end',
+          borderTop: `1px solid ${modalBorder}`,
+          transition: 'background 0.45s ease'
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '0.5rem 1rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: textSecondary,
+              background: dark ? 'transparent' : '#ffffff',
+              border: `1px solid ${inputBorder}`,
+              borderRadius: '0.5rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = dark ? '#1a3356' : '#f9fafb'}
+            onMouseLeave={(e) => e.currentTarget.style.background = dark ? 'transparent' : '#ffffff'}
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={onConfirm}
+            style={{
+              padding: '0.5rem 1.25rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: '#ffffff',
+              background: colors.button,
+              border: 'none',
+              borderRadius: '0.5rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: dark ? `0 4px 14px ${colors.iconBg}` : 'none'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = colors.buttonHover}
+            onMouseLeave={(e) => e.currentTarget.style.background = colors.button}
+          >
+            {confirmText}
+          </button>
         </div>
       </div>
     </div>

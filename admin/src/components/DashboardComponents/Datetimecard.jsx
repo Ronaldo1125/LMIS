@@ -1,7 +1,7 @@
 import { CalendarIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect } from 'react'
 
-const DateTimeCard = () => {
+const DateTimeCard = ({ dark }) => {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [isFlipping, setIsFlipping] = useState(false)
 
@@ -40,70 +40,105 @@ const DateTimeCard = () => {
   const seconds = currentTime.getSeconds()
   const shouldPulse = seconds % 2 === 0
 
+  // ── Colors ────────────────────────────────────────────────
+  const cardBg       = dark ? '#0f1f38' : '#e5e7eb'
+  const cardBorder   = dark ? '#1a3356' : 'rgba(209,213,219,0.6)'
+  const textPrimary  = dark ? '#dde8f5' : '#111827'
+  const textSecondary = dark ? '#6b8cae' : '#374151'
+  const iconBoxBg    = dark ? 'rgba(30,64,175,0.2)' : 'rgba(255,255,255,0.6)'
+  const iconBoxBorder = dark ? '#1a3356' : 'rgba(209,213,219,0.6)'
+  const iconColor    = dark ? '#93c5fd' : '#374151'
+  const labelColor   = dark ? '#2e4d70' : '#4b5563'
+  const tickFilled   = dark ? '#93c5fd' : '#4b5563'
+  const tickEmpty    = dark ? '#1a3356' : '#9ca3af'
+
   return (
-    <div 
-      className={`rounded-2xl shadow-lg p-4 text-gray-900 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border-2 border-gray-300/60 ${isFlipping ? 'animate-pulse' : ''}`}
-      style={{ 
-        backgroundColor: '#e5e7eb',
+    <div
+      style={{
+        borderRadius: '1rem',
+        boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.1)',
+        padding: '1rem',
+        background: cardBg,
+        border: `2px solid ${cardBorder}`,
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        animation: isFlipping ? 'pulse 0.6s ease' : undefined,
+        transition: 'background 0.45s ease, border-color 0.45s ease, box-shadow 0.3s ease, transform 0.3s ease',
+        cursor: 'default',
       }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = dark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 24px rgba(0,0,0,0.15)' }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = dark ? '0 4px 24px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.1)' }}
     >
       {/* Decorative corner accent */}
-      <div 
-        className="absolute top-0 right-0 w-20 h-20 opacity-20"
-        style={{
-          background: 'radial-gradient(circle at top right, #ffffff 0%, transparent 70%)'
-        }}
-      />
-      
-      {/* Quirky rotating icon */}
-      <div className="flex items-center gap-3 mb-3">
-        <div 
-          className="p-2 rounded-xl bg-white/60 backdrop-blur-sm border border-gray-300/60 hover:rotate-12 transition-transform duration-300"
-        >
-          <CalendarIcon className="w-5 h-5 text-gray-700" />
+      <div style={{
+        position: 'absolute', top: 0, right: 0,
+        width: '5rem', height: '5rem', opacity: dark ? 0.08 : 0.2,
+        background: 'radial-gradient(circle at top right, #ffffff 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Icon + label */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        <div style={{
+          padding: '0.5rem',
+          borderRadius: '0.625rem',
+          background: iconBoxBg,
+          border: `1px solid ${iconBoxBorder}`,
+          backdropFilter: 'blur(4px)',
+          transition: 'background 0.45s ease',
+        }}>
+          <CalendarIcon style={{ width: '1.25rem', height: '1.25rem', color: iconColor }} />
         </div>
-        <p className="text-xs font-bold tracking-widest opacity-80 uppercase text-gray-700">
+        <p style={{
+          fontSize: '0.65rem', fontWeight: 700,
+          letterSpacing: '0.12em', textTransform: 'uppercase',
+          color: labelColor, margin: 0,
+          transition: 'color 0.45s ease',
+        }}>
           Right Now
         </p>
       </div>
-      
-      <div className="space-y-1 relative z-10">
-        <p className="text-sm font-medium opacity-80 text-gray-700">
+
+      {/* Date & Time */}
+      <div style={{ position: 'relative', zIndex: 10 }}>
+        <p style={{ fontSize: '0.875rem', fontWeight: 500, color: textSecondary, margin: '0 0 0.25rem', transition: 'color 0.45s ease' }}>
           {formatDate(currentTime)}
         </p>
-        <p 
-  className="text-2xl font-normal tracking-tight"
-  style={{ 
-    letterSpacing: '-0.02em',
-    fontFeatureSettings: '"tnum"' // Tabular numbers for consistent width
-  }}
->
-  {formatTime(currentTime).split(':').map((part, idx) => (
-    <span key={idx}>
-      {part}
-      {idx < 2 && (
-        <span 
-          className={`inline-block transition-opacity duration-200 ${shouldPulse ? 'opacity-100' : 'opacity-40'}`}
-        >
-          :
-        </span>
-      )}
-    </span>
-  ))}
-</p>
+        <p style={{
+          fontSize: '1.5rem', fontWeight: 400,
+          letterSpacing: '-0.02em',
+          fontFeatureSettings: '"tnum"',
+          color: textPrimary, margin: 0,
+          transition: 'color 0.45s ease',
+        }}>
+          {formatTime(currentTime).split(':').map((part, idx) => (
+            <span key={idx}>
+              {part}
+              {idx < 2 && (
+                <span style={{
+                  display: 'inline-block',
+                  opacity: shouldPulse ? 1 : 0.4,
+                  transition: 'opacity 0.2s ease',
+                }}>
+                  :
+                </span>
+              )}
+            </span>
+          ))}
+        </p>
       </div>
 
-      {/* Fun ticking indicator */}
-      <div className="flex gap-1 mt-3">
+      {/* Ticking progress bar */}
+      <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.75rem' }}>
         {[...Array(12)].map((_, i) => (
           <div
             key={i}
-            className="h-1 flex-1 rounded-full transition-all duration-300"
             style={{
-              backgroundColor: i < (seconds / 5) ? '#4b5563' : '#9ca3af',
-              opacity: i < (seconds / 5) ? 0.9 : 0.4
+              height: '0.25rem', flex: 1,
+              borderRadius: '999px',
+              background: i < (seconds / 5) ? tickFilled : tickEmpty,
+              opacity: i < (seconds / 5) ? 0.9 : 0.4,
+              transition: 'background 0.3s ease, opacity 0.3s ease',
             }}
           />
         ))}

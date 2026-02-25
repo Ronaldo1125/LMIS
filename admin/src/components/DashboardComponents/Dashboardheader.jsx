@@ -3,14 +3,13 @@ import { useState, useEffect } from 'react'
 import NotificationPanel from './NotificationPanel'
 import AccountMenu from './AccountMenu'
 
-const DashboardHeader = ({ user, setCurrentView }) => {
+const DashboardHeader = ({ user, setCurrentView, dark }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSticky, setIsSticky] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [showNotifications, setShowNotifications] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
 
-  // Notifications state — managed here and passed down (no unused setter lint warning)
   const [notifications, setNotifications] = useState([])  // eslint-disable-line no-unused-vars
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -49,74 +48,149 @@ const DashboardHeader = ({ user, setCurrentView }) => {
     setCurrentView('help')
   }
 
+  // ── Colors ────────────────────────────────────────────────
+  const headerBg     = dark ? '#0d1d35' : '#ffffff'
+  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
+  const titleColor   = dark ? '#dde8f5' : 'var(--dark-blue-1)'
+  const subtitleColor = dark ? '#6b8cae' : '#4b5563'
+  const clockBg      = dark ? '#081422' : '#f8fafc'
+  const clockBorder  = dark ? '#1a3356' : '#e2e8f0'
+  const clockText    = dark ? '#6b8cae' : '#374151'
+  const clockTime    = dark ? '#93c5fd' : 'var(--secondary-4-grey)'
+  const clockDivider = dark ? '#1a3356' : '#d1d5db'
+  const inputBg      = dark ? '#081422' : '#ffffff'
+  const inputBorder  = dark ? '#1a3356' : '#d1d5db'
+  const inputText    = dark ? '#dde8f5' : '#1f2937'
+  const inputPlaceholder = dark ? '#2e4d70' : '#9ca3af'
+  const iconBtnBg    = dark ? '#0f1f38' : '#f8fafc'
+  const iconBtnBorder = dark ? '#1a3356' : '#e2e8f0'
+  const iconColor    = dark ? '#93c5fd' : 'var(--dark-blue-2)'
+
+  const iconBtnStyle = {
+    padding: '0.5rem',
+    borderRadius: '0.5rem',
+    background: iconBtnBg,
+    border: `1px solid ${iconBtnBorder}`,
+    cursor: 'pointer',
+    position: 'relative',
+    transition: 'background 0.2s ease, border-color 0.2s ease',
+    outline: 'none',
+  }
+
   return (
-    <div
-      className={`bg-white shadow-sm p-4 mb-6 transition-all duration-300 sticky top-0 z-50 ${
-        isSticky ? 'rounded-none shadow-md' : 'rounded-lg'
-      }`}
-    >
-      <div className="flex items-center justify-between max-w-[1400px] mx-auto">
+    <div style={{
+      background: headerBg,
+      border: `1px solid ${isSticky ? headerBorder : 'transparent'}`,
+      borderRadius: isSticky ? '0' : '0.5rem',
+      boxShadow: isSticky
+        ? (dark ? '0 4px 20px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.1)')
+        : (dark ? '0 1px 4px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.06)'),
+      padding: '1rem',
+      marginBottom: '1.5rem',
+      position: 'sticky', top: 0, zIndex: 50,
+      transition: 'background 0.45s ease, border-color 0.45s ease, box-shadow 0.3s ease, border-radius 0.3s ease',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '1400px', margin: '0 auto' }}>
 
         {/* Left — Logo */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           <img
             src="/LOGO.svg"
             alt="LMIS Logo"
-            className={`transition-all duration-300 ${isSticky ? 'w-10 h-10' : 'w-12 h-12'}`}
+            style={{
+              width: isSticky ? '2.5rem' : '3rem',
+              height: isSticky ? '2.5rem' : '3rem',
+              transition: 'all 0.3s ease',
+            }}
           />
           <div>
-            <h1 className={`font-bold text-[var(--dark-blue-1)] transition-all duration-300 ${isSticky ? 'text-xl' : 'text-2xl'}`}>
+            <h1 style={{
+              fontWeight: 700,
+              color: titleColor,
+              fontSize: isSticky ? '1.25rem' : '1.5rem',
+              margin: 0,
+              transition: 'all 0.3s ease',
+            }}>
               LMIS - DRO5
             </h1>
-            <p className={`text-xs text-gray-600 transition-all duration-300 overflow-hidden ${
-              isSticky ? 'opacity-0 max-h-0' : 'opacity-100 max-h-10'
-            }`}>
+            <p style={{
+              fontSize: '0.75rem',
+              color: subtitleColor,
+              margin: 0,
+              maxHeight: isSticky ? 0 : '2.5rem',
+              opacity: isSticky ? 0 : 1,
+              overflow: 'hidden',
+              transition: 'all 0.3s ease',
+            }}>
               Library Management Information System
             </p>
           </div>
         </div>
 
-        {/* Center — Clock (sticky only) */}
-        <div className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-slate-50 to-gray-50 border border-gray-200 transition-all duration-500 ${
-          isSticky
-            ? 'opacity-100 translate-y-0 scale-100'
-            : 'opacity-0 -translate-y-4 scale-95 absolute pointer-events-none'
-        }`}>
-          <CalendarIcon className="w-4 h-4 text-[var(--secondary-4-grey)]" />
-          <div className="flex items-center gap-3 text-sm">
-            <span className="font-medium text-gray-700">{formatDate(currentTime)}</span>
-            <span className="w-px h-4 bg-gray-300" />
-            <span className="font-semibold text-[var(--secondary-4-grey)] tabular-nums">{formatTime(currentTime)}</span>
+        {/* Center — Clock (only when sticky) */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.5rem',
+          padding: '0.5rem 1rem',
+          borderRadius: '0.5rem',
+          background: clockBg,
+          border: `1px solid ${clockBorder}`,
+          opacity: isSticky ? 1 : 0,
+          transform: isSticky ? 'translateY(0) scale(1)' : 'translateY(-1rem) scale(0.95)',
+          pointerEvents: isSticky ? 'auto' : 'none',
+          position: isSticky ? 'relative' : 'absolute',
+          transition: 'all 0.3s ease',
+        }}>
+          <CalendarIcon style={{ width: '1rem', height: '1rem', color: clockTime }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem' }}>
+            <span style={{ fontWeight: 500, color: clockText }}>{formatDate(currentTime)}</span>
+            <span style={{ width: '1px', height: '1rem', background: clockDivider }} />
+            <span style={{ fontWeight: 600, color: clockTime, fontVariantNumeric: 'tabular-nums' }}>
+              {formatTime(currentTime)}
+            </span>
           </div>
         </div>
 
         {/* Right — Actions */}
-        <div className="flex items-center gap-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
 
           {/* Search */}
-          <div className="relative">
+          <div style={{ position: 'relative' }}>
             <input
               type="text"
               placeholder="Search for queries..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-[var(--dark-blue-2)] focus:ring-2 focus:ring-[var(--dark-blue-2)] focus:ring-opacity-50 transition-all duration-300 ${
-                isSticky ? 'w-48' : 'w-64'
-              }`}
+              style={{
+                paddingLeft: '2.25rem', paddingRight: '0.75rem',
+                paddingTop: '0.5rem', paddingBottom: '0.5rem',
+                fontSize: '0.875rem', borderRadius: '0.5rem',
+                border: `1px solid ${inputBorder}`,
+                background: inputBg, color: inputText,
+                width: isSticky ? '12rem' : '16rem',
+                outline: 'none',
+                transition: 'all 0.3s ease',
+              }}
+              onFocus={e => { e.target.style.borderColor = 'var(--dark-blue-2)'; e.target.style.boxShadow = '0 0 0 2px rgba(15,97,247,0.2)' }}
+              onBlur={e => { e.target.style.borderColor = inputBorder; e.target.style.boxShadow = 'none' }}
             />
-            <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <MagnifyingGlassIcon style={{ width: '1rem', height: '1rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: inputPlaceholder }} />
           </div>
 
-          {/* Notifications button */}
-          <div className="relative">
+          {/* Notifications */}
+          <div style={{ position: 'relative' }}>
             <button
               onClick={() => { setShowNotifications((prev) => !prev); setShowAccountMenu(false) }}
-              className="relative p-2 rounded-lg bg-slate-50 border border-slate-200 transition-all group hover:bg-[var(--dark-blue-1)] hover:border-[var(--dark-blue-1)] focus:outline-none focus:ring-2 focus:ring-[var(--dark-blue-2)] focus:ring-opacity-40"
-              aria-label="Notifications"
+              style={iconBtnStyle}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--dark-blue-1)'; e.currentTarget.style.borderColor = 'var(--dark-blue-1)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = iconBtnBg; e.currentTarget.style.borderColor = iconBtnBorder }}
             >
-              <BellIcon className="w-5 h-5 text-[var(--dark-blue-2)] group-hover:text-white transition-colors" />
+              <BellIcon style={{ width: '1.25rem', height: '1.25rem', color: iconColor }} />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--secondary-3-medium)]" />
+                <span style={{
+                  position: 'absolute', top: '0.25rem', right: '0.25rem',
+                  width: '0.5rem', height: '0.5rem',
+                  borderRadius: '50%', background: 'var(--secondary-3-medium)',
+                }} />
               )}
             </button>
 
@@ -125,17 +199,19 @@ const DashboardHeader = ({ user, setCurrentView }) => {
               onClose={() => setShowNotifications(false)}
               notifications={notifications}
               isSticky={isSticky}
+              dark={dark}
             />
           </div>
 
-          {/* Account button */}
-          <div className="relative">
+          {/* Account */}
+          <div style={{ position: 'relative' }}>
             <button
               onClick={() => { setShowAccountMenu((prev) => !prev); setShowNotifications(false) }}
-              className="p-2 rounded-lg bg-slate-50 border border-slate-200 transition-all group hover:bg-[var(--dark-blue-1)] hover:border-[var(--dark-blue-1)] focus:outline-none focus:ring-2 focus:ring-[var(--dark-blue-2)] focus:ring-opacity-40"
-              aria-label="Account"
+              style={iconBtnStyle}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--dark-blue-1)'; e.currentTarget.style.borderColor = 'var(--dark-blue-1)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = iconBtnBg; e.currentTarget.style.borderColor = iconBtnBorder }}
             >
-              <UserCircleIcon className="w-5 h-5 text-[var(--dark-blue-2)] group-hover:text-white transition-colors" />
+              <UserCircleIcon style={{ width: '1.25rem', height: '1.25rem', color: iconColor }} />
             </button>
 
             <AccountMenu
@@ -145,6 +221,7 @@ const DashboardHeader = ({ user, setCurrentView }) => {
               isSticky={isSticky}
               onMyProfile={handleMyProfile}
               onHelpSupport={handleHelpSupport}
+              dark={dark}
             />
           </div>
 
