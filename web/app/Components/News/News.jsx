@@ -158,6 +158,7 @@ const News = () => {
         gridTemplateColumns: "2fr 1fr 1fr",
         gap: 32,
         marginBottom: 40,
+        
       }}>
         {current.map((item, i) => (
           <div
@@ -173,6 +174,7 @@ const News = () => {
               alignItems: "center",
               justifyContent: "center",
               overflow: "hidden",
+              borderRadius: 8,
             }}>
               <img 
                 src={item.image} 
