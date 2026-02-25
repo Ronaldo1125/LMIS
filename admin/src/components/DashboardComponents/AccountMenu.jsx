@@ -137,22 +137,6 @@ const AccountMenu = ({ isOpen, onClose, user, isSticky, onMyProfile, onHelpSuppo
         </button>
       </div>
 
-      {/* Divider and Logout option - Optional, but keeps it consistent with most Account Menus */}
-      <div style={{ borderTop: `1px solid ${menuBorder}`, margin: '0.25rem 0', transition: 'border-color 0.45s ease' }} />
-      <button
-        style={{
-          width: '100%', padding: '0.625rem 1rem', background: 'transparent', border: 'none',
-          display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer',
-          textAlign: 'left', transition: 'background 0.2s ease'
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = itemHover}
-        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-      >
-        <svg style={{ width: '1.25rem', height: '1.25rem', color: '#ef4444' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
-        <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#ef4444' }}>Sign Out</span>
-      </button>
     </div>
   )
 }
