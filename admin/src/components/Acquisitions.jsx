@@ -5,37 +5,45 @@ import SortControls from './AcquisitionsComponents/SortControls';
 import SearchBar from './AcquisitionsComponents/SearchBar';
 import AcquisitionsList from './AcquisitionsComponents/AcquisitionsList';
 import AcquisitionsGrid from './AcquisitionsComponents/AcquisitionsGrid';
-import api from '../utils/api'; // Import your API util
+import api from '../utils/api';
 
 const Acquisitions = ({ dark }) => {
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // State for API data
   const [acquisitionsData, setAcquisitionsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch acquisitions from API
+  // ── Same tokens as Accessions header ──────────────────────────────────────
+  const pageBg        = dark ? '#0a1628' : '#f1f5f9'
+  const headerBg      = dark ? '#0d1d35' : '#ffffff'
+  const headerBorder  = dark ? '#1a3356' : '#e2e8f0'
+  const cardBg        = dark ? '#0f1f38' : '#ffffff'
+  const border        = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary   = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary = dark ? '#6b8cae' : '#64748b'
+  const iconBoxBg     = dark ? 'rgba(30,64,175,0.15)' : '#dbeafe'
+  const iconColor     = dark ? '#93c5fd' : '#2563eb'
+  const errorBg       = dark ? 'rgba(220,38,38,0.1)' : '#fef2f2'
+  const errorBorder   = dark ? 'rgba(220,38,38,0.2)' : '#fecaca'
+  const errorText     = dark ? '#fca5a5' : '#dc2626'
+
   useEffect(() => {
     const fetchAcquisitions = async () => {
       try {
         setLoading(true);
         setError(null);
-
         const response = await api.get('/acquisitions');
-
         const transformedData = response.data.data.map(item => ({
-        id: item.accession_id,
-        accessionNo: item.accession_no,
-        title: item.title,
-        author: item.author,
-        coverImage: `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1544947950-fa07a98d237f' : '1495446815901-a7297e633e8d'}?w=400&h=600&fit=crop`,
-        acquisitionDate: item.date_accessioned
-        // isbn, publisher, publicationYear are not in the view
-      }));
+          id: item.accession_id,
+          accessionNo: item.accession_no,
+          title: item.title,
+          author: item.author,
+          coverImage: `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1544947950-fa07a98d237f' : '1495446815901-a7297e633e8d'}?w=400&h=600&fit=crop`,
+          acquisitionDate: item.date_accessioned,
+        }));
         setAcquisitionsData(transformedData);
       } catch (err) {
         console.error('Error fetching acquisitions:', err);
@@ -44,13 +52,11 @@ const Acquisitions = ({ dark }) => {
         setLoading(false);
       }
     };
-
     fetchAcquisitions();
   }, []);
 
   const filteredAndSortedAcquisitions = useMemo(() => {
     let filtered = acquisitionsData;
-
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = acquisitionsData.filter(book =>
@@ -59,9 +65,7 @@ const Acquisitions = ({ dark }) => {
         (book.accessionNo && book.accessionNo.toLowerCase().includes(query))
       );
     }
-
     const sorted = [...filtered];
-
     if (sortBy === 'alphabetical') {
       sorted.sort((a, b) => {
         const comparison = a.title.localeCompare(b.title);
@@ -74,7 +78,6 @@ const Acquisitions = ({ dark }) => {
         return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
       });
     }
-
     return sorted;
   }, [acquisitionsData, sortBy, sortOrder, searchQuery]);
 
@@ -89,38 +92,38 @@ const Acquisitions = ({ dark }) => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && searchQuery) {
-        setSearchQuery('');
-      }
+      if (e.key === 'Escape' && searchQuery) setSearchQuery('');
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [searchQuery]);
 
-  // Loading state
+  // ── Loading state ─────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${dark ? 'bg-[#0a1628]' : 'bg-gray-50'}`}>
-        <div className="text-center">
-          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${dark ? 'border-yellow-400' : 'border-blue-600'} mx-auto mb-4`}></div>
-          <p className={dark ? 'text-gray-300' : 'text-gray-600'}>Loading acquisitions...</p>
+      <div style={{ minHeight: '100vh', background: pageBg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.45s ease' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ display: 'inline-block', width: '3rem', height: '3rem', borderRadius: '50%', border: '2px solid transparent', borderBottomColor: iconColor, animation: 'spin 0.8s linear infinite', marginBottom: '1rem' }} />
+          <p style={{ color: textSecondary, margin: 0 }}>Loading acquisitions...</p>
         </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
-  // Error state
+  // ── Error state ───────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${dark ? 'bg-[#0a1628]' : 'bg-gray-50'}`}>
-        <div className={`${dark ? 'bg-[#1a2332] text-gray-200' : 'bg-white'} rounded-lg shadow-sm p-8 max-w-md text-center`}>
-          <AlertCircle className={`w-12 h-12 ${dark ? 'text-yellow-400' : 'text-red-500'} mx-auto mb-4`} />
-          <h2 className={`text-xl font-bold ${dark ? 'text-gray-100' : 'text-gray-800'} mb-2`}>Error Loading Data</h2>
-          <p className={dark ? 'text-gray-400 mb-4' : 'text-gray-600 mb-4'}>{error}</p>
+      <div style={{ minHeight: '100vh', background: pageBg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.45s ease' }}>
+        <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '0.75rem', padding: '2.5rem', maxWidth: '28rem', textAlign: 'center', boxShadow: dark ? '0 4px 24px rgba(0,0,0,0.4)' : '0 1px 8px rgba(0,0,0,0.06)' }}>
+          <AlertCircle style={{ width: '3rem', height: '3rem', color: errorText, margin: '0 auto 1rem' }} />
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: textPrimary, margin: '0 0 0.5rem' }}>Error Loading Data</h2>
+          <p style={{ color: textSecondary, margin: '0 0 1.25rem' }}>{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className={`px-6 py-2 ${dark ? 'bg-yellow-400 text-gray-900 hover:bg-yellow-500' : 'bg-blue-600 text-white hover:bg-blue-700'} rounded-lg transition-colors duration-200 font-medium`}
+            style={{ padding: '0.5rem 1.5rem', background: iconColor, color: '#ffffff', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', transition: 'opacity 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
             Retry
           </button>
@@ -130,16 +133,25 @@ const Acquisitions = ({ dark }) => {
   }
 
   return (
-    <div className={`min-h-screen ${dark ? 'bg-[#0a1628]' : 'bg-gray-50'}`}>
-      {/* Header */}
-      <div className={`${dark ? 'bg-[#1a2332] border-b border-gray-700' : 'bg-white border-b border-gray-200'} px-6 py-4 mb-6`}>
-        <div className="flex items-center gap-3">
-          <div className={dark ? 'p-2 bg-yellow-100 rounded-lg' : 'p-2 bg-blue-100 rounded-lg'}>
-            <BookMarked className={`w-6 h-6 ${dark ? 'text-yellow-500' : 'text-blue-600'}`} />
+    <div style={{ minHeight: '100vh', background: pageBg, transition: 'background 0.45s ease' }}>
+
+      {/* ── Header — matches Accessions exactly ──────────────────────────── */}
+      <div style={{
+        background: headerBg,
+        borderBottom: `1px solid ${headerBorder}`,
+        padding: '1rem 1.5rem',
+        marginBottom: '1.5rem',
+        transition: 'background 0.45s ease, border-color 0.45s ease',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ padding: '0.5rem', background: iconBoxBg, borderRadius: '0.5rem', transition: 'background 0.45s ease' }}>
+            <BookMarked style={{ width: '1.5rem', height: '1.5rem', color: iconColor }} />
           </div>
           <div>
-            <h1 className={`text-2xl font-bold ${dark ? 'text-gray-100' : 'text-gray-800'}`}>Recent Acquisitions</h1>
-            <p className={`text-sm ${dark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: textPrimary, margin: 0, transition: 'color 0.45s ease' }}>
+              Recent Acquisitions
+            </h1>
+            <p style={{ fontSize: '0.875rem', color: textSecondary, margin: 0, transition: 'color 0.45s ease' }}>
               {filteredAndSortedAcquisitions.length}{' '}
               {filteredAndSortedAcquisitions.length === 1 ? 'book' : 'books'}
               {searchQuery && ' found'} • Last 14 days
@@ -148,50 +160,40 @@ const Acquisitions = ({ dark }) => {
         </div>
       </div>
 
+      {/* ── Body ──────────────────────────────────────────────────────────── */}
       <div className="px-6">
         {/* Sticky Controls */}
-        <div className={`sticky top-0 z-40 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8 ${dark ? 'bg-[#0a1628]' : 'bg-gray-50'}`}> 
+        <div style={{
+          position: 'sticky', top: 0, zIndex: 40,
+          background: pageBg, paddingTop: '1rem', paddingBottom: '1rem',
+          transition: 'background 0.45s ease',
+        }}
+          className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8"
+        >
           <div className="flex flex-col sm:flex-row gap-6">
-            <SortControls
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              onSortChange={handleSortChange}
-              dark={dark}
-            />
-            <ViewToggle
-              viewMode={viewMode}
-              onViewChange={setViewMode}
-              dark={dark}
-            />
+            <SortControls sortBy={sortBy} sortOrder={sortOrder} onSortChange={handleSortChange} dark={dark} />
+            <ViewToggle viewMode={viewMode} onViewChange={setViewMode} dark={dark} />
           </div>
-
-          <SearchBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            dark={dark}
-          />
+          <SearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} dark={dark} />
         </div>
 
         {/* Content */}
         <div>
           {filteredAndSortedAcquisitions.length > 0 ? (
-            viewMode === 'grid' ? (
-              <AcquisitionsGrid acquisitions={filteredAndSortedAcquisitions} dark={dark} />
-            ) : (
-              <AcquisitionsList acquisitions={filteredAndSortedAcquisitions} dark={dark} />
-            )
+            viewMode === 'grid'
+              ? <AcquisitionsGrid acquisitions={filteredAndSortedAcquisitions} dark={dark} />
+              : <AcquisitionsList acquisitions={filteredAndSortedAcquisitions} dark={dark} />
           ) : (
-            <div className={`${dark ? 'bg-[#1a2332] text-gray-300' : 'bg-white'} rounded-lg shadow-sm p-16 text-center`}>
-              <p className={`${dark ? 'text-gray-400' : 'text-gray-500'} text-lg font-normal tracking-normal`}>
-                {searchQuery 
-                  ? `No books found matching "${searchQuery}"`
-                  : 'No acquisitions in the last 14 days'
-                }
+            <div style={{ background: cardBg, border: `1px solid ${border}`, borderRadius: '0.75rem', padding: '4rem', textAlign: 'center', transition: 'background 0.45s ease, border-color 0.45s ease' }}>
+              <p style={{ color: textSecondary, fontSize: '1rem', margin: 0 }}>
+                {searchQuery ? `No books found matching "${searchQuery}"` : 'No acquisitions in the last 14 days'}
               </p>
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className={`mt-4 px-6 py-2 ${dark ? 'bg-yellow-400 text-gray-900 hover:bg-yellow-500' : 'bg-blue-600 text-white hover:bg-blue-700'} rounded-lg transition-colors duration-200 font-medium tracking-normal`}
+                  style={{ marginTop: '1rem', padding: '0.5rem 1.5rem', background: iconColor, color: '#ffffff', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', transition: 'opacity 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                 >
                   Clear Search
                 </button>
@@ -200,6 +202,8 @@ const Acquisitions = ({ dark }) => {
           )}
         </div>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };
