@@ -1,21 +1,16 @@
 const jwt = require('jsonwebtoken');
 
-// Middleware to verify JWT token
+// Middleware to verify JWT token (blocks request if no/invalid token)
 const authMiddleware = (req, res, next) => {
   try {
-    // Get token from header
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'No token provided' });
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-
-    // Verify token
+    const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Add user info to request
     req.user = decoded;
     next();
 
@@ -30,19 +25,42 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// Middleware to check user rol// auth.js
-const roleMiddleware = (...allowedRoles) => {  // Add the ... rest operator
+// Middleware that attaches user info if a token is present,
+// but does NOT block the request if there's no token.
+// Use this on public routes where auth is optional (e.g. public book catalogue).
+const optionalAuthMiddleware = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      req.user = null; // No token — guest access
+      return next();
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+
+  } catch (error) {
+    // Token present but invalid/expired — treat as guest rather than blocking
+    req.user = null;
+    next();
+  }
+};
+
+// Middleware to check user role
+const roleMiddleware = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Authentication required' });
     }
-    
-    // Add debug logging
+
     console.log('User role:', req.user.role);
     console.log('Allowed roles:', allowedRoles);
-    
+
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         message: 'Access denied. Insufficient permissions.',
         requiredRoles: allowedRoles,
         userRole: req.user.role
@@ -54,5 +72,6 @@ const roleMiddleware = (...allowedRoles) => {  // Add the ... rest operator
 
 module.exports = {
   authMiddleware,
+  optionalAuthMiddleware,
   roleMiddleware
 };
