@@ -13,6 +13,15 @@ import {
   ChevronUpIcon
 } from '@heroicons/react/24/outline'
 
+// Sora + DM Sans fonts
+const fontLink = document.createElement('link')
+fontLink.href = 'https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap'
+fontLink.rel = 'stylesheet'
+document.head.appendChild(fontLink)
+
+const FONT_HEADING = "'Sora', -apple-system, BlinkMacSystemFont, sans-serif"
+const FONT_BODY    = "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+
 const CollectionByCategory = ({ dark }) => {
   const [hoveredCategory, setHoveredCategory] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -183,12 +192,13 @@ const CollectionByCategory = ({ dark }) => {
     display: 'flex', flexDirection: 'column', height: '100%',
     position: 'relative',
     transition: 'background 0.45s ease, border-color 0.45s ease',
+    fontFamily: FONT_BODY,
   }
 
   if (loading || error || categories.length === 0) {
     return (
       <div style={cardStyle}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--dark-blue-1)', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--dark-blue-1)', marginBottom: '1.5rem', fontFamily: FONT_HEADING }}>
           Collection by Category
         </h2>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
@@ -202,7 +212,7 @@ const CollectionByCategory = ({ dark }) => {
 
   return (
     <div style={cardStyle}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--dark-blue-1)', marginBottom: '1.5rem' }}>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--dark-blue-1)', marginBottom: '1.5rem', fontFamily: FONT_HEADING }}>
         Collection by Category
       </h2>
 
@@ -236,7 +246,7 @@ const CollectionByCategory = ({ dark }) => {
                     <Icon style={{ width: '1.25rem', height: '1.25rem', color: cat.color }} />
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: textPrimary, margin: 0 }}>{cat.name}</h3>
+                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: textPrimary, margin: 0, fontFamily: FONT_HEADING }}>{cat.name}</h3>
                     <p style={{ fontSize: '0.75rem', color: textSecondary, margin: 0 }}>{cat.count.toLocaleString()} items</p>
                   </div>
                 </div>
@@ -299,7 +309,7 @@ const CollectionByCategory = ({ dark }) => {
               background: dark ? '#0d1d35' : '#ffffff', borderRadius: '1rem 1rem 0 0'
             }}>
               <div>
-                <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--dark-blue-1)', margin: 0 }}>All Categories</h2>
+                <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--dark-blue-1)', margin: 0, fontFamily: FONT_HEADING }}>All Categories</h2>
                 <p style={{ fontSize: '0.75rem', color: textMuted, margin: '0.125rem 0 0' }}>
                   {totalItems.toLocaleString()} items in {categories.length} categories
                 </p>
@@ -336,7 +346,7 @@ const CollectionByCategory = ({ dark }) => {
                           <Icon style={{ width: '1.125rem', height: '1.125rem', color: cat.color }} />
                         </div>
                         <div>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: textPrimary, display: 'block' }}>{cat.name}</span>
+                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: textPrimary, display: 'block', fontFamily: FONT_HEADING }}>{cat.name}</span>
                           <span style={{ fontSize: '0.75rem', color: textSecondary }}>{cat.count.toLocaleString()} items</span>
                         </div>
                       </div>
