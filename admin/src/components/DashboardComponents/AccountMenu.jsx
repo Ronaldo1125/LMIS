@@ -1,12 +1,13 @@
 import { useRef, useEffect, useState } from 'react'
+import { UserCircleIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 
 const getRoleLabel = (r) => {
   switch (r) {
-    case 'admin': return 'Administrator'
+    case 'admin':     return 'Administrator'
     case 'librarian': return 'Librarian'
-    case 'staff': return 'Staff'
-    case 'patron': return 'Patron'
-    default: return r
+    case 'staff':     return 'Staff'
+    case 'patron':    return 'Patron'
+    default:          return r
   }
 }
 
@@ -14,42 +15,55 @@ const AccountMenu = ({ isOpen, onClose, user, isSticky, onMyProfile, onHelpSuppo
   const menuRef = useRef(null)
   const [isAnimating, setIsAnimating] = useState(false)
 
-  const fullName = user?.full_name || user?.username || 'Unknown'
-  const username = user?.username || ''
-  const role = user?.role || ''
-  const email = user?.email || `${username}@lmis-dro5.gov`
+  const fullName     = user?.full_name || user?.username || 'Unknown'
+  const username     = user?.username || ''
+  const role         = user?.role || ''
+  const email        = user?.email || `${username}@lmis-dro5.gov`
   const avatarLetter = fullName.charAt(0).toUpperCase()
 
-  // Sync animation state with isOpen
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => setIsAnimating(true), 10)
-    } else {
-      setIsAnimating(false)
-    }
+    if (isOpen) { setTimeout(() => setIsAnimating(true), 10) }
+    else { setIsAnimating(false) }
   }, [isOpen])
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        onClose()
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target)) onClose()
     }
     if (isOpen) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen, onClose])
 
-  // ── Colors (Matching previous components) ──────────────────
-  const menuBg       = dark ? '#0f1f38' : '#ffffff'
-  const menuBorder   = dark ? '#1a3356' : '#e2e8f0'
-  const textPrimary  = dark ? '#dde8f5' : '#374151'
-  const textSecondary = dark ? '#6b8cae' : '#6b7280'
-  const itemHover    = dark ? '#1a3356' : '#f9fafb'
-  const bannerBg     = dark 
-    ? 'linear-gradient(135deg, #0d1d35 0%, #1a3356 100%)' 
-    : 'linear-gradient(135deg, var(--dark-blue-1) 0%, var(--dark-blue-2) 100%)'
+  // ── Colors ────────────────────────────────────────────────────────────────
+  const menuBg        = dark ? '#0f1f38' : '#ffffff'
+  const menuBorder    = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary   = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary = dark ? '#6b8cae' : '#64748b'
+  const itemHover     = dark ? '#1a3356' : '#f1f5f9'
+  const divider       = dark ? '#1a3356' : '#e2e8f0'
 
   if (!isOpen && !isAnimating) return null
+
+  const MenuItem = ({ onClick, icon: Icon, label }) => {
+    const [hover, setHover] = useState(false)
+    return (
+      <button
+        onClick={onClick}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          width: '100%', padding: '0.625rem 1rem',
+          background: hover ? itemHover : 'transparent',
+          border: 'none', display: 'flex', alignItems: 'center',
+          gap: '0.75rem', cursor: 'pointer', textAlign: 'left',
+          transition: 'background 0.2s ease',
+        }}
+      >
+        <Icon style={{ width: '1.125rem', height: '1.125rem', color: textSecondary, flexShrink: 0 }} />
+        <span style={{ fontSize: '0.875rem', fontWeight: 500, color: textPrimary }}>{label}</span>
+      </button>
+    )
+  }
 
   return (
     <div
@@ -58,41 +72,52 @@ const AccountMenu = ({ isOpen, onClose, user, isSticky, onMyProfile, onHelpSuppo
         position: 'fixed',
         right: '1rem',
         top: isSticky ? '4.5rem' : '5.5rem',
-        width: '16rem',
+        width: '17rem',
         background: menuBg,
         border: `1px solid ${menuBorder}`,
         borderRadius: '0.75rem',
-        boxShadow: dark ? '0 10px 40px rgba(0,0,0,0.5)' : '0 10px 25px -5px rgba(0,0,0,0.1)',
+        boxShadow: dark ? '0 10px 40px rgba(0,0,0,0.5)' : '0 10px 25px -5px rgba(0,0,0,0.12)',
         zIndex: 100,
         overflow: 'hidden',
         opacity: isAnimating ? 1 : 0,
         transform: isAnimating ? 'translateY(0) scale(1)' : 'translateY(-10px) scale(0.95)',
-        transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.45s ease, border-color 0.45s ease',
-        transformOrigin: 'top right'
+        transition: 'opacity 0.2s ease, transform 0.2s ease, background 0.45s ease, border-color 0.45s ease',
+        transformOrigin: 'top right',
       }}
     >
-      {/* Profile banner */}
-      <div style={{ padding: '1.25rem', background: bannerBg, transition: 'background 0.45s ease' }}>
+      {/* ── Banner ──────────────────────────────────────────────────────── */}
+      <div style={{
+        padding: '1.25rem',
+        background: dark
+          ? 'linear-gradient(135deg, #0d1d35 0%, #1a3356 100%)'
+          : 'linear-gradient(135deg, #154A9A 0%, #1d6abf 100%)',
+        transition: 'background 0.45s ease',
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ 
-            width: '3rem', height: '3rem', borderRadius: '9999px', 
-            background: 'rgba(255, 255, 255, 0.2)', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, border: '1px solid rgba(255, 255, 255, 0.1)'
+          {/* Avatar */}
+          <div style={{
+            width: '3rem', height: '3rem', borderRadius: '9999px',
+            background: 'rgba(255,255,255,0.18)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.125rem' }}>{avatarLetter}</span>
           </div>
+
+          {/* Info */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h4 style={{ margin: 0, fontWeight: 600, color: '#ffffff', fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <h4 style={{ margin: 0, fontWeight: 700, color: '#ffffff', fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {fullName}
             </h4>
-            <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {email}
             </p>
-            <span style={{ 
-              display: 'inline-block', marginTop: '0.375rem', padding: '0.125rem 0.5rem', 
-              borderRadius: '9999px', background: 'rgba(255, 255, 255, 0.15)', 
-              color: '#ffffff', fontSize: '0.625rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.025em'
+            <span style={{
+              display: 'inline-block', marginTop: '0.35rem',
+              padding: '0.1rem 0.5rem', borderRadius: '999px',
+              background: 'rgba(255,255,255,0.15)',
+              color: '#ffffff', fontSize: '0.6rem', fontWeight: 700,
+              textTransform: 'uppercase', letterSpacing: '0.08em',
             }}>
               {getRoleLabel(role)}
             </span>
@@ -100,44 +125,14 @@ const AccountMenu = ({ isOpen, onClose, user, isSticky, onMyProfile, onHelpSuppo
         </div>
       </div>
 
-      {/* Menu items */}
-      <div style={{ padding: '0.5rem 0' }}>
-        <button
-          onClick={onMyProfile}
-          style={{
-            width: '100%', padding: '0.625rem 1rem', background: 'transparent', border: 'none',
-            display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer',
-            textAlign: 'left', transition: 'background 0.2s ease'
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = itemHover}
-          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-        >
-          <svg style={{ width: '1.25rem', height: '1.25rem', color: textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: textPrimary }}>My Profile</span>
-        </button>
+      {/* ── Divider ─────────────────────────────────────────────────────── */}
+      <div style={{ height: '1px', background: divider, transition: 'background 0.45s ease' }} />
 
-        <button
-          onClick={onHelpSupport}
-          style={{
-            width: '100%', padding: '0.625rem 1rem', background: 'transparent', border: 'none',
-            display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer',
-            textAlign: 'left', transition: 'background 0.2s ease'
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = itemHover}
-          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-        >
-          <svg style={{ width: '1.25rem', height: '1.25rem', color: textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span style={{ fontSize: '0.875rem', fontWeight: 500, color: textPrimary }}>Help & Support</span>
-        </button>
+      {/* ── Menu Items ──────────────────────────────────────────────────── */}
+      <div style={{ padding: '0.375rem 0' }}>
+        <MenuItem onClick={onMyProfile}    icon={UserCircleIcon}          label="My Profile"     />
+        <MenuItem onClick={onHelpSupport}  icon={QuestionMarkCircleIcon}  label="Help & Support" />
       </div>
-
-      
     </div>
   )
 }
