@@ -1,6 +1,22 @@
-import { XMarkIcon, ArrowUturnLeftIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline'
+import { useState, useMemo } from 'react'
+import { XMarkIcon, ArrowUturnLeftIcon, ArchiveBoxIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
 const ArchivesModal = ({ isOpen, onClose, archivedAccessions, onRestore, dark }) => {
+  // ── Hooks must be BEFORE any early return ─────────────────
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredAccessions = useMemo(() => {
+    if (!archivedAccessions) return []
+    if (!searchQuery) return archivedAccessions
+    const q = searchQuery.toLowerCase()
+    return archivedAccessions.filter(item =>
+      item.title?.toLowerCase().includes(q) ||
+      item.accession_no?.toLowerCase().includes(q) ||
+      item.author?.toLowerCase().includes(q)
+    )
+  }, [searchQuery, archivedAccessions])
+
+  // ── Early return AFTER hooks ───────────────────────────────
   if (!isOpen) return null
 
   const formatDate = (value) => {
@@ -11,22 +27,24 @@ const ArchivesModal = ({ isOpen, onClose, archivedAccessions, onRestore, dark })
   }
 
   // ── Colors ────────────────────────────────────────────────
-  const modalBg      = dark ? '#0f1f38' : '#ffffff'
-  const headerBg     = dark ? '#0d1d35' : '#ffffff'
-  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
-  const border       = dark ? '#1a3356' : '#e2e8f0'
-  const textPrimary  = dark ? '#dde8f5' : '#111827'
+  const modalBg       = dark ? '#0f1f38' : '#ffffff'
+  const headerBg      = dark ? '#0d1d35' : '#ffffff'
+  const headerBorder  = dark ? '#1a3356' : '#e2e8f0'
+  const border        = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary   = dark ? '#dde8f5' : '#111827'
   const textSecondary = dark ? '#6b8cae' : '#6b7280'
-  const textMuted    = dark ? '#2e4d70' : '#9ca3af'
-  const rowHoverBg   = dark ? '#0d1d35' : '#f8fafc'
-  const badgeBg      = dark ? 'rgba(253,186,116,0.15)' : 'var(--secondary-3-light)'
-  const badgeText    = dark ? '#fdba74' : 'var(--dark-blue-1)'
-  const reasonText   = dark ? '#fbbf24' : '#d97706'
-  const restoreBg    = dark ? '#1a3356' : '#f1f5f9'
-  const restoreText  = dark ? '#93c5fd' : '#374151'
-  const restoreHover = dark ? '#2e4d70' : '#e2e8f0'
-  const emptyIcon    = dark ? '#1a3356' : '#e5e7eb'
-  const closeHover   = dark ? '#1a3356' : '#f1f5f9'
+  const textMuted     = dark ? '#2e4d70' : '#9ca3af'
+  const rowHoverBg    = dark ? '#0d1d35' : '#f8fafc'
+  const badgeBg       = dark ? 'rgba(253,186,116,0.15)' : 'var(--secondary-3-light)'
+  const badgeText     = dark ? '#fdba74' : 'var(--dark-blue-1)'
+  const reasonText    = dark ? '#fbbf24' : '#d97706'
+  const restoreBg     = dark ? '#1a3356' : '#f1f5f9'
+  const restoreText   = dark ? '#93c5fd' : '#374151'
+  const restoreHover  = dark ? '#2e4d70' : '#e2e8f0'
+  const emptyIcon     = dark ? '#1a3356' : '#e5e7eb'
+  const closeHover    = dark ? '#1a3356' : '#f1f5f9'
+  const searchBg      = dark ? '#0c1a2e' : '#f8fafc'
+  const inputText     = dark ? '#dde8f5' : '#111827'
 
   return (
     <div style={{
@@ -42,7 +60,7 @@ const ArchivesModal = ({ isOpen, onClose, archivedAccessions, onRestore, dark })
           ? '0 24px 64px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.03) inset'
           : '0 24px 64px rgba(0,0,0,0.15)',
         width: '100%', maxWidth: '48rem',
-        maxHeight: '90vh', overflowY: 'auto',
+        maxHeight: '90vh', display: 'flex', flexDirection: 'column',
         border: dark ? `1px solid ${headerBorder}` : 'none',
         transition: 'background 0.45s ease',
       }}>
@@ -55,13 +73,14 @@ const ArchivesModal = ({ isOpen, onClose, archivedAccessions, onRestore, dark })
           padding: '1rem 1.5rem',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           borderRadius: '1rem 1rem 0 0',
+          flexShrink: 0,
           transition: 'background 0.45s ease, border-color 0.45s ease',
         }}>
           <div>
             <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--dark-blue-1)', margin: 0 }}>
-              Archived Accessions
+              Archives
             </h2>
-            {archivedAccessions.length > 0 && (
+            {archivedAccessions?.length > 0 && (
               <p style={{ fontSize: '0.8125rem', color: textMuted, margin: '0.125rem 0 0' }}>
                 {archivedAccessions.length} archived record{archivedAccessions.length !== 1 ? 's' : ''}
               </p>
@@ -77,15 +96,41 @@ const ArchivesModal = ({ isOpen, onClose, archivedAccessions, onRestore, dark })
           </button>
         </div>
 
-        <div style={{ padding: '1.5rem' }}>
-          {archivedAccessions.length === 0 ? (
+        {/* Search Bar */}
+        <div style={{
+          background: searchBg,
+          borderBottom: `1px solid ${headerBorder}`,
+          padding: '0.75rem 1.5rem',
+          display: 'flex', alignItems: 'center', gap: '0.75rem',
+          flexShrink: 0,
+          transition: 'background 0.45s ease',
+        }}>
+          <MagnifyingGlassIcon style={{ width: '1.125rem', height: '1.125rem', color: textMuted, flexShrink: 0 }} />
+          <input
+            type="text"
+            placeholder="Filter by Title, Accession No, or Author..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{
+              flex: 1, background: 'transparent', border: 'none', outline: 'none',
+              fontSize: '0.875rem', fontWeight: 500,
+              color: inputText,
+            }}
+          />
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
+          {filteredAccessions.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
               <ArchiveBoxIcon style={{ width: '3.5rem', height: '3.5rem', margin: '0 auto 0.75rem', color: emptyIcon }} />
-              <p style={{ color: textSecondary, margin: 0 }}>No archived accessions.</p>
+              <p style={{ color: textSecondary, margin: 0 }}>
+                {searchQuery ? 'No records match your search.' : 'No archived accessions.'}
+              </p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {archivedAccessions.map((item) => (
+              {filteredAccessions.map((item) => (
                 <div
                   key={item.id}
                   style={{

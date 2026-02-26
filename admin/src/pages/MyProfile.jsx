@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { KeyIcon, CheckIcon, ArrowLeftIcon, SunIcon, MoonIcon, PaintBrushIcon } from '@heroicons/react/24/outline'
+import { KeyIcon, CheckIcon, SunIcon, MoonIcon, PaintBrushIcon } from '@heroicons/react/24/outline'
 
 /*
   Add this to your global CSS (index.css) for smooth full-page transitions:
@@ -75,39 +75,38 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
     }
   }
 
-  // ─── VS Code-inspired dark gray color system ──────────────────────────────
-  // Light: clean white/slate  |  Dark: VS Code grays (#1e1e1e family)
+  // ─── Navy color system — matches the rest of the app ─────────────────────
   const C = {
-    // Backgrounds — each layer slightly lighter (VS Code layering)
-    pageBg:  dark ? '#1e1e1e' : '#f1f5f9',   // VS Code editor bg
-    cardBg:  dark ? '#252526' : '#ffffff',    // VS Code sidebar bg
-    insetBg: dark ? '#2d2d2d' : '#f8fafc',   // VS Code input/panel bg
+    // Backgrounds
+    pageBg:  dark ? '#0a1628' : '#f1f5f9',
+    cardBg:  dark ? '#0f1f38' : '#ffffff',
+    insetBg: dark ? '#081422' : '#f8fafc',
 
-    // Borders — subtle, not distracting
-    border:  dark ? '#3c3c3c' : '#e2e8f0',   // VS Code border color
+    // Borders
+    border:  dark ? '#1a3356' : '#e2e8f0',
 
     // Text
-    textPrimary:   dark ? '#d4d4d4' : '#1e293b',  // VS Code default text
-    textSecondary: dark ? '#858585' : '#64748b',  // VS Code comment gray
-    textMuted:     dark ? '#555555' : '#94a3b8',
+    textPrimary:   dark ? '#dde8f5' : '#1e293b',
+    textSecondary: dark ? '#6b8cae' : '#64748b',
+    textMuted:     dark ? '#2e4d70' : '#94a3b8',
 
     // Input
-    inputBg: dark ? '#3c3c3c' : '#ffffff',   // VS Code input bg
+    inputBg: dark ? '#081422' : '#ffffff',
 
     // Banner
     banner: dark
-      ? 'linear-gradient(135deg, #2d2d2d 0%, #252526 100%)'
+      ? 'linear-gradient(135deg, #0d1d35 0%, #1a3356 100%)'
       : 'linear-gradient(135deg, var(--dark-blue-1) 0%, var(--dark-blue-2) 100%)',
 
-    // Toggle pill — white/silver in dark, amber in light
-    pillBg:   dark ? '#c0c0c0' : '#f59e0b',
-    pillGlow: dark
-      ? '0 0 16px rgba(192,192,192,0.3), 0 2px 8px rgba(0,0,0,0.4)'
-      : '0 0 18px rgba(245,158,11,0.45)',
+    // Toggle pill — blue in dark, amber in light
+    pillBg:   dark ? '#2563eb' : '#f59e0b',
+   pillGlow: dark
+  ? '0 0 16px rgba(168,85,247,0.5), 0 0 32px rgba(168,85,247,0.2), 0 2px 8px rgba(0,0,0,0.4)'
+  : '0 0 18px rgba(245,158,11,0.45)',
 
     // Icon box
-    iconBoxBg:   dark ? 'rgba(192,192,192,0.08)' : 'rgba(245,158,11,0.14)',
-    iconBoxGlow: dark ? '0 0 10px rgba(192,192,192,0.12)' : '0 0 14px rgba(245,158,11,0.28)',
+    iconBoxBg:   dark ? 'rgba(37,99,235,0.15)' : 'rgba(245,158,11,0.14)',
+    iconBoxGlow: dark ? '0 0 10px rgba(37,99,235,0.2)' : '0 0 14px rgba(245,158,11,0.28)',
   }
 
   const cardStyle = {
@@ -146,23 +145,8 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
     <div style={{ minHeight: '100vh', background: C.pageBg, padding: '1.5rem', transition: 'background 0.4s ease' }}>
       <div style={{ maxWidth: '42rem', margin: '0 auto' }}>
 
-        {/* Back */}
-        <button
-          onClick={() => setCurrentView('dashboard')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '0.5rem',
-            fontSize: '0.875rem', color: C.textSecondary,
-            background: 'none', border: 'none', cursor: 'pointer',
-            marginBottom: '1.5rem', padding: 0,
-            transition: 'color 0.3s ease',
-          }}
-          onMouseEnter={e => e.currentTarget.style.color = C.textPrimary}
-          onMouseLeave={e => e.currentTarget.style.color = C.textSecondary}
-        >
-          <ArrowLeftIcon style={{ width: '1rem', height: '1rem' }} />
-          Back to Dashboard
-        </button>
-
+        
+        
         {/* ── Profile Card ─────────────────────────────────────────── */}
         <div style={{ ...cardStyle, marginBottom: '1.25rem' }}>
           {/* Banner */}
@@ -247,11 +231,13 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                     transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)',
                   }} />
                   <MoonIcon style={{
-                    position: 'absolute', inset: 0, width: '1.2rem', height: '1.2rem', color: '#d4d4d4',
-                    opacity: dark ? 1 : 0,
-                    transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0.3) rotate(-90deg)',
-                    transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)',
-                  }} />
+                  position: 'absolute', inset: 0, width: '1.2rem', height: '1.2rem',
+                  color: '#e2d9f3',  // silvery white-purple
+                  filter: dark ? 'drop-shadow(0 0 6px #c084fc) drop-shadow(0 0 12px #a855f7)' : 'none',
+                  opacity: dark ? 1 : 0,
+                  transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0.3) rotate(-90deg)',
+                  transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)',
+                }} />
                 </div>
               </div>
 
@@ -281,28 +267,23 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                 transition: 'background 0.4s ease, box-shadow 0.4s ease',
               }}
             >
-              {/* Subtle shine overlay on silver pill */}
-              {dark && (
-                <span style={{
-                  position: 'absolute', inset: 0, borderRadius: '999px',
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 60%)',
-                  pointerEvents: 'none',
-                }} />
-              )}
+              {/* Shine overlay */}
+              <span style={{
+                position: 'absolute', inset: 0, borderRadius: '999px',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 60%)',
+                pointerEvents: 'none',
+              }} />
 
               {/* Thumb */}
               <span style={{
                 position: 'relative', zIndex: 10,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 width: '1.4rem', height: '1.4rem', borderRadius: '50%',
-                background: dark ? '#1e1e1e' : '#ffffff',
-                boxShadow: dark
-                  ? '0 1px 4px rgba(0,0,0,0.6)'
-                  : '0 1px 5px rgba(0,0,0,0.25)',
+                background: dark ? '#0f1f38' : '#ffffff',
+                boxShadow: dark ? '0 1px 4px rgba(0,0,0,0.6)' : '0 1px 5px rgba(0,0,0,0.25)',
                 transform: dark ? 'translateX(1.625rem)' : 'translateX(0)',
                 transition: 'transform 0.45s cubic-bezier(0.34,1.3,0.64,1), background 0.4s ease, box-shadow 0.4s ease',
               }}>
-                {/* Tiny icon in thumb */}
                 <span style={{ position: 'relative', width: '0.75rem', height: '0.75rem' }}>
                   <SunIcon style={{
                     position: 'absolute', inset: 0, width: '0.75rem', height: '0.75rem', color: '#f59e0b',
@@ -311,10 +292,12 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                     transition: 'all 0.3s ease',
                   }} />
                   <MoonIcon style={{
-                    position: 'absolute', inset: 0, width: '0.75rem', height: '0.75rem', color: '#c0c0c0',
-                    opacity: dark ? 1 : 0,
-                    transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0) rotate(-45deg)',
-                    transition: 'all 0.3s ease',
+                  position: 'absolute', inset: 0, width: '0.75rem', height: '0.75rem',
+                  color: '#e2d9f3',
+                  filter: dark ? 'drop-shadow(0 0 3px #c084fc) drop-shadow(0 0 6px #a855f7)' : 'none',
+                  opacity: dark ? 1 : 0,
+                  transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0) rotate(-45deg)',
+                  transition: 'all 0.3s ease',
                   }} />
                 </span>
               </span>
@@ -350,7 +333,7 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                   style={inputBase}
                   placeholder={placeholder}
                   required
-                  onFocus={e => { e.target.style.borderColor = 'var(--dark-blue-1)'; e.target.style.boxShadow = '0 0 0 3px rgba(30,64,175,0.15)' }}
+                  onFocus={e => { e.target.style.borderColor = '#2563eb'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.15)' }}
                   onBlur={e => { e.target.style.borderColor = C.border; e.target.style.boxShadow = 'none' }}
                 />
               </div>
@@ -359,9 +342,9 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
             {pwError && (
               <p style={{
                 fontSize: '0.875rem', margin: 0, borderRadius: '0.5rem', padding: '0.625rem 1rem',
-                color: dark ? '#f87171' : '#dc2626',
-                background: dark ? 'rgba(220,38,38,0.1)' : '#fef2f2',
-                border: `1px solid ${dark ? 'rgba(220,38,38,0.2)' : '#fecaca'}`,
+                color: dark ? '#fca5a5' : '#dc2626',
+                background: dark ? 'rgba(239,68,68,0.1)' : '#fef2f2',
+                border: `1px solid ${dark ? 'rgba(239,68,68,0.2)' : '#fecaca'}`,
               }}>{pwError}</p>
             )}
 

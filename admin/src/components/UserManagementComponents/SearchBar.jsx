@@ -32,6 +32,16 @@ function SearchBar({
   const roles = ['All', 'Staff', 'Librarian', 'Patron']
   const statuses = ['All', 'Active', 'Inactive']
 
+  const handleClearAll = () => {
+    setSearchQuery('')
+    setRoleFilter('All')
+    setStatusFilter('All')
+    setIsRoleOpen(false)
+    setIsStatusOpen(false)
+  }
+
+  const isFiltered = searchQuery || roleFilter !== 'All' || statusFilter !== 'All'
+
   useEffect(() => {
     const onKeyDown = (event) => {
       const isSlash = event.key === '/'
@@ -39,12 +49,12 @@ function SearchBar({
       const activeTag = document.activeElement?.tagName?.toLowerCase()
       const isTypingField = ['input', 'textarea', 'select'].includes(activeTag)
 
-      if (isEscape) { setIsRoleOpen(false); setIsStatusOpen(false) }
+      if (isEscape) handleClearAll()
       if (isSlash && !isTypingField) { event.preventDefault(); searchInputRef.current?.focus() }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [setSearchQuery, setRoleFilter, setStatusFilter])
 
   useEffect(() => {
     const onClickOutside = (event) => {
@@ -73,10 +83,29 @@ function SearchBar({
           />
           {searchQuery && (
             <button type="button" onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-0 p-0 focus:outline-none focus:ring-0 active:bg-transparent"
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-0 p-0 focus:outline-none focus:ring-0"
               style={{ color: textMuted }} aria-label="Clear search">
               <X size={16} />
             </button>
+          )}
+
+          {/* Press Esc hint */}
+          {isFiltered && (
+            <div className="absolute left-0 right-0 top-full mt-2">
+              <p className={`text-xs font-normal tracking-wide`} style={{ color: dark ? '#93c5fd' : '#64748b' }}>
+                Press{' '}
+                <kbd style={{
+                  padding: '1px 6px',
+                  border: `1px solid ${dark ? '#93c5fd' : '#e2e8f0'}`,
+                  borderRadius: 4,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  background: dark ? '#1a3356' : '#f1f5f9',
+                  color: dark ? '#93c5fd' : '#475569'
+                }}>Esc</kbd>{' '}
+                to clear all filters
+              </p>
+            </div>
           )}
         </div>
 
@@ -135,7 +164,7 @@ function SearchBar({
           )}
         </div>
 
-        {/* Add Librarian button — only for admins */}
+        {/* Add Librarian button */}
         {isAdmin && (
           <button
             onClick={onAddLibrarian}
