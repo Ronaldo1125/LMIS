@@ -1,10 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/connection');
+const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
-// ─── Search books for the autofill modal ───────────────────────────────────────
+// Helper: check if the requesting user can see staff_only records
+const canViewStaffOnly = (user) => {
+  return user && (user.role === 'admin' || user.role === 'librarian' || user.role === 'staff');
+};
+
+// ─── Search books available for accession (not yet accessioned, not archived) ──
 // GET /api/accessions/search-books?q=keyword
-router.get('/search-books', async (req, res) => {
+router.get('/search-books', authMiddleware, async (req, res) => {
   const { q } = req.query;
 
   if (!q || q.trim().length < 1) {
@@ -13,16 +19,23 @@ router.get('/search-books', async (req, res) => {
 
   try {
     const keyword = `%${q.trim()}%`;
+
+    // Build access level filter — non-staff cannot search staff_only books for accession
+    const accessFilter = canViewStaffOnly(req.user) ? '' : "AND b.access_level = 'public'";
+
     const [rows] = await pool.query(
       `SELECT
-        id, category, call_number, title, author, editor, edition,
-        publication, publisher, date_of_publication, extent,
-        other_physical_details, dimensions, accompanying_material,
-        isbn, issn, notes_area, subjects
-       FROM books
-       WHERE is_archived = 0
-         AND (title LIKE ? OR author LIKE ? OR call_number LIKE ? OR isbn LIKE ?)
-       ORDER BY title ASC
+        b.id, b.category, b.call_number, b.title, b.author, b.editor, b.edition,
+        b.publication, b.publisher, b.date_of_publication, b.extent,
+        b.other_physical_details, b.dimensions, b.accompanying_material,
+        b.isbn, b.issn, b.notes_area, b.subjects, b.access_level,
+        (SELECT COUNT(*) FROM uploads u WHERE u.book_id = b.id AND u.status = 'active') AS upload_count
+       FROM books b
+       WHERE b.is_archived = 0
+         AND b.is_accessioned = 0
+         ${accessFilter}
+         AND (b.title LIKE ? OR b.author LIKE ? OR b.call_number LIKE ? OR b.isbn LIKE ?)
+       ORDER BY b.title ASC
        LIMIT 20`,
       [keyword, keyword, keyword, keyword]
     );
@@ -34,35 +47,9 @@ router.get('/search-books', async (req, res) => {
   }
 });
 
-// ─── Get single book by ID (for autofill) ─────────────────────────────────────
-// GET /api/accessions/book/:id
-router.get('/book/:id', async (req, res) => {
-  try {
-    const [rows] = await pool.query(
-      `SELECT
-        id, category, call_number, title, author, editor, edition,
-        publication, publisher, date_of_publication, extent,
-        other_physical_details, dimensions, accompanying_material,
-        isbn, issn, notes_area, subjects
-       FROM books
-       WHERE id = ? AND is_archived = 0`,
-      [req.params.id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'Book not found' });
-    }
-
-    res.json(rows[0]);
-  } catch (err) {
-    console.error('Error fetching book:', err);
-    res.status(500).json({ message: 'Failed to fetch book' });
-  }
-});
-
 // ─── Get next accession number (auto-suggest) ─────────────────────────────────
 // GET /api/accessions/next-number
-router.get('/next-number', async (req, res) => {
+router.get('/next-number', authMiddleware, async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT accession_no FROM accessions ORDER BY id DESC LIMIT 1`
@@ -71,7 +58,6 @@ router.get('/next-number', async (req, res) => {
     let nextNumber = 1;
 
     if (rows.length > 0) {
-      // Expects format like "2024-0001" or just "0001"
       const last = rows[0].accession_no;
       const match = last.match(/(\d+)$/);
       if (match) {
@@ -90,14 +76,67 @@ router.get('/next-number', async (req, res) => {
   }
 });
 
-// ─── Get all accessions ────────────────────────────────────────────────────────
+// ─── Get all accessions (joins with books for full data) ───────────────────────
 // GET /api/accessions
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT * FROM accessions WHERE is_archived = 0 ORDER BY date_accessioned DESC`
-    );
-    res.json(rows);
+    const { page = 1, limit = 10, search = '' } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Access level filter applied at the accession level
+    const accessFilter = canViewStaffOnly(req.user) ? '' : "AND a.access_level = 'public'";
+
+    let query = `
+      SELECT
+        a.id, a.accession_no, a.date_accessioned, a.book_id, a.access_level,
+        a.is_archived, a.archived_at, a.archived_by, a.archive_reason,
+        b.category, b.call_number, b.title, b.author, b.editor, b.edition,
+        b.publication, b.publisher, b.date_of_publication, b.extent,
+        b.other_physical_details, b.dimensions, b.accompanying_material,
+        b.isbn, b.issn, b.notes_area, b.subjects,
+        (SELECT COUNT(*) FROM uploads u WHERE u.book_id = a.book_id AND u.status = 'active') AS upload_count
+      FROM accessions a
+      JOIN books b ON a.book_id = b.id
+      WHERE a.is_archived = 0
+      ${accessFilter}
+    `;
+
+    let countQuery = `
+      SELECT COUNT(*) AS total
+      FROM accessions a
+      JOIN books b ON a.book_id = b.id
+      WHERE a.is_archived = 0
+      ${accessFilter}
+    `;
+
+    const params = [];
+    const countParams = [];
+
+    if (search) {
+      const like = `%${search}%`;
+      const searchClause = ' AND (b.title LIKE ? OR b.author LIKE ? OR b.isbn LIKE ? OR a.accession_no LIKE ?)';
+      query += searchClause;
+      countQuery += searchClause;
+      params.push(like, like, like, like);
+      countParams.push(like, like, like, like);
+    }
+
+    query += ' ORDER BY a.date_accessioned DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [rows] = await pool.query(query, params);
+    const [countResult] = await pool.query(countQuery, countParams);
+    const total = countResult[0].total;
+
+    res.json({
+      accessions: rows,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (err) {
     console.error('Error fetching accessions:', err);
     res.status(500).json({ message: 'Failed to fetch accessions' });
@@ -106,10 +145,23 @@ router.get('/', async (req, res) => {
 
 // ─── Get archived accessions ───────────────────────────────────────────────────
 // GET /api/accessions/archived
-router.get('/archived', async (req, res) => {
+router.get('/archived', authMiddleware, async (req, res) => {
   try {
+    // Archived list is staff-only by nature; still filter access_level for non-privileged users
+    const accessFilter = canViewStaffOnly(req.user) ? '' : "AND a.access_level = 'public'";
+
     const [rows] = await pool.query(
-      `SELECT * FROM accessions WHERE is_archived = 1 ORDER BY archived_at DESC`
+      `SELECT
+        a.id, a.accession_no, a.date_accessioned, a.book_id, a.access_level,
+        a.is_archived, a.archived_at, a.archived_by, a.archive_reason,
+        b.category, b.call_number, b.title, b.author, b.editor, b.edition,
+        b.publication, b.publisher, b.date_of_publication,
+        b.isbn, b.issn, b.subjects
+       FROM accessions a
+       JOIN books b ON a.book_id = b.id
+       WHERE a.is_archived = 1
+       ${accessFilter}
+       ORDER BY a.archived_at DESC`
     );
     res.json(rows);
   } catch (err) {
@@ -120,10 +172,19 @@ router.get('/archived', async (req, res) => {
 
 // ─── Get single accession ──────────────────────────────────────────────────────
 // GET /api/accessions/:id
-router.get('/:id', async (req, res) => {
+router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT * FROM accessions WHERE id = ?`,
+      `SELECT
+        a.id, a.accession_no, a.date_accessioned, a.book_id, a.access_level,
+        a.is_archived, a.archived_at, a.archived_by, a.archive_reason,
+        b.category, b.call_number, b.title, b.author, b.editor, b.edition,
+        b.publication, b.publisher, b.date_of_publication, b.extent,
+        b.other_physical_details, b.dimensions, b.accompanying_material,
+        b.isbn, b.issn, b.notes_area, b.subjects, b.copies
+       FROM accessions a
+       JOIN books b ON a.book_id = b.id
+       WHERE a.id = ?`,
       [req.params.id]
     );
 
@@ -131,98 +192,115 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Accession not found' });
     }
 
-    res.json(rows[0]);
+    const accession = rows[0];
+
+    // ── Access level guard ───────────────────────────────────────────────────
+    if (accession.access_level === 'staff_only' && !canViewStaffOnly(req.user)) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    res.json(accession);
   } catch (err) {
     console.error('Error fetching accession:', err);
     res.status(500).json({ message: 'Failed to fetch accession' });
   }
 });
 
-// ─── Create accession ──────────────────────────────────────────────────────────
+// ─── Create accession (promotes a catalog book) ────────────────────────────────
 // POST /api/accessions
-router.post('/', async (req, res) => {
-  const {
-    accession_no,
-    date_accessioned,
-    book_id,
-    title,
-    author,
-    editor,
-    edition,
-    publication,
-    publisher,
-    date_of_publication,
-    extent,
-    other_physical_details,
-    dimensions,
-    accompanying_material,
-    isbn,
-    issn,
-    notes_area,
-    subjects,
-  } = req.body;
+router.post('/', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
+  const { accession_no, date_accessioned, book_id } = req.body;
 
-  // Basic validation
-  if (!accession_no || !date_accessioned) {
+  if (!accession_no || !date_accessioned || !book_id) {
     return res.status(400).json({
-      message: 'accession_no and date_accessioned are required',
+      message: 'accession_no, date_accessioned, and book_id are required',
     });
   }
 
+  const connection = await pool.getConnection();
+
   try {
+    await connection.beginTransaction();
+
+    // Check book exists, is not archived, and not already accessioned
+    const [books] = await connection.query(
+      `SELECT id, title, is_archived, is_accessioned, access_level FROM books WHERE id = ?`,
+      [book_id]
+    );
+
+    if (books.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'Book not found' });
+    }
+
+    if (books[0].is_archived) {
+      await connection.rollback();
+      return res.status(400).json({ message: 'Cannot accession an archived book' });
+    }
+
+    if (books[0].is_accessioned) {
+      await connection.rollback();
+      return res.status(400).json({ message: 'This book has already been accessioned' });
+    }
+
     // Check for duplicate accession_no
-    const [existing] = await pool.query(
+    const [existing] = await connection.query(
       `SELECT id FROM accessions WHERE accession_no = ?`,
       [accession_no]
     );
 
     if (existing.length > 0) {
+      await connection.rollback();
       return res.status(409).json({
         message: `Accession number "${accession_no}" already exists`,
       });
     }
 
-    const [result] = await pool.query(
-      `INSERT INTO accessions (
-        accession_no, date_accessioned, book_id,
-        title, author, editor, edition,
-        publication, publisher, date_of_publication,
-        extent, other_physical_details, dimensions,
-        accompanying_material, isbn, issn, notes_area, subjects
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        accession_no, date_accessioned, book_id || null,
-        title, author, editor, edition,
-        publication, publisher, date_of_publication || null,
-        extent, other_physical_details, dimensions,
-        accompanying_material, isbn, issn, notes_area, subjects,
-      ]
+    // Inherit access_level from the source book
+    const inheritedAccessLevel = books[0].access_level || 'public';
+
+    // Create the accession record
+    const [result] = await connection.query(
+      `INSERT INTO accessions (accession_no, date_accessioned, book_id, access_level)
+       VALUES (?, ?, ?, ?)`,
+      [accession_no, date_accessioned, book_id, inheritedAccessLevel]
     );
 
+    // Mark the book as accessioned
+    const performedBy = req.user.email || req.user.username;
+    await connection.query(
+      `UPDATE books
+       SET is_accessioned = TRUE,
+           accessioned_at = NOW(),
+           accessioned_by = ?
+       WHERE id = ?`,
+      [performedBy, book_id]
+    );
+
+    await connection.commit();
+
     res.status(201).json({
-      message: 'Accession created successfully',
+      message: 'Book accessioned successfully',
       id: result.insertId,
       accession_no,
+      book_id,
+      access_level: inheritedAccessLevel,
     });
   } catch (err) {
+    await connection.rollback();
     console.error('Error creating accession:', err);
     res.status(500).json({ message: 'Failed to create accession' });
+  } finally {
+    connection.release();
   }
 });
 
-// ─── Update accession ──────────────────────────────────────────────────────────
+// ─── Update accession number / date only ──────────────────────────────────────
 // PUT /api/accessions/:id
-router.put('/:id', async (req, res) => {
-  const {
-    accession_no, date_accessioned, book_id,
-    title, author, editor, edition,
-    publication, publisher, date_of_publication,
-    extent, other_physical_details, dimensions,
-    accompanying_material, isbn, issn, notes_area, subjects,
-  } = req.body;
+router.put('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
+  const { accession_no, date_accessioned } = req.body;
 
   try {
-    // Check duplicate accession_no but exclude current record
     if (accession_no) {
       const [existing] = await pool.query(
         `SELECT id FROM accessions WHERE accession_no = ? AND id != ?`,
@@ -237,22 +315,10 @@ router.put('/:id', async (req, res) => {
 
     const [result] = await pool.query(
       `UPDATE accessions SET
-        accession_no = ?, date_accessioned = ?, book_id = ?,
-        title = ?, author = ?, editor = ?, edition = ?,
-        publication = ?, publisher = ?, date_of_publication = ?,
-        extent = ?, other_physical_details = ?, dimensions = ?,
-        accompanying_material = ?, isbn = ?, issn = ?,
-        notes_area = ?, subjects = ?
+        accession_no = COALESCE(?, accession_no),
+        date_accessioned = COALESCE(?, date_accessioned)
        WHERE id = ?`,
-      [
-        accession_no, date_accessioned, book_id || null,
-        title, author, editor, edition,
-        publication, publisher, date_of_publication || null,
-        extent, other_physical_details, dimensions,
-        accompanying_material, isbn, issn,
-        notes_area, subjects,
-        req.params.id,
-      ]
+      [accession_no || null, date_accessioned || null, req.params.id]
     );
 
     if (result.affectedRows === 0) {
@@ -266,11 +332,114 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// ─── Update access level of an accession ──────────────────────────────────────
+// PATCH /api/accessions/:id/access-level
+router.patch('/:id/access-level', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
+  const { access_level } = req.body;
+
+  const validLevels = ['public', 'staff_only'];
+  if (!access_level || !validLevels.includes(access_level)) {
+    return res.status(400).json({
+      message: `Invalid access_level. Must be one of: ${validLevels.join(', ')}`,
+    });
+  }
+
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [rows] = await connection.query(
+      `SELECT a.id, a.book_id FROM accessions a WHERE a.id = ?`,
+      [req.params.id]
+    );
+
+    if (rows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'Accession not found' });
+    }
+
+    const { book_id } = rows[0];
+
+    // Update accession
+    await connection.query(
+      `UPDATE accessions SET access_level = ? WHERE id = ?`,
+      [access_level, req.params.id]
+    );
+
+    // Keep the source book in sync
+    await connection.query(
+      `UPDATE books SET access_level = ? WHERE id = ?`,
+      [access_level, book_id]
+    );
+
+    await connection.commit();
+
+    res.json({
+      message: `Access level updated to '${access_level}' for accession and its linked book`,
+    });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error updating access level:', err);
+    res.status(500).json({ message: 'Failed to update access level' });
+  } finally {
+    connection.release();
+  }
+});
+
+// ─── De-accession: revert book back to catalog ────────────────────────────────
+// DELETE /api/accessions/:id/deaccession
+router.delete('/:id/deaccession', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [rows] = await connection.query(
+      `SELECT a.id, a.book_id FROM accessions a WHERE a.id = ?`,
+      [req.params.id]
+    );
+
+    if (rows.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'Accession not found' });
+    }
+
+    const { book_id } = rows[0];
+
+    // Delete the accession record
+    await connection.query(`DELETE FROM accessions WHERE id = ?`, [req.params.id]);
+
+    // Revert book back to active catalog status
+    await connection.query(
+      `UPDATE books
+       SET is_accessioned = FALSE,
+           accessioned_at = NULL,
+           accessioned_by = NULL
+       WHERE id = ?`,
+      [book_id]
+    );
+
+    await connection.commit();
+
+    res.json({
+      message: 'Book de-accessioned successfully and restored to catalog',
+      book_id,
+    });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error de-accessioning:', err);
+    res.status(500).json({ message: 'Failed to de-accession' });
+  } finally {
+    connection.release();
+  }
+});
 
 // ─── Archive accession (soft delete) ───────────────────────────────────────────
 // PATCH /api/accessions/:id/archive
-router.patch('/:id/archive', async (req, res) => {
-  const { archived_by, archive_reason } = req.body;
+router.patch('/:id/archive', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
+  const { archive_reason } = req.body;
+  const archivedBy = req.user.email || req.user.username;
 
   try {
     const [result] = await pool.query(
@@ -280,13 +449,11 @@ router.patch('/:id/archive', async (req, res) => {
         archived_by = ?,
         archive_reason = ?
        WHERE id = ? AND is_archived = 0`,
-      [archived_by || null, archive_reason || null, req.params.id]
+      [archivedBy, archive_reason || null, req.params.id]
     );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({
-        message: 'Accession not found or already archived',
-      });
+      return res.status(404).json({ message: 'Accession not found or already archived' });
     }
 
     res.json({ message: 'Accession archived successfully' });
@@ -298,7 +465,7 @@ router.patch('/:id/archive', async (req, res) => {
 
 // ─── Restore archived accession ────────────────────────────────────────────────
 // PATCH /api/accessions/:id/restore
-router.patch('/:id/restore', async (req, res) => {
+router.patch('/:id/restore', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   try {
     const [result] = await pool.query(
       `UPDATE accessions SET
@@ -311,37 +478,13 @@ router.patch('/:id/restore', async (req, res) => {
     );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({
-        message: 'Accession not found or not archived',
-      });
+      return res.status(404).json({ message: 'Accession not found or not archived' });
     }
 
     res.json({ message: 'Accession restored successfully' });
   } catch (err) {
     console.error('Error restoring accession:', err);
     res.status(500).json({ message: 'Failed to restore accession' });
-  }
-});
-
-// ─── Delete accession permanently ──────────────────────────────────────────────
-// DELETE /api/accessions/:id
-router.delete('/:id', async (req, res) => {
-  try {
-    const [result] = await pool.query(
-      `DELETE FROM accessions WHERE id = ?`,
-      [req.params.id]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({
-        message: 'Accession not found',
-      });
-    }
-
-    res.json({ message: 'Accession deleted permanently' });
-  } catch (err) {
-    console.error('Error deleting accession:', err);
-    res.status(500).json({ message: 'Failed to delete accession' });
   }
 });
 
