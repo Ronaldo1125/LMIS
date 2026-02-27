@@ -64,6 +64,9 @@ app.use('/api/uploads', uploadsRoutes);
 const importBooksRoute = require('./routes/importBooks');
 app.use('/api/books', importBooksRoute);
 
+const searchRoute = require('./routes/search');
+app.use('/api/search', searchRoute);
+
 // Accessions
 const accessionsRoutes = require('./routes/accessions');
 app.use('/api/accessions', accessionsRoutes);
