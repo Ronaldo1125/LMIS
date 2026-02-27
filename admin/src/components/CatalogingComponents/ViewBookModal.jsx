@@ -9,7 +9,10 @@ import {
   Loader, 
   Clock, 
   Database, 
-  HardDrive 
+  HardDrive,Tag, Hash, BookText, User, UserCog, Layers, MapPin, 
+  Building2, Calendar, Maximize, Info, 
+  PackagePlus, Barcode, Globe, Copy, Key, StickyNote
+
 } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -209,26 +212,25 @@ const ViewBookModal = ({ isOpen, onClose, book, dark }) => {
   }
 
   const details = [
-    { label: 'Classification', value: book.category, icon: '📂' },
-    { label: 'Call Number', value: book.call_number, icon: '🏷️' },
-    { label: 'Full Title', value: book.title, fullWidth: true, icon: '📖' },
-    { label: 'Author', value: book.author, icon: '✍️' },
-    { label: 'Editor', value: book.editor, icon: '👓' },
-    { label: 'Edition', value: book.edition, icon: '🔄' },
-    { label: 'Place of Publication', value: book.publication, icon: '📍' },
-    { label: 'Publisher', value: book.publisher, icon: '🏢' },
-    { label: 'Date Published', value: book.date_of_publication, icon: '📅' },
-    { label: 'Extent / Pages', value: book.extent, icon: '📏' },
-    { label: 'Dimensions', value: book.dimensions, icon: '📐' },
-    { label: 'Physical Details', value: book.other_physical_details, icon: '🔍' },
-    { label: 'Accompanying Material', value: book.accompanying_material, icon: '💿' },
-    { label: 'ISBN (Standard #)', value: book.isbn, icon: '🔢' },
-    { label: 'ISSN', value: book.issn, icon: '🆔' },
-    { label: 'Total Copies', value: book.copies, icon: '📚' },
-    { label: 'Subjects / Keywords', value: book.subjects, fullWidth: true, icon: '🏷️' },
-    { label: 'Notes Area', value: book.notes_area, fullWidth: true, icon: '📝' },
-  ]
-
+    { label: 'Classification', value: book.category, icon: Tag },
+    { label: 'Call Number', value: book.call_number, icon: Hash },
+    { label: 'Full Title', value: book.title, fullWidth: true, icon: BookText },
+    { label: 'Author', value: book.author, icon: User },
+    { label: 'Editor', value: book.editor, icon: UserCog },
+    { label: 'Edition', value: book.edition, icon: Layers },
+    { label: 'Place of Publication', value: book.publication, icon: MapPin },
+    { label: 'Publisher', value: book.publisher, icon: Building2 },
+    { label: 'Date Published', value: book.date_of_publication, icon: Calendar },
+    { label: 'Extent / Pages', value: book.extent, icon: FileText },
+    { label: 'Dimensions', value: book.dimensions, icon: Maximize },
+    { label: 'Physical Details', value: book.other_physical_details, icon: Info },
+    { label: 'Accompanying Material', value: book.accompanying_material, icon: PackagePlus },
+    { label: 'ISBN (Standard #)', value: book.isbn, icon: Barcode },
+    { label: 'ISSN', value: book.issn, icon: Globe },
+    { label: 'Total Copies', value: book.copies, icon: Copy },
+    { label: 'Subjects / Keywords', value: book.subjects, fullWidth: true, icon: Key },
+    { label: 'Notes Area', value: book.notes_area, fullWidth: true, icon: StickyNote },
+]
   return (
     <div
       className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-hidden"
@@ -267,9 +269,11 @@ const ViewBookModal = ({ isOpen, onClose, book, dark }) => {
                   key={item.label} 
                   className={`${item.fullWidth ? 'md:col-span-2' : ''} border-b ${borderCol} pb-4`}
                 >
-                  <p className={`text-[10px] font-black uppercase tracking-[0.15em] mb-2 ${textSecondary} flex items-center gap-2`}>
-                    <span className="text-sm opacity-70">{item.icon}</span> {item.label}
-                  </p>
+                  {/* NEW CODE */}
+            <p className={`text-[10px] font-black uppercase tracking-[0.15em] mb-2 ${textSecondary} flex items-center gap-2`}>
+            <item.icon className="w-4 h-4 opacity-70" strokeWidth={2.5} /> 
+              {item.label}
+                </p>
                   <p className={`text-sm font-semibold leading-relaxed ${textPrimary}`}>
                     {renderValue(item.value)}
                   </p>

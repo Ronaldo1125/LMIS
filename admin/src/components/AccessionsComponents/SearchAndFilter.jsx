@@ -34,12 +34,12 @@ const SearchAndFilter = ({
     const onKeyDown = (e) => {
       const activeTag = document.activeElement?.tagName?.toLowerCase()
       const isTyping = ['input', 'textarea', 'select'].includes(activeTag)
-      if (e.key === 'Escape') setIsStatusOpen(false)
+      if (e.key === 'Escape') { setIsStatusOpen(false); setSearchTerm(''); setSelectedStatus('all') }
       if (e.key === '/' && !isTyping) { e.preventDefault(); searchInputRef.current?.focus() }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [setSearchTerm, setSelectedStatus])
 
   useEffect(() => {
     const onClickOutside = (e) => { if (!dropdownRef.current?.contains(e.target)) setIsStatusOpen(false) }
@@ -97,9 +97,27 @@ const SearchAndFilter = ({
             <XMarkIcon
               onClick={() => setSearchTerm('')}
               style={{ width: '1.125rem', height: '1.125rem', position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: textSecondary }}
-            />
-          )}
-        </div>
+          />
+)}
+
+{searchTerm && (
+  <div style={{ position: 'absolute', left: 0, right: 0, top: '100%', marginTop: '0.5rem' }}>
+    <p style={{ fontSize: '0.75rem', color: dark ? '#93c5fd' : '#64748b', margin: 0 }}>
+      Press{' '}
+      <kbd style={{
+        padding: '1px 6px',
+        border: `1px solid ${dark ? '#93c5fd' : '#e2e8f0'}`,
+        borderRadius: 4,
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        background: dark ? '#1a3356' : '#f1f5f9',
+        color: dark ? '#93c5fd' : '#475569'
+      }}>Esc</kbd>{' '}
+      to clear all filters
+    </p>
+  </div>
+)}
+</div>
 
         {/* Status Dropdown */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 180px', position: 'relative' }} ref={dropdownRef}>
