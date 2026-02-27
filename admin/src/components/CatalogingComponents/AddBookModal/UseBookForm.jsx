@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import api from '../../../utils/api' // ✅ Import configured axios (adjust path based on your folder structure)
+import api from '../../../utils/api'
 
 const initialFormState = {
   category: '',
@@ -19,7 +19,8 @@ const initialFormState = {
   issn: '',
   notesArea: '',
   subjects: '',
-  copies: 1
+  copies: 1,
+  access_level: 'public', // ✅ NEW
 }
 
 export const useBookForm = (isOpen) => {
@@ -73,26 +74,23 @@ export const useBookForm = (isOpen) => {
         issn: formData.issn,
         notes_area: formData.notesArea,
         subjects: formData.subjects,
-        copies: parseInt(formData.copies)
+        copies: parseInt(formData.copies),
+        access_level: formData.access_level || 'public', // ✅ NEW
       }
 
       const response = await api.post('/books', bookData)
-
-      // Return the bookId from the response for file uploads
       const bookId = response.data.bookId
-      
+
       resetForm()
-      
-      // Return bookId so AddBookModal can use it for file uploads
       return bookId
 
     } catch (err) {
       console.error('Error adding book:', err)
       setError(
-        err.response?.data?.message || 
+        err.response?.data?.message ||
         'Failed to add book. Please try again.'
       )
-      return null // Return null on error
+      return null
     } finally {
       setLoading(false)
     }
@@ -105,6 +103,6 @@ export const useBookForm = (isOpen) => {
     formData,
     setFormData,
     handleSubmit,
-    resetForm
+    resetForm,
   }
 }

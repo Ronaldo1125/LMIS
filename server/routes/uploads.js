@@ -88,21 +88,33 @@ const logUploadAction = async (uploadId, action, userId, ipAddress, userAgent, d
   }
 };
 
-// Upload file(s) for a book (Admin only)
-router.post('/:bookId', authMiddleware, roleMiddleware('admin','librarian'), upload.array('files', 5), async (req, res) => {
+// Helper: sync has_digital_copy and digital_file_count on the books table
+const syncBookDigitalFields = async (connection, bookId) => {
+  const [countResult] = await connection.query(
+    `SELECT COUNT(*) as count FROM uploads WHERE book_id = ? AND status = 'active'`,
+    [bookId]
+  );
+  const count = countResult[0].count;
+  await connection.query(
+    `UPDATE books SET has_digital_copy = ?, digital_file_count = ? WHERE id = ?`,
+    [count > 0 ? 1 : 0, count, bookId]
+  );
+};
+
+// ─── Upload file(s) for a book ─────────────────────────────────────────────────
+router.post('/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), upload.array('files', 5), async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
     await connection.beginTransaction();
     
     const { bookId } = req.params;
-    const { setPrimary } = req.body; // Optional: set first file as primary
+    const { setPrimary } = req.body;
     
     // Verify book exists
     const [books] = await connection.query('SELECT id, title FROM books WHERE id = ?', [bookId]);
     if (books.length === 0) {
       await connection.rollback();
-      // Delete uploaded files
       if (req.files) {
         for (const file of req.files) {
           await fs.unlink(file.path).catch(() => {});
@@ -144,18 +156,13 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin','librarian'), upl
         );
         
         if (existingFile.length > 0) {
-          // Delete duplicate file
           await fs.unlink(file.path).catch(() => {});
-          continue; // Skip this file
+          continue;
         }
 
-        // Determine file type
         const fileType = ALLOWED_FILE_TYPES[file.mimetype] || 'other';
-        
-        // Set as primary if it's the first file and setPrimary is true
         const isPrimary = (setPrimary === 'true' && i === 0);
 
-        // Insert upload record
         const [result] = await connection.query(
           `INSERT INTO uploads (
             book_id, file_name, original_name, file_path, file_type, 
@@ -175,7 +182,6 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin','librarian'), upl
           ]
         );
 
-        // Log the upload
         await logUploadAction(result.insertId, 'created', userId, ipAddress, userAgent, 
           `Uploaded ${file.originalname} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
 
@@ -189,7 +195,6 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin','librarian'), upl
         });
       } catch (error) {
         console.error(`Error processing file ${file.originalname}:`, error);
-        // Delete the file if database insert fails
         await fs.unlink(file.path).catch(() => {});
       }
     }
@@ -198,6 +203,9 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin','librarian'), upl
       await connection.rollback();
       return res.status(400).json({ message: 'No files were successfully uploaded (possible duplicates)' });
     }
+
+    // ── Sync books.has_digital_copy and books.digital_file_count ──────────────
+    await syncBookDigitalFields(connection, bookId);
 
     await connection.commit();
 
@@ -209,21 +217,18 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin','librarian'), upl
   } catch (error) {
     await connection.rollback();
     console.error('Error uploading files:', error);
-    
-    // Cleanup uploaded files on error
     if (req.files) {
       for (const file of req.files) {
         await fs.unlink(file.path).catch(() => {});
       }
     }
-    
     res.status(500).json({ message: 'Error uploading files', error: error.message });
   } finally {
     connection.release();
   }
 });
 
-// Get all uploads for a book
+// ─── Get all uploads for a book ────────────────────────────────────────────────
 router.get('/book/:bookId', authMiddleware, async (req, res) => {
   try {
     const [uploads] = await pool.query(
@@ -243,7 +248,7 @@ router.get('/book/:bookId', authMiddleware, async (req, res) => {
   }
 });
 
-// Get single upload details
+// ─── Get single upload details ─────────────────────────────────────────────────
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const [uploads] = await pool.query(
@@ -265,7 +270,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// Download file
+// ─── Download file ─────────────────────────────────────────────────────────────
 router.get('/:id/download', authMiddleware, async (req, res) => {
   try {
     const [uploads] = await pool.query(
@@ -279,26 +284,22 @@ router.get('/:id/download', authMiddleware, async (req, res) => {
 
     const upload = uploads[0];
 
-    // Check if file exists on disk
     try {
       await fs.access(upload.file_path);
     } catch {
       return res.status(404).json({ message: 'File not found on server' });
     }
 
-    // Increment download count
     await pool.query(
       'UPDATE uploads SET download_count = download_count + 1 WHERE id = ?',
       [req.params.id]
     );
 
-    // Log download
     const userId = req.user.email || req.user.username;
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.get('user-agent');
     await logUploadAction(req.params.id, 'downloaded', userId, ipAddress, userAgent);
 
-    // Send file
     res.download(upload.file_path, upload.original_name);
 
   } catch (error) {
@@ -307,14 +308,13 @@ router.get('/:id/download', authMiddleware, async (req, res) => {
   }
 });
 
-// Set primary file (Admin only)
-router.patch('/:id/set-primary', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
+// ─── Set primary file ──────────────────────────────────────────────────────────
+router.patch('/:id/set-primary', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
     await connection.beginTransaction();
 
-    // Get upload and verify it exists
     const [uploads] = await connection.query(
       'SELECT book_id FROM uploads WHERE id = ? AND status = "active"',
       [req.params.id]
@@ -327,13 +327,11 @@ router.patch('/:id/set-primary', authMiddleware, roleMiddleware('admin','librari
 
     const bookId = uploads[0].book_id;
 
-    // Unset all primary flags for this book
     await connection.query(
       'UPDATE uploads SET is_primary = FALSE WHERE book_id = ?',
       [bookId]
     );
 
-    // Set this upload as primary
     await connection.query(
       'UPDATE uploads SET is_primary = TRUE WHERE id = ?',
       [req.params.id]
@@ -351,8 +349,9 @@ router.patch('/:id/set-primary', authMiddleware, roleMiddleware('admin','librari
     connection.release();
   }
 });
-// Delete ALL uploads for a book (Admin only) — called when deleting a book
-router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
+
+// ─── Delete ALL uploads for a book ────────────────────────────────────────────
+router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   const connection = await pool.getConnection();
 
   try {
@@ -360,7 +359,6 @@ router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin','librarian
 
     const { bookId } = req.params;
 
-    // Fetch all active uploads for this book so we can delete the physical files
     const [uploads] = await connection.query(
       'SELECT id, file_path FROM uploads WHERE book_id = ? AND status = "active"',
       [bookId]
@@ -369,13 +367,11 @@ router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin','librarian
     if (uploads.length > 0) {
       const ids = uploads.map(u => u.id);
 
-      // Soft-delete all records
       await connection.query(
         `UPDATE uploads SET status = "deleted" WHERE book_id = ?`,
         [bookId]
       );
 
-      // Log each deletion
       const userId = req.user.email || req.user.username;
       const ipAddress = req.ip || req.connection.remoteAddress;
       const userAgent = req.get('user-agent');
@@ -383,18 +379,22 @@ router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin','librarian
         await logUploadAction(id, 'deleted', userId, ipAddress, userAgent, 'Deleted with book');
       }
 
+      // ── Reset digital fields on the book ──────────────────────────────────
+      await connection.query(
+        `UPDATE books SET has_digital_copy = 0, digital_file_count = 0 WHERE id = ?`,
+        [bookId]
+      );
+
       await connection.commit();
 
-      // Delete physical files + the book's folder
       for (const upload of uploads) {
         await fs.unlink(upload.file_path).catch(err =>
           console.error(`Could not delete file ${upload.file_path}:`, err)
         );
       }
 
-      // Remove the now-empty book directory
       const bookDir = path.join(uploadDir, `book_${bookId}`);
-      await fs.rmdir(bookDir).catch(() => {}); // silently ignore if non-empty or missing
+      await fs.rmdir(bookDir).catch(() => {});
     } else {
       await connection.commit();
     }
@@ -410,14 +410,13 @@ router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin','librarian
   }
 });
 
-// Delete upload (Admin only)
-router.delete('/:id', authMiddleware, roleMiddleware('admin','librarian'), async (req, res) => {
+// ─── Delete single upload ──────────────────────────────────────────────────────
+router.delete('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
     await connection.beginTransaction();
 
-    // Get upload details
     const [uploads] = await connection.query(
       'SELECT * FROM uploads WHERE id = ?',
       [req.params.id]
@@ -430,21 +429,21 @@ router.delete('/:id', authMiddleware, roleMiddleware('admin','librarian'), async
 
     const upload = uploads[0];
 
-    // Mark as deleted in database (soft delete)
     await connection.query(
       'UPDATE uploads SET status = "deleted" WHERE id = ?',
       [req.params.id]
     );
 
-    // Log deletion
     const userId = req.user.email || req.user.username;
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.get('user-agent');
     await logUploadAction(req.params.id, 'deleted', userId, ipAddress, userAgent);
 
+    // ── Recalculate and sync digital fields on the book ──────────────────────
+    await syncBookDigitalFields(connection, upload.book_id);
+
     await connection.commit();
 
-    // Delete physical file
     await fs.unlink(upload.file_path).catch(err => {
       console.error('Error deleting physical file:', err);
     });
@@ -460,7 +459,7 @@ router.delete('/:id', authMiddleware, roleMiddleware('admin','librarian'), async
   }
 });
 
-// Verify file integrity (Admin only)
+// ─── Verify file integrity ─────────────────────────────────────────────────────
 router.post('/:id/verify', authMiddleware, roleMiddleware('admin'), async (req, res) => {
   try {
     const [uploads] = await pool.query(
@@ -474,7 +473,6 @@ router.post('/:id/verify', authMiddleware, roleMiddleware('admin'), async (req, 
 
     const upload = uploads[0];
 
-    // Check if file exists
     try {
       await fs.access(upload.file_path);
     } catch {
@@ -484,13 +482,9 @@ router.post('/:id/verify', authMiddleware, roleMiddleware('admin'), async (req, 
       });
     }
 
-    // Calculate current checksum
     const currentChecksum = await calculateChecksum(upload.file_path);
-
-    // Compare with stored checksum
     const isValid = currentChecksum === upload.checksum;
 
-    // Log verification
     const userId = req.user.email || req.user.username;
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.get('user-agent');
@@ -518,7 +512,7 @@ router.post('/:id/verify', authMiddleware, roleMiddleware('admin'), async (req, 
   }
 });
 
-// Get upload statistics (Admin only)
+// ─── Get upload statistics ─────────────────────────────────────────────────────
 router.get('/meta/statistics', authMiddleware, roleMiddleware('admin'), async (req, res) => {
   try {
     const [stats] = await pool.query(`
@@ -553,7 +547,6 @@ router.get('/meta/statistics', authMiddleware, roleMiddleware('admin'), async (r
       LIMIT 10
     `);
 
-    // Calculate total storage in MB/GB
     const totalBytes = stats.reduce((sum, stat) => sum + (parseInt(stat.total_storage_bytes) || 0), 0);
     const totalStorageGB = (totalBytes / 1024 / 1024 / 1024).toFixed(2);
 

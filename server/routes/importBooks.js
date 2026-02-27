@@ -34,32 +34,37 @@ function normalizeKey(raw) {
 // ─── Map a normalised header to a DB column ───────────────────────────────────
 const HEADER_MAP = {
   // call number
-  'call no':            'call_number',
-  'call number':        'call_number',
-  'call no.':           'call_number',
+  'call no':             'call_number',
+  'call number':         'call_number',
+  'call no.':            'call_number',
   // title
-  'title':              'title',
+  'title':               'title',
   // author / publisher (Excel often merges these)
-  'author publisher':   'author',
-  'author':             'author',
-  'publisher':          'publisher',
+  'author publisher':    'author',
+  'author':              'author',
+  'publisher':           'publisher',
   // date
   'date of publication': 'date_of_publication',
-  'date':               'date_of_publication',
+  'date':                'date_of_publication',
   // isbn / issn (Excel often merges these)
-  'isbn issn':          'isbn',
-  'isbn':               'isbn',
-  'issn':               'issn',
+  'isbn issn':           'isbn',
+  'isbn':                'isbn',
+  'issn':                'issn',
   // copies
-  'no of copies':       'copies',
-  'copies':             'copies',
-  'no copies':          'copies',
+  'no of copies':        'copies',
+  'copies':              'copies',
+  'no copies':           'copies',
   // accession / call number aliases
-  'accession no':       'call_number',
-  'accession no.':      'call_number',
+  'accession no':        'call_number',
+  'accession no.':       'call_number',
   // link to online copy → digital flag
   'link to online copy': 'has_digital_copy',
-  'link':               'has_digital_copy',
+  'link':                'has_digital_copy',
+  // category / subject
+  'category':            'category',
+  'subject':             'category',
+  'subject area':        'category',
+  'classification':      'category',
 };
 
 function mapHeaders(rawHeaders) {
@@ -138,16 +143,20 @@ function buildRecord(mappedHeaders, rowValues) {
     publisher = parts[1] || null;
   }
 
+  // Category — falls back to "Uncategorized" so FK constraint is always satisfied
+  const category = String(raw.category ?? '').trim() || 'Uncategorized';
+
   return {
-    call_number:        String(raw.call_number ?? '').trim() || null,
-    title:              String(raw.title ?? '').trim() || null,
+    call_number:          String(raw.call_number ?? '').trim() || null,
+    title:                String(raw.title ?? '').trim() || null,
     author,
     publisher,
-    date_of_publication: parseDate(raw.date_of_publication),
-    isbn:               isbn ? isbn.substring(0, 20) : null,
-    issn:               issn ? issn.substring(0, 20) : null,
+    date_of_publication:  parseDate(raw.date_of_publication),
+    isbn:                 isbn ? isbn.substring(0, 20) : null,
+    issn:                 issn ? issn.substring(0, 20) : null,
     copies,
-    has_digital_copy:   has_digital,
+    has_digital_copy:     has_digital,
+    category,
   };
 }
 
@@ -228,11 +237,20 @@ router.post(
         return res.status(422).json({ message: 'No valid book records found in the file.', skipped });
       }
 
+      // ── Ensure all categories exist (auto-insert unknown ones, including "Uncategorized") ──
+      const uniqueCategories = [...new Set(records.map(r => r.category).filter(Boolean))];
+      if (uniqueCategories.length > 0) {
+        await pool.query(
+          'INSERT IGNORE INTO categories (name) VALUES ?',
+          [uniqueCategories.map(c => [c])]
+        );
+      }
+
       // ── Bulk insert ──────────────────────────────────────────────────────────
       const SQL = `
         INSERT INTO books
           (call_number, title, author, publisher, date_of_publication,
-           isbn, issn, copies, has_digital_copy, created_at, updated_at)
+           isbn, issn, copies, has_digital_copy, category, created_at, updated_at)
         VALUES ?
         ON DUPLICATE KEY UPDATE
           title               = VALUES(title),
@@ -243,6 +261,7 @@ router.post(
           issn                = VALUES(issn),
           copies              = VALUES(copies),
           has_digital_copy    = VALUES(has_digital_copy),
+          category            = VALUES(category),
           updated_at          = NOW()
       `;
 
@@ -257,6 +276,7 @@ router.post(
         r.issn,
         r.copies,
         r.has_digital_copy,
+        r.category,
         now,
         now,
       ]);

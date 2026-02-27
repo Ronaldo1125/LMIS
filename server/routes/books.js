@@ -22,11 +22,6 @@ const canViewStaffOnly = (user) => {
 };
 
 // ─── Get all books with pagination and search ──────────────────────────────────
-// GET /api/books
-// Query params:
-//   showArchived: 'true' | 'false' (default) | 'all'
-//   showAccessioned: 'true' | 'false' (default) | 'all'
-//   search, category, page, limit
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const {
@@ -45,14 +40,11 @@ router.get('/', authMiddleware, async (req, res) => {
     const params = [];
     const countParams = [];
 
-    // ── Access level filter ──────────────────────────────────────────────────
-    // Non-privileged users only see public books
     if (!canViewStaffOnly(req.user)) {
       query += " AND access_level = 'public'";
       countQuery += " AND access_level = 'public'";
     }
 
-    // Archive filter
     if (showArchived === 'true') {
       query += ' AND is_archived = TRUE';
       countQuery += ' AND is_archived = TRUE';
@@ -63,7 +55,6 @@ router.get('/', authMiddleware, async (req, res) => {
       countQuery += ' AND is_archived = FALSE';
     }
 
-    // Accessioned filter
     if (showAccessioned === 'true') {
       query += ' AND is_accessioned = TRUE';
       countQuery += ' AND is_accessioned = TRUE';
@@ -74,7 +65,6 @@ router.get('/', authMiddleware, async (req, res) => {
       countQuery += ' AND is_accessioned = FALSE';
     }
 
-    // Search filter
     if (search) {
       const searchClause = ' AND (title LIKE ? OR author LIKE ? OR isbn LIKE ?)';
       query += searchClause;
@@ -84,7 +74,6 @@ router.get('/', authMiddleware, async (req, res) => {
       countParams.push(searchPattern, searchPattern, searchPattern);
     }
 
-    // Category filter
     if (category) {
       query += ' AND category = ?';
       countQuery += ' AND category = ?';
@@ -127,7 +116,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
 
     const book = books[0];
 
-    // ── Access level guard ───────────────────────────────────────────────────
     if (book.access_level === 'staff_only' && !canViewStaffOnly(req.user)) {
       return res.status(403).json({ message: 'Access denied' });
     }
@@ -171,7 +159,6 @@ router.get('/meta/stats', authMiddleware, async (req, res) => {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
 
-    // Stats respect access level — non-staff only see public book counts
     const accessFilter = canViewStaffOnly(req.user) ? '' : "AND access_level = 'public'";
 
     const [[{ total }]] = await pool.query(
@@ -222,7 +209,7 @@ router.get('/meta/stats', authMiddleware, async (req, res) => {
   }
 });
 
-// ─── Archive a book (Admin/Librarian only) ────────────────────────────────────
+// ─── Archive a book ────────────────────────────────────────────────────────────
 router.patch('/:id/archive', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   try {
     const { reason } = req.body;
@@ -296,7 +283,7 @@ router.patch('/:id/unarchive', authMiddleware, roleMiddleware('admin', 'libraria
   }
 });
 
-// ─── Update access level (Admin/Librarian only) ────────────────────────────────
+// ─── Update access level ───────────────────────────────────────────────────────
 router.patch('/:id/access-level', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   try {
     const { access_level } = req.body;
@@ -368,11 +355,17 @@ router.post('/', authMiddleware, roleMiddleware('admin', 'librarian'), async (re
       publication, publisher, date_of_publication, extent, dimensions,
       other_physical_details, accompanying_material, isbn, issn,
       notes_area, subjects, copies,
-      access_level = 'public',  // ← new field, defaults to public
+      access_level = 'public',
     } = req.body;
 
-    if (!category || !title) {
-      return res.status(400).json({ message: 'Required fields: category, title' });
+    // ── Validation ────────────────────────────────────────────────────────────
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: 'Title is required' });
+    }
+
+    // FIX: category is strictly required — no NULL allowed
+    if (!category || !category.trim()) {
+      return res.status(400).json({ message: 'Category is required' });
     }
 
     const validLevels = ['public', 'staff_only'];
@@ -390,12 +383,12 @@ router.post('/', authMiddleware, roleMiddleware('admin', 'librarian'), async (re
         notes_area, subjects, copies, access_level
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        category, call_number || null, title, author || null, editor || null,
-        edition || null, publication || null, publisher || null,
-        date_of_publication || null, extent || null, dimensions || null,
-        other_physical_details || null, accompanying_material || null,
-        isbn || null, issn || null, notes_area || null, subjects || null,
-        copies || 1, access_level,
+        category.trim(), call_number || null, title.trim(),
+        author || null, editor || null, edition || null,
+        publication || null, publisher || null, date_of_publication || null,
+        extent || null, dimensions || null, other_physical_details || null,
+        accompanying_material || null, isbn || null, issn || null,
+        notes_area || null, subjects || null, copies || 1, access_level,
       ]
     );
 
@@ -416,12 +409,11 @@ router.put('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (
       category, call_number, title, author, editor, edition,
       publication, publisher, date_of_publication, extent, dimensions,
       other_physical_details, accompanying_material, isbn, issn,
-      notes_area, subjects, copies,
-      access_level,  // ← new field
+      notes_area, subjects, copies, access_level,
     } = req.body;
 
     const [existingBook] = await pool.query(
-      'SELECT id, is_accessioned FROM books WHERE id = ?',
+      'SELECT id, is_accessioned, access_level FROM books WHERE id = ?',
       [req.params.id]
     );
 
@@ -435,7 +427,16 @@ router.put('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (
       });
     }
 
-    // Validate access_level if provided
+    // ── Validation ────────────────────────────────────────────────────────────
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: 'Title is required' });
+    }
+
+    // FIX: category is strictly required on update too — no NULL allowed
+    if (!category || !category.trim()) {
+      return res.status(400).json({ message: 'Category is required' });
+    }
+
     const validLevels = ['public', 'staff_only'];
     const resolvedAccessLevel = access_level ?? existingBook[0].access_level;
     if (!validLevels.includes(resolvedAccessLevel)) {
@@ -453,8 +454,9 @@ router.put('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (
         notes_area = ?, subjects = ?, copies = ?, access_level = ?
        WHERE id = ?`,
       [
-        category, call_number || null, title, author, editor || null,
-        edition || null, publication || null, publisher,
+        category.trim(), call_number || null, title.trim(),
+        author, editor || null, edition || null,
+        publication || null, publisher,
         date_of_publication || null, extent || null, dimensions || null,
         other_physical_details || null, accompanying_material || null,
         isbn, issn || null, notes_area || null, subjects || null,

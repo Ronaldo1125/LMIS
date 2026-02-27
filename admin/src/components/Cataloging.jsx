@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import api from '../utils/api' // ✅ Use the configured axios instance
+import api from '../utils/api'
 import { BookOpen } from 'lucide-react'
 import StatsOverview from './CatalogingComponents/StatsOverview'
 import SearchAndFilter from './CatalogingComponents/SearchAndFilter'
@@ -9,6 +9,30 @@ import ViewBookModal from './CatalogingComponents/ViewBookModal'
 import EditBookModal from './CatalogingComponents/EditBookModal'
 import ArchivesModal from './CatalogingComponents/ArchivesModal'
 import ImportBooksModal from './CatalogingComponents/ImportBooksModal'
+
+// ── Blank edit state (single source of truth) ─────────────────────────────────
+const blankEditBook = {
+  id: null,
+  category: '',
+  callNumber: '',
+  title: '',
+  author: '',
+  editor: '',
+  edition: '',
+  publication: '',
+  isbn: '',
+  issn: '',
+  publisher: '',
+  dateOfPublication: '',
+  extent: '',
+  otherPhysicalDetails: '',
+  dimensions: '',
+  accompanyingMaterial: '',
+  notesArea: '',
+  subjects: '',
+  copies: '',
+  access_level: 'public', // ✅ NEW
+}
 
 const Cataloging = ({ dark }) => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -26,27 +50,7 @@ const Cataloging = ({ dark }) => {
   const [totalPages, setTotalPages] = useState(1)
   const [catalogStats, setCatalogStats] = useState(null)
 
-  const [editBook, setEditBook] = useState({
-    id: null,
-    category: '',
-    callNumber: '',
-    title: '',
-    author: '',
-    editor: '',
-    edition: '',
-    publication: '',
-    isbn: '',
-    issn: '',
-    publisher: '',
-    dateOfPublication: '',
-    extent: '',
-    otherPhysicalDetails: '',
-    dimensions: '',
-    accompanyingMaterial: '',
-    notesArea: '',
-    subjects: '',
-    copies: '',
-  })
+  const [editBook, setEditBook] = useState(blankEditBook) // ✅ uses blankEditBook
 
   const categories = [
     'all',
@@ -80,7 +84,6 @@ const Cataloging = ({ dark }) => {
       }
 
       const response = await api.get('/books', { params })
-
       setBooks(response.data.books)
       setTotalPages(response.data.pagination.totalPages)
     } catch (err) {
@@ -100,13 +103,8 @@ const Cataloging = ({ dark }) => {
     }
   }, [])
 
-  useEffect(() => {
-    fetchBooks()
-  }, [fetchBooks])
-
-  useEffect(() => {
-    fetchStats()
-  }, [fetchStats])
+  useEffect(() => { fetchBooks() }, [fetchBooks])
+  useEffect(() => { fetchStats() }, [fetchStats])
 
   const handleBookAdded = () => {
     setCurrentPage(1)
@@ -177,6 +175,7 @@ const Cataloging = ({ dark }) => {
       notesArea: book.notes_area || '',
       subjects: book.subjects || '',
       copies: book.copies ?? '',
+      access_level: book.access_level || 'public', // ✅ NEW
     })
     setIsEditModalOpen(true)
   }
@@ -201,18 +200,14 @@ const Cataloging = ({ dark }) => {
         issn: editBook.issn,
         notes_area: editBook.notesArea,
         subjects: editBook.subjects,
-        copies: parseInt(editBook.copies)
+        copies: parseInt(editBook.copies),
+        access_level: editBook.access_level || 'public', // ✅ NEW
       }
 
       await api.put(`/books/${editBook.id}`, bookData)
 
       setIsEditModalOpen(false)
-      setEditBook({
-        id: null, category: '', callNumber: '', title: '', author: '',
-        editor: '', edition: '', publication: '', isbn: '', issn: '',
-        publisher: '', dateOfPublication: '', extent: '', otherPhysicalDetails: '',
-        dimensions: '', accompanyingMaterial: '', notesArea: '', subjects: '', copies: '',
-      })
+      setEditBook(blankEditBook) // ✅ clean reset using shared constant
 
       fetchBooks()
       fetchStats()
@@ -238,20 +233,20 @@ const Cataloging = ({ dark }) => {
     setSelectedBook(null)
   }
 
-  const pageBg       = dark ? '#0a1628' : '#f1f5f9'
-  const headerBg     = dark ? '#0d1d35' : '#ffffff'
-  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
-  const cardBg       = dark ? '#0f1f38' : '#ffffff'
-  const border       = dark ? '#1a3356' : '#e2e8f0'
-  const textPrimary  = dark ? '#dde8f5' : '#1e293b'
+  const pageBg        = dark ? '#0a1628' : '#f1f5f9'
+  const headerBg      = dark ? '#0d1d35' : '#ffffff'
+  const headerBorder  = dark ? '#1a3356' : '#e2e8f0'
+  const cardBg        = dark ? '#0f1f38' : '#ffffff'
+  const border        = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary   = dark ? '#dde8f5' : '#1e293b'
   const textSecondary = dark ? '#6b8cae' : '#64748b'
-  const iconBoxBg    = dark ? 'rgba(30,64,175,0.15)' : '#dbeafe'
-  const iconColor    = dark ? '#93c5fd' : '#2563eb'
-  const errorBg      = dark ? 'rgba(220,38,38,0.1)' : '#fef2f2'
-  const errorBorder  = dark ? 'rgba(220,38,38,0.2)' : '#fecaca'
-  const errorText    = dark ? '#fca5a5' : '#dc2626'
-  const btnBg        = dark ? '#0f1f38' : '#ffffff'
-  const btnHover     = dark ? '#1a3356' : '#f1f5f9'
+  const iconBoxBg     = dark ? 'rgba(30,64,175,0.15)' : '#dbeafe'
+  const iconColor     = dark ? '#93c5fd' : '#2563eb'
+  const errorBg       = dark ? 'rgba(220,38,38,0.1)' : '#fef2f2'
+  const errorBorder   = dark ? 'rgba(220,38,38,0.2)' : '#fecaca'
+  const errorText     = dark ? '#fca5a5' : '#dc2626'
+  const btnBg         = dark ? '#0f1f38' : '#ffffff'
+  const btnHover      = dark ? '#1a3356' : '#f1f5f9'
 
   return (
     <div style={{ minHeight: '100vh', background: pageBg, transition: 'background 0.45s ease' }}>
@@ -283,7 +278,6 @@ const Cataloging = ({ dark }) => {
 
         <StatsOverview stats={catalogStats} dark={dark} />
 
-        
         <div style={{ position: 'sticky', top: 0, zIndex: 40, background: pageBg, transition: 'background 0.45s ease' }}>
           <SearchAndFilter
             searchTerm={searchTerm}

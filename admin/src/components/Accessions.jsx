@@ -13,7 +13,7 @@ import ConfirmationModal from './AccessionsComponents/ConfirmationModal'
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('authToken') // ← match your login's setItem key
+  const token = localStorage.getItem('authToken')
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
@@ -38,41 +38,46 @@ const emptyAccessionForm = {
   subjects: '',
 }
 
-const Accessions = ({ dark }) => {
-  const [accessions, setAccessions] = useState([])
-  const [archivedAccessions, setArchivedAccessions] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+const PAGE_LIMIT = 10
 
-  const [searchTerm, setSearchTerm] = useState('')
+const Accessions = ({ dark }) => {
+  const [accessions, setAccessions]               = useState([])
+  const [archivedAccessions, setArchivedAccessions] = useState([])
+  const [loading, setLoading]                     = useState(true)
+  const [error, setError]                         = useState(null)
+
+  // ── Pagination state ───────────────────────────────────────────────────────
+  const [pagination, setPagination] = useState({
+    page: 1, limit: PAGE_LIMIT, total: 0, totalPages: 1,
+  })
+
+  const [searchTerm, setSearchTerm]         = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isAddModalOpen,  setIsAddModalOpen]  = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isArchivesOpen, setIsArchivesOpen] = useState(false)
+  const [isArchivesOpen,  setIsArchivesOpen]  = useState(false)
 
   const [selectedAccession, setSelectedAccession] = useState(null)
-  const [newAccession, setNewAccession] = useState(emptyAccessionForm)
+  const [newAccession,  setNewAccession]  = useState(emptyAccessionForm)
   const [editAccession, setEditAccession] = useState({ id: null, ...emptyAccessionForm })
 
   const [modalState, setModalState] = useState({
-    isOpen: false,
-    type: 'archive',
-    item: null,
-    loading: false
+    isOpen: false, type: 'archive', item: null, loading: false,
   })
 
-  // ─── Fetch active accessions ───────────────────────────────────────────────
-  const fetchAccessions = useCallback(async () => {
+  // ─── Fetch active accessions (server-side pagination + search) ─────────────
+  const fetchAccessions = useCallback(async (page = 1, search = '') => {
     try {
       setLoading(true)
       setError(null)
       const { data } = await axios.get(`${API_BASE}/accessions`, {
+        params: { page, limit: PAGE_LIMIT, search },
         headers: getAuthHeaders(),
       })
-      // Backend returns { accessions: [], pagination: {} }
       setAccessions(data.accessions || [])
+      setPagination(data.pagination || { page, limit: PAGE_LIMIT, total: 0, totalPages: 1 })
     } catch (err) {
       console.error('Failed to fetch accessions:', err)
       setError('Failed to load accessions.')
@@ -93,24 +98,31 @@ const Accessions = ({ dark }) => {
     }
   }, [])
 
+  // Initial load
   useEffect(() => {
-    fetchAccessions()
+    fetchAccessions(1, '')
   }, [fetchAccessions])
+
+  // Re-fetch when search changes (reset to page 1)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      fetchAccessions(1, searchTerm)
+      setPagination(prev => ({ ...prev, page: 1 }))
+    }, 350)
+    return () => clearTimeout(timeout)
+  }, [searchTerm, fetchAccessions])
 
   const statuses = ['all', 'Pending Review', 'Cataloged']
 
-  const filteredAccessions = accessions.filter((item) => {
-    const search = searchTerm.toLowerCase()
-    const matchesSearch =
-      (item.accession_no || '').toLowerCase().includes(search) ||
-      (item.title || '').toLowerCase().includes(search) ||
-      (item.author || '').toLowerCase().includes(search)
+  // Client-side status filter only (search is server-side)
+  const filteredAccessions = accessions.filter((item) =>
+    selectedStatus === 'all' || item.status === selectedStatus
+  )
 
-    const matchesStatus =
-      selectedStatus === 'all' || item.status === selectedStatus
-
-    return matchesSearch && matchesStatus
-  })
+  // ─── Page change ───────────────────────────────────────────────────────────
+  const handlePageChange = (newPage) => {
+    fetchAccessions(newPage, searchTerm)
+  }
 
   // ─── Add accession ─────────────────────────────────────────────────────────
   const handleAddAccession = async (e) => {
@@ -121,7 +133,7 @@ const Accessions = ({ dark }) => {
       })
       setNewAccession(emptyAccessionForm)
       setIsAddModalOpen(false)
-      fetchAccessions()
+      fetchAccessions(1, searchTerm)
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to create accession.'
       alert(msg)
@@ -163,7 +175,7 @@ const Accessions = ({ dark }) => {
     }
   }
 
-  // ─── Confirm delete ────────────────────────────────────────────────────────
+  // ─── Confirm delete (de-accession) ────────────────────────────────────────
   const handleConfirmDelete = async () => {
     if (!modalState.item) return
     setModalState(prev => ({ ...prev, loading: true }))
@@ -175,7 +187,7 @@ const Accessions = ({ dark }) => {
       setAccessions(prev => prev.filter(acc => acc.id !== modalState.item.id))
       setModalState({ isOpen: false, type: 'delete', item: null, loading: false })
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete accession.')
+      alert(err.response?.data?.message || 'Failed to de-accession.')
       setModalState(prev => ({ ...prev, loading: false }))
     }
   }
@@ -189,7 +201,7 @@ const Accessions = ({ dark }) => {
         { headers: getAuthHeaders() }
       )
       fetchArchivedAccessions()
-      fetchAccessions()
+      fetchAccessions(pagination.page, searchTerm)
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to restore accession.')
     }
@@ -199,6 +211,7 @@ const Accessions = ({ dark }) => {
   const handleEditAccession = (item) => {
     setEditAccession({
       id: item.id,
+      access_level: item.access_level || 'public',
       accession_no: item.accession_no || '',
       date_accessioned: item.date_accessioned?.slice(0, 10) || '',
       book_id: item.book_id || null,
@@ -221,7 +234,7 @@ const Accessions = ({ dark }) => {
     setIsEditModalOpen(true)
   }
 
-  // ─── Update accession ──────────────────────────────────────────────────────
+  // ─── Update accession (PUT) ────────────────────────────────────────────────
   const handleUpdateAccession = async () => {
     try {
       await axios.put(
@@ -231,10 +244,17 @@ const Accessions = ({ dark }) => {
       )
       setIsEditModalOpen(false)
       setEditAccession({ id: null, ...emptyAccessionForm })
-      fetchAccessions()
+      fetchAccessions(pagination.page, searchTerm)
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to update accession.')
     }
+  }
+
+  // ─── Access level changed inside EditModal → sync list in place ───────────
+  const handleAccessLevelChange = (id, newLevel) => {
+    setAccessions(prev =>
+      prev.map(a => a.id === id ? { ...a, access_level: newLevel } : a)
+    )
   }
 
   // ─── View accession ────────────────────────────────────────────────────────
@@ -290,7 +310,7 @@ const Accessions = ({ dark }) => {
       </div>
 
       <div style={{ padding: '0 1.5rem' }}>
-        <StatsOverview accessions={accessions} dark={dark} />
+        <StatsOverview accessions={accessions} pagination={pagination} dark={dark} />
 
         {/* Sticky Search and Filter */}
         <div style={{ position: 'sticky', top: 0, zIndex: 20, background: pageBg, paddingBottom: '1rem', transition: 'background 0.45s ease' }}>
@@ -314,7 +334,7 @@ const Accessions = ({ dark }) => {
             border: `1px solid ${errorBorder}`,
             color: errorText,
             borderRadius: '0.5rem',
-            fontSize: '0.875rem'
+            fontSize: '0.875rem',
           }}>
             {error}
           </div>
@@ -327,17 +347,16 @@ const Accessions = ({ dark }) => {
             borderRadius: '0.75rem',
             padding: '2rem',
             textAlign: 'center',
-            transition: 'background 0.45s ease'
+            transition: 'background 0.45s ease',
           }}>
             <div style={{
               display: 'inline-block',
-              width: '2rem',
-              height: '2rem',
+              width: '2rem', height: '2rem',
               borderRadius: '50%',
               border: `2px solid transparent`,
               borderBottomColor: iconColor,
               animation: 'spin 0.8s linear infinite',
-              marginBottom: '1rem'
+              marginBottom: '1rem',
             }} />
             <p style={{ color: textSecondary, margin: 0 }}>Loading accessions...</p>
           </div>
@@ -348,6 +367,8 @@ const Accessions = ({ dark }) => {
             onDelete={handleDeleteClick}
             onEdit={handleEditAccession}
             onView={handleViewAccession}
+            pagination={pagination}
+            onPageChange={handlePageChange}
             dark={dark}
           />
         )}
@@ -384,6 +405,7 @@ const Accessions = ({ dark }) => {
         onSubmit={handleUpdateAccession}
         editAccession={editAccession}
         setEditAccession={setEditAccession}
+        onAccessLevelChange={handleAccessLevelChange}
         dark={dark}
       />
 

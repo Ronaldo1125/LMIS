@@ -5,13 +5,14 @@ import {
   BuildingLibraryIcon
 } from '@heroicons/react/24/outline'
 
-const StatsOverview = ({ accessions, dark }) => {
-  const totalAccessions = accessions.length
+const StatsOverview = ({ accessions, pagination, dark }) => {
+  // Use server-reported total if available, otherwise fall back to current page length
+  const totalAccessions = pagination?.total ?? accessions.length
 
-  // Count unique titles as a proxy for unique works
+  // The following stats are computed from the current page only.
+  // They reflect visible data — for full accuracy these would need dedicated API endpoints.
   const uniqueTitles = new Set(accessions.map((item) => item.title).filter(Boolean)).size
 
-  // Accessions from this month
   const now = new Date()
   const thisMonthCount = accessions.filter((item) => {
     if (!item.date_accessioned) return false
@@ -19,15 +20,19 @@ const StatsOverview = ({ accessions, dark }) => {
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
   }).length
 
-  // Unique publishers
   const uniquePublishers = new Set(
     accessions.map((item) => item.publisher).filter(Boolean)
   ).size
+
+  // If paginated, surface a note on page-scoped stats
+  const isPaginated = pagination && pagination.totalPages > 1
+  const pageNote = isPaginated ? ` (this page)` : ''
 
   const stats = [
     {
       label: 'Total Accessions',
       value: totalAccessions.toLocaleString(),
+      // No subValue note — this one is accurate via pagination.total
       icon: ClipboardDocumentCheckIcon,
       iconBg:    dark ? 'rgba(15,97,247,0.15)'  : '#eff6ff',
       iconColor: dark ? '#93c5fd' : '#0F61F7',
@@ -36,6 +41,7 @@ const StatsOverview = ({ accessions, dark }) => {
     {
       label: 'Unique Titles',
       value: uniqueTitles.toLocaleString(),
+      subValue: isPaginated ? `Page ${pagination.page} of ${pagination.totalPages}` : undefined,
       icon: DocumentArrowDownIcon,
       iconBg:    dark ? 'rgba(63,27,210,0.15)'  : '#f5f3ff',
       iconColor: dark ? '#c4b5fd' : '#3F1BD2',
@@ -44,7 +50,7 @@ const StatsOverview = ({ accessions, dark }) => {
     {
       label: 'This Month',
       value: thisMonthCount.toLocaleString(),
-      subValue: 'New accessions',
+      subValue: `New accessions${pageNote}`,
       icon: ClockIcon,
       iconBg:    dark ? 'rgba(255,166,2,0.15)'  : '#fff7ed',
       iconColor: dark ? '#fdba74' : '#FFA602',
@@ -53,6 +59,7 @@ const StatsOverview = ({ accessions, dark }) => {
     {
       label: 'Unique Publishers',
       value: uniquePublishers.toLocaleString(),
+      subValue: isPaginated ? `On this page` : undefined,
       icon: BuildingLibraryIcon,
       iconBg:    dark ? 'rgba(255,208,2,0.12)'  : '#fefce8',
       iconColor: dark ? '#fde047' : '#ca8a04',
@@ -60,11 +67,11 @@ const StatsOverview = ({ accessions, dark }) => {
     },
   ]
 
-  const cardBg      = dark ? '#0f1f38' : '#ffffff'
-  const cardBorder  = dark ? '#1a3356' : '#e2e8f0'
-  const labelColor  = dark ? '#2e4d70' : '#4b5563'
-  const valueColor  = dark ? '#dde8f5' : '#154A9A'
-  const subColor    = dark ? '#2e4d70' : '#6b7280'
+  const cardBg     = dark ? '#0f1f38' : '#ffffff'
+  const cardBorder = dark ? '#1a3356' : '#e2e8f0'
+  const labelColor = dark ? '#2e4d70' : '#4b5563'
+  const valueColor = dark ? '#dde8f5' : '#154A9A'
+  const subColor   = dark ? '#2e4d70' : '#6b7280'
 
   return (
     <div style={{

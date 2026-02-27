@@ -49,20 +49,23 @@ const optionalAuthMiddleware = (req, res, next) => {
   }
 };
 
-// Middleware to check user role
+// Middleware to check user role.
+// Accepts roles as either spread args OR a single array:
+//   roleMiddleware('admin', 'librarian')
+//   roleMiddleware(['admin', 'librarian'])  ← both work now
 const roleMiddleware = (...allowedRoles) => {
+  // Flatten handles the case where caller passes a single array
+  const roles = allowedRoles.flat();
+
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    console.log('User role:', req.user.role);
-    console.log('Allowed roles:', allowedRoles);
-
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         message: 'Access denied. Insufficient permissions.',
-        requiredRoles: allowedRoles,
+        requiredRoles: roles,
         userRole: req.user.role
       });
     }

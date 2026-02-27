@@ -15,11 +15,6 @@ import {
 } from 'lucide-react';
 import FileUploadSection from './AddBookModal/FileUploadSection';
 
-/**
- * EditBookModal Component
- * Fully expanded for production use with comprehensive digital asset management
- * Theme: Glass-and-Steel (Dark/Light adaptive)
- */
 const EditBookModal = ({ 
   isOpen, 
   onClose, 
@@ -29,16 +24,14 @@ const EditBookModal = ({
   categories, 
   dark 
 }) => {
-  // ── State Management ──────────────────────────────────────────────────────
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadError, setUploadError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [existingFiles, setExistingFiles] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [deletingFile, setDeletingFile] = useState({});
-  const [activeTab, setActiveTab] = useState('details'); // 'details' | 'assets'
+  const [activeTab, setActiveTab] = useState('details');
 
-  // ── Theme Definition (Steel & Glass) ──────────────────────────────────────
   const theme = {
     overlay: 'rgba(2, 6, 23, 0.8)',
     blur: 'backdrop-blur-md',
@@ -55,7 +48,6 @@ const EditBookModal = ({
     buttonSecondary: dark ? 'bg-slate-800 text-slate-300 border-[#1a3356]' : 'bg-white text-slate-700 border-slate-200'
   };
 
-  // ── Sync with API ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (isOpen && editBook?.id) {
       fetchExistingFiles(editBook.id);
@@ -80,7 +72,6 @@ const EditBookModal = ({
     }
   };
 
-  // ── File Logic ────────────────────────────────────────────────────────────
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     const allowedExtensions = ['.pdf', '.epub', '.mobi', '.azw3', '.djvu'];
@@ -94,7 +85,7 @@ const EditBookModal = ({
       return;
     }
 
-    const maxSize = 100 * 1024 * 1024; // 100MB
+    const maxSize = 100 * 1024 * 1024;
     if (files.some(f => f.size > maxSize)) {
       setUploadError('One or more files exceed the 100MB size limit.');
       return;
@@ -136,14 +127,11 @@ const EditBookModal = ({
     }
   };
 
-  // ── Form Submission ───────────────────────────────────────────────────────
   const handleFormSubmit = async (event) => {
     event.preventDefault();
     
-    // Step 1: Submit Book Metadata
     await onSubmit();
 
-    // Step 2: Handle File Uploads if any
     if (selectedFiles.length > 0 && editBook?.id) {
       setIsUploading(true);
       setUploadError('');
@@ -152,7 +140,6 @@ const EditBookModal = ({
         const formData = new FormData();
         selectedFiles.forEach(file => formData.append('files', file));
         
-        // If no primary file exists yet, suggest making one from this batch
         if (!existingFiles.some(f => f.is_primary)) {
           formData.append('setPrimary', 'true');
         }
@@ -171,7 +158,6 @@ const EditBookModal = ({
     }
   };
 
-  // ── Helper Renders ────────────────────────────────────────────────────────
   const getFileIcon = (type) => {
     const t = type?.toLowerCase();
     if (t === 'pdf') return <FileText className="w-5 h-5 text-red-400" />;
@@ -274,7 +260,7 @@ const EditBookModal = ({
                 />
               </div>
 
-              {/* Title - Span 2 */}
+              {/* Title */}
               <div className="md:col-span-2 space-y-2">
                 <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
                   Official Book Title *
@@ -292,7 +278,7 @@ const EditBookModal = ({
               {/* Author & Editor */}
               <div className="space-y-2">
                 <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Lead Author *
+                  Lead Author
                 </label>
                 <input
                   type="text"
@@ -328,7 +314,7 @@ const EditBookModal = ({
               </div>
               <div className="space-y-2">
                 <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Publisher / Press *
+                  Publisher / Press
                 </label>
                 <input
                   type="text"
@@ -365,36 +351,36 @@ const EditBookModal = ({
 
               {/* Physical Details & Accompanying */}
               <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="space-y-2">
-                    <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                      Physical Details
-                    </label>
-                    <input
-                      type="text"
-                      value={editBook.otherPhysicalDetails || ''}
-                      onChange={(e) => setEditBook({ ...editBook, otherPhysicalDetails: e.target.value })}
-                      placeholder="e.g., ill., maps, 24cm"
-                      className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
-                    />
-                 </div>
-                 <div className="space-y-2">
-                    <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                      Accompanying Material
-                    </label>
-                    <input
-                      type="text"
-                      value={editBook.accompanyingMaterial || ''}
-                      onChange={(e) => setEditBook({ ...editBook, accompanyingMaterial: e.target.value })}
-                      placeholder="e.g., 1 CD-ROM"
-                      className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
-                    />
-                 </div>
+                <div className="space-y-2">
+                  <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
+                    Physical Details
+                  </label>
+                  <input
+                    type="text"
+                    value={editBook.otherPhysicalDetails || ''}
+                    onChange={(e) => setEditBook({ ...editBook, otherPhysicalDetails: e.target.value })}
+                    placeholder="e.g., ill., maps, 24cm"
+                    className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
+                    Accompanying Material
+                  </label>
+                  <input
+                    type="text"
+                    value={editBook.accompanyingMaterial || ''}
+                    onChange={(e) => setEditBook({ ...editBook, accompanyingMaterial: e.target.value })}
+                    placeholder="e.g., 1 CD-ROM"
+                    className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  />
+                </div>
               </div>
 
-              {/* ISBN / ISSN */}
+              {/* ISBN / Copies */}
               <div className="space-y-2">
                 <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Standard Number (ISBN) *
+                  Standard Number (ISBN)
                 </label>
                 <input
                   type="text"
@@ -406,7 +392,7 @@ const EditBookModal = ({
               </div>
               <div className="space-y-2">
                 <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Available Copies *
+                  Available Copies
                 </label>
                 <input
                   type="number"
@@ -417,7 +403,7 @@ const EditBookModal = ({
                 />
               </div>
 
-              {/* Long Text Areas */}
+              {/* Subjects */}
               <div className="md:col-span-2 space-y-2">
                 <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
                   Subject Headings / Keywords
@@ -431,6 +417,7 @@ const EditBookModal = ({
                 />
               </div>
 
+              {/* Notes */}
               <div className="md:col-span-2 space-y-2">
                 <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
                   Notes & Annotations
@@ -442,13 +429,61 @@ const EditBookModal = ({
                   className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus} resize-none`}
                 />
               </div>
+
+              {/* ✅ Access Level Toggle */}
+              <div className="md:col-span-2 space-y-2">
+                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
+                  Access Level
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setEditBook({ ...editBook, access_level: 'public' })}
+                    className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
+                      (editBook.access_level || 'public') === 'public'
+                        ? 'border-blue-500 bg-blue-500/10'
+                        : `border-transparent ${theme.card} ${theme.border} hover:border-slate-500/50`
+                    }`}
+                  >
+                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                      (editBook.access_level || 'public') === 'public'
+                        ? 'bg-blue-500'
+                        : 'bg-slate-500'
+                    }`} />
+                    <div>
+                      <p className={`text-sm font-bold ${theme.textPrimary}`}>Public</p>
+                      <p className={`text-xs ${theme.textSecondary}`}>Visible to all users</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEditBook({ ...editBook, access_level: 'staff_only' })}
+                    className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
+                      editBook.access_level === 'staff_only'
+                        ? 'border-amber-500 bg-amber-500/10'
+                        : `border-transparent ${theme.card} ${theme.border} hover:border-slate-500/50`
+                    }`}
+                  >
+                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                      editBook.access_level === 'staff_only'
+                        ? 'bg-amber-500'
+                        : 'bg-slate-500'
+                    }`} />
+                    <div>
+                      <p className={`text-sm font-bold ${theme.textPrimary}`}>Staff Only</p>
+                      <p className={`text-xs ${theme.textSecondary}`}>Hidden from regular users</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
             </div>
           )}
 
           {activeTab === 'assets' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
               
-              {/* Header Info */}
               <div className={`p-4 rounded-xl flex items-start gap-4 ${theme.card} border ${theme.border}`}>
                 <Info className="w-5 h-5 text-blue-400 mt-0.5" />
                 <div className="text-sm">
@@ -459,7 +494,6 @@ const EditBookModal = ({
                 </div>
               </div>
 
-              {/* Existing Uploads List */}
               <div>
                 <h4 className={`text-xs font-black uppercase tracking-tighter mb-4 ${theme.textSecondary}`}>
                   Stored Assets on Server
@@ -483,14 +517,14 @@ const EditBookModal = ({
                           </div>
                           <div className="overflow-hidden">
                             <div className="flex items-center gap-2">
-                               <p className={`text-sm font-bold truncate ${theme.textPrimary}`}>
-                                 {file.original_name}
-                               </p>
-                               {file.is_primary && (
-                                 <span className="bg-blue-500/20 text-blue-400 text-[9px] px-2 py-0.5 rounded-full border border-blue-500/30 uppercase font-black">
-                                   Primary
-                                 </span>
-                               )}
+                              <p className={`text-sm font-bold truncate ${theme.textPrimary}`}>
+                                {file.original_name}
+                              </p>
+                              {file.is_primary && (
+                                <span className="bg-blue-500/20 text-blue-400 text-[9px] px-2 py-0.5 rounded-full border border-blue-500/30 uppercase font-black">
+                                  Primary
+                                </span>
+                              )}
                             </div>
                             <p className={`text-[10px] ${theme.textSecondary}`}>
                               {file.file_type.toUpperCase()} • {(file.file_size / (1024 * 1024)).toFixed(2)} MB • {file.download_count} DLs
@@ -529,7 +563,6 @@ const EditBookModal = ({
                 )}
               </div>
 
-              {/* Upload Section */}
               {existingFiles.length < 5 && (
                 <div className="pt-4">
                   <FileUploadSection
@@ -546,7 +579,7 @@ const EditBookModal = ({
           )}
         </form>
 
-        {/* Modal Footer Actions */}
+        {/* Modal Footer */}
         <div className={`px-8 py-5 border-t flex items-center justify-between ${theme.header} ${theme.border}`}>
           <div className="flex items-center gap-2">
             {isUploading && (

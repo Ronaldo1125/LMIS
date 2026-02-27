@@ -166,6 +166,56 @@ const BookFormFields = ({ formData, onChange, categories, loading }) => {
         disabled={loading}
         required
       />
+
+      {/* ✅ Access Level Toggle */}
+      <div className="md:col-span-2 space-y-2">
+        <label className="block text-sm font-semibold text-slate-700">
+          Access Level
+        </label>
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => onChange({ ...formData, access_level: 'public' })}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
+              (formData.access_level || 'public') === 'public'
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+              (formData.access_level || 'public') === 'public'
+                ? 'bg-blue-500'
+                : 'bg-slate-300'
+            }`} />
+            <div>
+              <p className="text-sm font-bold text-slate-800">Public</p>
+              <p className="text-xs text-slate-500">Visible to all users</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => onChange({ ...formData, access_level: 'staff_only' })}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
+              formData.access_level === 'staff_only'
+                ? 'border-amber-500 bg-amber-50'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+              formData.access_level === 'staff_only'
+                ? 'bg-amber-500'
+                : 'bg-slate-300'
+            }`} />
+            <div>
+              <p className="text-sm font-bold text-slate-800">Staff Only</p>
+              <p className="text-xs text-slate-500">Hidden from regular users</p>
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
