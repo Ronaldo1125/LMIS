@@ -486,11 +486,22 @@ const Search = () => {
                       </span>
                       <span style={{ color: "#9ca3af", fontWeight: 600, flexShrink: 0 }}>{book.year}</span>
                     </div>
-                    {book.access_level === "staff_only" && (
-                      <span style={{ marginTop: 6, display: "inline-block", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: "#92400e", background: "#fef3c7", borderRadius: 4, padding: "2px 6px" }}>
-                        STAFF ONLY
+                    <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+                      {/* PDF badge — always shown since all results have a PDF */}
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", color: "#166534", background: "#dcfce7", borderRadius: 4, padding: "2px 6px" }}>
+                        PDF
                       </span>
-                    )}
+                      {book.upload_size && (
+                        <span style={{ fontSize: 10, color: "#9ca3af" }}>
+                          {(book.upload_size / (1024 * 1024)).toFixed(1)} MB
+                        </span>
+                      )}
+                      {book.access_level === "staff_only" && (
+                        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: "#92400e", background: "#fef3c7", borderRadius: 4, padding: "2px 6px" }}>
+                          STAFF ONLY
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))
@@ -530,6 +541,15 @@ const Search = () => {
                         {book.author}
                       </span>
                       <span style={{ fontWeight: 700, color: "#9ca3af", flexShrink: 0 }}>{book.year}</span>
+                      {/* PDF badge */}
+                      <span style={{ display: "inline-flex", alignItems: "center", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", color: "#166534", background: "#dcfce7", borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>
+                        PDF
+                      </span>
+                      {book.upload_size && (
+                        <span style={{ fontSize: 10, color: "#9ca3af", flexShrink: 0 }}>
+                          {(book.upload_size / (1024 * 1024)).toFixed(1)} MB
+                        </span>
+                      )}
                       {book.access_level === "staff_only" && (
                         <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: "#92400e", background: "#fef3c7", borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>
                           STAFF ONLY

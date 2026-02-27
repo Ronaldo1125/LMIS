@@ -30,7 +30,7 @@ router.get('/', authMiddleware, async (req, res) => {
       search = '',
       category = '',
       showArchived = 'false',
-      showAccessioned = 'false',
+      showAccessioned = 'all',
     } = req.query;
 
     const offset = (page - 1) * limit;
