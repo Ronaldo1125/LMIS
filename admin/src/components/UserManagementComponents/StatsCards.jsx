@@ -1,13 +1,12 @@
 import { Users, UserCog, BookUser, ShieldCheck } from 'lucide-react'
 
 function StatsCards({ stats = {}, dark = false }) {
-  // ── Colors ────────────────────────────────────────────────
   const cardBg       = dark ? '#0f1f38' : '#ffffff'
   const borderColors = [
-    dark ? '#ef4444' : '#dc2626',   // Admin   — red
-    dark ? '#2563eb' : '#0F61F7',   // Staff   — blue
-    dark ? '#a855f7' : '#3F1BD2',   // Librarian — purple
-    dark ? '#f59e0b' : '#FFA602',   // Patron  — amber
+    dark ? '#ef4444' : '#dc2626',
+    dark ? '#2563eb' : '#0F61F7',
+    dark ? '#a855f7' : '#3F1BD2',
+    dark ? '#f59e0b' : '#FFA602',
   ]
   const iconBgColors = [
     dark ? 'rgba(239,68,68,0.15)'   : '#fee2e2',
@@ -27,7 +26,7 @@ function StatsCards({ stats = {}, dark = false }) {
   const cards = [
     {
       title: 'Admins',
-      count: stats.admins ?? 0,
+      count: stats.Admin ?? 0,
       icon: ShieldCheck,
       borderColor: borderColors[0],
       iconBg: iconBgColors[0],
@@ -35,7 +34,7 @@ function StatsCards({ stats = {}, dark = false }) {
     },
     {
       title: 'Staff Members',
-      count: stats.staff ?? 0,
+      count: stats.Staff ?? 0,
       icon: Users,
       borderColor: borderColors[1],
       iconBg: iconBgColors[1],
@@ -43,7 +42,7 @@ function StatsCards({ stats = {}, dark = false }) {
     },
     {
       title: 'Librarians',
-      count: stats.librarians ?? 0,
+      count: stats.Librarian ?? 0,
       icon: UserCog,
       borderColor: borderColors[2],
       iconBg: iconBgColors[2],
@@ -51,7 +50,7 @@ function StatsCards({ stats = {}, dark = false }) {
     },
     {
       title: 'Patrons',
-      count: stats.patrons ?? 0,
+      count: stats.Patron ?? 0,
       icon: BookUser,
       borderColor: borderColors[3],
       iconBg: iconBgColors[3],
