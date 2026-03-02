@@ -52,6 +52,9 @@ app.use('/api/auth', authRoutes);
 const adminpanelUsersRoutes = require('./routes/adminpanelUsers');
 app.use('/api/adminpanel-users', adminpanelUsersRoutes);
 
+const userTypeRoutes = require('./routes/userType');
+app.use('/api/usertype', userTypeRoutes);
+
 // Books
 const booksRoutes = require('./routes/books');
 app.use('/api/books', booksRoutes);
