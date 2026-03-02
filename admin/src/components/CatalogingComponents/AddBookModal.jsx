@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import api from '../../utils/api' // ✅ Import configured axios
+import api from '../../utils/api'
 import ModalHeader from './AddBookModal/ModalHeader'
 import ErrorAlert from './AddBookModal/ErrorAlert'
 import BookFormFields from './AddBookModal/BookFormFields'
@@ -7,7 +7,7 @@ import FormActions from './AddBookModal/FormActions'
 import FileUploadSection from './AddBookModal/FileUploadSection'
 import { useBookForm } from './AddBookModal/UseBookForm'
 
-const AddBookModal = ({ isOpen, onClose, onBookAdded }) => {
+const AddBookModal = ({ isOpen, onClose, onBookAdded, dark = false }) => {
   const {
     categories,
     loading,
@@ -21,162 +21,122 @@ const AddBookModal = ({ isOpen, onClose, onBookAdded }) => {
   const [uploadError, setUploadError] = useState('')
   const [isUploading, setIsUploading] = useState(false)
 
-  // Handle file selection
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files)
-    
-    // Validate file types
     const allowedTypes = [
-      'application/pdf',
-      'application/epub+zip',
-      'application/x-mobipocket-ebook',
-      'application/vnd.amazon.ebook',
-      'image/vnd.djvu',
-      'image/x-djvu'
+      'application/pdf', 'application/epub+zip',
+      'application/x-mobipocket-ebook', 'application/vnd.amazon.ebook',
+      'image/vnd.djvu', 'image/x-djvu'
     ]
-    
     const allowedExtensions = ['.pdf', '.epub', '.mobi', '.azw3', '.djvu']
-    
-    const invalidFiles = files.filter(file => {
-      const hasValidMime = allowedTypes.includes(file.type)
-      const hasValidExt = allowedExtensions.some(ext => 
-        file.name.toLowerCase().endsWith(ext)
-      )
-      return !hasValidMime && !hasValidExt
-    })
-    
-    if (invalidFiles.length > 0) {
-      setUploadError('Invalid file type. Only PDF, EPUB, MOBI, AZW3, and DJVU files are allowed.')
-      return
-    }
-
-    // Validate file size (100MB max)
+    const invalidFiles = files.filter(file =>
+      !allowedTypes.includes(file.type) &&
+      !allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext))
+    )
+    if (invalidFiles.length > 0) { setUploadError('Invalid file type. Only PDF, EPUB, MOBI, AZW3, and DJVU files are allowed.'); return }
     const maxSize = 100 * 1024 * 1024
-    const oversizedFiles = files.filter(file => file.size > maxSize)
-    
-    if (oversizedFiles.length > 0) {
-      setUploadError(`File size exceeds 100MB limit: ${oversizedFiles[0].name}`)
-      return
-    }
-
-    // Validate max 5 files
-    if (files.length > 5) {
-      setUploadError('Maximum 5 files allowed per upload.')
-      return
-    }
-
+    if (files.some(f => f.size > maxSize)) { setUploadError('File size exceeds 100MB limit.'); return }
+    if (files.length > 5) { setUploadError('Maximum 5 files allowed per upload.'); return }
     setUploadError('')
     setSelectedFiles(files)
   }
 
-  // Remove selected file
   const handleRemoveFile = (index) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index))
     setUploadError('')
   }
 
-  // Enhanced submit handler with file upload
   const handleSubmitWithFiles = async (e) => {
     e.preventDefault()
-    
     try {
-      // First, submit the book form and get the bookId
       const bookId = await handleSubmit(e)
-      
-      if (!bookId) {
-        // Book creation failed, error is already set in useBookForm
-        return
-      }
-
-      // If files are selected, upload them
+      if (!bookId) return
       if (selectedFiles.length > 0) {
         setIsUploading(true)
         setUploadError('')
-
-        const formData = new FormData()
-        selectedFiles.forEach(file => {
-          formData.append('files', file)
-        })
-        formData.append('setPrimary', 'true') // Set first file as primary
-
+        const fd = new FormData()
+        selectedFiles.forEach(file => fd.append('files', file))
+        fd.append('setPrimary', 'true')
         try {
-          const response = await api.post(
-            `/uploads/${bookId}`,
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data'
-              }
-            }
-          )
-
-          console.log('Files uploaded successfully:', response.data)
+          await api.post(`/uploads/${bookId}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
         } catch (uploadErr) {
-          console.error('Error uploading files:', uploadErr)
-          setUploadError(
-            uploadErr.response?.data?.message || 
-            'Book created but file upload failed. You can add files later.'
-          )
-          // Don't return here - still want to close modal and refresh
+          setUploadError(uploadErr.response?.data?.message || 'Book created but file upload failed. You can add files later.')
         } finally {
           setIsUploading(false)
         }
       }
-
-      // Reset files
       setSelectedFiles([])
       setUploadError('')
-      
-      // Close modal
       onClose()
-      
-      // Trigger refresh
-      if (onBookAdded) {
-        onBookAdded()
-      }
-      
+      if (onBookAdded) onBookAdded()
     } catch (err) {
       console.error('Error in form submission:', err)
-      // Error is already handled in useBookForm
     }
   }
 
   if (!isOpen) return null
 
+  // ── Colors (matches AddAccessionModal exactly) ─────────────
+  const modalBg      = dark ? '#0f1f38' : '#ffffff'
+  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
+
+  const isLoading = loading || isUploading
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <ModalHeader 
-          title="Add New Book" 
-          onClose={onClose} 
-          disabled={loading || isUploading} 
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(0,0,0,0.7)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '1rem', zIndex: 50,
+    }}>
+      <div style={{
+        background: modalBg,
+        borderRadius: '1rem',
+        boxShadow: dark
+          ? '0 24px 64px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.03) inset'
+          : '0 24px 64px rgba(0,0,0,0.15)',
+        width: '100%', maxWidth: '48rem',
+        maxHeight: '90vh', overflowY: 'auto',
+        border: dark ? `1px solid ${headerBorder}` : 'none',
+        transition: 'background 0.45s ease',
+      }}>
+
+        <ModalHeader
+          title="Add New Book"
+          onClose={onClose}
+          disabled={isLoading}
+          dark={dark}
         />
 
-        <form onSubmit={handleSubmitWithFiles} className="p-6">
-          <ErrorAlert message={error} />
+        <form onSubmit={handleSubmitWithFiles} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+          <ErrorAlert message={error} dark={dark} />
 
           <BookFormFields
             formData={formData}
             onChange={setFormData}
             categories={categories}
-            loading={loading || isUploading}
+            loading={isLoading}
+            dark={dark}
           />
 
-          {/* File Upload Section */}
           <FileUploadSection
             selectedFiles={selectedFiles}
             onFileChange={handleFileChange}
             onRemoveFile={handleRemoveFile}
             error={uploadError}
-            loading={loading || isUploading}
+            loading={isLoading}
+            dark={dark}
           />
 
           <FormActions
             onCancel={onClose}
-            loading={loading || isUploading}
-            submitText={isUploading ? 'Uploading Files...' : 'Add Book'}
+            loading={isLoading}
+            submitText="Add Book"
             loadingText={isUploading ? 'Uploading Files...' : 'Adding...'}
+            dark={dark}
           />
+
         </form>
       </div>
     </div>
