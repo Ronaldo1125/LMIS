@@ -4,23 +4,23 @@ const jwt = require('jsonwebtoken');
 const authMiddleware = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith('Bearer '))
       return res.status(401).json({ message: 'No token provided' });
-    }
 
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Normalize: admins use 'role', regular users use 'user_type'
+    // Give everyone a unified 'role' field
+    decoded.role = decoded.role || decoded.user_type || null;
+
     req.user = decoded;
     next();
-
   } catch (error) {
-    if (error.name === 'TokenExpiredError') {
+    if (error.name === 'TokenExpiredError')
       return res.status(401).json({ message: 'Token expired' });
-    }
-    if (error.name === 'JsonWebTokenError') {
+    if (error.name === 'JsonWebTokenError')
       return res.status(401).json({ message: 'Invalid token' });
-    }
     return res.status(401).json({ message: 'Authentication failed' });
   }
 };

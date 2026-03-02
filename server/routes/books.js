@@ -18,7 +18,9 @@ const formatDateForResponse = (book) => {
 
 // Helper: check if the requesting user can see staff_only books
 const canViewStaffOnly = (user) => {
-  return user && (user.role === 'admin' || user.role === 'librarian' || user.role === 'staff');
+  if (!user) return false;
+  const role = user.role; // now normalized by authMiddleware
+  return role === 'admin' || role === 'librarian' || role === 'Staff';
 };
 
 // ─── Get all books with pagination and search ──────────────────────────────────
@@ -105,38 +107,6 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
-// ─── Get single book by ID ─────────────────────────────────────────────────────
-router.get('/:id', authMiddleware, async (req, res) => {
-  try {
-    const [books] = await pool.query('SELECT * FROM books WHERE id = ?', [req.params.id]);
-
-    if (books.length === 0) {
-      return res.status(404).json({ message: 'Book not found' });
-    }
-
-    const book = books[0];
-
-    if (book.access_level === 'staff_only' && !canViewStaffOnly(req.user)) {
-      return res.status(403).json({ message: 'Access denied' });
-    }
-
-    const formattedBook = formatDateForResponse(book);
-
-    if (formattedBook.is_accessioned) {
-      const [accessions] = await pool.query(
-        'SELECT id, accession_no, date_accessioned FROM accessions WHERE book_id = ?',
-        [req.params.id]
-      );
-      formattedBook.accession = accessions[0] || null;
-    }
-
-    res.json(formattedBook);
-  } catch (error) {
-    console.error('Error fetching book:', error);
-    res.status(500).json({ message: 'Error fetching book' });
-  }
-});
-
 // ─── Get all categories (hierarchical) ────────────────────────────────────────
 router.get('/meta/categories', authMiddleware, async (req, res) => {
   try {
@@ -162,8 +132,8 @@ router.get('/meta/stats', authMiddleware, async (req, res) => {
     const accessFilter = canViewStaffOnly(req.user) ? '' : "AND access_level = 'public'";
 
     const [[{ total }]] = await pool.query(
-      `SELECT COUNT(*) as total FROM books WHERE is_archived = FALSE AND is_accessioned = FALSE ${accessFilter}`
-    );
+  `SELECT COUNT(*) as total FROM books WHERE is_archived = FALSE ${accessFilter}`
+);
 
     const [[{ accessioned }]] = await pool.query(
       `SELECT COUNT(*) as accessioned FROM books WHERE is_accessioned = TRUE ${accessFilter}`
@@ -344,6 +314,38 @@ router.get('/meta/archive-stats', authMiddleware, roleMiddleware('admin', 'libra
   } catch (error) {
     console.error('Error fetching archive stats:', error);
     res.status(500).json({ message: 'Error fetching archive statistics' });
+  }
+});
+
+// ─── Get single book by ID ─────────────────────────────────────────────────────
+router.get('/:id', authMiddleware, async (req, res) => {
+  try {
+    const [books] = await pool.query('SELECT * FROM books WHERE id = ?', [req.params.id]);
+
+    if (books.length === 0) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+
+    const book = books[0];
+
+    if (book.access_level === 'staff_only' && !canViewStaffOnly(req.user)) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const formattedBook = formatDateForResponse(book);
+
+    if (formattedBook.is_accessioned) {
+      const [accessions] = await pool.query(
+        'SELECT id, accession_no, date_accessioned FROM accessions WHERE book_id = ?',
+        [req.params.id]
+      );
+      formattedBook.accession = accessions[0] || null;
+    }
+
+    res.json(formattedBook);
+  } catch (error) {
+    console.error('Error fetching book:', error);
+    res.status(500).json({ message: 'Error fetching book' });
   }
 });
 

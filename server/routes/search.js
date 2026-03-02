@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require('../config/connection');
+const { optionalAuthMiddleware } = require('../middleware/auth'); // ← ADDED
 
 /**
  * GET /api/search
@@ -17,7 +18,7 @@ const pool = require('../config/connection');
  *   page       – page number (default 1)
  *   limit      – results per page (default 24, max 100)
  */
-router.get("/", async (req, res) => {
+router.get("/", optionalAuthMiddleware, async (req, res) => { // ← ADDED optionalAuthMiddleware
   try {
     const {
       query    = "",
@@ -35,11 +36,15 @@ router.get("/", async (req, res) => {
     const offset   = (pageNum - 1) * limitNum;
 
     // ── access-level gate ───────────────────────────────────────────────────
+    // FIX: check both 'role' (adminpanel_users token) and 'user_type' (users token)
     const isStaff =
       req.user &&
-      (req.user.role === "staff" ||
-        req.user.role === "admin" ||
-        req.user.role === "librarian");
+      (
+        req.user.role      === "admin"     ||
+        req.user.role      === "librarian" ||
+        req.user.role      === "Staff"     ||  // normalized by authMiddleware
+        req.user.user_type === "Staff"         // fallback: raw users token
+      );
 
     // ── build WHERE clauses ─────────────────────────────────────────────────
     const conditions = [];
@@ -58,17 +63,17 @@ router.get("/", async (req, res) => {
       )
     `);
 
-    // 3. *** Only show books that have at least one active PDF upload ***
+    // 3. Only show books that have at least one active PDF upload
     conditions.push(`
       EXISTS (
         SELECT 1 FROM uploads u
-        WHERE u.book_id = b.id
+        WHERE u.book_id   = b.id
           AND u.file_type = 'pdf'
           AND u.status    = 'active'
       )
     `);
 
-    // 4. Access level — unauthenticated users see public only
+    // 4. Access level — non-staff users see public only
     if (!isStaff) {
       conditions.push("b.access_level = 'public'");
     }
@@ -114,8 +119,6 @@ router.get("/", async (req, res) => {
     const whereSQL = "WHERE " + conditions.join(" AND ");
 
     // ── SELECT columns ──────────────────────────────────────────────────────
-    // Also pulls the primary PDF's metadata via a correlated subquery so the
-    // frontend can show file size, download count, etc. without a second query.
     const selectSQL = `
       SELECT
         b.id,
@@ -135,7 +138,7 @@ router.get("/", async (req, res) => {
         b.date_of_publication,
         NULL AS image,
 
-        -- Primary PDF upload metadata (is_primary = 1 preferred, else earliest active PDF)
+        -- Primary PDF upload metadata
         (
           SELECT u.id FROM uploads u
           WHERE u.book_id   = b.id
