@@ -1,28 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../utils/api'; 
+import api from '../../utils/api';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { 
-  Trash2, 
-  CheckCircle, 
-  FileText, 
-  File, 
-  Loader, 
+import {
+  Trash2,
+  CheckCircle,
+  FileText,
+  File,
+  Loader,
   AlertCircle,
   CloudUpload,
   Info,
-  Layers,
   BookOpen
 } from 'lucide-react';
 import FileUploadSection from './AddBookModal/FileUploadSection';
 
-const EditBookModal = ({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  editBook, 
-  setEditBook, 
-  categories, 
-  dark 
+const EditBookModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  editBook,
+  setEditBook,
+  categories,
+  dark
 }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadError, setUploadError] = useState('');
@@ -31,26 +30,16 @@ const EditBookModal = ({
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [deletingFile, setDeletingFile] = useState({});
   const [activeTab, setActiveTab] = useState('details');
-
-  const theme = {
-    overlay: 'rgba(2, 6, 23, 0.8)',
-    blur: 'backdrop-blur-md',
-    container: dark ? 'bg-[#0f1f38]/95' : 'bg-white',
-    header: dark ? 'bg-[#0d1d35]' : 'bg-slate-50',
-    border: dark ? 'border-[#1a3356]' : 'border-slate-200',
-    textPrimary: dark ? 'text-[#dde8f5]' : 'text-slate-900',
-    textSecondary: dark ? 'text-[#6b8cae]' : 'text-slate-500',
-    inputBg: dark ? 'bg-[#0d1d35]' : 'bg-white',
-    inputBorder: dark ? 'border-[#1a3356]' : 'border-slate-200',
-    inputFocus: 'focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500',
-    card: dark ? 'bg-[#162a4a]' : 'bg-slate-50',
-    buttonPrimary: 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20',
-    buttonSecondary: dark ? 'bg-slate-800 text-slate-300 border-[#1a3356]' : 'bg-white text-slate-700 border-slate-200'
-  };
+  const [categoryList, setCategoryList] = useState([]);
 
   useEffect(() => {
-    if (isOpen && editBook?.id) {
-      fetchExistingFiles(editBook.id);
+    if (isOpen) {
+      if (categoryList.length === 0) {
+        api.get('/books/meta/categories').then(res => setCategoryList(res.data)).catch(() => {});
+      }
+      if (editBook?.id) {
+        fetchExistingFiles(editBook.id);
+      }
     }
     if (!isOpen) {
       setSelectedFiles([]);
@@ -76,7 +65,7 @@ const EditBookModal = ({
     const files = Array.from(e.target.files);
     const allowedExtensions = ['.pdf', '.epub', '.mobi', '.azw3', '.djvu'];
 
-    const invalidFiles = files.filter(file => 
+    const invalidFiles = files.filter(file =>
       !allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext))
     );
 
@@ -91,8 +80,8 @@ const EditBookModal = ({
       return;
     }
 
-    if (existingFiles.length + files.length > 5) {
-      setUploadError(`Limit reached. You can only have 5 files total per book.`);
+    if (existingFiles.length + selectedFiles.length + files.length > 5) {
+      setUploadError('Limit reached. You can only have 5 files total per book.');
       return;
     }
 
@@ -106,7 +95,7 @@ const EditBookModal = ({
 
   const handleDeleteExistingFile = async (uploadId) => {
     if (!window.confirm('Are you sure you want to permanently delete this digital asset?')) return;
-    
+
     setDeletingFile(prev => ({ ...prev, [uploadId]: true }));
     try {
       await api.delete(`/uploads/${uploadId}`);
@@ -129,17 +118,17 @@ const EditBookModal = ({
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-    
+
     await onSubmit();
 
     if (selectedFiles.length > 0 && editBook?.id) {
       setIsUploading(true);
       setUploadError('');
-      
+
       try {
         const formData = new FormData();
         selectedFiles.forEach(file => formData.append('files', file));
-        
+
         if (!existingFiles.some(f => f.is_primary)) {
           formData.append('setPrimary', 'true');
         }
@@ -165,274 +154,315 @@ const EditBookModal = ({
     return <File className="w-5 h-5 text-slate-400" />;
   };
 
+  // Mirrors CategorySelect's renderCategoryOptions exactly — parent/child with └─ arrows
+  const renderCategoryOptions = () => {
+    if (!categoryList || categoryList.length === 0) return null;
+
+    const options = [];
+    const parents = categoryList.filter(cat => !cat.parent_id);
+
+    parents.forEach(parent => {
+      options.push(
+        <option key={parent.id} value={parent.name}>
+          {parent.name}
+        </option>
+      );
+      const children = categoryList.filter(cat => cat.parent_id === parent.id);
+      children.forEach(child => {
+        options.push(
+          <option key={child.id} value={child.name}>
+            &nbsp;&nbsp;&nbsp;&nbsp;└─ {child.name}
+          </option>
+        );
+      });
+    });
+
+    return options;
+  };
+
+  // Matches AddBookModal's FormInput / CategorySelect styling exactly
+  const inputClass = "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent";
+  const labelClass = "block text-sm font-medium text-gray-700 mb-2";
+
   if (!isOpen) return null;
 
   return (
-    <div 
-      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 ${theme.blur}`}
-      style={{ backgroundColor: theme.overlay }}
-    >
-      <div 
-        className={`relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl shadow-2xl border ${theme.container} ${theme.border} overflow-hidden`}
-      >
-        {/* Modal Header */}
-        <div className={`flex items-center justify-between px-8 py-5 border-b ${theme.header} ${theme.border}`}>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg">
-              <Layers className="w-6 h-6 text-blue-500" />
-            </div>
-            <div>
-              <h2 className={`text-xl font-bold tracking-tight ${theme.textPrimary}`}>
-                Edit Resource Management
-              </h2>
-              <p className={`text-xs font-medium uppercase tracking-widest ${theme.textSecondary}`}>
-                ID: {editBook?.id || 'N/A'} — System Update Mode
-              </p>
-            </div>
-          </div>
-          <button 
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900">Edit Book</h2>
+          <button
             onClick={onClose}
-            className={`p-2 rounded-full hover:bg-slate-500/10 transition-colors ${theme.textSecondary}`}
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
           >
-            <XMarkIcon className="w-7 h-7" />
+            <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className={`flex px-8 border-b ${theme.border}`}>
-          <button 
+        <div className="flex px-6 border-b border-gray-200">
+          <button
             onClick={() => setActiveTab('details')}
-            className={`py-4 px-6 text-sm font-bold border-b-2 transition-all ${
-              activeTab === 'details' 
-              ? 'border-blue-500 text-blue-500' 
-              : `border-transparent ${theme.textSecondary} hover:text-blue-400`
+            className={`py-3 px-4 text-sm font-semibold border-b-2 transition-all ${
+              activeTab === 'details'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            Book Metadata
+            Book Details
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('assets')}
-            className={`py-4 px-6 text-sm font-bold border-b-2 transition-all ${
-              activeTab === 'assets' 
-              ? 'border-blue-500 text-blue-500' 
-              : `border-transparent ${theme.textSecondary} hover:text-blue-400`
+            className={`py-3 px-4 text-sm font-semibold border-b-2 transition-all ${
+              activeTab === 'assets'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             Digital Assets ({existingFiles.length})
           </button>
         </div>
 
-        {/* Main Content Area */}
-        <form onSubmit={handleFormSubmit} className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-          
+        {/* Form */}
+        <form onSubmit={handleFormSubmit} className="p-6">
+
+          {/* Error Alert */}
+          {uploadError && (
+            <div className="mb-4 flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {uploadError}
+            </div>
+          )}
+
+          {/* Book Details Tab */}
           {activeTab === 'details' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              
-              {/* Category Field */}
-              <div className="space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Primary Classification *
-                </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              {/* Category — hierarchy with └─ arrows, mirrors CategorySelect */}
+              <div>
+                <label className={labelClass}>Category *</label>
                 <select
                   required
-                  value={editBook.category}
+                  value={editBook.category || ''}
                   onChange={(e) => setEditBook({ ...editBook, category: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  className={inputClass}
                 >
-                  <option value="">Select Category</option>
-                  {categories.filter(c => c !== 'all').map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
+                  <option value="">Select category</option>
+                  {renderCategoryOptions()}
                 </select>
               </div>
 
               {/* Call Number */}
-              <div className="space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Shelf Call Number
-                </label>
+              <div>
+                <label className={labelClass}>Call Number</label>
                 <input
                   type="text"
                   value={editBook.callNumber || ''}
                   onChange={(e) => setEditBook({ ...editBook, callNumber: e.target.value })}
-                  placeholder="e.g., QA 76.73 .J3"
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  placeholder="Enter call number"
+                  className={inputClass}
                 />
               </div>
 
               {/* Title */}
-              <div className="md:col-span-2 space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Official Book Title *
-                </label>
+              <div className="md:col-span-2">
+                <label className={labelClass}>Title *</label>
                 <input
                   type="text"
                   required
                   value={editBook.title || ''}
                   onChange={(e) => setEditBook({ ...editBook, title: e.target.value })}
-                  placeholder="The Complete Reference..."
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  placeholder="Enter book title"
+                  className={inputClass}
                 />
               </div>
 
-              {/* Author & Editor */}
-              <div className="space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Lead Author
-                </label>
+              {/* Author */}
+              <div>
+                <label className={labelClass}>Author</label>
                 <input
                   type="text"
                   value={editBook.author || ''}
                   onChange={(e) => setEditBook({ ...editBook, author: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  placeholder="Author name"
+                  className={inputClass}
                 />
               </div>
-              <div className="space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Contributing Editor
-                </label>
+
+              {/* Editor */}
+              <div>
+                <label className={labelClass}>Editor</label>
                 <input
                   type="text"
                   value={editBook.editor || ''}
                   onChange={(e) => setEditBook({ ...editBook, editor: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  placeholder="Editor name"
+                  className={inputClass}
                 />
               </div>
 
-              {/* Edition & Publisher */}
-              <div className="space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Edition / Version
-                </label>
+              {/* Edition */}
+              <div>
+                <label className={labelClass}>Edition</label>
                 <input
                   type="text"
                   value={editBook.edition || ''}
                   onChange={(e) => setEditBook({ ...editBook, edition: e.target.value })}
-                  placeholder="e.g., Global Edition"
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  placeholder="e.g., 2nd ed."
+                  className={inputClass}
                 />
               </div>
-              <div className="space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Publisher / Press
-                </label>
+
+              {/* Publication */}
+              <div>
+                <label className={labelClass}>Publication</label>
+                <input
+                  type="text"
+                  value={editBook.publication || ''}
+                  onChange={(e) => setEditBook({ ...editBook, publication: e.target.value })}
+                  placeholder="Place of publication"
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Publisher */}
+              <div>
+                <label className={labelClass}>Publisher</label>
                 <input
                   type="text"
                   value={editBook.publisher || ''}
                   onChange={(e) => setEditBook({ ...editBook, publisher: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  placeholder="Publisher name"
+                  className={inputClass}
                 />
               </div>
 
-              {/* Dates & Extent */}
-              <div className="space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Publication Date
-                </label>
+              {/* Date of Publication */}
+              <div>
+                <label className={labelClass}>Date of Publication</label>
                 <input
                   type="date"
                   value={editBook.dateOfPublication || ''}
                   onChange={(e) => setEditBook({ ...editBook, dateOfPublication: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  className={inputClass}
                 />
               </div>
-              <div className="space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Extent (Pages/Size)
-                </label>
+
+              {/* Extent */}
+              <div>
+                <label className={labelClass}>Extent of Item</label>
                 <input
                   type="text"
                   value={editBook.extent || ''}
                   onChange={(e) => setEditBook({ ...editBook, extent: e.target.value })}
-                  placeholder="e.g., xiv, 1024 p."
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  placeholder="e.g., 120 pages"
+                  className={inputClass}
                 />
               </div>
 
-              {/* Physical Details & Accompanying */}
-              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                    Physical Details
-                  </label>
-                  <input
-                    type="text"
-                    value={editBook.otherPhysicalDetails || ''}
-                    onChange={(e) => setEditBook({ ...editBook, otherPhysicalDetails: e.target.value })}
-                    placeholder="e.g., ill., maps, 24cm"
-                    className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                    Accompanying Material
-                  </label>
-                  <input
-                    type="text"
-                    value={editBook.accompanyingMaterial || ''}
-                    onChange={(e) => setEditBook({ ...editBook, accompanyingMaterial: e.target.value })}
-                    placeholder="e.g., 1 CD-ROM"
-                    className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
-                  />
-                </div>
+              {/* Dimensions */}
+              <div>
+                <label className={labelClass}>Dimensions</label>
+                <input
+                  type="text"
+                  value={editBook.dimensions || ''}
+                  onChange={(e) => setEditBook({ ...editBook, dimensions: e.target.value })}
+                  placeholder="e.g., 21 cm"
+                  className={inputClass}
+                />
               </div>
 
-              {/* ISBN / Copies */}
-              <div className="space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Standard Number (ISBN)
-                </label>
+              {/* Other Physical Details */}
+              <div className="md:col-span-2">
+                <label className={labelClass}>Other Physical Details</label>
+                <textarea
+                  rows={2}
+                  value={editBook.otherPhysicalDetails || ''}
+                  onChange={(e) => setEditBook({ ...editBook, otherPhysicalDetails: e.target.value })}
+                  placeholder="e.g., illustrations, maps"
+                  className={`${inputClass} resize-none`}
+                />
+              </div>
+
+              {/* Accompanying Material */}
+              <div className="md:col-span-2">
+                <label className={labelClass}>Accompanying Material</label>
+                <textarea
+                  rows={2}
+                  value={editBook.accompanyingMaterial || ''}
+                  onChange={(e) => setEditBook({ ...editBook, accompanyingMaterial: e.target.value })}
+                  placeholder="e.g., 1 CD-ROM, 1 map"
+                  className={`${inputClass} resize-none`}
+                />
+              </div>
+
+              {/* ISBN */}
+              <div>
+                <label className={labelClass}>ISBN</label>
                 <input
                   type="text"
                   value={editBook.isbn || ''}
                   onChange={(e) => setEditBook({ ...editBook, isbn: e.target.value })}
-                  placeholder="978-..."
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  placeholder="978-X-XXX-XXXXX-X"
+                  className={inputClass}
                 />
               </div>
-              <div className="space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Available Copies
-                </label>
+
+              {/* ISSN */}
+              <div>
+                <label className={labelClass}>ISSN</label>
                 <input
-                  type="number"
-                  min="1"
-                  value={editBook.copies || 1}
-                  onChange={(e) => setEditBook({ ...editBook, copies: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus}`}
+                  type="text"
+                  value={editBook.issn || ''}
+                  onChange={(e) => setEditBook({ ...editBook, issn: e.target.value })}
+                  placeholder="XXXX-XXXX"
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Notes Area */}
+              <div className="md:col-span-2">
+                <label className={labelClass}>Notes Area</label>
+                <textarea
+                  rows={3}
+                  value={editBook.notesArea || ''}
+                  onChange={(e) => setEditBook({ ...editBook, notesArea: e.target.value })}
+                  placeholder="Additional notes"
+                  className={`${inputClass} resize-none`}
                 />
               </div>
 
               {/* Subjects */}
-              <div className="md:col-span-2 space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Subject Headings / Keywords
-                </label>
+              <div className="md:col-span-2">
+                <label className={labelClass}>Subjects</label>
                 <textarea
-                  rows="2"
+                  rows={2}
                   value={editBook.subjects || ''}
                   onChange={(e) => setEditBook({ ...editBook, subjects: e.target.value })}
-                  placeholder="Database Systems, SQL, Web Development..."
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus} resize-none`}
+                  placeholder="Comma-separated subjects"
+                  className={`${inputClass} resize-none`}
                 />
               </div>
 
-              {/* Notes */}
-              <div className="md:col-span-2 space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
-                  Notes & Annotations
-                </label>
-                <textarea
-                  rows="3"
-                  value={editBook.notesArea || ''}
-                  onChange={(e) => setEditBook({ ...editBook, notesArea: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${theme.inputBg} ${theme.inputBorder} ${theme.textPrimary} ${theme.inputFocus} resize-none`}
+              {/* Number of Copies */}
+              <div>
+                <label className={labelClass}>Number of Copies *</label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={editBook.copies || 1}
+                  onChange={(e) => setEditBook({ ...editBook, copies: e.target.value })}
+                  placeholder="1"
+                  className={inputClass}
                 />
               </div>
 
-              {/* ✅ Access Level Toggle */}
+              {/* Access Level — matches BookFormFields exactly */}
               <div className="md:col-span-2 space-y-2">
-                <label className={`text-[11px] font-black uppercase tracking-widest ${theme.textSecondary}`}>
+                <label className="block text-sm font-semibold text-slate-700">
                   Access Level
                 </label>
                 <div className="grid grid-cols-2 gap-4">
@@ -441,18 +471,16 @@ const EditBookModal = ({
                     onClick={() => setEditBook({ ...editBook, access_level: 'public' })}
                     className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                       (editBook.access_level || 'public') === 'public'
-                        ? 'border-blue-500 bg-blue-500/10'
-                        : `border-transparent ${theme.card} ${theme.border} hover:border-slate-500/50`
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
                     }`}
                   >
                     <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                      (editBook.access_level || 'public') === 'public'
-                        ? 'bg-blue-500'
-                        : 'bg-slate-500'
+                      (editBook.access_level || 'public') === 'public' ? 'bg-blue-500' : 'bg-slate-300'
                     }`} />
                     <div>
-                      <p className={`text-sm font-bold ${theme.textPrimary}`}>Public</p>
-                      <p className={`text-xs ${theme.textSecondary}`}>Visible to all users</p>
+                      <p className="text-sm font-bold text-slate-800">Public</p>
+                      <p className="text-xs text-slate-500">Visible to all users</p>
                     </div>
                   </button>
 
@@ -461,18 +489,16 @@ const EditBookModal = ({
                     onClick={() => setEditBook({ ...editBook, access_level: 'staff_only' })}
                     className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                       editBook.access_level === 'staff_only'
-                        ? 'border-amber-500 bg-amber-500/10'
-                        : `border-transparent ${theme.card} ${theme.border} hover:border-slate-500/50`
+                        ? 'border-amber-500 bg-amber-50'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
                     }`}
                   >
                     <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                      editBook.access_level === 'staff_only'
-                        ? 'bg-amber-500'
-                        : 'bg-slate-500'
+                      editBook.access_level === 'staff_only' ? 'bg-amber-500' : 'bg-slate-300'
                     }`} />
                     <div>
-                      <p className={`text-sm font-bold ${theme.textPrimary}`}>Staff Only</p>
-                      <p className={`text-xs ${theme.textSecondary}`}>Hidden from regular users</p>
+                      <p className="text-sm font-bold text-slate-800">Staff Only</p>
+                      <p className="text-xs text-slate-500">Hidden from regular users</p>
                     </div>
                   </button>
                 </div>
@@ -481,140 +507,125 @@ const EditBookModal = ({
             </div>
           )}
 
+          {/* Digital Assets Tab */}
           {activeTab === 'assets' && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              
-              <div className={`p-4 rounded-xl flex items-start gap-4 ${theme.card} border ${theme.border}`}>
-                <Info className="w-5 h-5 text-blue-400 mt-0.5" />
-                <div className="text-sm">
-                  <p className={`font-bold ${theme.textPrimary}`}>Digital Library Configuration</p>
-                  <p className={theme.textSecondary}>
-                    You can upload up to 5 files. The "Primary" file is the one users see by default when clicking the download button.
-                  </p>
-                </div>
+            <div className="space-y-6">
+
+              <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm">
+                <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                <p className="text-gray-600">
+                  You can upload up to 5 files. The <strong>Primary</strong> file is shown by default when users click download.
+                </p>
               </div>
 
               <div>
-                <h4 className={`text-xs font-black uppercase tracking-tighter mb-4 ${theme.textSecondary}`}>
-                  Stored Assets on Server
-                </h4>
-                
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">Stored Files</h4>
+
                 {loadingFiles ? (
-                  <div className="flex flex-col items-center py-12 gap-3">
-                    <Loader className="w-10 h-10 animate-spin text-blue-500" />
-                    <p className={`text-sm ${theme.textSecondary}`}>Synchronizing with cloud storage...</p>
+                  <div className="flex flex-col items-center py-10 gap-2">
+                    <Loader className="w-8 h-8 animate-spin text-blue-500" />
+                    <p className="text-sm text-gray-500">Loading files...</p>
                   </div>
                 ) : existingFiles.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {existingFiles.map((file) => (
-                      <div 
-                        key={file.id} 
-                        className={`group flex items-center justify-between p-4 rounded-2xl border transition-all ${theme.card} ${theme.border} hover:border-blue-500/50`}
+                      <div
+                        key={file.id}
+                        className="group flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-blue-300 transition-all bg-gray-50"
                       >
-                        <div className="flex items-center gap-4 overflow-hidden">
-                          <div className={`p-3 rounded-xl bg-white/5 border ${theme.border}`}>
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="p-2 rounded-lg bg-white border border-gray-200">
                             {getFileIcon(file.file_type)}
                           </div>
                           <div className="overflow-hidden">
                             <div className="flex items-center gap-2">
-                              <p className={`text-sm font-bold truncate ${theme.textPrimary}`}>
+                              <p className="text-sm font-medium text-gray-800 truncate">
                                 {file.original_name}
                               </p>
                               {file.is_primary && (
-                                <span className="bg-blue-500/20 text-blue-400 text-[9px] px-2 py-0.5 rounded-full border border-blue-500/30 uppercase font-black">
+                                <span className="bg-blue-100 text-blue-600 text-[10px] px-2 py-0.5 rounded-full font-semibold">
                                   Primary
                                 </span>
                               )}
                             </div>
-                            <p className={`text-[10px] ${theme.textSecondary}`}>
-                              {file.file_type.toUpperCase()} • {(file.file_size / (1024 * 1024)).toFixed(2)} MB • {file.download_count} DLs
+                            <p className="text-xs text-gray-400">
+                              {file.file_type.toUpperCase()} • {(file.file_size / (1024 * 1024)).toFixed(2)} MB • {file.download_count} downloads
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           {!file.is_primary && (
                             <button
                               type="button"
                               onClick={() => handleSetPrimary(file.id)}
-                              className="p-2 hover:bg-blue-500/10 text-blue-400 rounded-lg transition-colors"
+                              className="p-1.5 hover:bg-blue-100 text-blue-500 rounded-lg transition-colors"
                               title="Set as Primary"
                             >
-                              <CheckCircle className="w-5 h-5" />
+                              <CheckCircle className="w-4 h-4" />
                             </button>
                           )}
                           <button
                             type="button"
                             onClick={() => handleDeleteExistingFile(file.id)}
                             disabled={deletingFile[file.id]}
-                            className="p-2 hover:bg-red-500/10 text-red-400 rounded-lg transition-colors disabled:opacity-30"
+                            className="p-1.5 hover:bg-red-100 text-red-400 rounded-lg transition-colors disabled:opacity-30"
                           >
-                            {deletingFile[file.id] ? <Loader className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                            {deletingFile[file.id]
+                              ? <Loader className="w-4 h-4 animate-spin" />
+                              : <Trash2 className="w-4 h-4" />
+                            }
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 border-2 border-dashed rounded-3xl border-slate-700/50">
-                    <CloudUpload className="w-12 h-12 text-slate-700 mx-auto mb-3" />
-                    <p className={`text-sm ${theme.textSecondary}`}>No digital copies linked to this record.</p>
+                  <div className="text-center py-10 border-2 border-dashed border-gray-200 rounded-xl">
+                    <CloudUpload className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm text-gray-400">No digital files linked to this book.</p>
                   </div>
                 )}
               </div>
 
               {existingFiles.length < 5 && (
-                <div className="pt-4">
-                  <FileUploadSection
-                    selectedFiles={selectedFiles}
-                    onFileChange={handleFileChange}
-                    onRemoveFile={handleRemoveNewFile}
-                    error={uploadError}
-                    loading={isUploading}
-                    dark={dark}
-                  />
-                </div>
+                <FileUploadSection
+                  selectedFiles={selectedFiles}
+                  onFileChange={handleFileChange}
+                  onRemoveFile={handleRemoveNewFile}
+                  error={uploadError}
+                  loading={isUploading}
+                  dark={dark}
+                />
               )}
             </div>
           )}
-        </form>
 
-        {/* Modal Footer */}
-        <div className={`px-8 py-5 border-t flex items-center justify-between ${theme.header} ${theme.border}`}>
-          <div className="flex items-center gap-2">
+          {/* Form Actions */}
+          <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
             {isUploading && (
-              <div className="flex items-center gap-2 text-blue-500 text-xs font-bold animate-pulse">
+              <div className="flex items-center gap-2 text-blue-500 text-sm mr-auto">
                 <Loader className="w-4 h-4 animate-spin" />
-                Processing Assets...
+                Uploading files...
               </div>
             )}
-            {uploadError && (
-              <div className="flex items-center gap-2 text-red-500 text-xs font-bold">
-                <AlertCircle className="w-4 h-4" />
-                {uploadError}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={onClose}
-              className={`px-6 py-2.5 rounded-xl font-bold text-sm border transition-all ${theme.buttonSecondary}`}
+              className="px-5 py-2 rounded-lg text-sm font-medium text-gray-600 border border-gray-300 hover:bg-gray-50 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
-              onClick={handleFormSubmit}
               disabled={isUploading}
-              className={`px-8 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50 ${theme.buttonPrimary}`}
+              className="px-6 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white transition-all disabled:opacity-50"
             >
-              {isUploading ? 'Finalizing Sync...' : 'Commit Changes'}
+              {isUploading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
-        </div>
 
+        </form>
       </div>
     </div>
   );

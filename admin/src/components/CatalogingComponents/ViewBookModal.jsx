@@ -288,20 +288,8 @@ const ViewBookModal = ({ isOpen, onClose, book, dark }) => {
           </section>
         </div>
 
-        {/* Footer */}
-        <div className={`px-8 py-5 ${headerBg} border-t ${borderCol} flex justify-end rounded-b-2xl`}>
-          <button
-            type="button"
-            onClick={onClose}
-            className={`px-8 py-2.5 rounded-xl border font-bold text-sm transition-all active:scale-95 ${
-              dark 
-                ? 'bg-[#162a4a] text-slate-300 border-[#1a3356] hover:bg-[#1a3356]' 
-                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-            }`}
-          >
-            Close Viewport
-          </button>
-        </div>
+        
+        
       </div>
     </div>
   )
