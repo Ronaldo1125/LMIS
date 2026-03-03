@@ -13,13 +13,11 @@ const FormField = ({ label, required, children, colSpan, dark }) => (
 )
 
 const BookFormFields = ({ formData, onChange, categories, loading, dark = false }) => {
-  // ── Colors ────────────────────────────────────────────────
   const inputBg     = dark ? '#081422' : '#ffffff'
   const inputBorder = dark ? '#1a3356' : '#d1d5db'
   const textPrimary = dark ? '#dde8f5' : '#1e293b'
   const textMuted   = dark ? '#2e4d70' : '#94a3b8'
   const sectionDivider = dark ? '#1a3356' : '#f1f5f9'
-  const selectBg    = dark ? '#081422' : '#ffffff'
 
   const inputStyle = {
     width: '100%', padding: '0.5rem 0.75rem',
@@ -49,6 +47,33 @@ const BookFormFields = ({ formData, onChange, categories, loading, dark = false 
   const focusStyle = (e) => { e.target.style.borderColor = '#2563eb' }
   const blurStyle  = (e) => { e.target.style.borderColor = inputBorder }
 
+  // Render category options with parent/child hierarchy and └─ arrows
+  const renderCategoryOptions = () => {
+    const options = []
+    const parents = categories
+      .filter(cat => !cat.parent_id)
+      .sort((a, b) => a.display_order - b.display_order)
+
+    parents.forEach(parent => {
+      options.push(
+        <option key={parent.id} value={parent.name}>
+          {parent.name}
+        </option>
+      )
+      const children = categories
+        .filter(cat => cat.parent_id === parent.id)
+        .sort((a, b) => a.display_order - b.display_order)
+      children.forEach(child => {
+        options.push(
+          <option key={child.id} value={child.name}>
+            {'    └─ '}{child.name}
+          </option>
+        )
+      })
+    })
+    return options
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
@@ -67,11 +92,7 @@ const BookFormFields = ({ formData, onChange, categories, loading, dark = false 
               onFocus={focusStyle} onBlur={blurStyle}
             >
               <option value="">Select a category</option>
-              {categories.map(cat => (
-                <option key={cat.id ?? cat} value={cat.id ?? cat}>
-                  {cat.name ?? cat}
-                </option>
-              ))}
+              {renderCategoryOptions()}
             </select>
           </FormField>
 
@@ -135,12 +156,11 @@ const BookFormFields = ({ formData, onChange, categories, loading, dark = false 
 
           <FormField label="Publication" dark={dark}>
             <input
-              type="text" value={formData.publication}
-              onChange={handleChange('publication')}
-              placeholder="Place of publication"
-              disabled={loading} style={inputStyle}
-              onFocus={focusStyle} onBlur={blurStyle}
-            />
+        type="date" value={formData.dateOfPublication}
+        onChange={handleChange('dateOfPublication')}
+        disabled={loading} style={{ ...inputStyle, colorScheme: dark ? 'dark' : 'light' }}
+        onFocus={focusStyle} onBlur={blurStyle}
+          />
           </FormField>
 
           <FormField label="Publisher" dark={dark}>
@@ -280,11 +300,9 @@ const BookFormFields = ({ formData, onChange, categories, loading, dark = false 
             />
           </FormField>
 
-          {/* Access Level */}
           <FormField label="Access Level" colSpan={2} dark={dark}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
 
-              {/* Public */}
               <button
                 type="button"
                 disabled={loading}
@@ -294,8 +312,7 @@ const BookFormFields = ({ formData, onChange, categories, loading, dark = false 
                   padding: '0.75rem 1rem',
                   borderRadius: '0.5rem', textAlign: 'left',
                   border: `2px solid ${(formData.access_level || 'public') === 'public'
-                    ? '#2563eb'
-                    : (dark ? '#1a3356' : '#e2e8f0')}`,
+                    ? '#2563eb' : (dark ? '#1a3356' : '#e2e8f0')}`,
                   background: (formData.access_level || 'public') === 'public'
                     ? (dark ? 'rgba(37,99,235,0.12)' : '#eff6ff')
                     : (dark ? '#081422' : '#ffffff'),
@@ -315,7 +332,6 @@ const BookFormFields = ({ formData, onChange, categories, loading, dark = false 
                 </div>
               </button>
 
-              {/* Staff Only */}
               <button
                 type="button"
                 disabled={loading}
@@ -325,8 +341,7 @@ const BookFormFields = ({ formData, onChange, categories, loading, dark = false 
                   padding: '0.75rem 1rem',
                   borderRadius: '0.5rem', textAlign: 'left',
                   border: `2px solid ${formData.access_level === 'staff_only'
-                    ? '#d97706'
-                    : (dark ? '#1a3356' : '#e2e8f0')}`,
+                    ? '#d97706' : (dark ? '#1a3356' : '#e2e8f0')}`,
                   background: formData.access_level === 'staff_only'
                     ? (dark ? 'rgba(217,119,6,0.1)' : '#fffbeb')
                     : (dark ? '#081422' : '#ffffff'),
