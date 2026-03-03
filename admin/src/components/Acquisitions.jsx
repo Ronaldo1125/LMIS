@@ -16,7 +16,6 @@ const Acquisitions = ({ dark }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ── Same tokens as Accessions header ──────────────────────────────────────
   const pageBg        = dark ? '#0a1628' : '#f1f5f9'
   const headerBg      = dark ? '#0d1d35' : '#ffffff'
   const headerBorder  = dark ? '#1a3356' : '#e2e8f0'
@@ -35,27 +34,28 @@ const Acquisitions = ({ dark }) => {
         setError(null);
         const response = await api.get('/acquisitions');
         const transformedData = response.data.data.map(item => ({
-  id: item.id,
-  accession_no: item.accession_no,
-  date_accessioned: item.date_accessioned,
-  title: item.title,
-  author: item.author,
-  editor: item.editor,
-  edition: item.edition,
-  publication: item.publication,
-  publisher: item.publisher,
-  date_of_publication: item.date_of_publication,
-  isbn: item.isbn,
-  issn: item.issn,
-  subjects: item.subjects,
-  extent: item.extent,
-  dimensions: item.dimensions,
-  other_physical_details: item.other_physical_details,
-  accompanying_material: item.accompanying_material,
-  notes_area: item.notes_area,
-  coverImage: `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1544947950-fa07a98d237f' : '1495446815901-a7297e633e8d'}?w=400&h=600&fit=crop`,
-  acquisitionDate: item.date_accessioned,
-}));
+          id: item.id,
+          accession_no: item.accession_no,
+          date_accessioned: item.date_accessioned,
+          title: item.title,
+          author: item.author,
+          editor: item.editor,
+          edition: item.edition,
+          publication: item.publication,
+          publisher: item.publisher,
+          date_of_publication: item.date_of_publication,
+          isbn: item.isbn,
+          issn: item.issn,
+          subjects: item.subjects,
+          extent: item.extent,
+          dimensions: item.dimensions,
+          other_physical_details: item.other_physical_details,
+          accompanying_material: item.accompanying_material,
+          notes_area: item.notes_area,
+          upload_count: item.upload_count,
+          upload_id: item.upload_id ?? null,   // ← passed to AcquisitionCard for PDF thumbnail
+          acquisitionDate: item.date_accessioned,
+        }));
         setAcquisitionsData(transformedData);
       } catch (err) {
         console.error('Error fetching acquisitions:', err);
@@ -74,7 +74,7 @@ const Acquisitions = ({ dark }) => {
       filtered = acquisitionsData.filter(book =>
         book.title.toLowerCase().includes(query) ||
         book.author.toLowerCase().includes(query) ||
-        (book.accessionNo && book.accessionNo.toLowerCase().includes(query))
+        (book.accession_no && book.accession_no.toLowerCase().includes(query))
       );
     }
     const sorted = [...filtered];
@@ -147,7 +147,7 @@ const Acquisitions = ({ dark }) => {
   return (
     <div style={{ minHeight: '100vh', background: pageBg, transition: 'background 0.45s ease' }}>
 
-      {/* ── Header — matches Accessions exactly ──────────────────────────── */}
+      {/* ── Header ───────────────────────────────────────────────────────── */}
       <div style={{
         background: headerBg,
         borderBottom: `1px solid ${headerBorder}`,

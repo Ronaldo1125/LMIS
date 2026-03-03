@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ChevronRight, Loader2, BookOpen } from "lucide-react";
 import Nav from "../Nav/Nav";
 import Footer from "../Footer/Footer";
+import PDFThumbnail from "./PDFThumbnail"; // ← ADD THIS IMPORT (adjust path as needed)
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -250,7 +251,6 @@ const Search = () => {
       setLoading(true);
       setError(null);
       try {
-        // Build query string to send to backend
         const params = new URLSearchParams();
         if (urlQuery)    params.set("query",    urlQuery);
         if (urlCategory) params.set("category", urlCategory);
@@ -260,7 +260,6 @@ const Search = () => {
         params.set("page",  String(urlPage));
         params.set("limit", String(LIMIT));
 
-        // Attach JWT if present (staff access unlocks staff_only books)
         const headers = { "Content-Type": "application/json" };
         const token = getToken();
         if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -302,7 +301,6 @@ const Search = () => {
   const onSubmitSearch = () => pushParams({ query: searchInput.trim(), page: "1" });
 
   const onFilterChange = (key, value) => {
-    // update local state immediately for responsive UI
     if (key === "category") setFilterCategory(value);
     if (key === "author")   setFilterAuthor(value);
     if (key === "format")   setFilterFormat(value);
@@ -463,19 +461,9 @@ const Search = () => {
                   onMouseOut={(e)  => (e.currentTarget.style.boxShadow = "none")}
                   onClick={() => router.push(`/books/${book.id}`)}
                 >
-                  <div style={{ aspectRatio: "3/4", background: "#f6f8ff", overflow: "hidden" }}>
-                    {book.image ? (
-                      <img
-                        src={book.image}
-                        alt={book.title}
-                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                      />
-                    ) : (
-                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#c7d2e7" }}>
-                        <BookOpen size={32} />
-                      </div>
-                    )}
-                  </div>
+                  {/* ── UPDATED: PDF first-page thumbnail ── */}
+                  <PDFThumbnail uploadId={book.upload_id} title={book.title} />
+
                   <div style={{ padding: "12px 12px 14px" }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", lineHeight: 1.3, marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                       {book.title}
@@ -487,7 +475,6 @@ const Search = () => {
                       <span style={{ color: "#9ca3af", fontWeight: 600, flexShrink: 0 }}>{book.year}</span>
                     </div>
                     <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
-                      {/* PDF badge — always shown since all results have a PDF */}
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", color: "#166534", background: "#dcfce7", borderRadius: 4, padding: "2px 6px" }}>
                         PDF
                       </span>
@@ -523,15 +510,15 @@ const Search = () => {
                   onMouseOut={(e)  => (e.currentTarget.style.background = "#fff")}
                   onClick={() => router.push(`/books/${book.id}`)}
                 >
-                  <div style={{ width: 44, height: 58, borderRadius: 8, overflow: "hidden", flexShrink: 0, border: "1px solid #e6ecf7", background: "#f6f8ff" }}>
-                    {book.image ? (
-                      <img src={book.image} alt={book.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    ) : (
-                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#c7d2e7" }}>
-                        <BookOpen size={18} />
-                      </div>
-                    )}
+                  {/* ── UPDATED: PDF first-page thumbnail (small) ── */}
+                  <div style={{ width: 44, height: 58, borderRadius: 8, overflow: "hidden", flexShrink: 0, border: "1px solid #e6ecf7" }}>
+                    <PDFThumbnail
+                      uploadId={book.upload_id}
+                      title={book.title}
+                      style={{ aspectRatio: "unset", width: "100%", height: "100%" }}
+                    />
                   </div>
+
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", lineHeight: 1.25, marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={book.title}>
                       {book.title}
@@ -541,7 +528,6 @@ const Search = () => {
                         {book.author}
                       </span>
                       <span style={{ fontWeight: 700, color: "#9ca3af", flexShrink: 0 }}>{book.year}</span>
-                      {/* PDF badge */}
                       <span style={{ display: "inline-flex", alignItems: "center", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", color: "#166534", background: "#dcfce7", borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>
                         PDF
                       </span>

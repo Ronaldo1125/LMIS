@@ -11,7 +11,6 @@ const authMiddleware = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Normalize: admins use 'role', regular users use 'user_type'
-    // Give everyone a unified 'role' field
     decoded.role = decoded.role || decoded.user_type || null;
 
     req.user = decoded;
@@ -27,34 +26,33 @@ const authMiddleware = (req, res, next) => {
 
 // Middleware that attaches user info if a token is present,
 // but does NOT block the request if there's no token.
-// Use this on public routes where auth is optional (e.g. public book catalogue).
 const optionalAuthMiddleware = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      req.user = null; // No token — guest access
+      req.user = null;
       return next();
     }
 
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // ── FIX: same normalization as authMiddleware ──────────────────────────
+    decoded.role = decoded.role || decoded.user_type || null;
+
     req.user = decoded;
     next();
 
   } catch (error) {
-    // Token present but invalid/expired — treat as guest rather than blocking
+    // Token present but invalid/expired — treat as guest
     req.user = null;
     next();
   }
 };
 
 // Middleware to check user role.
-// Accepts roles as either spread args OR a single array:
-//   roleMiddleware('admin', 'librarian')
-//   roleMiddleware(['admin', 'librarian'])  ← both work now
 const roleMiddleware = (...allowedRoles) => {
-  // Flatten handles the case where caller passes a single array
   const roles = allowedRoles.flat();
 
   return (req, res, next) => {

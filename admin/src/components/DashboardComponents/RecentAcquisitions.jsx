@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import PDFThumbnail from './PDFThumbnail'
 
 const RecentAcquisitions = ({ dark }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -59,7 +60,8 @@ const RecentAcquisitions = ({ dark }) => {
         date: item.date_accessioned,
         category: item.category || 'Uncategorized',
         color: categoryColors[item.category] || '#64748b',
-        id: item.id
+        id: item.id,
+        uploadId: item.upload_id,
       }))
 
       setAcquisitions(formattedAcquisitions)
@@ -92,8 +94,6 @@ const RecentAcquisitions = ({ dark }) => {
   const textMuted            = dark ? '#2e4d70' : '#6b7280'
   const itemBg               = dark ? '#081422' : '#ffffff'
   const itemBorder           = dark ? '#1a3356' : '#e2e8f0'
-  const imagePlaceholder     = dark ? '#1a3356' : '#e5e7eb'
-  const imagePlaceholderText = dark ? '#2e4d70' : '#9ca3af'
   const modalBg              = dark ? '#0f1f38' : '#ffffff'
   const modalBorder          = dark ? '#1a3356' : '#e2e8f0'
   const modalHeaderFooterBg  = dark ? '#0d1d35' : '#f8fafc'
@@ -262,16 +262,13 @@ const RecentAcquisitions = ({ dark }) => {
                     transition: 'background 0.45s ease',
                   }}
                 >
-                  {/* Image Placeholder */}
-                  <div style={{
-                    width: '5rem', height: '6rem',
-                    background: imagePlaceholder,
-                    borderRadius: '0.375rem',
-                    flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.75rem', color: imagePlaceholderText,
-                  }}>
-                    Image
+                  {/* PDF Thumbnail */}
+                  <div style={{ width: '5rem', height: '6rem', flexShrink: 0, borderRadius: '0.375rem', overflow: 'hidden' }}>
+                    <PDFThumbnail
+                      uploadId={item.uploadId}
+                      title={item.title}
+                      style={{ borderRadius: '0.375rem' }}
+                    />
                   </div>
 
                   {/* Text Content */}
