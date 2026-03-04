@@ -133,10 +133,8 @@ const ImportBooksModal = ({ isOpen, onClose, onImported, dark }) => {
               <UploadCloud className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Bulk Import Engine</h2>
-              <p className="text-white/60 text-xs font-medium uppercase tracking-widest mt-0.5">
-                Excel Pipeline • System Synchronization
-              </p>
+              <h2 className="text-xl font-bold text-white tracking-tight"> Import Excel Files</h2>
+              
             </div>
           </div>
           <button onClick={handleClose} className="text-white/50 hover:text-white transition-colors">
@@ -243,9 +241,7 @@ const ImportBooksModal = ({ isOpen, onClose, onImported, dark }) => {
                     <p className={`text-base font-bold tracking-tight ${theme.textPrimary}`}>
                       Drop spreadsheet or click to browse
                     </p>
-                    <p className={`text-sm font-medium mt-1 ${theme.textSecondary}`}>
-                      Supports Microsoft Excel (.xlsx, .xls)
-                    </p>
+                    
                   </div>
                   <div className="mt-6 flex gap-2">
                     <span className={`px-3 py-1 rounded-full text-[10px] font-black border uppercase tracking-tighter ${theme.buttonSecondary}`}>
@@ -322,8 +318,7 @@ const ImportBooksModal = ({ isOpen, onClose, onImported, dark }) => {
                 ) : (
                   <>
                     <UploadCloud className="w-4 h-4" />
-                    Committing Data
-                  </>
+                    Upload Data                  </>
                 )}
               </button>
             )}

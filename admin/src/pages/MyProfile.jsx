@@ -93,16 +93,16 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
     // Input
     inputBg: dark ? '#081422' : '#ffffff',
 
-    // Banner
+    // Banner — blue gradient in both modes
     banner: dark
       ? 'linear-gradient(135deg, #0d1d35 0%, #1a3356 100%)'
       : 'linear-gradient(135deg, var(--dark-blue-1) 0%, var(--dark-blue-2) 100%)',
 
-    // Toggle pill — blue in dark, amber in light
+    // Toggle pill — purple glow in dark, amber in light
     pillBg:   dark ? '#2563eb' : '#f59e0b',
-   pillGlow: dark
-  ? '0 0 16px rgba(168,85,247,0.5), 0 0 32px rgba(168,85,247,0.2), 0 2px 8px rgba(0,0,0,0.4)'
-  : '0 0 18px rgba(245,158,11,0.45)',
+    pillGlow: dark
+      ? '0 0 16px rgba(168,85,247,0.5), 0 0 32px rgba(168,85,247,0.2), 0 2px 8px rgba(0,0,0,0.4)'
+      : '0 0 18px rgba(245,158,11,0.45)',
 
     // Icon box
     iconBoxBg:   dark ? 'rgba(37,99,235,0.15)' : 'rgba(245,158,11,0.14)',
@@ -145,15 +145,15 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
     <div style={{ minHeight: '100vh', background: C.pageBg, padding: '1.5rem', transition: 'background 0.4s ease' }}>
       <div style={{ maxWidth: '42rem', margin: '0 auto' }}>
 
-        
-        
         {/* ── Profile Card ─────────────────────────────────────────── */}
         <div style={{ ...cardStyle, marginBottom: '1.25rem' }}>
-          {/* Banner */}
+
+          {/* Banner — uses C.banner so light mode stays blue */}
           <div style={{ height: '6rem', background: C.banner, transition: 'background 0.4s ease' }} />
 
           <div style={{ padding: '0 1.5rem 1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', marginTop: '-2.5rem', marginBottom: '1rem' }}>
+
               {/* Avatar */}
               <div style={{
                 width: '5rem', height: '5rem', borderRadius: '1rem', flexShrink: 0,
@@ -167,7 +167,8 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                   {fullName.charAt(0)}
                 </span>
               </div>
-              {/* Badge */}
+
+              {/* Role Badge */}
               <div style={{ paddingBottom: '0.25rem' }}>
                 <span style={{
                   ...getRoleBadgeStyle(role),
@@ -231,13 +232,13 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                     transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)',
                   }} />
                   <MoonIcon style={{
-                  position: 'absolute', inset: 0, width: '1.2rem', height: '1.2rem',
-                  color: '#e2d9f3',  // silvery white-purple
-                  filter: dark ? 'drop-shadow(0 0 6px #c084fc) drop-shadow(0 0 12px #a855f7)' : 'none',
-                  opacity: dark ? 1 : 0,
-                  transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0.3) rotate(-90deg)',
-                  transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)',
-                }} />
+                    position: 'absolute', inset: 0, width: '1.2rem', height: '1.2rem',
+                    color: '#e2d9f3',
+                    filter: dark ? 'drop-shadow(0 0 6px #c084fc) drop-shadow(0 0 12px #a855f7)' : 'none',
+                    opacity: dark ? 1 : 0,
+                    transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0.3) rotate(-90deg)',
+                    transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)',
+                  }} />
                 </div>
               </div>
 
@@ -292,12 +293,12 @@ const MyProfile = ({ user, setCurrentView, dark, setDark }) => {
                     transition: 'all 0.3s ease',
                   }} />
                   <MoonIcon style={{
-                  position: 'absolute', inset: 0, width: '0.75rem', height: '0.75rem',
-                  color: '#e2d9f3',
-                  filter: dark ? 'drop-shadow(0 0 3px #c084fc) drop-shadow(0 0 6px #a855f7)' : 'none',
-                  opacity: dark ? 1 : 0,
-                  transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0) rotate(-45deg)',
-                  transition: 'all 0.3s ease',
+                    position: 'absolute', inset: 0, width: '0.75rem', height: '0.75rem',
+                    color: '#e2d9f3',
+                    filter: dark ? 'drop-shadow(0 0 3px #c084fc) drop-shadow(0 0 6px #a855f7)' : 'none',
+                    opacity: dark ? 1 : 0,
+                    transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0) rotate(-45deg)',
+                    transition: 'all 0.3s ease',
                   }} />
                 </span>
               </span>
