@@ -8,8 +8,7 @@ const canViewStaffOnly = (user) => {
   return user && (user.role === 'admin' || user.role === 'librarian' || user.role === 'staff');
 };
 
-// GET /api/acquisitions/stats - Get acquisition statistics
-// NOTE: must be defined BEFORE the '/' route to avoid routing conflicts
+// GET /api/acquisitions/stats
 router.get('/stats', authMiddleware, async (req, res) => {
   try {
     const accessFilter = canViewStaffOnly(req.user) ? '' : "AND a.access_level = 'public'";
@@ -84,7 +83,17 @@ router.get('/', authMiddleware, async (req, res) => {
           SELECT COUNT(*)
           FROM uploads u
           WHERE u.book_id = a.book_id AND u.status = 'active'
-        ) AS upload_count
+        ) AS upload_count,
+        -- ▼ NEW: primary PDF upload id for thumbnail rendering
+        (
+          SELECT u.id
+          FROM uploads u
+          WHERE u.book_id   = a.book_id
+            AND u.file_type = 'pdf'
+            AND u.status    = 'active'
+          ORDER BY u.is_primary DESC, u.upload_date ASC
+          LIMIT 1
+        ) AS upload_id
       FROM accessions a
       JOIN books b ON a.book_id = b.id
       ${baseWhere}

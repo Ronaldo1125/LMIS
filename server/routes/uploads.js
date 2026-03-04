@@ -4,9 +4,10 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const { createReadStream } = require('fs');
 const crypto = require('crypto');
 const pool = require('../config/connection');
-const { authMiddleware, roleMiddleware } = require('../middleware/auth');
+const { authMiddleware, roleMiddleware, optionalAuthMiddleware } = require('../middleware/auth');
 
 // Ensure upload directory exists - using absolute path from project root
 // This will create: C:\Users\Laptop\Desktop\LMIS\server\uploads
@@ -267,6 +268,52 @@ router.get('/:id', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error fetching upload:', error);
     res.status(500).json({ message: 'Error fetching upload' });
+  }
+});
+
+// ─── Preview file (stream for in-browser rendering, does NOT increment download_count) ──
+// Uses optionalAuthMiddleware so guests can preview public-access books.
+// Staff-only books still require a valid token.
+router.get('/:id/preview', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const [uploads] = await pool.query(
+      `SELECT u.*, b.access_level
+       FROM uploads u
+       JOIN books b ON u.book_id = b.id
+       WHERE u.id = ? AND u.status = 'active'`,
+      [req.params.id]
+    );
+
+    if (uploads.length === 0) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    const upload = uploads[0];
+
+    // Access control: staff_only books require admin, librarian, or staff.
+    if (upload.access_level === 'staff_only') {
+      const role = req.user?.role?.toLowerCase(); // normalize casing
+      const isStaff = ['admin', 'librarian', 'staff'].includes(role);
+      if (!isStaff) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
+
+    try {
+      await fs.access(upload.file_path);
+    } catch {
+      return res.status(404).json({ message: 'File not found on server' });
+    }
+
+    res.setHeader('Content-Type', upload.mime_type || 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${upload.original_name}"`);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+
+    createReadStream(upload.file_path).pipe(res);
+
+  } catch (error) {
+    console.error('Error previewing file:', error);
+    res.status(500).json({ message: 'Error previewing file' });
   }
 });
 
