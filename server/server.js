@@ -74,6 +74,10 @@ app.use('/api/search', searchRoute);
 const accessionsRoutes = require('./routes/accessions');
 app.use('/api/accessions', accessionsRoutes);
 
+// Book Details (client-facing)
+const bookDetailsRoutes = require('./routes/bookDetails');
+app.use('/api/book-details', bookDetailsRoutes); 
+
 // Acquisitions
 const acquisitionsRoutes = require('./routes/acquisitions');
 app.use('/api/acquisitions', acquisitionsRoutes);
