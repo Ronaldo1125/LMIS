@@ -1,39 +1,62 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Download, FileText, TrendingUp, Book, Sparkles, X } from 'lucide-react';
 
+const API_BASE_URL = 'http://localhost:5000';
+
+function getToken() {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || null;
+}
+
 const MostDownloadedStats = ({ dark }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [timeRange, setTimeRange] = useState('month');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
-  
+  const [loading, setLoading] = useState(true);
+  const [downloadStats, setDownloadStats] = useState({
+    totalDownloads: 0,
+    topItems: []
+  });
+
   const categoryDropdownRef = useRef(null);
   const timeRangeDropdownRef = useRef(null);
 
-  // Sample data structure - replace with your actual API data
-  const [downloadStats] = useState({
-    totalDownloads: 15847,
-    topItems: [
-      { id: 1, title: "Digital Transformation in Education 2024", category: "Reports", subcategory: "Annual Reports", downloads: 1234, trend: 15.3 },
-      { id: 2, title: "Machine Learning Fundamentals", category: "Books", subcategory: null, downloads: 1089, trend: 8.7 },
-      { id: 3, title: "Technology Today Magazine - Jan 2024", category: "Periodicals", subcategory: "Magazines", downloads: 967, trend: -2.1 },
-      { id: 4, title: "Advanced Research Methods", category: "Thesis/Research papers", subcategory: null, downloads: 845, trend: 12.5 },
-      { id: 5, title: "User Manual: Library System v3.0", category: "Guides/Manuals", subcategory: null, downloads: 734, trend: 22.8 },
-      { id: 6, title: "Constitutional Law Handbook 2024", category: "Statute/Law/Legal Documents", subcategory: null, downloads: 698, trend: 5.2 },
-      { id: 7, title: "World Atlas - Revised Edition", category: "Reference Materials", subcategory: "Atlas", downloads: 645, trend: -1.5 },
-      { id: 8, title: "Historical Sourcebook Vol. 3", category: "Sourcebook", subcategory: null, downloads: 612, trend: 18.9 },
-      { id: 9, title: "Climate Change Research Compilation", category: "Thesis/Research papers", subcategory: null, downloads: 587, trend: 31.2 },
-      { id: 10, title: "Encyclopedia Britannica - Science", category: "Reference Materials", subcategory: "Encyclopedia", downloads: 543, trend: 8.1 },
-      { id: 11, title: "Financial Review Journal - Q4 2024", category: "Periodicals", subcategory: "Journals", downloads: 521, trend: 12.7 },
-      { id: 12, title: "Introduction to Data Science", category: "Books", subcategory: null, downloads: 498, trend: 24.5 },
-      { id: 13, title: "Annual Education Report 2024", category: "Reports", subcategory: "Annual Reports", downloads: 476, trend: 6.8 },
-      { id: 14, title: "Health & Wellness Magazine - Feb 2024", category: "Periodicals", subcategory: "Magazines", downloads: 454, trend: -3.2 },
-      { id: 15, title: "Software Development Best Practices", category: "Guides/Manuals", subcategory: null, downloads: 432, trend: 15.6 }
-    ]
-  });
+  // Fetch real data from API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = getToken();
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-  // ── Brand Colors (unchanged) ──────────────────────────────
+        const res = await fetch(`${API_BASE_URL}/api/uploads/meta/statistics`, { headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+
+        setDownloadStats({
+          totalDownloads: data.summary?.totalDownloads ?? 0,
+          topItems: (data.topDownloads ?? []).map(item => ({
+            id: item.id,
+            title: item.book_title,
+            category: item.book_category,
+            subcategory: null,
+            downloads: item.download_count,
+            trend: 0
+          }))
+        });
+      } catch (err) {
+        console.error('[MostDownloadedStats] Failed to fetch:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  // ── Brand Colors ──────────────────────────────────────────
   const brand = {
     darkBlue1: '#154A9A', darkBlue2: '#0F61F7',
     darkBlue3: '#0248D4', darkBlue4: '#0032A6',
@@ -44,26 +67,26 @@ const MostDownloadedStats = ({ dark }) => {
 
   // ── Dark mode color system ────────────────────────────────
   const C = {
-    cardBg:       dark ? '#0f1f38' : '#ffffff',
-    cardBorder:   dark ? '#1a3356' : 'transparent',
-    insetBg:      dark ? '#081422' : '#f9fafb',
-    insetBorder:  dark ? '#1a3356' : '#e5e7eb',
-    inputBg:      dark ? '#081422' : '#ffffff',
-    inputBorder:  dark ? '#1a3356' : '#e5e7eb',
-    inputText:    dark ? '#dde8f5' : '#111827',
-    dropdownBg:   dark ? '#0f1f38' : '#ffffff',
+    cardBg:        dark ? '#0f1f38' : '#ffffff',
+    cardBorder:    dark ? '#1a3356' : 'transparent',
+    insetBg:       dark ? '#081422' : '#f9fafb',
+    insetBorder:   dark ? '#1a3356' : '#e5e7eb',
+    inputBg:       dark ? '#081422' : '#ffffff',
+    inputBorder:   dark ? '#1a3356' : '#e5e7eb',
+    inputText:     dark ? '#dde8f5' : '#111827',
+    dropdownBg:    dark ? '#0f1f38' : '#ffffff',
     dropdownHover: dark ? '#0d1d35' : '#f9fafb',
-    textPrimary:  dark ? '#dde8f5' : '#111827',
+    textPrimary:   dark ? '#dde8f5' : '#111827',
     textSecondary: dark ? '#6b8cae' : '#6b7280',
-    textMuted:    dark ? '#2e4d70' : '#9ca3af',
-    labelColor:   dark ? '#2e4d70' : '#374151',
-    divider:      dark ? '#1a3356' : '#e5e7eb',
-    subcatBg:     dark ? '#1a3356' : '#e5e7eb',
-    subcatText:   dark ? '#6b8cae' : '#4b5563',
-    totalBg:      dark ? '#1a3356' : '#374151',
-    totalBorder:  dark ? '#2e4d70' : '#4b5563',
-    iconColor:    dark ? '#9ca3af' : '#9ca3af',
-    accentDot:    brand.secondary2Medium,
+    textMuted:     dark ? '#2e4d70' : '#9ca3af',
+    labelColor:    dark ? '#2e4d70' : '#374151',
+    divider:       dark ? '#1a3356' : '#e5e7eb',
+    subcatBg:      dark ? '#1a3356' : '#e5e7eb',
+    subcatText:    dark ? '#6b8cae' : '#4b5563',
+    totalBg:       dark ? '#1a3356' : '#374151',
+    totalBorder:   dark ? '#2e4d70' : '#4b5563',
+    iconColor:     dark ? '#9ca3af' : '#9ca3af',
+    accentDot:     brand.secondary2Medium,
   };
 
   const categories = [
@@ -116,7 +139,7 @@ const MostDownloadedStats = ({ dark }) => {
     return colors[category] || '#6b7280';
   };
 
-  const formatNumber = (num) => num.toLocaleString();
+  const formatNumber = (num) => Number(num).toLocaleString();
 
   const getRankBadgeStyle = (index) => {
     if (index === 0) return { bg: brand.secondary2Medium, color: '#111827' };
@@ -220,20 +243,22 @@ const MostDownloadedStats = ({ dark }) => {
               {formatNumber(item.downloads)}
             </span>
           </div>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '0.2rem',
-            fontSize: '0.6875rem', fontWeight: 700,
-            padding: '3px 6px', borderRadius: '0.3rem',
-            background: item.trend > 0
-              ? (dark ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.1)')
-              : (dark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.1)'),
-            color: item.trend > 0
-              ? (dark ? '#86efac' : '#16a34a')
-              : (dark ? '#fca5a5' : '#dc2626'),
-          }}>
-            <span>{item.trend > 0 ? '↑' : '↓'}</span>
-            {Math.abs(item.trend)}%
-          </div>
+          {item.trend !== 0 && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.2rem',
+              fontSize: '0.6875rem', fontWeight: 700,
+              padding: '3px 6px', borderRadius: '0.3rem',
+              background: item.trend > 0
+                ? (dark ? 'rgba(34,197,94,0.12)' : 'rgba(34,197,94,0.1)')
+                : (dark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.1)'),
+              color: item.trend > 0
+                ? (dark ? '#86efac' : '#16a34a')
+                : (dark ? '#fca5a5' : '#dc2626'),
+            }}>
+              <span>{item.trend > 0 ? '↑' : '↓'}</span>
+              {Math.abs(item.trend)}%
+            </div>
+          )}
         </div>
       </div>
     );
@@ -296,6 +321,27 @@ const MostDownloadedStats = ({ dark }) => {
     </div>
   );
 
+  const LoadingPlaceholder = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+      {[...Array(5)].map((_, i) => (
+        <div key={i} style={{
+          height: '4.5rem', borderRadius: '0.625rem',
+          background: dark ? '#0d1d35' : '#f3f4f6',
+          border: `2px solid ${C.insetBorder}`,
+          animation: 'pulse 1.5s ease-in-out infinite',
+          opacity: 1 - i * 0.15,
+        }} />
+      ))}
+    </div>
+  );
+
+  const EmptyState = () => (
+    <div style={{ textAlign: 'center', padding: '2rem', color: C.textSecondary }}>
+      <Download style={{ width: '2rem', height: '2rem', margin: '0 auto 0.5rem', opacity: 0.4 }} />
+      <p style={{ margin: 0, fontWeight: 500 }}>No download data available</p>
+    </div>
+  );
+
   return (
     <>
       <div style={{
@@ -348,7 +394,7 @@ const MostDownloadedStats = ({ dark }) => {
               Total Downloads
             </div>
             <div style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '2px', letterSpacing: '-0.5px' }}>
-              {formatNumber(downloadStats.totalDownloads)}
+              {loading ? '—' : formatNumber(downloadStats.totalDownloads)}
             </div>
             <div style={{ position: 'absolute', top: '6px', right: '6px', width: '6px', height: '6px', background: brand.secondary2Medium, borderRadius: '50%' }} />
           </div>
@@ -380,7 +426,12 @@ const MostDownloadedStats = ({ dark }) => {
 
         {/* Stats List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-          {downloadStats.topItems.slice(0, 5).map((item, index) => renderDownloadItem(item, index))}
+          {loading
+            ? <LoadingPlaceholder />
+            : downloadStats.topItems.length === 0
+              ? <EmptyState />
+              : downloadStats.topItems.slice(0, 5).map((item, index) => renderDownloadItem(item, index))
+          }
         </div>
 
         {/* View All */}
@@ -437,7 +488,12 @@ const MostDownloadedStats = ({ dark }) => {
             {/* Modal Content */}
             <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                {downloadStats.topItems.map((item, index) => renderDownloadItem(item, index))}
+                {loading
+                  ? <LoadingPlaceholder />
+                  : downloadStats.topItems.length === 0
+                    ? <EmptyState />
+                    : downloadStats.topItems.map((item, index) => renderDownloadItem(item, index))
+                }
               </div>
             </div>
 

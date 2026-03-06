@@ -558,9 +558,8 @@ router.post('/:id/verify', authMiddleware, roleMiddleware('admin'), async (req, 
     res.status(500).json({ message: 'Error verifying file integrity' });
   }
 });
-
 // ─── Get upload statistics ─────────────────────────────────────────────────────
-router.get('/meta/statistics', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+router.get('/meta/statistics', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   try {
     const [stats] = await pool.query(`
       SELECT 
@@ -586,7 +585,7 @@ router.get('/meta/statistics', authMiddleware, roleMiddleware('admin'), async (r
     `);
 
     const [topDownloads] = await pool.query(`
-      SELECT u.*, b.title as book_title
+      SELECT u.*, b.title as book_title, b.category as book_category
       FROM uploads u
       JOIN books b ON u.book_id = b.id
       WHERE u.status = 'active'
@@ -594,15 +593,15 @@ router.get('/meta/statistics', authMiddleware, roleMiddleware('admin'), async (r
       LIMIT 10
     `);
 
-    const totalBytes = stats.reduce((sum, stat) => sum + (parseInt(stat.total_storage_bytes) || 0), 0);
+    const totalBytes = stats.reduce((sum, stat) => sum + (parseInt(stat.total_storage_bytes, 10) || 0), 0);
     const totalStorageGB = (totalBytes / 1024 / 1024 / 1024).toFixed(2);
 
     res.json({
       summary: {
-        totalUploads: stats.reduce((sum, stat) => sum + stat.count_by_type, 0),
+        totalUploads: stats.reduce((sum, stat) => sum + (parseInt(stat.count_by_type, 10) || 0), 0),
         booksWithFiles: stats[0]?.books_with_files || 0,
         totalStorageGB: totalStorageGB,
-        totalDownloads: stats.reduce((sum, stat) => sum + (stat.total_downloads || 0), 0)
+        totalDownloads: stats.reduce((sum, stat) => sum + (parseInt(stat.total_downloads, 10) || 0), 0)
       },
       byFileType: stats,
       recentUploads: recentUploads,

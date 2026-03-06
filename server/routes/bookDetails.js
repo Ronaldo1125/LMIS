@@ -44,7 +44,8 @@ router.get('/:bookId', optionalAuthMiddleware, async (req, res) => {
         u.id                  AS upload_id,
         u.file_type           AS file_type,
         u.file_size           AS file_size,
-        u.original_name       AS upload_original_name
+        u.original_name       AS upload_original_name,
+        u.download_count      AS download_count
 
       FROM books b
       LEFT JOIN accessions a
@@ -67,7 +68,6 @@ router.get('/:bookId', optionalAuthMiddleware, async (req, res) => {
     const row = rows[0];
 
     // ── Access control ────────────────────────────────────────────────────
-    // staff_only books are visible only to admin / librarian / staff
     if (row.access_level === 'staff_only') {
       const role    = req.user?.role?.toLowerCase();
       const isStaff = ['admin', 'librarian', 'staff'].includes(role);
@@ -100,19 +100,21 @@ router.get('/:bookId', optionalAuthMiddleware, async (req, res) => {
       // Accession (null if not yet accessioned)
       accession: row.accession_id
         ? {
-            id:             row.accession_id,
-            accession_no:   row.accession_no,
+            id:               row.accession_id,
+            accession_no:     row.accession_no,
             date_accessioned: row.date_accessioned,
           }
         : null,
 
       // Upload (null if no digital copy uploaded)
+      // download_count is now included so the frontend can display it on load
       upload: row.upload_id
         ? {
-            id:            row.upload_id,
-            file_type:     row.file_type,
-            file_size:     row.file_size,
-            original_name: row.upload_original_name,
+            id:             row.upload_id,
+            file_type:      row.file_type,
+            file_size:      row.file_size,
+            original_name:  row.upload_original_name,
+            download_count: row.download_count ?? 0,
           }
         : null,
     };
