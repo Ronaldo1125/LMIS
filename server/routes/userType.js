@@ -97,6 +97,19 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+// ─── GET /api/usertype/patrons/count ─────────────────────────────────────────
+router.get('/patrons/count', async (req, res) => {
+  try {
+    const [[{ count }]] = await pool.query(
+      `SELECT COUNT(*) AS count FROM users WHERE user_type = 'Patron'`
+    );
+    res.json({ count: Number(count) });
+  } catch (err) {
+    console.error('GET /usertype/patrons/count error:', err);
+    res.status(500).json({ message: 'Failed to fetch patron count.' });
+  }
+});
+
 // ─── PATCH /api/usertype/:id/user-type ───────────────────────────────────────
 router.patch('/:id/user-type', async (req, res) => {
   try {

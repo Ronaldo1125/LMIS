@@ -1,57 +1,90 @@
-import { UsersIcon, ArrowDownTrayIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { UsersIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect } from 'react'
 import DashboardHeader from './DashboardComponents/Dashboardheader'
-import StatCard from './DashboardComponents/StatCard'
+import StatCard from './DashboardComponents/Statcard'
 import DateTimeCard from './DashboardComponents/Datetimecard'
 import CollectionByCategory from './DashboardComponents/CollectionByCategory'
 import RecentAcquisitions from './DashboardComponents/RecentAcquisitions'
 import MostDownloadedStats from './DashboardComponents/MostDownloadedStats'
-import WebsiteAnalytics from './DashboardComponents/WebsiteAnalytics'
 import LoginNotification from './DashboardComponents/LoginNotification'
+import SearchAnalytics from './DashboardComponents/SearchAnalytics'
 
-// ✅ Accept user and setCurrentView from App.jsx
+const API_BASE_URL = 'http://localhost:5000'
+
+function getToken() {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || null
+}
+
 const Dashboard = ({ user, setCurrentView, dark }) => {
   const [isSticky, setIsSticky] = useState(false)
+  const [totalDownloads, setTotalDownloads] = useState('—')
+  const [patronCount, setPatronCount] = useState('—')
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsSticky(window.scrollY > 20)
-    }
+    const handleScroll = () => setIsSticky(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    const fetchDownloads = async () => {
+      try {
+        const token = getToken()
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+        const res = await fetch(`${API_BASE_URL}/api/uploads/meta/statistics`, { headers })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        const total = data.summary?.totalDownloads ?? 0
+        setTotalDownloads(total.toLocaleString())
+      } catch (err) {
+        console.error('[Dashboard] Failed to fetch download stats:', err)
+        setTotalDownloads('—')
+      }
+    }
+    fetchDownloads()
+  }, [])
+
+  useEffect(() => {
+    const fetchPatronCount = async () => {
+      try {
+        const token = getToken()
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+        const res = await fetch(`${API_BASE_URL}/api/usertype/patrons/count`, { headers })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        setPatronCount((data.count ?? 0).toLocaleString())
+      } catch (err) {
+        console.error('[Dashboard] Failed to fetch patron count:', err)
+        setPatronCount('—')
+      }
+    }
+    fetchPatronCount()
   }, [])
 
   const stats = [
     {
       title: 'Patrons',
-      value: '1,284',
+      value: patronCount,
       icon: UsersIcon,
       colorVar: 'var(--dark-blue-2)'
     },
     {
       title: 'Downloads',
-      value: '5,432',
+      value: totalDownloads,
       icon: ArrowDownTrayIcon,
       colorVar: 'var(--secondary-1-medium)'
     },
-    {
-      title: 'Site Visits',
-      value: '12,543',
-      icon: EyeIcon,
-      colorVar: 'var(--secondary-3-medium)'
-    },
   ]
 
-  const pageBg  = dark ? '#0a1628' : '#f1f5f9'
-  const headerBg = dark ? '#0d1d35' : '#ffffff'
+  const pageBg       = dark ? '#0a1628' : '#f1f5f9'
+  const headerBg     = dark ? '#0d1d35' : '#ffffff'
   const headerBorder = dark ? '#1a3356' : '#e2e8f0'
 
   return (
     <div style={{ padding: '1.5rem', minHeight: '100vh', background: pageBg, transition: 'background 0.45s ease' }}>
-      {/* Login Success Notification */}
       <LoginNotification />
 
-      {/* Header — ✅ forward both props so navigation and account details work */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 30,
         background: headerBg,
@@ -88,9 +121,9 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
         <MostDownloadedStats dark={dark} />
       </div>
 
-      {/* Website Analytics */}
+      {/* Search Analytics */}
       <div style={{ marginTop: '1.5rem' }}>
-        <WebsiteAnalytics dark={dark} />
+        <SearchAnalytics dark={dark} />
       </div>
     </div>
   )
