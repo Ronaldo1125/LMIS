@@ -98,11 +98,11 @@ const DashboardHeader = ({ user, setCurrentView, dark }) => {
             src="/LOGO.svg"
             alt="LMIS Logo"
             style={{
-              width: isSticky ? '2.5rem' : '3rem',
-              height: isSticky ? '2.5rem' : '3rem',
-              transition: 'all 0.3s ease',
-            }}
-          />
+            width: isSticky ? '2.5rem' : '3rem',
+            height: isSticky ? '2.5rem' : '3rem',
+            transition: 'all 0.3s ease',
+            filter: dark ? 'brightness(0) invert(1)' : 'none',        }}
+/>
           <div>
             <h1 style={{
               fontWeight: 700,

@@ -5,13 +5,30 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ChevronRight, Loader2, BookOpen } from "lucide-react";
 import Nav from "../Nav/Nav";
 import Footer from "../Footer/Footer";
-import PDFThumbnail from "./PDFThumbnail"; // ← ADD THIS IMPORT (adjust path as needed)
+import PDFThumbnail from "./PDFThumbnail";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 function getToken() {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("token") || sessionStorage.getItem("token") || null;
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+async function recordBookClick(bookId) {
+  try {
+    const headers = { "Content-Type": "application/json" };
+    const token = getToken();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    await fetch(`${API_BASE}/api/books/${bookId}/click`, {
+      method: "POST",
+      headers,
+    });
+  } catch {
+    // fire-and-forget — never block navigation on this
+  }
 }
 
 // ─── icon components ──────────────────────────────────────────────────────────
@@ -193,10 +210,6 @@ const CATEGORIES = ["Fiction", "Non-Fiction", "Science", "History", "Technology"
 const FORMATS    = ["Hardcover", "Paperback", "E-Book", "Journal", "Magazine", "Thesis", "Report"];
 const LANGUAGES  = ["English", "Filipino", "Spanish", "French", "Japanese", "Chinese", "German"];
 
-// ─── API base URL from env ────────────────────────────────────────────────────
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
 const Search = () => {
@@ -212,9 +225,9 @@ const Search = () => {
   const urlPage     = parseInt(searchParams.get("page") || "1", 10);
 
   // ── local UI state ────────────────────────────────────────────────────────
-  const [searchInput,   setSearchInput]   = useState(urlQuery);
-  const [activeField,   setActiveField]   = useState("All fields");
-  const [isGridView,    setIsGridView]    = useState(true);
+  const [searchInput,    setSearchInput]    = useState(urlQuery);
+  const [activeField,    setActiveField]    = useState("All fields");
+  const [isGridView,     setIsGridView]     = useState(true);
   const [filterCategory, setFilterCategory] = useState(urlCategory);
   const [filterAuthor,   setFilterAuthor]   = useState(urlAuthor);
   const [filterFormat,   setFilterFormat]   = useState(urlFormat);
@@ -323,6 +336,12 @@ const Search = () => {
   };
 
   const onPage = (p) => pushParams({ page: String(p) });
+
+  // ── navigate to book (records click first) ────────────────────────────────
+  const onBookClick = (bookId) => {
+    recordBookClick(bookId);
+    router.push(`/books/${bookId}`);
+  };
 
   // ── derived values ────────────────────────────────────────────────────────
   const pageTitle = urlCategory
@@ -459,9 +478,8 @@ const Search = () => {
                   style={{ cursor: "pointer", border: "1px solid #e6ecf7", borderRadius: 8, overflow: "hidden", transition: "box-shadow 0.15s" }}
                   onMouseOver={(e) => (e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)")}
                   onMouseOut={(e)  => (e.currentTarget.style.boxShadow = "none")}
-                  onClick={() => router.push(`/books/${book.id}`)}
+                  onClick={() => onBookClick(book.id)}
                 >
-                  {/* ── UPDATED: PDF first-page thumbnail ── */}
                   <PDFThumbnail uploadId={book.upload_id} title={book.title} />
 
                   <div style={{ padding: "12px 12px 14px" }}>
@@ -508,9 +526,8 @@ const Search = () => {
                   style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderBottom: idx < books.length - 1 ? "1px solid #eef2ff" : "none", cursor: "pointer", transition: "background 0.15s" }}
                   onMouseOver={(e) => (e.currentTarget.style.background = "#f7faff")}
                   onMouseOut={(e)  => (e.currentTarget.style.background = "#fff")}
-                  onClick={() => router.push(`/books/${book.id}`)}
+                  onClick={() => onBookClick(book.id)}
                 >
-                  {/* ── UPDATED: PDF first-page thumbnail (small) ── */}
                   <div style={{ width: 44, height: 58, borderRadius: 8, overflow: "hidden", flexShrink: 0, border: "1px solid #e6ecf7" }}>
                     <PDFThumbnail
                       uploadId={book.upload_id}

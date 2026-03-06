@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/connection');
-const { authMiddleware, roleMiddleware } = require('../middleware/auth');
+const { authMiddleware, roleMiddleware, optionalAuthMiddleware } = require('../middleware/auth');
 
 // Helper function to format dates
 const formatDateForResponse = (book) => {
@@ -16,10 +16,9 @@ const formatDateForResponse = (book) => {
   return book;
 };
 
-// Helper: check if the requesting user can see staff_only books
 const canViewStaffOnly = (user) => {
   if (!user) return false;
-  const role = user.role; // now normalized by authMiddleware
+  const role = user.role;
   return role === 'admin' || role === 'librarian' || role === 'Staff';
 };
 
@@ -132,8 +131,8 @@ router.get('/meta/stats', authMiddleware, async (req, res) => {
     const accessFilter = canViewStaffOnly(req.user) ? '' : "AND access_level = 'public'";
 
     const [[{ total }]] = await pool.query(
-  `SELECT COUNT(*) as total FROM books WHERE is_archived = FALSE ${accessFilter}`
-);
+      `SELECT COUNT(*) as total FROM books WHERE is_archived = FALSE ${accessFilter}`
+    );
 
     const [[{ accessioned }]] = await pool.query(
       `SELECT COUNT(*) as accessioned FROM books WHERE is_accessioned = TRUE ${accessFilter}`
@@ -176,6 +175,71 @@ router.get('/meta/stats', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error fetching stats:', error);
     res.status(500).json({ message: 'Error fetching statistics' });
+  }
+});
+
+// ─── Get archive statistics ────────────────────────────────────────────────────
+router.get('/meta/archive-stats', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
+  try {
+    const [stats] = await pool.query(`
+      SELECT archive_reason, COUNT(*) as count_by_reason
+      FROM books
+      WHERE is_archived = TRUE
+      GROUP BY archive_reason
+    `);
+
+    const [totalCount] = await pool.query(`
+      SELECT
+        SUM(CASE WHEN is_archived = TRUE THEN 1 ELSE 0 END) as archived,
+        SUM(CASE WHEN is_accessioned = TRUE THEN 1 ELSE 0 END) as accessioned,
+        SUM(CASE WHEN is_archived = FALSE AND is_accessioned = FALSE THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN access_level = 'staff_only' THEN 1 ELSE 0 END) as staff_only,
+        SUM(CASE WHEN access_level = 'public' THEN 1 ELSE 0 END) as public,
+        COUNT(*) as total
+      FROM books
+    `);
+
+    res.json({
+      overview: totalCount[0],
+      byReason: stats,
+    });
+  } catch (error) {
+    console.error('Error fetching archive stats:', error);
+    res.status(500).json({ message: 'Error fetching archive statistics' });
+  }
+});
+
+// ─── POST /:id/click — increment search_count ──────────────────────────────────
+// IMPORTANT: must be defined BEFORE GET /:id to avoid route shadowing
+router.post('/:id/click', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const bookId = parseInt(req.params.id, 10);
+    if (!bookId || isNaN(bookId)) {
+      return res.status(400).json({ message: 'Invalid book ID' });
+    }
+
+    const [result] = await pool.query(
+      `UPDATE books
+          SET search_count = search_count + 1,
+              updated_at   = NOW()
+        WHERE id          = ?
+          AND is_archived = 0`,
+      [bookId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Book not found or archived' });
+    }
+
+    const [[row]] = await pool.query(
+      'SELECT search_count FROM books WHERE id = ?',
+      [bookId]
+    );
+
+    return res.json({ success: true, search_count: row?.search_count ?? null });
+  } catch (err) {
+    console.error('[POST /api/books/:id/click] error:', err);
+    return res.status(500).json({ message: 'Internal server error', error: err.message });
   }
 });
 
@@ -286,37 +350,6 @@ router.patch('/:id/access-level', authMiddleware, roleMiddleware('admin', 'libra
   }
 });
 
-// ─── Get archive statistics ────────────────────────────────────────────────────
-router.get('/meta/archive-stats', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
-  try {
-    const [stats] = await pool.query(`
-      SELECT archive_reason, COUNT(*) as count_by_reason
-      FROM books
-      WHERE is_archived = TRUE
-      GROUP BY archive_reason
-    `);
-
-    const [totalCount] = await pool.query(`
-      SELECT
-        SUM(CASE WHEN is_archived = TRUE THEN 1 ELSE 0 END) as archived,
-        SUM(CASE WHEN is_accessioned = TRUE THEN 1 ELSE 0 END) as accessioned,
-        SUM(CASE WHEN is_archived = FALSE AND is_accessioned = FALSE THEN 1 ELSE 0 END) as active,
-        SUM(CASE WHEN access_level = 'staff_only' THEN 1 ELSE 0 END) as staff_only,
-        SUM(CASE WHEN access_level = 'public' THEN 1 ELSE 0 END) as public,
-        COUNT(*) as total
-      FROM books
-    `);
-
-    res.json({
-      overview: totalCount[0],
-      byReason: stats,
-    });
-  } catch (error) {
-    console.error('Error fetching archive stats:', error);
-    res.status(500).json({ message: 'Error fetching archive statistics' });
-  }
-});
-
 // ─── Get single book by ID ─────────────────────────────────────────────────────
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
@@ -360,12 +393,10 @@ router.post('/', authMiddleware, roleMiddleware('admin', 'librarian'), async (re
       access_level = 'public',
     } = req.body;
 
-    // ── Validation ────────────────────────────────────────────────────────────
     if (!title || !title.trim()) {
       return res.status(400).json({ message: 'Title is required' });
     }
 
-    // FIX: category is strictly required — no NULL allowed
     if (!category || !category.trim()) {
       return res.status(400).json({ message: 'Category is required' });
     }
@@ -429,12 +460,10 @@ router.put('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (
       });
     }
 
-    // ── Validation ────────────────────────────────────────────────────────────
     if (!title || !title.trim()) {
       return res.status(400).json({ message: 'Title is required' });
     }
 
-    // FIX: category is strictly required on update too — no NULL allowed
     if (!category || !category.trim()) {
       return res.status(400).json({ message: 'Category is required' });
     }

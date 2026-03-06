@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import RelatedBooks from "./RelatedBooks";
 import Nav from "../Nav/Nav";
-import PDFReader from "../PDFReader/PDFReader";
-import { BookOpen } from "lucide-react";
+import dynamic from "next/dynamic";
+const PDFReader = dynamic(() => import("../PDFReader/PDFReader"), { ssr: false });
+import { BookOpen, Download } from "lucide-react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -14,7 +15,7 @@ function getToken() {
 // ── PDF Thumbnail Preview ──────────────────────────────────────────────────────
 const BookThumbnailPreview = ({ uploadId, fallbackImage, title, className = "" }) => {
   const [blobUrl, setBlobUrl] = useState(null);
-  const [status, setStatus]  = useState("idle");
+  const [status, setStatus] = useState("idle");
 
   useEffect(() => {
     if (!uploadId) { setStatus("error"); return; }
@@ -24,7 +25,7 @@ const BookThumbnailPreview = ({ uploadId, fallbackImage, title, className = "" }
 
     const fetchPdf = async () => {
       try {
-        const token   = getToken();
+        const token = getToken();
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
         const res = await fetch(`${API_BASE_URL}/api/uploads/${uploadId}/preview`, { headers });
@@ -105,10 +106,12 @@ const BookThumbnailPreview = ({ uploadId, fallbackImage, title, className = "" }
 
 // ── Main BookDetails ───────────────────────────────────────────────────────────
 const BookDetails = ({ bookId }) => {
-  const [book, setBook]           = useState(null);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(null);
+  const [book, setBook] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [downloadCount, setDownloadCount] = useState(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -117,11 +120,10 @@ const BookDetails = ({ bookId }) => {
       setError(null);
 
       try {
-        const token   = getToken();
+        const token = getToken();
         const headers = { "Content-Type": "application/json" };
         if (token) headers.Authorization = `Bearer ${token}`;
 
-        // ── Uses the new dedicated client-facing endpoint ─────────────────
         const res = await fetch(`${API_BASE_URL}/api/book-details/${bookId}`, { headers });
 
         if (!res.ok) {
@@ -130,7 +132,12 @@ const BookDetails = ({ bookId }) => {
           else throw new Error("Failed to fetch book details.");
         }
 
-        setBook(await res.json());
+        const data = await res.json();
+        setBook(data);
+
+        if (data.upload?.download_count != null) {
+          setDownloadCount(data.upload.download_count);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -141,11 +148,38 @@ const BookDetails = ({ bookId }) => {
     fetchBook();
   }, [bookId]);
 
-  const handleDownloadBook = () => {
-    if (!book?.upload?.id) return;
-    const link = document.createElement("a");
-    link.href  = `${API_BASE_URL}/api/uploads/${book.upload.id}/download`;
-    link.click();
+  // ── Download: authenticated fetch → blob → save
+  // The /api/uploads/:id/download route already increments download_count,
+  // so we do NOT call /api/books/:id/download-click to avoid double-counting.
+  const handleDownloadBook = async () => {
+    if (!book?.upload?.id || downloading) return;
+    setDownloading(true);
+
+    try {
+      const token = getToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const res = await fetch(`${API_BASE_URL}/api/uploads/${book.upload.id}/download`, { headers });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const filename = book.upload.original_name || `${book.title}.pdf`;
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      link.click();
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
+
+      // Optimistically update the local count since the backend already incremented it
+      setDownloadCount((prev) => (prev ?? 0) + 1);
+    } catch (err) {
+      console.error("Download failed:", err);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleBookmark = () => console.log("Bookmark to be implemented");
@@ -180,9 +214,8 @@ const BookDetails = ({ bookId }) => {
 
   if (!book) return null;
 
-  // Everything comes cleanly from the new endpoint — no more field-guessing
-  const uploadId    = book.upload?.id || null;
-  const coverImage  = "/assets/BooksImages/2.avif"; // fallback; new endpoint has no cover_image yet
+  const uploadId = book.upload?.id || null;
+  const coverImage = "/assets/BooksImages/2.avif";
   const accessionNo = book.accession?.accession_no || "—";
   const isAvailable = book.copies > 0;
 
@@ -233,6 +266,16 @@ const BookDetails = ({ bookId }) => {
                   )}
                 </div>
 
+                {/* Download count badge */}
+                {downloadCount != null && downloadCount > 0 && (
+                  <div className="mt-3 flex items-center gap-1.5 text-gray-400 text-xs">
+                    <Download size={13} />
+                    <span>
+                      {downloadCount.toLocaleString()} download{downloadCount !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                )}
+
                 {/* Buttons */}
                 <div className="mt-8 flex flex-col gap-5">
                   <div className="flex gap-3 w-full max-w-2xl">
@@ -245,10 +288,17 @@ const BookDetails = ({ bookId }) => {
                     </button>
                     <button
                       onClick={handleDownloadBook}
-                      disabled={!uploadId}
-                      className="flex-1 px-12 py-3 text-sm font-semibold rounded bg-gray-900 text-white hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      disabled={!uploadId || downloading}
+                      className="flex-1 px-12 py-3 text-sm font-semibold rounded bg-gray-900 text-white hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      Download
+                      {downloading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Downloading…
+                        </>
+                      ) : (
+                        "Download"
+                      )}
                     </button>
                     <button
                       onClick={handleBookmark}
@@ -298,7 +348,12 @@ const BookDetails = ({ bookId }) => {
                       <InfoRow label="Access Level" value={book.access_level === "staff_only" ? "Staff Only" : "Public"} />
                     )}
                     {book.upload && (
-                      <InfoRow label="File Type" value={book.upload.file_type?.toUpperCase() || "—"} />
+                      <>
+                        <InfoRow label="File Type" value={book.upload.file_type?.toUpperCase() || "—"} />
+                        {downloadCount != null && (
+                          <InfoRow label="Downloads" value={downloadCount.toLocaleString()} />
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -327,12 +382,12 @@ const BookDetails = ({ bookId }) => {
             </div>
             <div className="h-[75vh]">
               <PDFReader
-  uploadId={uploadId}
-  fallbackImage={coverImage}
-  title={book.title}
-  className="h-[700px]"
-  maxPages={5}          // ← renders first 5 pages stacked, no controls
-/>
+                uploadId={uploadId}
+                fallbackImage={coverImage}
+                title={book.title}
+                className="h-[700px]"
+                maxPages={5}
+              />
             </div>
             <div className="p-4 border-t bg-gray-50">
               <p className="text-sm text-gray-600 text-center">
