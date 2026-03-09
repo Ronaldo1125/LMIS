@@ -1,11 +1,7 @@
-import { Inter_Tight } from "next/font/google";
+// Using Nimbus Sans via CSS instead of Google Fonts
 import "./globals.css";
 
-const interTight = Inter_Tight({
-  variable: "--font-inter-tight",
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-});
+// Font configuration moved to globals.css
 
 export const metadata = {
   title: "Create Next App",
@@ -16,8 +12,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${interTight.variable} antialiased`}
-        style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
+        className="antialiased"
+        style={{ fontFamily: '"Nimbus Sans", sans-serif' }}
       >
         {children}
       </body>

@@ -65,8 +65,8 @@ const FrequentlySearched = () => {
       }}>
         <h2 style={{
           fontSize: 29,
-          fontWeight: 600,
-          color: "#003087",
+          fontWeight: 500,
+          color: "#000000ff",
           margin: 0,
         }}>
           Most Searched Books

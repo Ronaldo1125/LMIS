@@ -18,7 +18,7 @@
 
   --color-foreground: var(--foreground);
 
-  --font-sans: "Inter Tight", system-ui, sans-serif;
+  --font-sans: "Nimbus Sans", sans-serif;
 
 }
 
@@ -44,7 +44,7 @@ body {
 
   color: var(--foreground);
 
-  font-family: "Inter Tight", system-ui, sans-serif;
+  font-family: "Nimbus Sans", sans-serif;
 
   scroll-behavior: smooth;
 

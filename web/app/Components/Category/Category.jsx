@@ -18,82 +18,96 @@ export default function Category() {
   const categories = useMemo(() => rawCategories, []);
 
   return (
-    <section className="w-full bg-white pt-15">
-      <div style={{
-        maxWidth: 1440,
-        marginLeft: "auto",
-        marginRight: "auto",
-        padding: "48px 48px 24px",
-      }}>
+    <section className="w-full bg-white py-20">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
+
         {/* Title */}
-        <div className="text-center">
-          <h2 className="text-[40px] sm:text-[56px] font-medium leading-[1.05] tracking-tight text-black" >
-            Browse Categories
-          </h2>
+        <h2 className="text-[34px] md:text-[42px] font-semibold text-[#0b1c48] mb-12">
+          Explore our library resources 
+        </h2>
 
-          <p className="mt-4 text-[14px] sm:text-[16px] text-black/60 max-w-[760px] mx-auto leading-relaxed">
-            Explore thousands of government publications, research materials, journals, and reference documents
-            available in DEPDEV Region V e-Library.
-          </p>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-12">
 
-        {/* Category list (2 columns like screenshot) */}
-        <div className="mt-12 sm:mt-14">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16">
-            {/* LEFT column */}
-            <div className="border-t border-black/15">
-              {categories
-                .filter((_, i) => i % 2 === 0)
-                .map((cat) => (
-                  <CategoryRow key={cat.name} cat={cat} />
-                ))}
-            </div>
-
-            {/* RIGHT column */}
-            <div className="border-t border-black/15">
-              {categories
-                .filter((_, i) => i % 2 === 1)
-                .map((cat) => (
-                  <CategoryRow key={cat.name} cat={cat} />
-                ))}
-            </div>
+          {/* LEFT SIDE - CATEGORIES */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {categories.map((cat) => (
+              <CategoryCard key={cat.name} cat={cat} />
+            ))}
           </div>
 
-          {/* Optional small note */}
-          <p className="mt-14 text-[12px] text-black/55 text-center">
-            Browse by format and document type to quickly find what you need.
-          </p>
+          {/* RIGHT SIDE - OPENING HOURS */}
+          <div className="bg-white rounded-lg p-8 shadow-sm h-fit">
+
+            <h3 className="text-[28px] font-semibold text-[#0b1c48] mb-4">
+              Today's opening hours
+            </h3>
+
+            <p className="text-gray-600 leading-relaxed mb-6">
+              The DEPDEV Region V e-Library is open today for research,
+              government publications access, and academic study.
+            </p>
+
+            <h4 className="text-[18px] font-semibold text-[#0b1c48]">
+              Ask Library
+            </h4>
+
+            <p className="text-gray-600 mt-2 mb-6">
+              Opening hours:
+              <span className="font-semibold ml-2 text-black">
+                10:00 AM – 6:00 PM
+              </span>
+            </p>
+
+            <button className="border border-[#3556e8] text-[#3556e8] px-5 py-3 rounded-md flex items-center gap-2 hover:bg-[#3556e8] hover:text-white transition">
+              Contact us
+              <ArrowIcon />
+            </button>
+
+          </div>
+
         </div>
       </div>
     </section>
   );
 }
 
-function CategoryRow({ cat }) {
+function CategoryCard({ cat }) {
   return (
     <Link
       href={`/search?category=${encodeURIComponent(cat.name.toLowerCase())}`}
-      className="
-        group flex items-center gap-4
-        py-6
-        border-b border-black/15
-        text-black
-      "
+      className="group bg-white rounded-lg p-6 flex items-center justify-between shadow-sm hover:shadow-md transition"
     >
-      {/* Icon */}
-      <span className="inline-flex h-6 w-6 items-center justify-center text-[#0B5ED7]">
-        {cat.icon}
-      </span>
+      <div className="flex items-center gap-4">
+        <span className="text-[#3556e8]">{cat.icon}</span>
+        <span className="font-medium text-[#0b1c48]">{cat.name}</span>
+      </div>
 
-      {/* Text */}
-      <span className="text-[16px] sm:text-[17px] font-medium tracking-tight group-hover:opacity-80">
-        {cat.name}
+      <span className="text-gray-400 group-hover:text-black transition">
+        <ArrowIcon />
       </span>
     </Link>
   );
 }
 
-/* --- Icons: outline, small --- */
+function ArrowIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
+}
+
+/* --- Icons --- */
+
 function I({ children }) {
   return (
     <svg
@@ -119,6 +133,7 @@ function BooksIcon() {
     </I>
   );
 }
+
 function SourcebookIcon() {
   return (
     <I>
@@ -129,6 +144,7 @@ function SourcebookIcon() {
     </I>
   );
 }
+
 function PeriodicalIcon() {
   return (
     <I>
@@ -138,6 +154,7 @@ function PeriodicalIcon() {
     </I>
   );
 }
+
 function ThesisIcon() {
   return (
     <I>
@@ -148,6 +165,7 @@ function ThesisIcon() {
     </I>
   );
 }
+
 function LawIcon() {
   return (
     <I>
@@ -158,6 +176,7 @@ function LawIcon() {
     </I>
   );
 }
+
 function GuideIcon() {
   return (
     <I>
@@ -167,6 +186,7 @@ function GuideIcon() {
     </I>
   );
 }
+
 function ReportIcon() {
   return (
     <I>
@@ -177,6 +197,7 @@ function ReportIcon() {
     </I>
   );
 }
+
 function ReferenceIcon() {
   return (
     <I>

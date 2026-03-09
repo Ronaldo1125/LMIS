@@ -5,6 +5,21 @@ import { useRouter } from "next/navigation";
 import Nav from "../Nav/Nav";
 import "../../globals.css";
 
+const SearchIcon = () => (
+  <svg 
+    width="16" 
+    height="16" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2"
+    className="ml-2"
+  >
+    <circle cx="11" cy="11" r="8"></circle>
+    <path d="m21 21-4.35-4.35"></path>
+  </svg>
+);
+
 const LandingPage = () => {
   const [query, setQuery] = useState("");
   const router = useRouter();
@@ -17,112 +32,70 @@ const LandingPage = () => {
   };
 
   return (
-    <section className="relative w-full h-[80vh] min-h-[520px] lg:min-h-[640px] overflow-hidden bg-black">
-      {/* Background image */}
+    <section className="relative w-full min-h-screen overflow-hidden bg-black">
+
+      {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('/assets/other/hj.png')" }}
       />
 
-      {/* Left fade overlay (like screenshot) */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
-        {/* subtle overall dim (very light) */}
-        <div className="absolute inset-0 bg-black/5" />
-      </div>
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/45" />
 
-      {/* Content */}
-      <div className="relative z-10 h-full">
+      <div className="relative z-10">
         <Nav />
 
-        {/* HERO COPY (LEFT EDGE) */}
-        <div className="h-full flex items-center">
-          <div
-            className="
-              w-full
-              px-6 md:px-10 lg:px-16
-              pb-10
-            "
-          >
-            <div className="max-w-[640px] md:max-w-[680px] lg:max-w-[720px]">
-              {/* Headline */}
-              <h1
-                className="
-                  text-white
-                 
-                  leading-[1.05]
-                  tracking-tight
-                  text-[46px] md:text-[56px] lg:text-[76px]
-                "
-              >
-                Depdev Digital
-                <br />
-                E-Library
-              </h1>
+        {/* Content */}
+        <div className="flex items-center min-h-[90vh] px-6 md:px-12 lg:px-24">
 
-              {/* Red underline */}
-              <div className="mt-6 h-[4px] w-[64px] bg-[#c23b2a]" />
+          <div className="max-w-3xl">
 
-              {/* Subtext */}
-              <p
-                className="
-                  mt-7
-                  text-white/90
-                  text-[15px] md:text-[16px] lg:text-[18px]
-                  leading-relaxed
-                  max-w-[480px] md:max-w-[520px] lg:max-w-[560px]
-                "
-              >
-                Your comprehensive digital library for academic resources, 
-                research papers, and educational materials
-              </p>
+            {/* Title */}
+            <h1 className="text-white text-[44px] md:text-[56px] lg:text-[64px] font-bold leading-tight mb-6">
+              Depdev Digital Library
+            </h1>
 
-              {/* Optional: Search (keep if you want it on hero) */}
-              <form onSubmit={handleSearch} className="mt-10 max-w-[580px] md:max-w-[620px] lg:max-w-[640px]">
-                <div className="flex w-full overflow-hidden bg-white/95 backdrop-blur-sm">
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search by title, author, subject, ISBN..."
-                    className="
-                      h-[54px] md:h-[58px] lg:h-[62px]
-                      w-full
-                      px-5 md:px-6 lg:px-8
-                      text-[15px] md:text-[16px] lg:text-[17px]
-                      text-black
-                      placeholder:text-black/45
-                      outline-none
-                      bg-transparent
-                    "
-                  />
-                  <button
-                    type="submit"
-                    className="
-                      h-[54px] md:h-[58px] lg:h-[62px]
-                      px-6 md:px-7 lg:px-8
-                      bg-blue-800
-                      text-white
-                      font-semibold
-                      hover:brightness-95 active:brightness-90
-                    "
-                  >
-                    Search
-                  </button>
-                </div>
-              </form>
+            {/* Description */}
+            <p className="text-white/90 text-lg mb-12 max-w-2xl">
+              Your gateway to comprehensive economic research, policy papers, 
+              development reports, and statistical data for informed decision-making.
+            </p>
 
-              {/* Footnote (optional) */}
-              <p className="mt-6 text-white/70 text-[12px] md:text-[13px]">
-                *Empowering education through digital innovation
-              </p>
+            {/* White Content Section */}
+            <div className="mt-12 bg-white p-8 shadow-lg">
+              <h3 className="text-black text-2xl md:text-3xl font-semibold mb-6">
+                Search library
+              </h3>
+              
+              {/* Search Bar */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-[700px] bg-white p-1 rounded-lg border border-gray-200">
+
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search for books, journals, articles, databases and more"
+                  className="flex-1 h-[60px] px-6 text-gray-800 outline-none bg-white"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSearch(e);
+                  }}
+                />
+
+                <button
+                  onClick={handleSearch}
+                  className="h-[60px] px-10 bg-black text-white font-semibold hover:bg-black flex items-center"
+                >
+                  Search
+                  <SearchIcon />
+                </button>
+
+              </div>
             </div>
+
           </div>
+
         </div>
-      </div>
-      
-      {/* SCROLL TO DISCOVER - Bottom Right */}
-      <div className="absolute bottom-8 right-8 text-white text-sm font-bold tracking-wider md:text-base lg:text-lg">
-        (SCROLL TO DISCOVER)
+
       </div>
     </section>
   );

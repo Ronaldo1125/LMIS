@@ -11,7 +11,7 @@ export default function Page() {
 
   return (
 
-    <div>
+    <div className="min-w-[320px]">
 
 
       <LandingPage />

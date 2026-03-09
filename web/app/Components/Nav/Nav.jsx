@@ -16,9 +16,36 @@ const Nav = () => {
   const [showRegister, setShowRegister]           = useState(false);
   const [user, setUser]                           = useState(null);
   const [isProfileOpen, setIsProfileOpen]         = useState(false);
+  const [isScrolled, setIsScrolled]               = useState(false);
+  const [isVisible, setIsVisible]                 = useState(true);
+  const [lastScrollY, setLastScrollY]             = useState(0);
 
   const profileRef = useRef(null);
   const router     = useRouter();
+
+  /* ── Scroll behavior ── */
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Show white background when scrolled down
+      setIsScrolled(currentScrollY > 10);
+      
+      // Hide/show nav based on scroll direction
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down - hide nav
+        setIsVisible(false);
+      } else {
+        // Scrolling up - show nav
+        setIsVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   /* ── Read user from localStorage on mount ── */
   useEffect(() => {
@@ -104,7 +131,9 @@ const Nav = () => {
       <MobileNav />
 
       {/* Desktop Navigation */}
-      <nav className="hidden lg:block fixed top-0 left-0 right-0 z-50 bg-white">
+      <nav className={`hidden lg:block fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out bg-black ${
+        isVisible ? ' transform translate-y-0' : ' transform -translate-y-full'
+      }`}>
         <div className="w-full h-16 flex items-center">
 
           {/* LEFT: LOGO */}
@@ -113,23 +142,23 @@ const Nav = () => {
               <img
                 src="/assets/other/depdevlogo.png"
                 alt="Logo"
-                className="h-4 w-auto sm:h-6 lg:h-8"
+                className="h-4 w-auto sm:h-6 lg:h-8 filter brightness-0 invert"
               />
             </Link>
           </div>
 
           {/* CENTER NAV */}
           <div className="flex-1 flex justify-center items-center">
-            <ul className="flex items-center gap-6 lg:gap-10 text-black text-xs sm:text-xs lg:text-sm font-medium">
+            <ul className="flex items-center gap-6 lg:gap-10 text-white text-xs sm:text-xs lg:text-sm font-medium">
               <li>
-                <Link href="/about" className="hover:text-black/80 transition">Browse</Link>
+                <Link href="/about" className="hover:text-gray-200 transition">Browse</Link>
               </li>
               <li>
-                <Link href="/catalog" className="hover:text-black/80 transition">New release</Link>
+                <Link href="/catalog" className="hover:text-gray-200 transition">New release</Link>
               </li>
               <li className="relative">
                 <div
-                  className="flex items-center cursor-pointer hover:text-black/80 transition"
+                  className="flex items-center cursor-pointer hover:text-gray-200 transition"
                   onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
                 >
                   <Link href="/contact">Collection</Link>
@@ -152,10 +181,10 @@ const Nav = () => {
                 </div>
               </li>
               <li>
-                <Link href="/about" className="hover:text-black/80 transition">About</Link>
+                <Link href="/about" className="hover:text-gray-200 transition">About</Link>
               </li>
               <li>
-                <Link href="/news" className="hover:text-black/80 transition">News</Link>
+                <Link href="/news" className="hover:text-gray-200 transition">News</Link>
               </li>
             </ul>
           </div>
@@ -216,7 +245,7 @@ const Nav = () => {
               <>
                 <button
                   onClick={() => setShowLogin(true)}
-                  className="text-sm font-medium text-black hover:text-black/80 transition mr-6"
+                  className="text-sm font-medium text-white hover:text-gray-200 transition mr-6"
                 >
                   Login
                 </button>
