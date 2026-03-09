@@ -430,15 +430,15 @@ const EditBookModal = ({
 
               {/* Date of Publication */}
               <div>
-      <label style={labelStyle}>Date of Publication</label>
-      <input
-      type="date"
-      value={editBook.dateOfPublication || ''}
-      onChange={(e) => setEditBook({ ...editBook, dateOfPublication: e.target.value })}
-      style={{ ...inputStyle, colorScheme: dark ? 'dark' : 'light' }}
-      onFocus={focusStyle} onBlur={blurStyle}
-  />
-      </div>
+                <label style={labelStyle}>Date of Publication</label>
+                <input
+                  type="date"
+                  value={editBook.dateOfPublication || ''}
+                  onChange={(e) => setEditBook({ ...editBook, dateOfPublication: e.target.value })}
+                  style={{ ...inputStyle, colorScheme: dark ? 'dark' : 'light' }}
+                  onFocus={focusStyle} onBlur={blurStyle}
+                />
+              </div>
 
               {/* Extent */}
               <div>

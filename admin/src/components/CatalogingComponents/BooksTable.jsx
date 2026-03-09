@@ -3,13 +3,15 @@ import {
   BookOpenIcon,
   PencilSquareIcon,
   TrashIcon,
-  ArchiveBoxIcon
+  ArchiveBoxIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline'
 import Modal from './Modal'
 
 const BooksTable = ({ books = [], onEdit, onView, onDelete, onArchive, dark }) => {
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, book: null })
   const [archiveModal, setArchiveModal] = useState({ isOpen: false, book: null, reason: '' })
+  const [lockedMsg, setLockedMsg] = useState(false)
 
   // ── Theme Configuration ────────────────────────────────────
   const tableBg      = dark ? '#0f1f38' : '#ffffff'
@@ -18,7 +20,7 @@ const BooksTable = ({ books = [], onEdit, onView, onDelete, onArchive, dark }) =
   const rowHover     = dark ? '#162a4a' : '#f8fafc'
   const textPrimary  = dark ? '#dde8f5' : '#1e293b'
   const textSecondary = dark ? '#6b8cae' : '#64748b'
-  const textMuted     = dark ? '#4a6b8c' : '#94a3b8' // Fixed missing variable
+  const textMuted     = dark ? '#4a6b8c' : '#94a3b8'
   const stickyColumnBg = dark ? '#0f1f38' : '#ffffff'
 
   // ── Helper Functions ──────────────────────────────────────
@@ -115,7 +117,6 @@ const BooksTable = ({ books = [], onEdit, onView, onDelete, onArchive, dark }) =
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = rowHover
-                    // Target the first cell (sticky) specifically
                     if (e.currentTarget.cells[0]) e.currentTarget.cells[0].style.background = rowHover
                   }}
                   onMouseLeave={(e) => {
@@ -160,11 +161,19 @@ const BooksTable = ({ books = [], onEdit, onView, onDelete, onArchive, dark }) =
                   </td>
                   <td style={{ padding: '1rem 1.5rem', borderBottom: `1px solid ${tableBorder}` }}>
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      <ActionBtn 
-                        icon={PencilSquareIcon} 
-                        hoverColor={dark ? '#60a5fa' : '#2563eb'} 
-                        title="Edit"
-                        onClick={(e) => { e.stopPropagation(); onEdit && onEdit(book); }} 
+                      <ActionBtn
+                        icon={book.is_accessioned ? LockClosedIcon : PencilSquareIcon}
+                        hoverColor={book.is_accessioned ? '#ef4444' : (dark ? '#60a5fa' : '#2563eb')}
+                        title={book.is_accessioned ? 'Already in Accession' : 'Edit'}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (book.is_accessioned) {
+                            setLockedMsg(true)
+                            setTimeout(() => setLockedMsg(false), 2500)
+                          } else {
+                            onEdit && onEdit(book)
+                          }
+                        }}
                       />
                       <ActionBtn 
                         icon={ArchiveBoxIcon} 
@@ -227,6 +236,23 @@ const BooksTable = ({ books = [], onEdit, onView, onDelete, onArchive, dark }) =
         inputValue={archiveModal.reason}
         onInputChange={(val) => setArchiveModal(prev => ({ ...prev, reason: val }))}
       />
+
+      {/* Locked Toast Popup */}
+      {lockedMsg && (
+        <div style={{
+          position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)',
+          background: dark ? '#0f1f38' : '#1e293b',
+          color: '#ffffff', padding: '0.75rem 1.5rem',
+          borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: 500,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          zIndex: 999,
+          border: dark ? '1px solid #1a3356' : 'none',
+          display: 'flex', alignItems: 'center', gap: '0.5rem',
+        }}>
+          <LockClosedIcon style={{ width: '1rem', height: '1rem', color: '#f87171' }} />
+          This book is already in Accession
+        </div>
+      )}
     </>
   )
 }
