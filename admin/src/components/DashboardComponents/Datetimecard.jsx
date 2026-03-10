@@ -30,7 +30,6 @@ const DateTimeCard = ({ dark }) => {
   const cardBg        = dark ? '#0f1f38' : '#ffffff'
   const cardBorder    = dark ? '#1a3356' : '#e2e8f0'
   const textPrimary   = dark ? '#dde8f5' : '#111827'
-  const textSecondary = dark ? '#6b8cae' : '#6b7280'
   const iconBoxBg     = dark ? 'rgba(30,64,175,0.2)' : 'rgba(0,0,0,0.04)'
   const iconColor     = dark ? '#93c5fd' : '#374151'
   const labelColor    = dark ? '#6b8cae' : '#6b7280'
