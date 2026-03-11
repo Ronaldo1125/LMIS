@@ -28,9 +28,12 @@ function filterByPeriod(books, days) {
   if (!days) return books
   const cutoff = new Date()
   cutoff.setDate(cutoff.getDate() - days)
+  // If no books have any date fields, skip period filtering entirely
+  const anyHasDate = books.some(b => b.created_at || b.accessioned_at || b.date_added)
+  if (!anyHasDate) return books
   return books.filter(b => {
     const d = b.created_at || b.accessioned_at || b.date_added
-    if (!d) return false
+    if (!d) return true // include undated books
     return new Date(d) >= cutoff
   })
 }
@@ -75,13 +78,18 @@ export default function CurrencyOfCollection({ dark = false }) {
 
   const derivedData = (() => {
     const days = PERIODS.find(p => p.key === period)?.days
-    const books = filterByPeriod(allBooks, days).filter(b => {
-      const y = parseInt(b.publication_year || b.year || b.pub_year)
-      return !isNaN(y) && y > 1900 && y <= new Date().getFullYear()
+    const filtered = filterByPeriod(allBooks, days)
+
+    const getYear = b => parseInt(b.date_of_publication || b.publication_year || b.year || b.pub_year)
+
+    const books = filtered.filter(b => {
+      const y = getYear(b)
+      return !isNaN(y) && y > 1800 && y <= new Date().getFullYear() + 1
     })
+
     const catYears = {}
     books.forEach(book => {
-      const y = parseInt(book.publication_year || book.year || book.pub_year)
+      const y = getYear(book)
       const cat = book.category || 'Uncategorized'
       const match = categories.find(c => c.id === cat || c.name === cat)
       let catName = cat
@@ -175,7 +183,7 @@ export default function CurrencyOfCollection({ dark = false }) {
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '9px 12px', borderRadius: 8,
-        border: `1px solid ${dark ? '#1a3356' : '#e8edf5'}`,
+        border: `1px solid ${bdr}`,
         borderLeft: `3px solid ${PALETTE[i % PALETTE.length]}`,
         background: dark ? '#0c1c34' : '#ffffff',
       }}>
