@@ -9,7 +9,7 @@ const FreeAccess = () => {
             Free for everyone, forever.
           </h2>
           <p className="text-sm md:text-base text-gray-200 leading-relaxed">
-            Arcadia is an open-access digital library. No subscriptions, no paywalls, no late fees — just instant access to hundreds of thousands of titles from any device.
+            LMIS is an open-access digital library. No subscriptions, no paywalls, no late fees — just instant access to hundreds of thousands of titles from any device.
           </p>
         </div>
         <div className="md:w-1/2 flex flex-col sm:flex-row gap-4 justify-center md:justify-end">
