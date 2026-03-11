@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { createPortal } from 'react-dom'
+import { XMarkIcon, BookOpenIcon } from '@heroicons/react/24/outline'
 import PDFThumbnail from './PDFThumbnail'
 
 const RecentAcquisitions = ({ dark }) => {
@@ -8,169 +9,157 @@ const RecentAcquisitions = ({ dark }) => {
   const [acquisitions, setAcquisitions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [hoveredIndex, setHoveredIndex] = useState(null)
 
-  // Category color mapping
   const categoryColors = {
-    'Books': 'var(--dark-blue-1)',
+    'Books': '#2563eb',
     'Reports': '#64748b',
-    'Periodicals': 'var(--secondary-1-medium)',
-    'Sourcebook': 'var(--secondary-3-medium)',
-    'Thesis/Research papers': 'var(--dark-blue-1)',
-    'Statute/Law/Legal Documents': '#64748b',
-    'Guides/Manuals': 'var(--secondary-1-medium)',
-    'Reference Materials': 'var(--secondary-3-medium)',
+    'Periodicals': '#7c3aed',
+    'Sourcebook': '#f59e0b',
+    'Thesis/Research papers': '#0891b2',
+    'Statute/Law/Legal Documents': '#374151',
+    'Guides/Manuals': '#059669',
+    'Reference Materials': '#dc2626',
     'Uncategorized': '#94a3b8'
   }
 
   const categoryTypes = {
-    'Books': 'Book',
-    'Reports': 'Report',
-    'Periodicals': 'Periodical',
-    'Sourcebook': 'Sourcebook',
-    'Thesis/Research papers': 'Thesis',
-    'Statute/Law/Legal Documents': 'Law Document',
-    'Guides/Manuals': 'Manual',
-    'Reference Materials': 'Reference Material',
-    'Uncategorized': 'Uncategorized'
+    'Books': 'Book', 'Reports': 'Report', 'Periodicals': 'Periodical',
+    'Sourcebook': 'Sourcebook', 'Thesis/Research papers': 'Thesis',
+    'Statute/Law/Legal Documents': 'Law Doc', 'Guides/Manuals': 'Manual',
+    'Reference Materials': 'Reference', 'Uncategorized': 'Other'
   }
 
-  useEffect(() => {
-    fetchAcquisitions()
-  }, [])
+  useEffect(() => { fetchAcquisitions() }, [])
 
   const fetchAcquisitions = async () => {
     try {
-      setLoading(true)
-      setError(null)
-
-      const response = await fetch('http://localhost:5000/api/acquisitions', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
+      setLoading(true); setError(null)
+      const res = await fetch('http://localhost:5000/api/acquisitions', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
       })
-
-      if (!response.ok) throw new Error('Failed to fetch acquisitions')
-
-      const data = await response.json()
-
-      const formattedAcquisitions = (data.data || []).map(item => ({
+      if (!res.ok) throw new Error('Failed to fetch acquisitions')
+      const data = await res.json()
+      setAcquisitions((data.data || []).map(item => ({
         title: item.title,
         type: categoryTypes[item.category] || 'Other',
         author: item.author || 'Unknown Author',
         date: item.date_accessioned,
         category: item.category || 'Uncategorized',
-        color: categoryColors[item.category] || '#64748b',
-        id: item.id,
-        uploadId: item.upload_id,
-      }))
-
-      setAcquisitions(formattedAcquisitions)
+        color: categoryColors[item.category] || '#94a3b8',
+        id: item.id, uploadId: item.upload_id,
+      })))
     } catch (err) {
-      console.error('Error fetching acquisitions:', err)
       setError(err.message)
     } finally {
       setLoading(false)
     }
   }
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffDays = Math.ceil(Math.abs(now - date) / (1000 * 60 * 60 * 24))
-    if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Yesterday'
-    if (diffDays < 14) return `${diffDays} days ago`
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const formatDate = (ds) => {
+    const d = new Date(ds), now = new Date()
+    const diff = Math.ceil(Math.abs(now - d) / 86400000)
+    if (diff === 0) return 'Today'
+    if (diff === 1) return 'Yesterday'
+    if (diff < 14) return `${diff}d ago`
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
   const openModal = () => { setIsModalOpen(true); setTimeout(() => setIsAnimating(true), 10) }
-  const closeModal = () => { setIsAnimating(false); setTimeout(() => setIsModalOpen(false), 400) }
+  const closeModal = () => { setIsAnimating(false); setTimeout(() => setIsModalOpen(false), 380) }
 
-  // ── Colors ────────────────────────────────────────────────
-  const cardBg               = dark ? '#0f1f38' : '#ffffff'
-  const cardBorder           = dark ? '#1a3356' : '#e2e8f0'
-  const textPrimary          = dark ? '#dde8f5' : '#111827'
-  const textSecondary        = dark ? '#6b8cae' : '#4b5563'
-  const textMuted            = dark ? '#2e4d70' : '#6b7280'
-  const itemBg               = dark ? '#081422' : '#ffffff'
-  const itemBorder           = dark ? '#1a3356' : '#e2e8f0'
-  const modalBg              = dark ? '#0f1f38' : '#ffffff'
-  const modalBorder          = dark ? '#1a3356' : '#e2e8f0'
-  const modalHeaderFooterBg  = dark ? '#0d1d35' : '#f8fafc'
-  const closeHover           = dark ? '#1a3356' : '#f1f5f9'
-  const itemDivider          = dark ? '#1a3356' : '#e2e8f0'
-  const viewMoreBg           = dark ? '#1a3356' : '#64748b'
-  const viewMoreHover        = dark ? '#2e4d70' : '#475569'
+  // ── Tokens ──────────────────────────────────────────────────────────────
+  const bg       = dark ? '#0c1c34' : '#ffffff'
+  const bdr      = dark ? '#1a3356' : '#e8edf5'
+  const txt1     = dark ? '#e2ecf8' : '#0f172a'
+  const txt2     = dark ? '#6b8cae' : '#64748b'
+  const txt3     = dark ? '#2e4d70' : '#94a3b8'
+  const itemBg   = dark ? '#07111f' : '#f8fafc'
+  const modalBg  = dark ? '#0c1c34' : '#ffffff'
+  const hdBg     = dark ? '#07111f' : '#f8fafc'
 
   const cardStyle = {
-    background: cardBg,
-    border: `1px solid ${cardBorder}`,
-    borderRadius: '0.75rem',
-    boxShadow: dark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.06)',
-    padding: '1.5rem',
-    display: 'flex', flexDirection: 'column', height: '100%',
-    position: 'relative',
-    transition: 'background 0.45s ease, border-color 0.45s ease',
+    background: bg, border: `1px solid ${bdr}`,
+    borderRadius: 12,
+    boxShadow: dark ? '0 2px 16px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.07)',
+    padding: '20px 22px', display: 'flex', flexDirection: 'column', height: '100%',
+    transition: 'background 0.35s ease, border-color 0.35s ease',
+    fontFamily: "'DM Sans', sans-serif",
   }
 
-  if (loading) return (
-    <div style={cardStyle}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--dark-blue-1)', marginBottom: '1.5rem' }}>
-        Recent Acquisitions
-      </h2>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-        <span style={{ color: textSecondary }}>Loading acquisitions...</span>
+  const SectionHeader = () => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 8,
+          background: dark ? 'rgba(96,165,250,0.14)' : 'rgba(37,99,235,0.09)',
+          border: `1px solid ${dark ? 'rgba(96,165,250,0.2)' : 'rgba(37,99,235,0.14)'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <BookOpenIcon style={{ width: '0.95rem', height: '0.95rem', color: dark ? '#60a5fa' : '#2563eb' }} />
+        </div>
+        <div>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: dark ? '#e2ecf8' : '#334155', margin: 0, letterSpacing: '-0.02em', fontFamily: "'Sora', sans-serif" }}>
+            Recent Acquisitions
+          </h2>
+          <p style={{ fontSize: 11, color: txt2, margin: 0 }}>Latest additions to the collection</p>
+        </div>
       </div>
     </div>
   )
 
-  if (error) return (
+  if (loading || error || acquisitions.length === 0) return (
     <div style={cardStyle}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--dark-blue-1)', marginBottom: '1.5rem' }}>
-        Recent Acquisitions
-      </h2>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-        <span style={{ color: dark ? '#fca5a5' : '#ef4444' }}>Error: {error}</span>
-      </div>
-    </div>
-  )
-
-  if (acquisitions.length === 0) return (
-    <div style={cardStyle}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--dark-blue-1)', marginBottom: '1.5rem' }}>
-        Recent Acquisitions
-      </h2>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-        <span style={{ color: textSecondary }}>No recent acquisitions found</span>
+      <SectionHeader />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 120 }}>
+        <span style={{ color: error ? '#f87171' : txt2, fontSize: 13 }}>
+          {loading ? 'Loading…' : error ? `Error: ${error}` : 'No acquisitions found'}
+        </span>
       </div>
     </div>
   )
 
   return (
     <div style={cardStyle}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--dark-blue-1)', marginBottom: '1.5rem' }}>
-        Recent Acquisitions
-      </h2>
+      <SectionHeader />
 
       {/* Preview list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-        {acquisitions.slice(0, 4).map((item, index) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+        {acquisitions.slice(0, 4).map((item, i) => (
           <div
-            key={item.id || index}
+            key={item.id || i}
+            onMouseEnter={() => setHoveredIndex(i)}
+            onMouseLeave={() => setHoveredIndex(null)}
             style={{
-              background: itemBg,
-              border: `1px solid ${itemBorder}`,
-              borderRadius: '0.5rem',
-              padding: '1rem',
-              transition: 'background 0.45s ease, border-color 0.45s ease',
+              background: hoveredIndex === i ? (dark ? '#0f1e36' : '#f0f5ff') : itemBg,
+              border: `1px solid ${hoveredIndex === i ? item.color + '50' : bdr}`,
+              borderLeft: `3px solid ${item.color}`,
+              borderRadius: 9, padding: '10px 12px',
+              transition: 'all 0.2s ease',
+              cursor: 'default',
+              transform: hoveredIndex === i ? 'translateX(4px)' : 'translateX(0)',
             }}
           >
-            <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: textPrimary, margin: 0 }}>
-              {item.title}
-            </h3>
-            <p style={{ fontSize: '0.75rem', color: textSecondary, fontStyle: 'italic', margin: '0.25rem 0 0' }}>
-              by {item.author}
-            </p>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  fontSize: 13, fontWeight: 600, color: txt1, margin: 0,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{item.title}</p>
+                <p style={{ fontSize: 11, color: txt2, fontStyle: 'italic', margin: '2px 0 0' }}>
+                  by {item.author}
+                </p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                <span style={{
+                  fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+                  color: item.color, background: `${item.color}18`,
+                  border: `1px solid ${item.color}28`,
+                  padding: '2px 6px', borderRadius: 5,
+                }}>{item.type}</span>
+                <span style={{ fontSize: 10, color: txt3 }}>{formatDate(item.date)}</span>
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -178,162 +167,106 @@ const RecentAcquisitions = ({ dark }) => {
       <button
         onClick={openModal}
         style={{
-          marginTop: '1rem', padding: '0.5rem 1rem',
-          borderRadius: '0.5rem',
-          background: viewMoreBg,
-          color: '#ffffff',
-          border: 'none', cursor: 'pointer',
-          fontWeight: 600, fontSize: '0.875rem',
-          transition: 'background 0.2s ease, transform 0.15s ease',
+          marginTop: 14, padding: '9px 14px', borderRadius: 9,
+          background: dark ? '#1a3356' : '#2563eb',
+          color: '#ffffff', border: 'none', cursor: 'pointer',
+          fontWeight: 600, fontSize: 13, width: '100%',
+          transition: 'all 0.2s ease', fontFamily: "'DM Sans', sans-serif",
+          letterSpacing: '-0.01em',
         }}
-        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.background = viewMoreHover }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = viewMoreBg }}
+        onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
       >
-        View More ({acquisitions.length} total)
+        View All ({acquisitions.length} total)
       </button>
 
       {/* Modal */}
-      {isModalOpen && (
+      {isModalOpen && createPortal(
         <div
           style={{
-            position: 'fixed', inset: 0,
+            position: 'fixed', inset: 0, zIndex: 9999,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 50,
-            background: isAnimating ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0)',
-            opacity: isAnimating ? 1 : 0,
-            transition: 'background 0.4s ease, opacity 0.4s ease',
+            background: 'transparent',
           }}
           onClick={closeModal}
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             style={{
-              background: modalBg,
-              border: dark ? `1px solid ${modalBorder}` : 'none',
-              borderRadius: '1rem',
+              background: dark ? '#0c1c34' : '#ffffff', border: `1px solid ${dark ? '#1a3356' : '#e8edf5'}`,
+              borderRadius: 16,
               boxShadow: dark ? '0 24px 64px rgba(0,0,0,0.7)' : '0 24px 64px rgba(0,0,0,0.15)',
               width: '100%', maxWidth: '42rem',
-              height: '85vh',
+              height: '70vh', minHeight: 300,
               display: 'flex', flexDirection: 'column',
-              transform: isAnimating ? 'scale(1) translateY(0)' : 'scale(0.5) translateY(2.5rem)',
+              transform: isAnimating ? 'scale(1) translateY(0)' : 'scale(0.94) translateY(20px)',
               opacity: isAnimating ? 1 : 0,
-              transformOrigin: 'bottom center',
-              transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+              transition: 'all 0.38s cubic-bezier(0.16,1,0.3,1)',
+              fontFamily: "'DM Sans', sans-serif",
             }}
           >
-            {/* Modal Header */}
             <div style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '1rem 1.5rem',
-              borderBottom: `1px solid ${modalBorder}`,
-              borderRadius: '1rem 1rem 0 0',
-              background: modalHeaderFooterBg,
-              transition: 'background 0.45s ease, border-color 0.45s ease',
+              padding: '14px 20px', borderBottom: `1px solid ${dark ? '#1a3356' : '#e8edf5'}`,
+              background: dark ? '#07111f' : '#f8fafc', borderRadius: '16px 16px 0 0',
             }}>
               <div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--dark-blue-1)', margin: 0 }}>
+                <h2 style={{ fontSize: 15, fontWeight: 700, color: dark ? '#e2ecf8' : '#0f172a', margin: 0, fontFamily: "'Sora', sans-serif" }}>
                   Recent Acquisitions
                 </h2>
-                <p style={{ fontSize: '0.75rem', color: textMuted, margin: '0.25rem 0 0' }}>
-                  {acquisitions.length} items acquired in the last 14 days
+                <p style={{ fontSize: 11, color: dark ? '#6b8cae' : '#64748b', margin: '2px 0 0' }}>
+                  {acquisitions.length} items in the collection
                 </p>
               </div>
               <button
                 onClick={closeModal}
-                style={{ padding: '0.5rem', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', transition: 'background 0.2s ease' }}
-                onMouseEnter={e => e.currentTarget.style.background = closeHover}
+                style={{ padding: 6, background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                <XMarkIcon style={{ width: '1.5rem', height: '1.5rem', color: textSecondary }} />
+                <XMarkIcon style={{ width: '1.2rem', height: '1.2rem', color: '#64748b' }} />
               </button>
             </div>
 
-            {/* Scrollable Content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {acquisitions.map((item, index) => (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10, borderRadius: '0 0 16px 16px' }}>
+              {acquisitions.map((item, i) => (
                 <div
-                  key={item.id || index}
+                  key={item.id || i}
                   style={{
-                    padding: '1rem',
-                    borderRadius: '0.5rem',
-                    border: `1px solid ${item.color}`,
-                    display: 'flex', gap: '1rem',
-                    background: dark ? 'rgba(255,255,255,0.02)' : '#ffffff',
-                    transition: 'background 0.45s ease',
+                    padding: '12px 14px', borderRadius: 10,
+                    border: `1px solid ${item.color}40`,
+                    background: dark ? '#0c1c34' : '#ffffff',
+                    display: 'flex', gap: 12,
                   }}
                 >
-                  {/* PDF Thumbnail */}
-                  <div style={{ width: '5rem', height: '6rem', flexShrink: 0, borderRadius: '0.375rem', overflow: 'hidden' }}>
-                    <PDFThumbnail
-                      uploadId={item.uploadId}
-                      title={item.title}
-                      style={{ borderRadius: '0.375rem' }}
-                    />
+                  <div style={{ width: '4.5rem', height: '5.5rem', flexShrink: 0, borderRadius: 7, overflow: 'hidden' }}>
+                    <PDFThumbnail uploadId={item.uploadId} title={item.title} style={{ borderRadius: 7 }} />
                   </div>
-
-                  {/* Text Content */}
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: textPrimary, margin: 0 }}>
-                          {item.title}
-                        </h3>
-                        <p style={{ fontSize: '0.75rem', color: textSecondary, fontStyle: 'italic', margin: '0.125rem 0 0' }}>
-                          by {item.author}
-                        </p>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                        <h3 style={{ fontSize: 13, fontWeight: 600, color: txt1, margin: 0 }}>{item.title}</h3>
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
+                          letterSpacing: '0.06em', color: item.color,
+                          background: `${item.color}18`, border: `1px solid ${item.color}28`,
+                          padding: '2px 6px', borderRadius: 5, flexShrink: 0,
+                        }}>{item.type}</span>
                       </div>
-                      <span style={{
-                        padding: '0.2rem 0.5rem', borderRadius: '0.25rem',
-                        fontSize: '0.7rem', fontWeight: 700,
-                        textTransform: 'uppercase', letterSpacing: '0.05em',
-                        background: `${item.color}25`, color: item.color,
-                        flexShrink: 0,
-                      }}>
-                        {item.type}
-                      </span>
+                      <p style={{ fontSize: 11, color: txt2, fontStyle: 'italic', margin: '3px 0 0' }}>by {item.author}</p>
                     </div>
-
-                    <div style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      borderTop: `1px solid ${itemDivider}`,
-                      paddingTop: '0.5rem',
-                    }}>
-                      <span style={{ fontSize: '0.75rem', color: textMuted }}>{item.category}</span>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: item.color }}>
-                        {formatDate(item.date)}
-                      </span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${bdr}`, paddingTop: 6 }}>
+                      <span style={{ fontSize: 11, color: txt2 }}>{item.category}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: item.color }}>{formatDate(item.date)}</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Footer */}
-            <div style={{
-              padding: '1rem 1.5rem',
-              borderTop: `1px solid ${modalBorder}`,
-              display: 'flex', justifyContent: 'flex-end',
-              background: modalHeaderFooterBg,
-              borderRadius: '0 0 1rem 1rem',
-              transition: 'background 0.45s ease, border-color 0.45s ease',
-            }}>
-              <button
-                onClick={closeModal}
-                style={{
-                  padding: '0.5rem 1.2rem', borderRadius: '0.5rem',
-                  fontSize: '0.875rem', fontWeight: 600,
-                  background: 'var(--dark-blue-1)', color: '#ffffff',
-                  border: 'none', cursor: 'pointer',
-                  transition: 'opacity 0.2s ease',
-                }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-              >
-                Close
-              </button>
-            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

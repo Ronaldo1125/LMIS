@@ -1,29 +1,30 @@
 import { useState, useEffect } from 'react'
-import { 
-  BookOpenIcon, 
-  DocumentTextIcon, 
-  NewspaperIcon, 
-  ArchiveBoxIcon, 
-  AcademicCapIcon, 
-  ScaleIcon, 
-  BookmarkIcon,
-  QuestionMarkCircleIcon,
-  XMarkIcon,
-  ChevronDownIcon,
-  ChevronUpIcon
+import { createPortal } from 'react-dom'
+import {
+  BookOpenIcon, DocumentTextIcon, NewspaperIcon, ArchiveBoxIcon,
+  AcademicCapIcon, ScaleIcon, BookmarkIcon, QuestionMarkCircleIcon,
+  XMarkIcon, ChevronDownIcon, ChevronUpIcon
 } from '@heroicons/react/24/outline'
 
-// Sora + DM Sans fonts
-const fontLink = document.createElement('link')
-fontLink.href = 'https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap'
-fontLink.rel = 'stylesheet'
-document.head.appendChild(fontLink)
+const FONT_HEADING = "'Sora', -apple-system, sans-serif"
+const FONT_BODY    = "'DM Sans', -apple-system, 'Segoe UI', sans-serif"
 
-const FONT_HEADING = "'Sora', -apple-system, BlinkMacSystemFont, sans-serif"
-const FONT_BODY    = "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+const categoryIcons = {
+  'Books': BookOpenIcon, 'Reports': DocumentTextIcon, 'Periodicals': NewspaperIcon,
+  'Sourcebook': ArchiveBoxIcon, 'Thesis/Research papers': AcademicCapIcon,
+  'Statute/Law/Legal Documents': ScaleIcon, 'Guides/Manuals': BookmarkIcon,
+  'Reference Materials': BookOpenIcon, 'Uncategorized': QuestionMarkCircleIcon
+}
+
+const categoryColors = {
+  'Books': '#2563eb', 'Reports': '#64748b', 'Periodicals': '#7c3aed',
+  'Sourcebook': '#f59e0b', 'Thesis/Research papers': '#0891b2',
+  'Statute/Law/Legal Documents': '#374151', 'Guides/Manuals': '#059669',
+  'Reference Materials': '#dc2626', 'Uncategorized': '#94a3b8'
+}
 
 const CollectionByCategory = ({ dark }) => {
-  const [hoveredCategory, setHoveredCategory] = useState(null)
+  const [hoveredIndex, setHoveredIndex] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [expandedCategories, setExpandedCategories] = useState({})
@@ -31,228 +32,169 @@ const CollectionByCategory = ({ dark }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Icon mapping for categories
-  const categoryIcons = {
-    'Books': BookOpenIcon,
-    'Reports': DocumentTextIcon,
-    'Periodicals': NewspaperIcon,
-    'Sourcebook': ArchiveBoxIcon,
-    'Thesis/Research papers': AcademicCapIcon,
-    'Statute/Law/Legal Documents': ScaleIcon,
-    'Guides/Manuals': BookmarkIcon,
-    'Reference Materials': BookOpenIcon,
-    'Uncategorized': QuestionMarkCircleIcon
-  }
-
-  // Color mapping for categories
-  const categoryColors = {
-    'Books': 'var(--dark-blue-1)',
-    'Reports': '#64748b',
-    'Periodicals': 'var(--secondary-1-medium)',
-    'Sourcebook': 'var(--secondary-3-medium)',
-    'Thesis/Research papers': 'var(--dark-blue-1)',
-    'Statute/Law/Legal Documents': '#64748b',
-    'Guides/Manuals': 'var(--secondary-1-medium)',
-    'Reference Materials': 'var(--secondary-3-medium)',
-    'Uncategorized': '#94a3b8'
-  }
-
-  useEffect(() => {
-    fetchCategoryData()
-  }, [])
+  useEffect(() => { fetchCategoryData() }, [])
 
   const fetchCategoryData = async () => {
     try {
-      setLoading(true)
-      setError(null)
-
-      const categoriesResponse = await fetch('http://localhost:5000/api/books/meta/categories', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      })
-
-      if (!categoriesResponse.ok) throw new Error('Failed to fetch categories')
-      const categoriesData = await categoriesResponse.json()
-
-      const booksResponse = await fetch('http://localhost:5000/api/books?limit=999999&showArchived=false', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        }
-      })
-
-      if (!booksResponse.ok) throw new Error('Failed to fetch books')
-      const booksData = await booksResponse.json()
+      setLoading(true); setError(null)
+      const headers = { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+      const [catRes, bookRes] = await Promise.all([
+        fetch('http://localhost:5000/api/books/meta/categories', { headers }),
+        fetch('http://localhost:5000/api/books?limit=999999&showArchived=false', { headers }),
+      ])
+      if (!catRes.ok || !bookRes.ok) throw new Error('Failed to fetch data')
+      const categoriesData = await catRes.json()
+      const booksData = await bookRes.json()
       const books = booksData.books || []
 
-      const categoryCounts = {}
-      const subcategoryCounts = {}
+      const categoryCounts = {}, subcategoryCounts = {}
       let uncategorizedCount = 0
-
       books.forEach(book => {
-        if (!book.category || book.category.trim() === '') {
-          uncategorizedCount++
-        } else {
-          const categoryMatch = categoriesData.find(cat => 
-            cat.id === book.category || cat.name === book.category
-          )
-
-          if (categoryMatch) {
-            if (categoryMatch.parent_id) {
-              const parentCategory = categoriesData.find(cat => cat.id === categoryMatch.parent_id)
-              if (parentCategory) {
-                categoryCounts[parentCategory.name] = (categoryCounts[parentCategory.name] || 0) + 1
-                const subKey = `${parentCategory.name}::${categoryMatch.name}`
-                subcategoryCounts[subKey] = (subcategoryCounts[subKey] || 0) + 1
+        if (!book.category || book.category.trim() === '') { uncategorizedCount++ } else {
+          const match = categoriesData.find(c => c.id === book.category || c.name === book.category)
+          if (match) {
+            if (match.parent_id) {
+              const parent = categoriesData.find(c => c.id === match.parent_id)
+              if (parent) {
+                categoryCounts[parent.name] = (categoryCounts[parent.name] || 0) + 1
+                const key = `${parent.name}::${match.name}`
+                subcategoryCounts[key] = (subcategoryCounts[key] || 0) + 1
               }
-            } else {
-              categoryCounts[categoryMatch.name] = (categoryCounts[categoryMatch.name] || 0) + 1
-            }
-          } else {
-            categoryCounts[book.category] = (categoryCounts[book.category] || 0) + 1
-          }
+            } else { categoryCounts[match.name] = (categoryCounts[match.name] || 0) + 1 }
+          } else { categoryCounts[book.category] = (categoryCounts[book.category] || 0) + 1 }
         }
       })
 
-      const parentCategories = categoriesData.filter(cat => !cat.parent_id)
-      const formattedCategories = parentCategories.map(parent => {
-        const subcategories = categoriesData
-          .filter(cat => cat.parent_id === parent.id)
-          .map(sub => ({
-            name: sub.name,
-            count: subcategoryCounts[`${parent.name}::${sub.name}`] || 0
-          }))
-          .filter(sub => sub.count > 0)
+      const parents = categoriesData.filter(c => !c.parent_id)
+      const formatted = parents.map(parent => ({
+        name: parent.name,
+        icon: categoryIcons[parent.name] || BookOpenIcon,
+        count: categoryCounts[parent.name] || 0,
+        color: categoryColors[parent.name] || '#64748b',
+        subcategories: categoriesData.filter(c => c.parent_id === parent.id)
+          .map(sub => ({ name: sub.name, count: subcategoryCounts[`${parent.name}::${sub.name}`] || 0 }))
+          .filter(s => s.count > 0)
+      })).filter(c => c.count > 0).sort((a, b) => b.count - a.count)
 
-        return {
-          name: parent.name,
-          icon: categoryIcons[parent.name] || BookOpenIcon,
-          count: categoryCounts[parent.name] || 0,
-          color: categoryColors[parent.name] || '#64748b',
-          subcategories: subcategories.length > 0 ? subcategories : undefined
-        }
-      }).filter(cat => cat.count > 0)
-
-      if (uncategorizedCount > 0) {
-        formattedCategories.push({
-          name: 'Uncategorized',
-          icon: QuestionMarkCircleIcon,
-          count: uncategorizedCount,
-          color: '#94a3b8'
-        })
-      }
-
-      formattedCategories.sort((a, b) => b.count - a.count)
-      setCategories(formattedCategories)
+      if (uncategorizedCount > 0) formatted.push({ name: 'Uncategorized', icon: QuestionMarkCircleIcon, count: uncategorizedCount, color: '#94a3b8' })
+      setCategories(formatted)
     } catch (err) {
-      console.error('Error fetching category data:', err)
       setError(err.message)
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
-  const totalItems = categories.reduce((sum, cat) => sum + cat.count, 0)
+  const totalItems = categories.reduce((s, c) => s + c.count, 0)
+  const openModal  = () => { setIsModalOpen(true); setTimeout(() => setIsAnimating(true), 10) }
+  const closeModal = () => { setIsAnimating(false); setTimeout(() => setIsModalOpen(false), 380) }
+  const toggleCat  = name => setExpandedCategories(p => ({ ...p, [name]: !p[name] }))
 
-  const openModal = () => {
-    setIsModalOpen(true)
-    setTimeout(() => setIsAnimating(true), 10)
-  }
-
-  const closeModal = () => {
-    setIsAnimating(false)
-    setTimeout(() => setIsModalOpen(false), 400)
-  }
-
-  const toggleCategory = (categoryName) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [categoryName]: !prev[categoryName]
-    }))
-  }
-
-  // ── Colors (Matching RecentAcquisitions) ───────────────────
-  const cardBg       = dark ? '#0f1f38' : '#ffffff'
-  const cardBorder   = dark ? '#1a3356' : '#e2e8f0'
-  const textPrimary  = dark ? '#dde8f5' : '#111827'
-  const textSecondary = dark ? '#6b8cae' : '#4b5563'
-  const textMuted     = dark ? '#2e4d70' : '#6b7280'
-  const itemBg       = dark ? '#081422' : '#ffffff'
-  const itemBorder   = dark ? '#1a3356' : '#e2e8f0'
-  const modalBg      = dark ? '#0f1f38' : '#ffffff'
-  const modalBorder  = dark ? '#1a3356' : '#e2e8f0'
-  const closeHover   = dark ? '#1a3356' : '#f1f5f9'
+  // ── Tokens ──────────────────────────────────────────────────────────────
+  const bg       = dark ? '#0c1c34' : '#ffffff'
+  const bdr      = dark ? '#1a3356' : '#e8edf5'
+  const txt1     = dark ? '#e2ecf8' : '#0f172a'
+  const txt2     = dark ? '#6b8cae' : '#64748b'
+  const txt3     = dark ? '#2e4d70' : '#94a3b8'
+  const surface  = dark ? '#07111f' : '#f8fafc'
+  const modalBg  = dark ? '#0c1c34' : '#ffffff'
+  const hdBg     = dark ? '#07111f' : '#f8fafc'
 
   const cardStyle = {
-    background: cardBg,
-    border: `1px solid ${cardBorder}`,
-    borderRadius: '0.5rem',
-    boxShadow: dark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.06)',
-    padding: '1.5rem',
-    display: 'flex', flexDirection: 'column', height: '100%',
-    position: 'relative',
-    transition: 'background 0.45s ease, border-color 0.45s ease',
+    background: bg, border: `1px solid ${bdr}`,
+    borderRadius: 12,
+    boxShadow: dark ? '0 2px 16px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.07)',
+    padding: '20px 22px', display: 'flex', flexDirection: 'column', height: '100%',
+    transition: 'background 0.35s ease, border-color 0.35s ease',
     fontFamily: FONT_BODY,
   }
 
-  if (loading || error || categories.length === 0) {
-    return (
-      <div style={cardStyle}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--dark-blue-1)', marginBottom: '1.5rem', fontFamily: FONT_HEADING }}>
-          Collection by Category
-        </h2>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-          <span style={{ color: error ? (dark ? '#fca5a5' : '#ef4444') : textSecondary }}>
-            {loading ? 'Loading categories...' : error ? `Error: ${error}` : 'No categories found'}
-          </span>
+  const SectionHeader = () => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 8,
+          background: dark ? 'rgba(96,165,250,0.14)' : 'rgba(37,99,235,0.09)',
+          border: `1px solid ${dark ? 'rgba(96,165,250,0.2)' : 'rgba(37,99,235,0.14)'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <BookOpenIcon style={{ width: '0.95rem', height: '0.95rem', color: dark ? '#60a5fa' : '#2563eb' }} />
+        </div>
+        <div>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: dark ? '#e2ecf8' : '#334155', margin: 0, letterSpacing: '-0.02em', fontFamily: FONT_HEADING }}>
+            Collection by Category
+          </h2>
+          <p style={{ fontSize: 11, color: txt2, margin: 0 }}>
+            {totalItems > 0 ? `${totalItems.toLocaleString()} items across ${categories.length} categories` : 'Browse the collection'}
+          </p>
         </div>
       </div>
-    )
-  }
+    </div>
+  )
+
+  if (loading || error || categories.length === 0) return (
+    <div style={cardStyle}>
+      <SectionHeader />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 120 }}>
+        <span style={{ color: error ? '#f87171' : txt2, fontSize: 13 }}>
+          {loading ? 'Loading categories…' : error ? `Error: ${error}` : 'No categories found'}
+        </span>
+      </div>
+    </div>
+  )
 
   return (
     <div style={cardStyle}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--dark-blue-1)', marginBottom: '1.5rem', fontFamily: FONT_HEADING }}>
-        Collection by Category
-      </h2>
+      <SectionHeader />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
-        {categories.slice(0, 4).map((cat, index) => {
+      {/* Category rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+        {categories.slice(0, 4).map((cat, i) => {
           const Icon = cat.icon
-          const isHovered = hoveredCategory === index
+          const isHov = hoveredIndex === i
+          const pct = totalItems > 0 ? Math.round((cat.count / totalItems) * 100) : 0
           return (
             <div
               key={cat.name}
-              onMouseEnter={() => setHoveredCategory(index)}
-              onMouseLeave={() => setHoveredCategory(null)}
+              onMouseEnter={() => setHoveredIndex(i)}
+              onMouseLeave={() => setHoveredIndex(null)}
               style={{
-                padding: '1rem',
-                borderRadius: '0.5rem',
-                background: isHovered ? (dark ? '#1a3356' : `${cat.color}15`) : itemBg,
-                border: `1px solid ${itemBorder}`,
-                borderLeft: `4px solid ${cat.color}`,
-                cursor: 'pointer',
-                transform: isHovered ? 'translateX(6px)' : 'translateX(0)',
-                transition: 'all 0.3s ease',
+                padding: '11px 13px', borderRadius: 9,
+                background: isHov ? (dark ? '#0f1e36' : `${cat.color}08`) : surface,
+                border: `1px solid ${isHov ? cat.color + '45' : bdr}`,
+                borderLeft: `3px solid ${cat.color}`,
+                transform: isHov ? 'translateX(5px)' : 'translateX(0)',
+                transition: 'all 0.25s ease', cursor: 'default',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ 
-                    width: '2.5rem', height: '2.5rem', borderRadius: '0.5rem', 
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                    background: `${cat.color}18`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: `${cat.color}20` 
                   }}>
-                    <Icon style={{ width: '1.25rem', height: '1.25rem', color: cat.color }} />
+                    <Icon style={{ width: '0.9rem', height: '0.9rem', color: cat.color }} />
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: textPrimary, margin: 0, fontFamily: FONT_HEADING }}>{cat.name}</h3>
-                    <p style={{ fontSize: '0.75rem', color: textSecondary, margin: 0 }}>{cat.count.toLocaleString()} items</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: txt1, margin: 0, fontFamily: FONT_HEADING }}>
+                      {cat.name}
+                    </p>
+                    <p style={{ fontSize: 11, color: txt2, margin: 0 }}>{cat.count.toLocaleString()} items</p>
                   </div>
                 </div>
-                <span style={{ fontSize: '0.875rem', fontWeight: 700, color: cat.color }}>
-                  {cat.count}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {/* Mini progress bar */}
+                  <div style={{ width: 48, height: 4, borderRadius: 99, background: dark ? '#1a3356' : '#e8edf5', overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: cat.color, borderRadius: 99, transition: 'width 0.8s ease' }} />
+                  </div>
+                  <span style={{
+                    fontSize: 13, fontWeight: 800, color: cat.color,
+                    minWidth: 32, textAlign: 'right',
+                    fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum"',
+                    fontFamily: FONT_BODY, display: 'inline-block',
+                  }}>
+                    {cat.count}
+                  </span>
+                </div>
               </div>
             </div>
           )
@@ -262,109 +204,117 @@ const CollectionByCategory = ({ dark }) => {
       <button
         onClick={openModal}
         style={{
-          marginTop: '1rem', padding: '0.625rem 1rem',
-          borderRadius: '0.5rem',
-          background: dark ? '#1a3356' : '#64748b',
-          color: '#ffffff',
-          border: 'none', cursor: 'pointer',
-          fontWeight: 600, fontSize: '0.875rem',
-          transition: 'background 0.2s ease, transform 0.15s ease',
+          marginTop: 14, padding: '9px 14px', borderRadius: 9,
+          background: dark ? '#1a3356' : '#2563eb',
+          color: '#ffffff', border: 'none', cursor: 'pointer',
+          fontWeight: 600, fontSize: 13, width: '100%',
+          transition: 'opacity 0.2s ease', fontFamily: FONT_BODY,
         }}
-        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.background = dark ? '#2e4d70' : '#475569' }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = dark ? '#1a3356' : '#64748b' }}
+        onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
       >
-        View All Catalog ({totalItems.toLocaleString()} total items)
+        View All Catalog ({totalItems.toLocaleString()} items)
       </button>
 
-      {isModalOpen && (
+      {/* Modal */}
+      {isModalOpen && createPortal(
         <div
           style={{
-            position: 'fixed', inset: 0, zIndex: 50,
+            position: 'fixed', inset: 0, zIndex: 9999,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: isAnimating ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0)',
-            opacity: isAnimating ? 1 : 0,
-            transition: 'background 0.4s ease, opacity 0.4s ease',
+            background: 'transparent',
+            transition: 'background 0.38s ease',
           }}
           onClick={closeModal}
         >
           <div
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             style={{
-              background: modalBg,
-              border: dark ? `1px solid ${modalBorder}` : 'none',
-              borderRadius: '1rem',
-              boxShadow: dark ? '0 24px 64px rgba(0,0,0,0.7)' : '0 24px 64px rgba(0,0,0,0.15)',
-              width: '100%', maxWidth: '28rem',
-              maxHeight: '80vh',
+              background: dark ? '#0c1c34' : '#ffffff', border: `1px solid ${dark ? '#1a3356' : '#e8edf5'}`,
+              borderRadius: 16,
+              boxShadow: dark ? '0 24px 64px rgba(0,0,0,0.7)' : '0 24px 64px rgba(0,0,0,0.14)',
+              width: '100%', maxWidth: '28rem', maxHeight: '82vh',
               display: 'flex', flexDirection: 'column',
-              transform: isAnimating ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(2rem)',
+              transform: isAnimating ? 'scale(1) translateY(0)' : 'scale(0.94) translateY(16px)',
               opacity: isAnimating ? 1 : 0,
-              transition: 'all 0.4s cubic-bezier(0.16,1,0.3,1)',
+              transition: 'all 0.38s cubic-bezier(0.16,1,0.3,1)',
+              fontFamily: FONT_BODY,
             }}
           >
-            {/* Modal Header */}
+            {/* Header */}
             <div style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '1rem 1.5rem', borderBottom: `1px solid ${modalBorder}`,
-              background: dark ? '#0d1d35' : '#ffffff', borderRadius: '1rem 1rem 0 0'
+              padding: '14px 20px', borderBottom: `1px solid ${dark ? '#1a3356' : '#e8edf5'}`,
+              background: dark ? '#07111f' : '#f8fafc', borderRadius: '16px 16px 0 0',
             }}>
               <div>
-                <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--dark-blue-1)', margin: 0, fontFamily: FONT_HEADING }}>All Categories</h2>
-                <p style={{ fontSize: '0.75rem', color: textMuted, margin: '0.125rem 0 0' }}>
+                <h2 style={{ fontSize: 15, fontWeight: 700, color: dark ? '#e2ecf8' : '#0f172a', margin: 0, fontFamily: FONT_HEADING }}>All Categories</h2>
+                <p style={{ fontSize: 11, color: dark ? '#6b8cae' : '#64748b', margin: '2px 0 0' }}>
                   {totalItems.toLocaleString()} items in {categories.length} categories
                 </p>
               </div>
               <button
                 onClick={closeModal}
-                style={{ padding: '0.5rem', background: 'transparent', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}
-                onMouseEnter={e => e.currentTarget.style.background = closeHover}
+                style={{ padding: 6, background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', transition: 'background 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.background = dark ? '#1a3356' : '#f1f5f9'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                <XMarkIcon style={{ width: '1.25rem', height: '1.25rem', color: textSecondary }} />
+                <XMarkIcon style={{ width: '1.1rem', height: '1.1rem', color: txt2 }} />
               </button>
             </div>
 
-            {/* Modal Content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {categories.map((cat) => {
+            {/* Content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 8, borderRadius: '0 0 16px 16px' }}>
+              {categories.map(cat => {
                 const Icon = cat.icon
                 const isExpanded = expandedCategories[cat.name]
                 const hasSub = cat.subcategories && cat.subcategories.length > 0
-
                 return (
-                  <div key={cat.name} style={{ border: `1px solid ${itemBorder}`, borderRadius: '0.5rem', overflow: 'hidden' }}>
+                  <div key={cat.name} style={{ border: `1px solid ${dark ? '#1a3356' : '#e8edf5'}`, borderRadius: 9, overflow: 'hidden' }}>
                     <button
-                      onClick={() => hasSub && toggleCategory(cat.name)}
+                      onClick={() => hasSub && toggleCat(cat.name)}
                       style={{
                         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '0.75rem', background: 'transparent', border: 'none', cursor: hasSub ? 'pointer' : 'default',
-                        textAlign: 'left'
+                        padding: '10px 13px', background: 'transparent', border: 'none',
+                        cursor: hasSub ? 'pointer' : 'default', textAlign: 'left',
+                        transition: 'background 0.15s',
                       }}
+                      onMouseEnter={e => { if (hasSub) e.currentTarget.style.background = dark ? '#0f1e36' : '#f8fafc' }}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${cat.color}20` }}>
-                          <Icon style={{ width: '1.125rem', height: '1.125rem', color: cat.color }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 30, height: 30, borderRadius: 7, background: `${cat.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Icon style={{ width: '0.875rem', height: '0.875rem', color: cat.color }} />
                         </div>
                         <div>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: textPrimary, display: 'block', fontFamily: FONT_HEADING }}>{cat.name}</span>
-                          <span style={{ fontSize: '0.75rem', color: textSecondary }}>{cat.count.toLocaleString()} items</span>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: dark ? '#e2ecf8' : '#0f172a', display: 'block', fontFamily: FONT_HEADING }}>{cat.name}</span>
+                          <span style={{ fontSize: 11, color: dark ? '#6b8cae' : '#64748b' }}>{cat.count.toLocaleString()} items</span>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.125rem 0.375rem', borderRadius: '0.25rem', color: cat.color, background: `${cat.color}15` }}>
-                          {cat.count}
-                        </span>
-                        {hasSub && (isExpanded ? <ChevronUpIcon style={{width:'1rem', color:textMuted}}/> : <ChevronDownIcon style={{width:'1rem', color:textMuted}}/>)}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 52, justifyContent: 'flex-end' }}>
+                        <span style={{
+                          fontSize: 12, fontWeight: 700,
+                          color: cat.color, background: `${cat.color}15`,
+                          fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum"',
+                          width: 28, height: 24, borderRadius: 6,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          flexShrink: 0,
+                        }}>{cat.count}</span>
+                        <div style={{ width: '0.875rem', flexShrink: 0 }}>
+                          {hasSub && (isExpanded
+                            ? <ChevronUpIcon style={{ width: '0.875rem', color: '#94a3b8' }} />
+                            : <ChevronDownIcon style={{ width: '0.875rem', color: '#94a3b8' }} />
+                          )}
+                        </div>
                       </div>
                     </button>
-
                     {hasSub && isExpanded && (
-                      <div style={{ padding: '0 1rem 0.75rem 3.5rem', background: dark ? 'rgba(255,255,255,0.02)' : '#f9fafb', borderTop: `1px solid ${itemBorder}` }}>
-                        <ul style={{ listStyle: 'none', padding: 0, margin: '0.5rem 0 0' }}>
-                          {cat.subcategories.map((sub) => (
-                            <li key={sub.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0', fontSize: '0.8125rem', color: textSecondary }}>
+                      <div style={{ padding: '0 14px 10px 52px', background: dark ? '#07111f' : '#f9fafb', borderTop: `1px solid ${dark ? '#1a3356' : '#e8edf5'}` }}>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0 0' }}>
+                          {cat.subcategories.map(sub => (
+                            <li key={sub.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: 12, color: txt2 }}>
                               <span>{sub.name}</span>
-                              <span style={{ fontWeight: 500, color: textMuted }}>{sub.count}</span>
+                              <span style={{ fontWeight: 600, color: txt3, fontVariantNumeric: 'tabular-nums' }}>{sub.count}</span>
                             </li>
                           ))}
                         </ul>
@@ -375,17 +325,10 @@ const CollectionByCategory = ({ dark }) => {
               })}
             </div>
 
-            {/* Modal Footer */}
-            <div style={{ padding: '1rem', borderTop: `1px solid ${modalBorder}`, display: 'flex', justifyContent: 'flex-end', background: dark ? '#0d1d35' : '#ffffff', borderRadius: '0 0 1rem 1rem' }}>
-              <button
-                onClick={closeModal}
-                style={{ padding: '0.5rem 1.25rem', borderRadius: '0.5rem', background: 'var(--dark-blue-1)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}
-              >
-                Close
-              </button>
-            </div>
+            {/* Footer */}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

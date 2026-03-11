@@ -121,7 +121,7 @@ const FrequentlySearched = () => {
 
   const handleBookClick = (book) => {
     // navigate to book detail page — adjust to your router
-    router.push(`/books/${book.id}`);
+    router.push(`/book/${book.id}`);
   };
 
   // ── skeleton card ───────────────────────────────────────────────────────
