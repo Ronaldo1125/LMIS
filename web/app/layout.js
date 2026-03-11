@@ -1,7 +1,10 @@
-// Using Nimbus Sans via CSS instead of Google Fonts
+import { Inter } from 'next/font/google';
 import "./globals.css";
 
-// Font configuration moved to globals.css
+const interDisplay = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export const metadata = {
   title: "Create Next App",
@@ -11,10 +14,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className="antialiased"
-        style={{ fontFamily: '"Nimbus Sans", sans-serif' }}
-      >
+      <body className={interDisplay.className + " antialiased"}>
         {children}
       </body>
     </html>

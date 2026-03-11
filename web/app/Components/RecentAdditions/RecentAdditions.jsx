@@ -308,7 +308,7 @@ const RecentAdditions = () => {
           gap: 16,
         }}
       >
-        <h2 style={{ fontSize: 28, fontWeight: 700, color: "#003087", margin: 0, letterSpacing: "-0.01em" }}>
+        <h2 style={{ fontSize: 28, fontWeight: 700, color: "#000000ff", margin: 0, letterSpacing: "-0.01em" }}>
           Recent Additions
         </h2>
 
@@ -390,7 +390,7 @@ const RecentAdditions = () => {
             margin: "0 auto",
             padding: "0 48px 56px",
             display: "grid",
-            gridTemplateColumns: "repeat(6, 1fr)",
+            gridTemplateColumns: "repeat(5, 1fr)",
             gap: 18,
           }}
         >

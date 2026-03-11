@@ -106,7 +106,7 @@ const News = () => {
           marginLeft: "auto",
           marginRight: "auto",
         }}>
-          <h2 style={{ fontSize: 29, fontWeight: 600, color: "#003087", margin: 0 }}>
+          <h2 style={{ fontSize: 29, fontWeight: 600, color: "#000000ff", margin: 0 }}>
             Depdev 5 News
           </h2>
 

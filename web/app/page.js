@@ -5,7 +5,7 @@ import Category from "./Components/Category/Category";
 import News from "./Components/News/News";
 import AboutLibrary from "./Components/AboutLibrary/AboutLibrary";
 import Footer from "./Components/Footer/Footer";
-
+import FreeAccess from "./Components/FreeAccess/FreeAccess";
 
 export default function Page() {
 
@@ -15,17 +15,22 @@ export default function Page() {
 
 
       <LandingPage />
-       <Category />
+
+     
+
+       <RecentAdditions />
+       
  
       <FrequentlySearched />
-      <RecentAdditions />
-      
+     
+      <Category />
     
       
-      <AboutLibrary />
+      
       
       <News />
       
+       <FreeAccess />
       <Footer />
 
     </div>
