@@ -457,7 +457,7 @@ const Search = () => {
 
   const onPage      = (p) => pushParams({ page: String(p) });
   const onSortChange = (v) => pushParams({ sort: v, page: "1" });
-  const onBookClick  = (id) => { recordBookClick(id); router.push(`/books/${id}`); };
+  const onBookClick  = (id) => { recordBookClick(id); router.push(`/book/${id}`); };
 
   // ── derived ───────────────────────────────────────────────────────────────
   const pageTitle = urlCategory

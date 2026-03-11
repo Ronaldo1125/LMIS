@@ -368,7 +368,7 @@ const BookDetails = ({ bookId }) => {
             </div>
           </div>
 
-          <RelatedBooks currentBook={book} />
+          <RelatedBooks currentBookId={book.id} />
         </div>
       </div>
 
