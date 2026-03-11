@@ -13,8 +13,7 @@ const formatDate = (raw) => {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 };
 
-const API_BASE       = "http://localhost:5000";
-const THUMBNAIL_BASE = `${API_BASE}/api/book-cover`; // GET /api/book-cover/:uploadId
+const API_BASE = "http://localhost:5000";
 
 // Pull the JWT stored by your auth flow (adjust key name if different)
 const getAuthHeaders = () => {
@@ -63,7 +62,8 @@ const PlaceholderCover = ({ title, color }) => (
 const BookCard = ({ book, onClick }) => {
   const [imgFailed, setImgFailed] = useState(false);
   const hasCover = !!book.upload_id && !imgFailed;
-  const coverSrc = book.upload_id ? `${THUMBNAIL_BASE}/${book.upload_id}` : null;
+  // ✅ Use relative path, same as FrequentlySearched
+  const coverSrc = book.upload_id ? `/api/book-cover/${book.upload_id}` : null;
 
   return (
     <div
@@ -146,7 +146,8 @@ const BookCard = ({ book, onClick }) => {
 const BookRow = ({ book, onClick, isLast }) => {
   const [imgFailed, setImgFailed] = useState(false);
   const hasCover = !!book.upload_id && !imgFailed;
-  const coverSrc = book.upload_id ? `${THUMBNAIL_BASE}/${book.upload_id}` : null;
+  // ✅ Use relative path, same as FrequentlySearched
+  const coverSrc = book.upload_id ? `/api/book-cover/${book.upload_id}` : null;
 
   return (
     <div
