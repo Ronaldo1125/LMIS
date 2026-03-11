@@ -109,6 +109,7 @@ function UserManagement({ dark }) {
     dateAdded:         user.dateAdded,
     isActiveLibrarian: user.isActiveLibrarian,
     source:            user.source,
+    avatar:            user.avatar,
   }))
 
   // ── Handlers ──────────────────────────────────────────────────────────────

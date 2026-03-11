@@ -43,7 +43,6 @@ const ArchivesModal = ({ isOpen, onClose, onRestore, dark = true }) => {
   const closeHover    = dark ? '#1a3356' : '#f1f5f9'
   const searchBg      = dark ? '#0c1a2e' : '#f8fafc'
   const inputText     = dark ? '#dde8f5' : '#111827'
-  const inputPlaceholder = dark ? '#2e4d70' : '#9ca3af'
 
   useEffect(() => {
     if (isOpen) {
@@ -63,7 +62,7 @@ const ArchivesModal = ({ isOpen, onClose, onRestore, dark = true }) => {
         params: { showArchived: 'true', limit: 200 }
       })
       setArchivedBooks(response.data.books || [])
-    } catch (err) {
+    } catch {
       setError('Failed to load archived books.')
     } finally {
       setLoading(false)
@@ -86,7 +85,7 @@ const ArchivesModal = ({ isOpen, onClose, onRestore, dark = true }) => {
       await onRestore(id)
       fetchArchivedBooks()
       if (showDetails) setShowDetails(false)
-    } catch (err) {
+    } catch {
       setError('Reintegration sequence failed.')
     }
   }
