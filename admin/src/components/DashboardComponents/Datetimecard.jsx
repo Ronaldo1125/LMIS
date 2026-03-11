@@ -18,15 +18,15 @@ const DateTimeCard = ({ dark }) => {
   const ampm = h24 >= 12 ? 'PM' : 'AM'
   const blink = sec % 2 === 0
 
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-
-  const bdr  = dark ? '#1a3356' : '#e8edf5'
-  const txt1 = dark ? '#e2ecf8' : '#0f172a'
-  const txt2 = dark ? '#6b8cae' : '#64748b'
-  const accentColor = dark ? '#60a5fa' : '#2563eb'
-  const segFilled = dark ? '#60a5fa' : '#2563eb'
-  const segEmpty  = dark ? '#1a3356' : '#e2eaf6'
-  const filled = Math.floor(sec / 10)
+  const cardBg        = dark ? '#0f1f38' : '#ffffff'
+  const cardBorder    = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary   = dark ? '#dde8f5' : '#111827'
+  const textSecondary = dark ? '#6b8cae' : '#6b7280'
+  const iconBoxBg     = dark ? 'rgba(30,64,175,0.2)' : 'rgba(0,0,0,0.04)'
+  const iconColor     = dark ? '#93c5fd' : '#374151'
+  const labelColor    = dark ? '#6b8cae' : '#6b7280'
+  const tickFilled    = dark ? '#93c5fd' : '#4b5563'
+  const tickEmpty     = dark ? '#1a3356' : '#e2e8f0'
 
   return (
     <div
