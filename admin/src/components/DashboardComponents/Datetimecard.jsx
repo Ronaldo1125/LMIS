@@ -27,7 +27,17 @@ const DateTimeCard = ({ dark }) => {
   const labelColor    = dark ? '#6b8cae' : '#6b7280'
   const tickFilled    = dark ? '#93c5fd' : '#4b5563'
   const tickEmpty     = dark ? '#1a3356' : '#e2e8f0'
+  const bdr = cardBorder
+  const accentColor = dark ? '#60a5fa' : '#2563eb'
+  const txt1 = textPrimary
+  const txt2 = textSecondary
 
+const dateStr = now.toLocaleDateString(undefined, {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric'
+})
   return (
     <div
       onMouseEnter={() => setHovered(true)}
