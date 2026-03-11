@@ -210,7 +210,6 @@ router.get('/meta/archive-stats', authMiddleware, roleMiddleware('admin', 'libra
 });
 
 // ─── POST /:id/click — increment search_count ──────────────────────────────────
-// IMPORTANT: must be defined BEFORE GET /:id to avoid route shadowing
 router.post('/:id/click', optionalAuthMiddleware, async (req, res) => {
   try {
     const bookId = parseInt(req.params.id, 10);
@@ -347,6 +346,124 @@ router.patch('/:id/access-level', authMiddleware, roleMiddleware('admin', 'libra
   } catch (error) {
     console.error('Error updating access level:', error);
     res.status(500).json({ message: 'Error updating access level' });
+  }
+});
+
+// ─── Get related books ─────────────────────────────────────────────────────────
+router.get("/:id/related", optionalAuthMiddleware, async (req, res) => {
+  try {
+    const bookId   = parseInt(req.params.id, 10);
+    const limitNum = Math.min(24, Math.max(1, parseInt(req.query.limit || "6", 10)));
+
+    if (isNaN(bookId)) {
+      return res.status(400).json({ message: "Invalid book id" });
+    }
+
+    // ── fetch the source book ─────────────────────────────────────────────
+    // FIX: was [[sourceRows]] which destructured the first *row* not the rows array
+    const [sourceRows] = await pool.query(
+      `SELECT id, category, author, subjects
+       FROM books
+       WHERE id = ? AND is_archived = 0 AND is_accessioned = 1`,
+      [bookId]
+    );
+
+    if (!sourceRows || sourceRows.length === 0) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    const source = sourceRows[0];
+
+    // ── extract individual subject keywords ───────────────────────────────
+    const subjectKeywords = source.subjects
+      ? source.subjects
+          .split(/[,;|]+/)
+          .map((s) => s.trim().toLowerCase())
+          .filter((s) => s.length > 2)
+      : [];
+
+    const cappedKeywords = subjectKeywords.slice(0, 8);
+
+    // ── build score expression ────────────────────────────────────────────
+    // FIX: avoid alias in HAVING — inline the full score expression instead
+    const subjectLikes   = cappedKeywords.map(() => `b.subjects LIKE ?`).join(" OR ");
+    const subjectScore   = cappedKeywords.length > 0
+      ? `CASE WHEN (${subjectLikes}) THEN 2 ELSE 0 END`
+      : "0";
+    const subjectParams  = cappedKeywords.map((k) => `%${k}%`);
+
+    // Full inline score (repeated for HAVING)
+    const inlineScore = `(
+      CASE WHEN b.category = ? THEN 3 ELSE 0 END
+      + ${subjectScore}
+      + CASE WHEN b.author = ? THEN 1 ELSE 0 END
+    )`;
+
+    // params: [category, ...subjectParams, author]
+    const scoreParamsOnce = [source.category, ...subjectParams, source.author];
+
+    const sql = `
+      SELECT
+        b.id,
+        b.title,
+        b.author,
+        b.editor,
+        b.edition,
+        b.category,
+        b.call_number,
+        b.publication,
+        b.publisher,
+        b.subjects,
+        b.isbn,
+        b.issn,
+        YEAR(b.date_of_publication) AS year,
+        b.copies,
+        ${inlineScore} AS _score,
+
+        (SELECT u.id
+           FROM uploads u
+          WHERE u.book_id = b.id AND u.file_type = 'pdf' AND u.status = 'active'
+          ORDER BY u.is_primary DESC, u.upload_date ASC
+          LIMIT 1) AS upload_id,
+
+        (SELECT u.file_size
+           FROM uploads u
+          WHERE u.book_id = b.id AND u.file_type = 'pdf' AND u.status = 'active'
+          ORDER BY u.is_primary DESC, u.upload_date ASC
+          LIMIT 1) AS upload_size
+
+      FROM books b
+      WHERE b.id            != ?
+        AND b.is_archived    = 0
+        AND b.is_accessioned = 1
+        AND EXISTS (
+          SELECT 1 FROM accessions a
+          WHERE a.book_id = b.id AND a.is_archived = 0
+        )
+        AND EXISTS (
+          SELECT 1 FROM uploads u
+          WHERE u.book_id = b.id AND u.file_type = 'pdf' AND u.status = 'active'
+        )
+      HAVING ${inlineScore} > 0
+      ORDER BY _score DESC, b.title ASC
+      LIMIT ?
+    `;
+
+    // params order: score SELECT, bookId, score HAVING, limitNum
+    const queryParams = [
+      ...scoreParamsOnce,   // for SELECT score
+      bookId,               // for WHERE b.id != ?
+      ...scoreParamsOnce,   // for HAVING score (repeated because inline)
+      limitNum,
+    ];
+
+    const [related] = await pool.query(sql, queryParams);
+
+    return res.json({ results: related, total: related.length });
+
+  } catch (err) {
+    console.error("[/api/books/:id/related] error:", err);
+    return res.status(500).json({ message: "Internal server error", error: err.message });
   }
 });
 

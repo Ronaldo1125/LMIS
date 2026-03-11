@@ -84,7 +84,6 @@ router.get(
     }
   }
 );
-
 /**
  * Get user stats
  * GET /adminpanel-users/stats
@@ -111,7 +110,6 @@ router.get(
     }
   }
 );
-
 /**
  * Create Staff
  * POST /adminpanel-users/staff
@@ -162,7 +160,6 @@ router.post(
     }
   }
 );
-
 /**
  * Create Librarian
  * POST /adminpanel-users/librarians
@@ -340,6 +337,53 @@ router.put(
       }
     } catch (error) {
       console.error('Set active librarian error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+);
+
+router.put(
+  '/:id/avatar',
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { avatar } = req.body;
+
+      if (!avatar) {
+        return res.status(400).json({ message: 'Avatar URL is required' });
+      }
+
+      // Validate it's a DiceBear URL (basic guard)
+      if (!avatar.startsWith('https://api.dicebear.com/')) {
+        return res.status(400).json({ message: 'Invalid avatar URL' });
+      }
+
+      // Users can only update their own avatar unless they're admin
+      const isSelf = String(req.user.id) === String(id);
+      const isAdmin = req.user.role === 'admin';
+
+      if (!isSelf && !isAdmin) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+
+      // Admins cannot have their avatar changed by others
+      if (!isSelf && isAdmin) {
+        return res.status(403).json({ message: 'Cannot modify admin avatar' });
+      }
+
+      const [result] = await pool.query(
+        'UPDATE adminpanel_users SET avatar = ? WHERE id = ?',
+        [avatar, id]
+      );
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.json({ message: 'Avatar updated successfully', avatar });
+    } catch (error) {
+      console.error('Update avatar error:', error);
       res.status(500).json({ message: 'Server error' });
     }
   }

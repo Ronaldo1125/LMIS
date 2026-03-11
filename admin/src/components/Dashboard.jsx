@@ -7,7 +7,8 @@ import CollectionByCategory from './DashboardComponents/CollectionByCategory'
 import RecentAcquisitions from './DashboardComponents/RecentAcquisitions'
 import MostDownloadedStats from './DashboardComponents/MostDownloadedStats'
 import LoginNotification from './DashboardComponents/LoginNotification'
-import SearchAnalytics from './DashboardComponents/SearchAnalytics'
+import DuplicateTitlesDetector from './DashboardComponents/DuplicateTitlesDetector'
+import CurrencyOfCollection from './DashboardComponents/CurrencyOfCollection'
 
 const API_BASE_URL = 'http://localhost:5000'
 
@@ -15,6 +16,24 @@ function getToken() {
   if (typeof window === 'undefined') return null
   return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || null
 }
+
+// ── Section divider label ─────────────────────────────────────────────────────
+const SectionLabel = ({ label, gradientFrom, gradientTo }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.75rem' }}>
+    <div style={{
+      width: 3, height: 14, borderRadius: 99,
+      background: `linear-gradient(180deg, ${gradientFrom}, ${gradientTo})`,
+      flexShrink: 0,
+    }} />
+    <span style={{
+      fontSize: '0.625rem', fontWeight: 700,
+      letterSpacing: '0.11em', textTransform: 'uppercase',
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
+      {label}
+    </span>
+  </div>
+)
 
 const Dashboard = ({ user, setCurrentView, dark }) => {
   const [isSticky, setIsSticky] = useState(false)
@@ -77,26 +96,85 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
     },
   ]
 
-  const pageBg       = dark ? '#0a1628' : '#f1f5f9'
-  const headerBg     = dark ? '#0d1d35' : '#ffffff'
-  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
+  // ── Unified tokens ──────────────────────────────────────────────────────
+  const pageBg       = dark ? '#07111f' : '#f0f4fa'
+  const headerBg     = dark ? '#0c1c34' : '#ffffff'
+  const headerBorder = dark ? '#1a3356' : '#e8edf5'
+  const labelColor   = dark ? '#2e4d70' : '#94a3b8'
 
   return (
-    <div style={{ padding: '1.5rem', minHeight: '100vh', background: pageBg, transition: 'background 0.45s ease' }}>
-      <LoginNotification />
+    <div style={{
+      padding: '1.5rem',
+      minHeight: '100vh',
+      background: pageBg,
+      transition: 'background 0.35s ease',
+      backgroundImage: dark
+        ? 'radial-gradient(circle, rgba(255,255,255,0.02) 1px, transparent 1px)'
+        : 'radial-gradient(circle, rgba(0,0,0,0.03) 1px, transparent 1px)',
+      backgroundSize: '28px 28px',
+      fontFamily: "'DM Sans', sans-serif",
+    }}>
 
+      {/* Ambient glows */}
       <div style={{
+        position: 'fixed', top: 0, left: 0, width: '38vw', height: '38vh',
+        background: dark
+          ? 'radial-gradient(ellipse at top left, rgba(37,99,235,0.07) 0%, transparent 70%)'
+          : 'radial-gradient(ellipse at top left, rgba(37,99,235,0.05) 0%, transparent 70%)',
+        pointerEvents: 'none', zIndex: 0,
+      }} />
+      <div style={{
+        position: 'fixed', bottom: 0, right: 0, width: '32vw', height: '32vh',
+        background: dark
+          ? 'radial-gradient(ellipse at bottom right, rgba(124,58,237,0.06) 0%, transparent 70%)'
+          : 'radial-gradient(ellipse at bottom right, rgba(124,58,237,0.04) 0%, transparent 70%)',
+        pointerEvents: 'none', zIndex: 0,
+      }} />
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+        @keyframes dashFadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .dash-section {
+          animation: dashFadeUp 0.45s ease both;
+          position: relative; z-index: 1;
+        }
+        .dash-section:nth-child(1) { animation-delay: 0.04s }
+        .dash-section:nth-child(2) { animation-delay: 0.08s }
+        .dash-section:nth-child(3) { animation-delay: 0.13s }
+        .dash-section:nth-child(4) { animation-delay: 0.18s }
+        .dash-section:nth-child(5) { animation-delay: 0.23s }
+        .dash-section:nth-child(6) { animation-delay: 0.28s }
+        .dash-section:nth-child(7) { animation-delay: 0.33s }
+      `}</style>
+
+      {/* Login Notification */}
+      <div className="dash-section">
+        <LoginNotification />
+      </div>
+
+      {/* Header */}
+      <div className="dash-section" style={{
         position: 'sticky', top: 0, zIndex: 30,
         background: headerBg,
         borderBottom: isSticky ? `1px solid ${headerBorder}` : 'none',
-        boxShadow: isSticky ? (dark ? '0 4px 24px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.08)') : 'none',
-        transition: 'background 0.45s ease, box-shadow 0.3s ease, border-color 0.45s ease',
+        boxShadow: isSticky
+          ? (dark ? '0 4px 24px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.08)')
+          : 'none',
+        backdropFilter: isSticky ? 'blur(16px)' : 'none',
+        WebkitBackdropFilter: isSticky ? 'blur(16px)' : 'none',
+        transition: 'background 0.35s ease, box-shadow 0.3s ease, border-color 0.35s ease',
       }}>
         <DashboardHeader user={user} setCurrentView={setCurrentView} dark={dark} />
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" style={{ marginTop: '1.5rem' }}>
+      {/* Stats Row */}
+      <div
+        className="dash-section"
+        style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}
+      >
         {stats.map((stat, index) => (
           <StatCard
             key={index}
@@ -111,20 +189,31 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
       </div>
 
       {/* Collection & Acquisitions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{ marginTop: '1.5rem' }}>
-        <CollectionByCategory dark={dark} />
-        <RecentAcquisitions dark={dark} />
+      <div className="dash-section" style={{ marginTop: '2rem' }}>
+        <div
+          style={{
+            // Inline label color override so it respects dark prop
+            '--label-c': labelColor,
+          }}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5" style={{ '--section-label-color': labelColor }}>
+            <CollectionByCategory dark={dark} />
+            <RecentAcquisitions dark={dark} />
+          </div>
+        </div>
       </div>
 
       {/* Download Stats */}
-      <div style={{ marginTop: '1.5rem' }}>
+      <div className="dash-section" style={{ marginTop: '2rem' }}>
         <MostDownloadedStats dark={dark} />
       </div>
 
-      {/* Search Analytics */}
-      <div style={{ marginTop: '1.5rem' }}>
-        <SearchAnalytics dark={dark} />
+      {/* New Widgets */}
+      <div className="dash-section" style={{ marginTop: '2rem', paddingBottom: '2.5rem', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
+        <DuplicateTitlesDetector dark={dark} />
+        <CurrencyOfCollection dark={dark} />
       </div>
+
     </div>
   )
 }

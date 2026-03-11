@@ -3,6 +3,34 @@ import { Key, UserX, CheckCircle, Circle, Crown, AlertCircle, UserCheck, ShieldC
 // source === 'adminpanel' → Admin or Librarian row (read-only type, different table)
 // source === 'users'      → Staff or Patron row (type is mutable via /api/usertype)
 
+function DiceBearAvatar({ url, size = 40, cardBg, isActiveLibrarian }) {
+  return (
+    <div style={{ position: 'relative', flexShrink: 0 }}>
+      <div style={{
+        width: size, height: size, borderRadius: '50%',
+        border: '2px solid rgba(148,163,184,0.2)',
+        background: '#f0f7ff',
+        overflow: 'hidden',
+      }}>
+        <img
+          src={url}
+          alt="avatar"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      </div>
+      {isActiveLibrarian && (
+        <div style={{
+          position: 'absolute', top: -6, right: -6,
+          width: 20, height: 20, background: '#f59e0b', borderRadius: '50%',
+          border: `2px solid ${cardBg}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Crown size={10} style={{ color: '#fff' }} />
+        </div>
+      )}
+    </div>
+  )
+}
+
 function UsersTable({
   users,
   onResetPassword,
@@ -241,26 +269,15 @@ function UsersTable({
                   onMouseEnter={e => e.currentTarget.style.background = rowHover}
                   onMouseLeave={e => e.currentTarget.style.background = baseBg}
                 >
-                  {/* Name + Avatar */}
+                  {/* Name + DiceBear Avatar */}
                   <td style={{ padding: '0.75rem 1.5rem', verticalAlign: 'middle' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{
-                        width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 700, fontSize: '1rem', color: '#fff',
-                        background: getAvatarColor(displayName), position: 'relative',
-                      }}>
-                        {displayName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                        {user.isActiveLibrarian && (
-                          <div style={{
-                            position: 'absolute', top: -6, right: -6,
-                            width: 20, height: 20, background: '#f59e0b', borderRadius: '50%',
-                            border: `2px solid ${cardBg}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
-                            <Crown size={10} style={{ color: '#fff' }} />
-                          </div>
-                        )}
-                      </div>
+                      <DiceBearAvatar
+                        url={user.avatar}
+                        size={40}
+                        cardBg={cardBg}
+                        isActiveLibrarian={user.isActiveLibrarian}
+                      />
                       <div style={{ fontWeight: 700, color: dark ? '#f8fafc' : textPrimary, fontSize: '1rem' }}>
                         {displayName}
                       </div>
@@ -302,12 +319,6 @@ function UsersTable({
       `}</style>
     </div>
   )
-}
-
-function getAvatarColor(name) {
-  const colors = ['#3b82f6','#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#64748b']
-  if (!name) return colors[0]
-  return colors[name.charCodeAt(0) % colors.length]
 }
 
 export default UsersTable

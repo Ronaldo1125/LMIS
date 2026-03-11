@@ -39,6 +39,66 @@ const News = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(0);
+
+  // ── responsive configuration ──────────────────────────────────────
+  const getResponsiveConfig = () => {
+    if (windowWidth < 640) { // Mobile
+      return {
+        headerPadding: "20px 16px 16px",
+        contentPadding: "0 16px",
+        gridColumns: "1fr",
+        gap: 16,
+        titleSize: 24,
+        itemsPerSlide: 1,
+        cardTitleSize: 16,
+        minCardHeight: 280
+      };
+    } else if (windowWidth < 768) { // Tablet
+      return {
+        headerPadding: "32px 24px 16px",
+        contentPadding: "0 24px",
+        gridColumns: "1fr 1fr",
+        gap: 24,
+        titleSize: 26,
+        itemsPerSlide: 2,
+        cardTitleSize: 18,
+        minCardHeight: 300
+      };
+    } else if (windowWidth < 1024) { // Small desktop
+      return {
+        headerPadding: "40px 32px 18px",
+        contentPadding: "0 32px",
+        gridColumns: "2fr 1fr 1fr",
+        gap: 28,
+        titleSize: 28,
+        itemsPerSlide: 3,
+        cardTitleSize: 20,
+        minCardHeight: 320
+      };
+    } else { // Large desktop
+      return {
+        headerPadding: "48px 48px 24px",
+        contentPadding: "0 48px",
+        gridColumns: "2fr 1fr 1fr",
+        gap: 32,
+        titleSize: 29,
+        itemsPerSlide: 3,
+        cardTitleSize: 20,
+        minCardHeight: 320
+      };
+    }
+  };
+
+  const config = getResponsiveConfig();
+
+  // ── window resize listener ────────────────────────────────────────────
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch news from backend — thumbnail already stored in DB
   useEffect(() => {
@@ -74,10 +134,10 @@ const News = () => {
     load();
   }, []);
 
-  // Group into slides of 3
+  // Group into slides based on responsive config
   const slides = [];
-  for (let i = 0; i < newsItems.length; i += 3) {
-    slides.push(newsItems.slice(i, i + 3));
+  for (let i = 0; i < newsItems.length; i += config.itemsPerSlide) {
+    slides.push(newsItems.slice(i, i + config.itemsPerSlide));
   }
 
   const prev = () => setCurrentSlide((s) => Math.max(s - 1, 0));
@@ -99,47 +159,81 @@ const News = () => {
         {/* ── Section Header ── */}
         <div style={{
           display: "flex",
-          alignItems: "center",
+          alignItems: windowWidth < 640 ? "flex-start" : "center",
           justifyContent: "space-between",
-          padding: "48px 48px 24px",
+          padding: config.headerPadding,
           maxWidth: 1440,
           marginLeft: "auto",
           marginRight: "auto",
+          gap: 16,
+          flexDirection: windowWidth < 640 ? "column" : "row",
         }}>
-          <h2 style={{ fontSize: 29, fontWeight: 600, color: "#003087", margin: 0 }}>
-            Depdev 5 News
-          </h2>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[
-                { fn: prev, disabled: currentSlide === 0, Icon: ChevronLeft },
-                { fn: next, disabled: currentSlide === slides.length - 1 || slides.length === 0, Icon: ChevronRight },
-              ].map(({ fn, disabled, Icon }, idx) => (
-                <button
-                  key={idx}
-                  onClick={fn}
-                  disabled={disabled}
-                  style={{
-                    width: 40, height: 40, borderRadius: 8,
-                    border: "1px solid #d1d8e8",
-                    background: disabled ? "#f5f7fa" : "#fff",
-                    color: disabled ? "#c0c8d8" : "#003087",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: disabled ? "not-allowed" : "pointer",
-                    transition: "background 0.15s",
-                  }}
-                >
-                  <Icon size={18} />
-                </button>
-              ))}
-            </div>
+          <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{ fontSize: config.titleSize, fontWeight: 600, color: "#000000ff", margin: 0 }}>
+              {windowWidth < 640 ? "News" : "Depdev 5 News"}
+            </h2>
+            
+            {/* Mobile navigation arrows */}
+            {windowWidth < 640 && (
+              <div style={{ display: "flex", gap: 8 }}>
+                {[
+                  { fn: prev, disabled: currentSlide === 0, Icon: ChevronLeft },
+                  { fn: next, disabled: currentSlide === slides.length - 1 || slides.length === 0, Icon: ChevronRight },
+                ].map(({ fn, disabled, Icon }, idx) => (
+                  <button
+                    key={idx}
+                    onClick={fn}
+                    disabled={disabled}
+                    style={{
+                      width: 36, height: 32, borderRadius: 8,
+                      border: "1px solid #d1d8e8",
+                      background: disabled ? "#f5f7fa" : "#fff",
+                      color: disabled ? "#c0c8d8" : "#003087",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: disabled ? "not-allowed" : "pointer",
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    <Icon size={16} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Desktop navigation arrows */}
+          {windowWidth >= 640 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                {[
+                  { fn: prev, disabled: currentSlide === 0, Icon: ChevronLeft },
+                  { fn: next, disabled: currentSlide === slides.length - 1 || slides.length === 0, Icon: ChevronRight },
+                ].map(({ fn, disabled, Icon }, idx) => (
+                  <button
+                    key={idx}
+                    onClick={fn}
+                    disabled={disabled}
+                    style={{
+                      width: 40, height: 40, borderRadius: 8,
+                      border: "1px solid #d1d8e8",
+                      background: disabled ? "#f5f7fa" : "#fff",
+                      color: disabled ? "#c0c8d8" : "#003087",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: disabled ? "not-allowed" : "pointer",
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    <Icon size={18} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Error state ── */}
         {error && (
-          <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 48px 40px", color: "#dc2626", fontSize: 14 }}>
+          <div style={{ maxWidth: 1440, margin: "0 auto", padding: `0 ${config.contentPadding} 40px`, color: "#dc2626", fontSize: 14 }}>
             Failed to load news: {error}
           </div>
         )}
@@ -148,12 +242,12 @@ const News = () => {
         <div style={{
           maxWidth: 1440,
           margin: "0 auto",
-          padding: "0 48px",
+          padding: config.contentPadding,
           display: "grid",
-          gridTemplateColumns: "2fr 1fr 1fr",
-          gap: 32,
+          gridTemplateColumns: config.gridColumns,
+          gap: config.gap,
           marginBottom: 40,
-          minHeight: 320,
+          minHeight: config.minCardHeight,
         }}>
           {loading
             ? [0, 1, 2].map((i) => <SkeletonCard key={i} large={i === 0} />)
@@ -209,10 +303,11 @@ const News = () => {
 
                 {/* Title */}
                 <h3 style={{
-                  fontSize: i === 0 ? 20 : 16,
+                  fontSize: config.cardTitleSize,
                   fontWeight: 600, lineHeight: 1.4,
                   margin: "0 0 10px 0", color: "#111827",
                   transition: "color 0.15s",
+                  ...(windowWidth < 640 && { lineHeight: 1.3 } ),
                 }}>
                   {item.title}
                 </h3>

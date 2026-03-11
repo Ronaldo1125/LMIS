@@ -47,43 +47,48 @@ const MobileNav = () => {
 
       {/* Mobile Menu Content */}
       <div
-        className={`lg:hidden fixed top-0 left-0 right-0 z-50 bg-white transform transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`lg:hidden fixed top-0 right-0 left-0 z-50 bg-white transform transition-transform duration-300 ease-in-out overflow-y-auto ${
+          isOpen ? "translate-x-0" : "translate-x-full"
         }`}
-        style={{ top: "60px" }}
+        style={{ top: "64px", height: "calc(100vh - 64px)" }}
       >
-        <div className="px-6 py-6 space-y-6">
+        <div className="px-6 py-6 space-y-6 min-h-full flex flex-col">
           {/* Navigation Links */}
-          <nav className="space-y-4">
+          <div className="mt-16">
+            <nav className="space-y-2">
             <Link
               href="/about"
-              className="block text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors py-2"
+              className="block text-3xl font-medium text-gray-900 hover:text-blue-600 transition-colors py-2"
               onClick={closeMenu}
             >
               Browse
             </Link>
             <Link
               href="/catalog"
-              className="block text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors py-2"
+              className="block text-3xl font-medium text-gray-900 hover:text-blue-600 transition-colors py-2"
               onClick={closeMenu}
             >
               New release
             </Link>
             <Link
               href="/contact"
-              className="block text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors py-2"
+              className="block text-3xl font-medium text-gray-900 hover:text-blue-600 transition-colors py-2"
               onClick={closeMenu}
             >
               Collection
             </Link>
             <Link
               href="/news"
-              className="block text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors py-2"
+              className="block text-3xl font-medium text-gray-900 hover:text-blue-600 transition-colors py-2"
               onClick={closeMenu}
             >
               News
             </Link>
           </nav>
+          </div>
+
+          {/* Spacer to push buttons to bottom */}
+          <div className="flex-grow"></div>
 
           {/* Action Buttons */}
           <div className="space-y-3 pt-6 border-t border-gray-200">

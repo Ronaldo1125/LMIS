@@ -20,7 +20,6 @@ const EditBookModal = ({
   onSubmit,
   editBook,
   setEditBook,
-  categories,
   dark
 }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -83,15 +82,15 @@ const EditBookModal = ({
       setExistingFiles([]);
       setActiveTab('details');
     }
-  }, [isOpen, editBook?.id]);
+  }, [isOpen, editBook?.id, categoryList.length]);
 
   const fetchExistingFiles = async (bookId) => {
     setLoadingFiles(true);
     try {
       const response = await api.get(`/uploads/book/${bookId}`);
       setExistingFiles(response.data);
-    } catch (err) {
-      console.error('Failed to fetch existing files:', err);
+    } catch (_err) {
+      console.error('Failed to fetch existing files:', _err);
     } finally {
       setLoadingFiles(false);
     }
@@ -136,7 +135,7 @@ const EditBookModal = ({
     try {
       await api.delete(`/uploads/${uploadId}`);
       setExistingFiles(prev => prev.filter(f => f.id !== uploadId));
-    } catch (err) {
+    } catch {
       setUploadError('Permission denied or server error during deletion.');
     } finally {
       setDeletingFile(prev => ({ ...prev, [uploadId]: false }));
@@ -147,7 +146,7 @@ const EditBookModal = ({
     try {
       await api.patch(`/uploads/${uploadId}/set-primary`);
       fetchExistingFiles(editBook.id);
-    } catch (err) {
+    } catch {
       setUploadError('Failed to update primary file status.');
     }
   };
@@ -175,7 +174,7 @@ const EditBookModal = ({
 
         setSelectedFiles([]);
         fetchExistingFiles(editBook.id);
-      } catch (err) {
+      } catch{
         setUploadError('Metadata saved, but file upload failed. Check connection.');
       } finally {
         setIsUploading(false);

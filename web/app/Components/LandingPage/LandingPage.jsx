@@ -17,7 +17,7 @@ const LandingPage = () => {
   };
 
   return (
-    <section className="relative w-full h-[80vh] min-h-[520px] lg:min-h-[640px] overflow-hidden bg-black">
+    <section className="relative w-full h-[100vh] min-h-[520px] lg:min-h-[640px] overflow-hidden bg-black">
       {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -120,10 +120,7 @@ const LandingPage = () => {
         </div>
       </div>
       
-      {/* SCROLL TO DISCOVER - Bottom Right */}
-      <div className="absolute bottom-8 right-8 text-white text-sm font-bold tracking-wider md:text-base lg:text-lg">
-        (SCROLL TO DISCOVER)
-      </div>
+      
     </section>
   );
 };
