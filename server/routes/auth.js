@@ -75,7 +75,8 @@ router.post('/login', async (req, res) => {
         username: user.username,
         full_name: user.full_name,
         role: user.role,
-        is_active: user.is_active
+        is_active: user.is_active,
+        avatar: user.avatar  // ✅ added
       }
     });
 
@@ -97,7 +98,7 @@ router.post('/logout', authMiddleware, (req, res) => {
 router.get('/verify', authMiddleware, async (req, res) => {
   try {
     const [users] = await pool.query(
-      'SELECT id, username, full_name, role, is_active, last_login FROM adminpanel_users WHERE id = ?',
+      'SELECT id, username, full_name, role, is_active, last_login, avatar FROM adminpanel_users WHERE id = ?',  // ✅ added avatar
       [req.user.id]
     );
 
@@ -123,7 +124,8 @@ router.get('/verify', authMiddleware, async (req, res) => {
         full_name: user.full_name,
         role: user.role,
         is_active: user.is_active,
-        last_login: user.last_login
+        last_login: user.last_login,
+        avatar: user.avatar  // ✅ added
       }
     });
 

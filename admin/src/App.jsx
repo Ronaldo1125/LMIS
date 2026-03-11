@@ -38,6 +38,7 @@ const normalizeUser = (raw) => {
     full_name: raw.full_name || raw.fullName || raw.name || raw.username || '',
     email:     raw.email     || `${raw.username || ''}@lmis-dro5.gov`,
     role:      raw.role      || '',
+    avatar:    raw.avatar    || null, 
   }
 }
 
