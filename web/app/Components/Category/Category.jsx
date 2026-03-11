@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 
 const rawCategories = [
@@ -20,17 +20,96 @@ export default function Category() {
   const featuredCategories = categories.slice(0, 6);
   const remainingCategories = categories.slice(6);
   const [showAll, setShowAll] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(0);
+
+  // ── responsive configuration ──────────────────────────────────────
+  const getResponsiveConfig = () => {
+    if (windowWidth < 640) { // Mobile
+      return {
+        sectionPadding: "py-12",
+        containerPadding: "px-4",
+        titleSize: "text-[24px]",
+        gridCols: "grid-cols-1",
+        gap: "gap-4",
+        cardPadding: "p-4",
+        titleMargin: "mb-6",
+        gridMargin: "mb-6",
+        showHeaderText: true
+      };
+    } else if (windowWidth < 768) { // Tablet
+      return {
+        sectionPadding: "py-14",
+        containerPadding: "px-6",
+        titleSize: "text-[28px]",
+        gridCols: "grid-cols-2",
+        gap: "gap-5",
+        cardPadding: "p-5",
+        titleMargin: "mb-7",
+        gridMargin: "mb-7",
+        showHeaderText: true
+      };
+    } else if (windowWidth < 1024) { // Small desktop
+      return {
+        sectionPadding: "py-15",
+        containerPadding: "px-8",
+        titleSize: "text-[30px]",
+        gridCols: "grid-cols-3",
+        gap: "gap-6",
+        cardPadding: "p-6",
+        titleMargin: "mb-8",
+        gridMargin: "mb-8",
+        showHeaderText: false
+      };
+    } else { // Large desktop
+      return {
+        sectionPadding: "py-16",
+        containerPadding: "px-6",
+        titleSize: "text-[32px]",
+        gridCols: "grid-cols-3",
+        gap: "gap-6",
+        cardPadding: "p-6",
+        titleMargin: "mb-8",
+        gridMargin: "mb-8",
+        showHeaderText: false
+      };
+    }
+  };
+
+  const config = getResponsiveConfig();
+
+  // ── window resize listener ────────────────────────────────────────────
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
-    <section className="w-full bg-white py-16">
-      <div className="max-w-[1440px] mx-auto px-6">
+    <section className={`w-full bg-white ${config.sectionPadding}`}>
+      <div className={`max-w-[1440px] mx-auto ${config.containerPadding}`}>
 
         {/* Title */}
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-[32px] font-semibold text-[#0b1c48]">
-            Categories
-          </h2>
-          {!showAll && remainingCategories.length > 0 && (
+        <div className={`flex justify-between items-center ${windowWidth < 640 ? 'flex-col gap-4' : ''} ${config.titleMargin}`}>
+          <div className={windowWidth < 640 ? 'w-full flex justify-between items-center' : ''}>
+            <h2 className={`${config.titleSize} font-semibold text-[#0b1c48] ${windowWidth < 640 ? '' : ''}`}>
+              {config.showHeaderText && windowWidth < 640 ? "Categories" : "Categories"}
+            </h2>
+            
+            {/* Mobile View All Button */}
+            {windowWidth < 640 && !showAll && remainingCategories.length > 0 && (
+              <button
+                onClick={() => setShowAll(true)}
+                className="inline-flex items-center text-[#3556e8] hover:text-[#2a4bc7] font-medium transition-colors text-sm"
+              >
+                View All
+                <ArrowIcon />
+              </button>
+            )}
+          </div>
+          
+          {/* Desktop View All Button */}
+          {windowWidth >= 640 && !showAll && remainingCategories.length > 0 && (
             <button
               onClick={() => setShowAll(true)}
               className="inline-flex items-center text-[#3556e8] hover:text-[#2a4bc7] font-medium transition-colors"
@@ -42,9 +121,9 @@ export default function Category() {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className={`grid ${config.gridCols} ${config.gap} ${config.gridMargin}`}>
           {(showAll ? categories : featuredCategories).map((cat, index) => (
-            <CategoryCard key={cat.name} cat={cat} index={index} />
+            <CategoryCard key={cat.name} cat={cat} index={index} config={config} windowWidth={windowWidth} />
           ))}
         </div>
 
@@ -53,7 +132,7 @@ export default function Category() {
   );
 }
 
-function CategoryCard({ cat, index }) {
+function CategoryCard({ cat, index, config, windowWidth }) {
   const categoryData = {
     "Books & Monographs": {
       description: "Browse our curated catalog of government publications, academic books, and policy documents across all development sectors.",
@@ -121,7 +200,7 @@ function CategoryCard({ cat, index }) {
   return (
     <Link
       href={`/search?category=${encodeURIComponent(cat.name.toLowerCase())}`}
-      className={`group relative rounded-sm p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 ${data.bgColor}`}
+      className={`group relative rounded-sm ${config.cardPadding} shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 ${data.bgColor}`}
     >
       {/* Icon */}
       <div className={`mb-4 ${data.iconColor}`}>
@@ -129,12 +208,12 @@ function CategoryCard({ cat, index }) {
       </div>
 
       {/* Category Name */}
-      <h3 className={`font-semibold text-lg mb-3 ${data.textColor}`}>
+      <h3 className={`font-semibold ${config.titleSize === 'text-[24px]' ? 'text-base' : config.titleSize === 'text-[28px]' ? 'text-lg' : 'text-lg'} mb-3 ${data.textColor}`}>
         {cat.name}
       </h3>
 
       {/* Description */}
-      <p className={`text-sm leading-relaxed ${data.textColor} opacity-90`}>
+      <p className={`text-sm leading-relaxed ${data.textColor} opacity-90 ${windowWidth < 640 ? 'line-clamp-3' : ''}`}>
         {data.description}
       </p>
 

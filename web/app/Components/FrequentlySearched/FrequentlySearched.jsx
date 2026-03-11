@@ -14,6 +14,62 @@ const FrequentlySearched = () => {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
   const [page,    setPage]    = useState(0);
+  const [windowWidth, setWindowWidth] = useState(0);
+
+  // ── responsive configuration ──────────────────────────────────────
+  const getResponsiveConfig = () => {
+    if (windowWidth < 640) { // Mobile
+      return {
+        headerPadding: "20px 16px 16px",
+        contentPadding: "0 16px 32px",
+        gridColumns: "repeat(2, 1fr)",
+        gap: 12,
+        titleSize: 24,
+        showHeaderText: true,
+        itemsPerPage: 6
+      };
+    } else if (windowWidth < 768) { // Tablet
+      return {
+        headerPadding: "32px 24px 16px",
+        contentPadding: "0 24px 40px",
+        gridColumns: "repeat(3, 1fr)",
+        gap: 16,
+        titleSize: 26,
+        showHeaderText: true,
+        itemsPerPage: 9
+      };
+    } else if (windowWidth < 1024) { // Small desktop
+      return {
+        headerPadding: "40px 32px 18px",
+        contentPadding: "0 32px 48px",
+        gridColumns: "repeat(4, 1fr)",
+        gap: 18,
+        titleSize: 28,
+        showHeaderText: false,
+        itemsPerPage: 8
+      };
+    } else { // Large desktop
+      return {
+        headerPadding: "48px 48px 24px",
+        contentPadding: "0 48px 56px",
+        gridColumns: "repeat(5, 1fr)",
+        gap: 18,
+        titleSize: 29,
+        showHeaderText: false,
+        itemsPerPage: 10
+      };
+    }
+  };
+
+  const config = getResponsiveConfig();
+
+  // ── window resize listener ────────────────────────────────────────────
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ── fetch from backend ──────────────────────────────────────────────────
   useEffect(() => {
@@ -57,8 +113,9 @@ const FrequentlySearched = () => {
   }, []);
 
   // ── pagination ──────────────────────────────────────────────────────────
-  const maxPage    = Math.max(0, Math.ceil(books.length / ITEMS_PER_PAGE) - 1);
-  const visible    = books.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
+  const itemsPerPage = config.itemsPerPage;
+  const maxPage    = Math.max(0, Math.ceil(books.length / itemsPerPage) - 1);
+  const visible    = books.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
   const handlePrev = () => setPage((p) => Math.max(0, p - 1));
   const handleNext = () => setPage((p) => Math.min(maxPage, p + 1));
 
@@ -187,73 +244,120 @@ const FrequentlySearched = () => {
       {/* Section Header */}
       <div style={{
         display: "flex",
-        alignItems: "center",
+        alignItems: windowWidth < 640 ? "flex-start" : "center",
         justifyContent: "space-between",
-        padding: "48px 48px 24px",
+        padding: config.headerPadding,
         maxWidth: 1440,
         marginLeft: "auto",
         marginRight: "auto",
+        gap: 16,
+        flexDirection: windowWidth < 640 ? "column" : "row",
       }}>
-        <h2 style={{
-          fontSize: 29,
-          fontWeight: 600,
-          color: "#000000ff",
-          margin: 0,
-        }}>
-          Most Searched Books
-        </h2>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {/* Arrows */}
-          <div style={{ width: 12 }} />
-          <button
-            onClick={handlePrev}
-            disabled={page === 0}
-            style={{
-              width: 40,
-              height: 36,
-              borderRadius: 12,
-              border: "1px solid #d1d8e8",
-              background: "#fff",
-              cursor: page === 0 ? "not-allowed" : "pointer",
-              opacity: page === 0 ? 0.5 : 1,
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            onClick={handleNext}
-            disabled={page === maxPage}
-            style={{
-              width: 40,
-              height: 36,
-              borderRadius: 12,
-              border: "1px solid #d1d8e8",
-              background: "#fff",
-              cursor: page === maxPage ? "not-allowed" : "pointer",
-              opacity: page === maxPage ? 0.5 : 1,
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <ChevronRight size={18} />
-          </button>
+        <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h2 style={{
+            fontSize: config.titleSize,
+            fontWeight: 600,
+            color: "#000000ff",
+            margin: 0,
+          }}>
+            {config.showHeaderText && windowWidth < 640 ? "Trending" : "Most Searched Books"}
+          </h2>
+          
+          {/* Pagination arrows - show beside title on mobile */}
+          {windowWidth < 640 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                onClick={handlePrev}
+                disabled={page === 0}
+                style={{
+                  width: 36,
+                  height: 32,
+                  borderRadius: 8,
+                  border: "1px solid #d1d8e8",
+                  background: "#fff",
+                  cursor: page === 0 ? "not-allowed" : "pointer",
+                  opacity: page === 0 ? 0.5 : 1,
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={page === maxPage}
+                style={{
+                  width: 36,
+                  height: 32,
+                  borderRadius: 8,
+                  border: "1px solid #d1d8e8",
+                  background: "#fff",
+                  cursor: page === maxPage ? "not-allowed" : "pointer",
+                  opacity: page === maxPage ? 0.5 : 1,
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Desktop pagination arrows */}
+        {windowWidth >= 640 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 12 }} />
+            <button
+              onClick={handlePrev}
+              disabled={page === 0}
+              style={{
+                width: 40,
+                height: 36,
+                borderRadius: 12,
+                border: "1px solid #d1d8e8",
+                background: "#fff",
+                cursor: page === 0 ? "not-allowed" : "pointer",
+                opacity: page === 0 ? 0.5 : 1,
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={page === maxPage}
+              style={{
+                width: 40,
+                height: 36,
+                borderRadius: 12,
+                border: "1px solid #d1d8e8",
+                background: "#fff",
+                cursor: page === maxPage ? "not-allowed" : "pointer",
+                opacity: page === maxPage ? 0.5 : 1,
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
       </div>
 
         {/* ── Grid ── */}
         <div style={{
           maxWidth: 1440,
           margin: "0 auto",
-          padding: "0 48px 56px",
+          padding: config.contentPadding,
           display: "grid",
-          gridTemplateColumns: `repeat(${GRID_COLUMNS}, 1fr)`,
-          gap: 18,
+          gridTemplateColumns: config.gridColumns,
+          gap: config.gap,
         }}>
 
           {/* Loading skeletons */}
-          {loading && Array.from({ length: GRID_COLUMNS }).map((_, i) => (
+          {loading && Array.from({ length: parseInt(config.gridColumns.match(/\d+/)[0]) }).map((_, i) => (
             <SkeletonCard key={i} />
           ))}
 
@@ -265,7 +369,7 @@ const FrequentlySearched = () => {
 
           {/* Book cards */}
           {!loading && !error && visible.map((book, idx) => {
-            const globalRank = page * ITEMS_PER_PAGE + idx + 1;
+            const globalRank = page * itemsPerPage + idx + 1;
             return (
               <div
                 key={book.id}
