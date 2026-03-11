@@ -30,10 +30,14 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Resources</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">E-Books</a></li>
-              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">Journals</a></li>
-              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">Databases</a></li>
-              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">Research Papers</a></li>
+              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">Books</a></li>
+              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">Sourcebooks</a></li>
+              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">Periodicals</a></li>
+              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">Thesis/ Research papers</a></li>
+              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">Statute/ Law/ Legal documents</a></li>
+              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">Guide/ Manuals</a></li>
+              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">Report</a></li>
+              <li><a href="#" className="text-sm text-gray-300 hover:text-[#D0674B] transition-colors">Reference Materials</a></li>
             </ul>
           </div>
 

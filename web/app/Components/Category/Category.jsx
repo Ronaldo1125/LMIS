@@ -1,99 +1,181 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 
 const rawCategories = [
-  { name: "Books", icon: <BooksIcon /> },
+  { name: "Books & Monographs", icon: <BooksIcon /> },
+  { name: "Journals & Articles", icon: <PeriodicalIcon /> },
+  { name: "Databases & Reports", icon: <ReportIcon /> },
   { name: "Sourcebooks", icon: <SourcebookIcon /> },
   { name: "Periodicals", icon: <PeriodicalIcon /> },
   { name: "Thesis / Research Papers", icon: <ThesisIcon /> },
   { name: "Statute / Law / Legal Documents", icon: <LawIcon /> },
   { name: "Guide / Manuals", icon: <GuideIcon /> },
-  { name: "Report", icon: <ReportIcon /> },
   { name: "Reference Materials", icon: <ReferenceIcon /> },
 ];
 
 export default function Category() {
   const categories = useMemo(() => rawCategories, []);
+  const featuredCategories = categories.slice(0, 6);
+  const remainingCategories = categories.slice(6);
+  const [showAll, setShowAll] = useState(false);
 
   return (
-    <section className="w-full bg-white pt-15">
-      <div style={{
-        maxWidth: 1440,
-        marginLeft: "auto",
-        marginRight: "auto",
-        padding: "48px 48px 24px",
-      }}>
+    <section className="w-full bg-white py-16">
+      <div className="max-w-[1440px] mx-auto px-6">
+
         {/* Title */}
-        <div className="text-center">
-          <h2 className="text-[40px] sm:text-[56px] font-medium leading-[1.05] tracking-tight text-black" >
-            Browse Categories
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-[32px] font-semibold text-[#0b1c48]">
+            Categories
           </h2>
-
-          <p className="mt-4 text-[14px] sm:text-[16px] text-black/60 max-w-[760px] mx-auto leading-relaxed">
-            Explore thousands of government publications, research materials, journals, and reference documents
-            available in DEPDEV Region V e-Library.
-          </p>
+          {!showAll && remainingCategories.length > 0 && (
+            <button
+              onClick={() => setShowAll(true)}
+              className="inline-flex items-center text-[#3556e8] hover:text-[#2a4bc7] font-medium transition-colors"
+            >
+              View All Collections
+              <ArrowIcon />
+            </button>
+          )}
         </div>
 
-        {/* Category list (2 columns like screenshot) */}
-        <div className="mt-12 sm:mt-14">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16">
-            {/* LEFT column */}
-            <div className="border-t border-black/15">
-              {categories
-                .filter((_, i) => i % 2 === 0)
-                .map((cat) => (
-                  <CategoryRow key={cat.name} cat={cat} />
-                ))}
-            </div>
-
-            {/* RIGHT column */}
-            <div className="border-t border-black/15">
-              {categories
-                .filter((_, i) => i % 2 === 1)
-                .map((cat) => (
-                  <CategoryRow key={cat.name} cat={cat} />
-                ))}
-            </div>
-          </div>
-
-          {/* Optional small note */}
-          <p className="mt-14 text-[12px] text-black/55 text-center">
-            Browse by format and document type to quickly find what you need.
-          </p>
+        {/* Categories Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {(showAll ? categories : featuredCategories).map((cat, index) => (
+            <CategoryCard key={cat.name} cat={cat} index={index} />
+          ))}
         </div>
+
       </div>
     </section>
   );
 }
 
-function CategoryRow({ cat }) {
+function CategoryCard({ cat, index }) {
+  const categoryData = {
+    "Books & Monographs": {
+      description: "Browse our curated catalog of government publications, academic books, and policy documents across all development sectors.",
+      bgColor: "bg-[#0b1c48]",
+      textColor: "text-white",
+      iconColor: "text-green-400",
+    },
+    "Journals & Articles": {
+      description: "Access peer-reviewed journals and research articles on economics, planning, infrastructure, and sustainable development.",
+      bgColor: "bg-white",
+      textColor: "text-[#0b1c48]",
+      iconColor: "text-blue-500",
+    },
+    "Databases & Reports": {
+      description: "Dive into statistical databases, annual reports, and data repositories produced by DEPDev and partner agencies.",
+      bgColor: "bg-[#d4af37]",
+      textColor: "text-[#0b1c48]",
+      iconColor: "text-purple-500",
+    },
+    "Sourcebooks": {
+      description: "Comprehensive reference materials and primary source documents for in-depth research and analysis.",
+      bgColor: "bg-[#2c5282]",
+      textColor: "text-white",
+      iconColor: "text-yellow-400",
+    },
+    "Periodicals": {
+      description: "Current and archived newspapers, magazines, and journals covering contemporary issues and historical events.",
+      bgColor: "bg-white",
+      textColor: "text-[#0b1c48]",
+      iconColor: "text-red-500",
+    },
+    "Thesis / Research Papers": {
+      description: "Academic theses, dissertations, and research papers from universities and research institutions.",
+      bgColor: "bg-[#1a365d]",
+      textColor: "text-white",
+      iconColor: "text-cyan-400",
+    },
+    "Statute / Law / Legal Documents": {
+      description: "Legal frameworks, statutes, regulations, and judicial decisions from various jurisdictions.",
+      bgColor: "bg-[#8b4513]",
+      textColor: "text-white",
+      iconColor: "text-orange-400",
+    },
+    "Guide / Manuals": {
+      description: "Practical guides, training manuals, and instructional materials for various procedures and processes.",
+      bgColor: "bg-white",
+      textColor: "text-[#0b1c48]",
+      iconColor: "text-green-500",
+    },
+    "Reference Materials": {
+      description: "Dictionaries, encyclopedias, almanacs, and other reference works for quick information lookup.",
+      bgColor: "bg-[#4a5568]",
+      textColor: "text-white",
+      iconColor: "text-pink-400",
+    },
+  };
+
+  const data = categoryData[cat.name] || { 
+    description: "Explore this collection of resources and materials.",
+    bgColor: "bg-white", 
+    textColor: "text-[#0b1c48]", 
+    iconColor: "text-[#3556e8]" 
+  };
+
   return (
     <Link
       href={`/search?category=${encodeURIComponent(cat.name.toLowerCase())}`}
-      className="
-        group flex items-center gap-4
-        py-6
-        border-b border-black/15
-        text-black
-      "
+      className={`group relative rounded-sm p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 ${data.bgColor}`}
     >
       {/* Icon */}
-      <span className="inline-flex h-6 w-6 items-center justify-center text-[#0B5ED7]">
+      <div className={`mb-4 ${data.iconColor}`}>
         {cat.icon}
-      </span>
+      </div>
 
-      {/* Text */}
-      <span className="text-[16px] sm:text-[17px] font-medium tracking-tight group-hover:opacity-80">
+      {/* Category Name */}
+      <h3 className={`font-semibold text-lg mb-3 ${data.textColor}`}>
         {cat.name}
-      </span>
+      </h3>
+
+      {/* Description */}
+      <p className={`text-sm leading-relaxed ${data.textColor} opacity-90`}>
+        {data.description}
+      </p>
+
+      {/* Hover Arrow - Bottom Right */}
+      <div className={`absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${data.textColor}`}>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </div>
     </Link>
   );
 }
 
-/* --- Icons: outline, small --- */
+function ArrowIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
+}
+
+/* --- Icons --- */
+
 function I({ children }) {
   return (
     <svg
@@ -119,6 +201,7 @@ function BooksIcon() {
     </I>
   );
 }
+
 function SourcebookIcon() {
   return (
     <I>
@@ -129,6 +212,7 @@ function SourcebookIcon() {
     </I>
   );
 }
+
 function PeriodicalIcon() {
   return (
     <I>
@@ -138,6 +222,7 @@ function PeriodicalIcon() {
     </I>
   );
 }
+
 function ThesisIcon() {
   return (
     <I>
@@ -148,6 +233,7 @@ function ThesisIcon() {
     </I>
   );
 }
+
 function LawIcon() {
   return (
     <I>
@@ -158,6 +244,7 @@ function LawIcon() {
     </I>
   );
 }
+
 function GuideIcon() {
   return (
     <I>
@@ -167,6 +254,7 @@ function GuideIcon() {
     </I>
   );
 }
+
 function ReportIcon() {
   return (
     <I>
@@ -177,6 +265,7 @@ function ReportIcon() {
     </I>
   );
 }
+
 function ReferenceIcon() {
   return (
     <I>

@@ -1,9 +1,12 @@
-import { useState, useEffect, useCallback } from 'react'
-import { LinkIcon, PlusIcon, TrashIcon, ArrowTopRightOnSquareIcon, NewspaperIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import {
+  LinkIcon, PlusIcon, TrashIcon,
+  ArrowTopRightOnSquareIcon, NewspaperIcon,
+  ArrowPathIcon, PhotoIcon, XMarkIcon,
+} from '@heroicons/react/24/outline'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
-// Font only — all colors are original
 const FONT_DISPLAY = '"Sora", -apple-system, BlinkMacSystemFont, sans-serif'
 const INTER        = '"DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
 
@@ -24,8 +27,8 @@ const truncateUrl = (url, max = 42) =>
   url.length > max ? url.slice(0, max) + '…' : url
 
 const authHeaders = () => ({
-  'Content-Type': 'application/json',
   Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
+  // NOTE: Do NOT set Content-Type here — the browser sets it automatically for FormData (multipart)
 })
 
 const StatusBadge = ({ ok, message }) => (
@@ -44,18 +47,121 @@ const StatusBadge = ({ ok, message }) => (
 const FieldError = ({ msg }) =>
   msg ? <p style={{ margin: '0.25rem 0 0', fontSize: '0.72rem', color: '#ef4444', fontFamily: INTER }}>{msg}</p> : null
 
+// ── Thumbnail upload / preview widget ───────────────────────────────────────
+const ThumbnailUpload = ({ file, preview, onFile, onClear, dark, inputBg, inputBorder, textMuted, accent, error }) => {
+  const inputRef = useRef(null)
+
+  const dropZoneStyle = {
+    width: '100%',
+    borderRadius: '0.5rem',
+    border: `1.5px dashed ${error ? '#ef4444' : preview ? accent : inputBorder}`,
+    background: preview ? 'transparent' : inputBg,
+    cursor: 'pointer',
+    transition: 'border-color 0.18s ease, background 0.18s ease',
+    overflow: 'hidden',
+    position: 'relative',
+    boxSizing: 'border-box',
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    const dropped = e.dataTransfer.files[0]
+    if (dropped && dropped.type.startsWith('image/')) {
+      onFile(dropped)
+    }
+  }
+
+  const handleDragOver = (e) => { e.preventDefault() }
+
+  if (preview) {
+    return (
+      <div style={{ position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', border: `1.5px solid ${accent}` }}>
+        <img
+          src={preview}
+          alt="Thumbnail preview"
+          style={{ width: '100%', height: '9rem', objectFit: 'cover', display: 'block' }}
+        />
+        {/* Overlay: filename + clear */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          background: 'linear-gradient(transparent, rgba(0,0,0,0.65))',
+          padding: '0.4rem 0.6rem 0.45rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <span style={{ fontSize: '0.68rem', color: '#fff', fontFamily: INTER, opacity: 0.9, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {file?.name || 'thumbnail'}
+          </span>
+          <button
+            type="button"
+            onClick={onClear}
+            style={{
+              background: 'rgba(255,255,255,0.18)', border: 'none', borderRadius: '50%',
+              width: '1.35rem', height: '1.35rem', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', flexShrink: 0,
+            }}
+            title="Remove thumbnail"
+          >
+            <XMarkIcon style={{ width: '0.7rem', height: '0.7rem' }} />
+          </button>
+        </div>
+        {/* Click to replace */}
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          style={{
+            position: 'absolute', top: '0.4rem', right: '0.4rem',
+            background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '0.3rem',
+            padding: '0.2rem 0.5rem', cursor: 'pointer', color: '#fff',
+            fontSize: '0.65rem', fontFamily: INTER, fontWeight: 600,
+          }}
+        >
+          Replace
+        </button>
+        <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) onFile(e.target.files[0]); e.target.value = '' }} />
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div
+        style={dropZoneStyle}
+        onClick={() => inputRef.current?.click()}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.background = dark ? 'rgba(21,74,154,0.06)' : 'rgba(21,74,154,0.04)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = error ? '#ef4444' : inputBorder; e.currentTarget.style.background = inputBg }}
+      >
+        <div style={{ padding: '1.1rem 0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
+          <PhotoIcon style={{ width: '1.5rem', height: '1.5rem', color: textMuted, opacity: 0.6 }} />
+          <span style={{ fontSize: '0.73rem', color: textMuted, fontFamily: INTER, textAlign: 'center', lineHeight: 1.4 }}>
+            <span style={{ color: accent, fontWeight: 600 }}>Click to upload</span> or drag &amp; drop
+          </span>
+          <span style={{ fontSize: '0.65rem', color: textMuted, opacity: 0.7, fontFamily: INTER }}>
+            PNG, JPG, GIF, WebP · max 5 MB
+          </span>
+        </div>
+      </div>
+      <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) onFile(e.target.files[0]); e.target.value = '' }} />
+    </>
+  )
+}
+
+// ── Main component ───────────────────────────────────────────────────────────
 const NewsManager = ({ dark }) => {
   const [newsList,      setNewsList]      = useState([])
   const [loading,       setLoading]       = useState(true)
   const [fetchError,    setFetchError]    = useState('')
   const [form,          setForm]          = useState({ title: '', url: '', category: 'General' })
+  const [thumbFile,     setThumbFile]     = useState(null)   // File object
+  const [thumbPreview,  setThumbPreview]  = useState(null)   // data-URL for preview
   const [errors,        setErrors]        = useState({})
   const [submitting,    setSubmitting]    = useState(false)
   const [status,        setStatus]        = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [deleting,      setDeleting]      = useState(null)
 
-  // ── Original colors ───────────────────────────────────────────────────────
   const bg          = dark ? '#0d1b2e' : '#ffffff'
   const bg2         = dark ? '#07111f' : '#f8fafc'
   const border      = dark ? '#1c2f4a' : '#e8eef6'
@@ -79,6 +185,17 @@ const NewsManager = ({ dark }) => {
 
   useEffect(() => { fetchNews() }, [fetchNews])
 
+  // Generate local preview URL whenever a new file is chosen
+  const handleThumbFile = (file) => {
+    setThumbFile(file)
+    const reader = new FileReader()
+    reader.onload = (e) => setThumbPreview(e.target.result)
+    reader.readAsDataURL(file)
+    setErrors(er => ({ ...er, thumbnail: '' }))
+  }
+
+  const clearThumb = () => { setThumbFile(null); setThumbPreview(null) }
+
   const validate = () => {
     const e = {}
     if (!form.title.trim()) e.title = 'Title is required'
@@ -91,12 +208,25 @@ const NewsManager = ({ dark }) => {
     const e = validate()
     if (Object.keys(e).length) { setErrors(e); return }
     setSubmitting(true); setStatus(null)
+
     try {
-      const res = await fetch(`${API_BASE}/news`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(form) })
+      // Use FormData so we can include the image file
+      const fd = new FormData()
+      fd.append('title',    form.title.trim())
+      fd.append('url',      form.url.trim())
+      fd.append('category', form.category)
+      if (thumbFile) fd.append('thumbnail', thumbFile)
+
+      const res = await fetch(`${API_BASE}/news`, {
+        method: 'POST',
+        headers: authHeaders(), // no Content-Type — browser sets multipart boundary
+        body: fd,
+      })
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.message || `Error ${res.status}`) }
       const created = await res.json()
       setNewsList(prev => [created, ...prev])
       setForm({ title: '', url: '', category: 'General' })
+      clearThumb()
       setErrors({})
       setStatus({ ok: true, message: 'Article published successfully.' })
       setTimeout(() => setStatus(null), 3500)
@@ -108,7 +238,7 @@ const NewsManager = ({ dark }) => {
   const handleDelete = async (id) => {
     setDeleting(id)
     try {
-      const res = await fetch(`${API_BASE}/news/${id}`, { method: 'DELETE', headers: authHeaders() })
+      const res = await fetch(`${API_BASE}/news/${id}`, { method: 'DELETE', headers: { ...authHeaders(), 'Content-Type': 'application/json' } })
       if (!res.ok) throw new Error()
       setNewsList(prev => prev.filter(n => n.id !== id))
       setDeleteConfirm(null)
@@ -161,22 +291,26 @@ const NewsManager = ({ dark }) => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '1.5rem', alignItems: 'start' }}>
 
-      {/* Add Form */}
+      {/* ── Add Form ───────────────────────────────────────────────────────── */}
       <div style={card}>
         {sectionHeader(<LinkIcon style={{ width: '0.9rem', height: '0.9rem', color: accent }} />, 'Add News Link')}
         {status && <StatusBadge ok={status.ok} message={status.message} />}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+
+          {/* Title */}
           <div>
             <label style={labelStyle}>Article Title</label>
-            <input style={inputStyle(!!errors.title)} placeholder="e.g. DepEd Releases New Guidelines..."
+            <input style={inputStyle(!!errors.title)} placeholder="e.g. DepEd Releases New Guidelines…"
               value={form.title}
               onChange={e => { setForm(f => ({ ...f, title: e.target.value })); setErrors(er => ({ ...er, title: '' })) }}
               onFocus={e => e.target.style.borderColor = accent}
-              onBlur={e => e.target.style.borderColor = errors.title ? '#ef4444' : inputBorder} />
+              onBlur={e => e.target.style.borderColor = errors.title ? '#ef4444' : inputBorder}
+            />
             <FieldError msg={errors.title} />
           </div>
 
+          {/* URL */}
           <div>
             <label style={labelStyle}>Article URL</label>
             <div style={{ position: 'relative' }}>
@@ -185,11 +319,13 @@ const NewsManager = ({ dark }) => {
                 value={form.url}
                 onChange={e => { setForm(f => ({ ...f, url: e.target.value })); setErrors(er => ({ ...er, url: '' })) }}
                 onFocus={e => e.target.style.borderColor = accent}
-                onBlur={e => e.target.style.borderColor = errors.url ? '#ef4444' : inputBorder} />
+                onBlur={e => e.target.style.borderColor = errors.url ? '#ef4444' : inputBorder}
+              />
             </div>
             <FieldError msg={errors.url} />
           </div>
 
+          {/* Category */}
           <div>
             <label style={labelStyle}>Category</label>
             <select style={{ ...inputStyle(false), cursor: 'pointer' }} value={form.category}
@@ -200,6 +336,29 @@ const NewsManager = ({ dark }) => {
             </select>
           </div>
 
+          {/* Thumbnail upload */}
+          <div>
+            <label style={labelStyle}>
+              Thumbnail
+              <span style={{ marginLeft: '0.3rem', fontWeight: 400, opacity: 0.6, textTransform: 'none', letterSpacing: 0 }}>— optional</span>
+            </label>
+            <ThumbnailUpload
+              file={thumbFile}
+              preview={thumbPreview}
+              onFile={handleThumbFile}
+              onClear={clearThumb}
+              dark={dark}
+              border={border}
+              inputBg={inputBg}
+              inputBorder={inputBorder}
+              textMuted={textMuted}
+              accent={accent}
+              error={errors.thumbnail}
+            />
+            <FieldError msg={errors.thumbnail} />
+          </div>
+
+          {/* Submit */}
           <button onClick={handleSubmit} disabled={submitting} style={{
             width: '100%', padding: '0.65rem',
             background: submitting ? (dark ? '#1c3461' : '#94a3b8') : accent,
@@ -216,7 +375,7 @@ const NewsManager = ({ dark }) => {
         </div>
       </div>
 
-      {/* News List */}
+      {/* ── News List ──────────────────────────────────────────────────────── */}
       <div style={card}>
         {sectionHeader(<NewspaperIcon style={{ width: '0.9rem', height: '0.9rem', color: accent }} />, 'Published Articles', newsList.length)}
 
@@ -255,53 +414,73 @@ const NewsManager = ({ dark }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', maxHeight: '60vh', overflowY: 'auto', paddingRight: '0.25rem' }}>
             {newsList.map(item => {
               const cat = CATEGORY_STYLES[item.category] || CATEGORY_STYLES.General
-              const isConfirming = deleteConfirm === item.id
+              const isConfirming  = deleteConfirm === item.id
               const isDeletingThis = deleting === item.id
               return (
                 <div key={item.id} style={{
                   background: isConfirming ? (dark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.04)') : bg2,
                   border: `1px solid ${isConfirming ? 'rgba(239,68,68,0.22)' : border}`,
-                  borderRadius: '0.625rem', padding: '0.8rem 0.975rem',
+                  borderRadius: '0.625rem',
+                  overflow: 'hidden',
                   transition: 'all 0.18s ease',
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-                        <span style={{ background: cat.bg, color: cat.text, borderRadius: '9999px', padding: '0.05rem 0.55rem', fontSize: '0.6375rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0, fontFamily: INTER }}>
-                          {item.category}
-                        </span>
-                        <span style={{ fontSize: '0.68rem', color: textMuted, fontFamily: INTER }}>
-                          {formatDate(item.created_at || item.addedAt)}
-                        </span>
-                      </div>
-                      <p style={{ margin: '0 0 0.25rem', fontSize: '0.8375rem', fontWeight: 600, color: textPrimary, lineHeight: 1.4, fontFamily: INTER }}>
-                        {item.title}
-                      </p>
-                      <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.7rem', color: accent, textDecoration: 'none', opacity: 0.85, fontFamily: INTER }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                        onMouseLeave={e => e.currentTarget.style.opacity = '0.85'}>
-                        {truncateUrl(item.url)}
-                        <ArrowTopRightOnSquareIcon style={{ width: '0.65rem', height: '0.65rem' }} />
-                      </a>
+                  {/* Thumbnail strip — shown if present */}
+                  {item.thumbnail && (
+                    <div style={{ height: '6.5rem', overflow: 'hidden', position: 'relative' }}>
+                      <img
+                        src={item.thumbnail}
+                        alt=""
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        onError={e => { e.currentTarget.parentElement.style.display = 'none' }}
+                      />
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.18))',
+                      }} />
                     </div>
+                  )}
 
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.3rem', flexShrink: 0 }}>
-                      {!isConfirming ? (
-                        <button onClick={() => setDeleteConfirm(item.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: textMuted, padding: '0.25rem', borderRadius: '0.35rem', transition: 'color 0.15s ease, background 0.15s ease' }}
-                          onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = 'rgba(239,68,68,0.08)' }}
-                          onMouseLeave={e => { e.currentTarget.style.color = textMuted; e.currentTarget.style.background = 'transparent' }}>
-                          <TrashIcon style={{ width: '0.9rem', height: '0.9rem' }} />
-                        </button>
-                      ) : (
-                        <div style={{ display: 'flex', gap: '0.3rem' }}>
-                          <button onClick={() => handleDelete(item.id)} disabled={isDeletingThis} style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.35rem', border: 'none', cursor: isDeletingThis ? 'not-allowed' : 'pointer', background: '#ef4444', color: '#ffffff', fontFamily: INTER, opacity: isDeletingThis ? 0.7 : 1 }}>
-                            {isDeletingThis ? 'Removing…' : 'Remove'}
-                          </button>
-                          <button onClick={() => setDeleteConfirm(null)} style={{ fontSize: '0.72rem', fontWeight: 600, padding: '0.25rem 0.625rem', borderRadius: '0.35rem', border: `1px solid ${border}`, cursor: 'pointer', background: 'transparent', color: textMuted, fontFamily: INTER }}>
-                            Cancel
-                          </button>
+                  <div style={{ padding: '0.8rem 0.975rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
+                          <span style={{ background: cat.bg, color: cat.text, borderRadius: '9999px', padding: '0.05rem 0.55rem', fontSize: '0.6375rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0, fontFamily: INTER }}>
+                            {item.category}
+                          </span>
+                          <span style={{ fontSize: '0.68rem', color: textMuted, fontFamily: INTER }}>
+                            {formatDate(item.created_at || item.addedAt)}
+                          </span>
                         </div>
-                      )}
+                        <p style={{ margin: '0 0 0.25rem', fontSize: '0.8375rem', fontWeight: 600, color: textPrimary, lineHeight: 1.4, fontFamily: INTER }}>
+                          {item.title}
+                        </p>
+                        <a href={item.url} target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.7rem', color: accent, textDecoration: 'none', opacity: 0.85, fontFamily: INTER }}
+                          onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                          onMouseLeave={e => e.currentTarget.style.opacity = '0.85'}>
+                          {truncateUrl(item.url)}
+                          <ArrowTopRightOnSquareIcon style={{ width: '0.65rem', height: '0.65rem' }} />
+                        </a>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.3rem', flexShrink: 0 }}>
+                        {!isConfirming ? (
+                          <button onClick={() => setDeleteConfirm(item.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: textMuted, padding: '0.25rem', borderRadius: '0.35rem', transition: 'color 0.15s ease, background 0.15s ease' }}
+                            onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = 'rgba(239,68,68,0.08)' }}
+                            onMouseLeave={e => { e.currentTarget.style.color = textMuted; e.currentTarget.style.background = 'transparent' }}>
+                            <TrashIcon style={{ width: '0.9rem', height: '0.9rem' }} />
+                          </button>
+                        ) : (
+                          <div style={{ display: 'flex', gap: '0.3rem' }}>
+                            <button onClick={() => handleDelete(item.id)} disabled={isDeletingThis} style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.35rem', border: 'none', cursor: isDeletingThis ? 'not-allowed' : 'pointer', background: '#ef4444', color: '#ffffff', fontFamily: INTER, opacity: isDeletingThis ? 0.7 : 1 }}>
+                              {isDeletingThis ? 'Removing…' : 'Remove'}
+                            </button>
+                            <button onClick={() => setDeleteConfirm(null)} style={{ fontSize: '0.72rem', fontWeight: 600, padding: '0.25rem 0.625rem', borderRadius: '0.35rem', border: `1px solid ${border}`, cursor: 'pointer', background: 'transparent', color: textMuted, fontFamily: INTER }}>
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

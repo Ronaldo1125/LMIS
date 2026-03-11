@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/connection');
-const { authMiddleware, roleMiddleware } = require('../middleware/auth');
+const { authMiddleware, optionalAuthMiddleware, roleMiddleware } = require('../middleware/auth');
 
 // Helper: check if the requesting user can see staff_only records
 const canViewStaffOnly = (user) => {
@@ -9,7 +9,7 @@ const canViewStaffOnly = (user) => {
 };
 
 // GET /api/acquisitions/stats
-router.get('/stats', authMiddleware, async (req, res) => {
+router.get('/stats', optionalAuthMiddleware, async (req, res) => {
   try {
     const accessFilter = canViewStaffOnly(req.user) ? '' : "AND a.access_level = 'public'";
 
@@ -37,7 +37,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
 });
 
 // GET /api/acquisitions?page=1&limit=15&search=keyword
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', optionalAuthMiddleware, async (req, res) => {
   try {
     const { page = 1, limit = 15, search = '' } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
@@ -84,7 +84,7 @@ router.get('/', authMiddleware, async (req, res) => {
           FROM uploads u
           WHERE u.book_id = a.book_id AND u.status = 'active'
         ) AS upload_count,
-        -- ▼ NEW: primary PDF upload id for thumbnail rendering
+        -- primary PDF upload id for thumbnail rendering
         (
           SELECT u.id
           FROM uploads u

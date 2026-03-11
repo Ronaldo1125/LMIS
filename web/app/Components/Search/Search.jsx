@@ -86,10 +86,10 @@ function FilterDropdown({ label, options, value, onChange }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`h-10 rounded-full border px-4 flex items-center gap-2 text-[13px] transition
+        className={`h-10  border px-4 flex items-center gap-2 text-[13px] transition
           ${value
-            ? "border-gray-800 bg-gray-900 text-white"
-            : "border-gray-200 bg-gray-50 text-gray-800 hover:bg-gray-100"
+            ? "border-black bg-black text-white"
+            : "border-black bg-black text-white hover:bg-gray-800"
           }`}
       >
         <span className="font-medium">{value || label}</span>
@@ -228,10 +228,20 @@ const Search = () => {
   const [searchInput,    setSearchInput]    = useState(urlQuery);
   const [activeField,    setActiveField]    = useState("All fields");
   const [isGridView,     setIsGridView]     = useState(true);
+  const [showAdvanced,   setShowAdvanced]   = useState(false);
   const [filterCategory, setFilterCategory] = useState(urlCategory);
   const [filterAuthor,   setFilterAuthor]   = useState(urlAuthor);
   const [filterFormat,   setFilterFormat]   = useState(urlFormat);
   const [filterLanguage, setFilterLanguage] = useState(urlLanguage);
+
+  // Advanced search fields
+  const [advTitle,       setAdvTitle]       = useState("");
+  const [advAuthor,      setAdvAuthor]      = useState("");
+  const [advSubject,     setAdvSubject]     = useState("");
+  const [advPublisher,   setAdvPublisher]   = useState("");
+  const [advYearFrom,    setAdvYearFrom]    = useState("");
+  const [advYearTo,      setAdvYearTo]      = useState("");
+  const [advISBN,        setAdvISBN]        = useState("");
 
   // ── API result state ──────────────────────────────────────────────────────
   const [books,      setBooks]      = useState([]);
@@ -313,6 +323,30 @@ const Search = () => {
   // ── event handlers ────────────────────────────────────────────────────────
   const onSubmitSearch = () => pushParams({ query: searchInput.trim(), page: "1" });
 
+  const onAdvancedSearch = () => {
+    const query = [
+      advTitle && `title:"${advTitle}"`,
+      advAuthor && `author:"${advAuthor}"`,
+      advSubject && `subject:"${advSubject}"`,
+      advPublisher && `publisher:"${advPublisher}"`,
+      advYearFrom && `year_from:${advYearFrom}`,
+      advYearTo && `year_to:${advYearTo}`,
+      advISBN && `isbn:${advISBN}`
+    ].filter(Boolean).join(" ");
+    
+    pushParams({ query: query.trim(), page: "1" });
+  };
+
+  const onClearAdvanced = () => {
+    setAdvTitle("");
+    setAdvAuthor("");
+    setAdvSubject("");
+    setAdvPublisher("");
+    setAdvYearFrom("");
+    setAdvYearTo("");
+    setAdvISBN("");
+  };
+
   const onFilterChange = (key, value) => {
     if (key === "category") setFilterCategory(value);
     if (key === "author")   setFilterAuthor(value);
@@ -357,14 +391,14 @@ const Search = () => {
     <div className="min-h-screen bg-white">
       <Nav />
 
-      <main className="mx-auto w-full max-w-[1440px] px-6 2xl:px-10 pt-10 pb-24">
-
-        {/* ── Title ── */}
-        <h1 className="text-[40px] font-medium text-black">{pageTitle}</h1>
-
-        {/* ── Search bar ── */}
-        <div className="mt-6">
-          <div className="w-full rounded-2xl border border-gray-200 bg-white shadow-sm px-4 py-2 flex items-center gap-3">
+      {/* BLUE HERO SECTION */}
+      <section className="w-full bg-blue-900 pt-16 pb-20">
+        <div className="max-w-[1440px] mx-auto px-6 2xl:px-10">
+          {/* ── Title ── */}
+          <h1 className="text-[40px] font-medium text-white mb-8">{pageTitle}</h1>
+          
+          {/* ── Search bar ── */}
+          <div className="w-full border-sm bg-white shadow-sm px-4 py-4 flex items-center gap-3">
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
@@ -397,43 +431,128 @@ const Search = () => {
             </button>
           </div>
 
+          {/* ── Advanced Search ── */}
+          <div className="mt-3 text-left">
+            <button 
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="text-white text-[13px] hover:text-gray-200 transition underline"
+            >
+              {showAdvanced ? "Hide Advanced Search" : "Advanced Search"}
+            </button>
+          </div>
+
+          {/* ── Advanced Search Form ── */}
+          {showAdvanced && (
+            <div className="mt-6 bg-white p-6 shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Advanced Search</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                  <input
+                    type="text"
+                    value={advTitle}
+                    onChange={(e) => setAdvTitle(e.target.value)}
+                    className="w-full px-0 py-2 border-0 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-0 transition-colors"
+                    placeholder="Enter book title"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Author</label>
+                  <input
+                    type="text"
+                    value={advAuthor}
+                    onChange={(e) => setAdvAuthor(e.target.value)}
+                    className="w-full px-0 py-2 border-0 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-0 transition-colors"
+                    placeholder="Enter author name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Subject/Keywords</label>
+                  <input
+                    type="text"
+                    value={advSubject}
+                    onChange={(e) => setAdvSubject(e.target.value)}
+                    className="w-full px-0 py-2 border-0 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-0 transition-colors"
+                    placeholder="Enter subject or keywords"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Publisher</label>
+                  <input
+                    type="text"
+                    value={advPublisher}
+                    onChange={(e) => setAdvPublisher(e.target.value)}
+                    className="w-full px-0 py-2 border-0 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-0 transition-colors"
+                    placeholder="Enter publisher name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Publication Year From</label>
+                  <input
+                    type="number"
+                    value={advYearFrom}
+                    onChange={(e) => setAdvYearFrom(e.target.value)}
+                    className="w-full px-0 py-2 border-0 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-0 transition-colors"
+                    placeholder="e.g., 2020"
+                    min="1900"
+                    max={new Date().getFullYear()}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Publication Year To</label>
+                  <input
+                    type="number"
+                    value={advYearTo}
+                    onChange={(e) => setAdvYearTo(e.target.value)}
+                    className="w-full px-0 py-2 border-0 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-0 transition-colors"
+                    placeholder="e.g., 2024"
+                    min="1900"
+                    max={new Date().getFullYear()}
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">ISBN</label>
+                  <input
+                    type="text"
+                    value={advISBN}
+                    onChange={(e) => setAdvISBN(e.target.value)}
+                    className="w-full px-0 py-2 border-0 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-0 transition-colors"
+                    placeholder="Enter ISBN (with or without hyphens)"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-8 flex gap-3">
+                <button
+                  onClick={onAdvancedSearch}
+                  className="px-6 py-2 bg-blue-900 text-white  hover:bg-blue-700 transition font-medium"
+                >
+                  Search
+                </button>
+                <button
+                  onClick={onClearAdvanced}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 transition font-medium"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ── Filter dropdowns ── */}
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <FilterDropdown
-              label="Category"
-              options={CATEGORIES}
-              value={filterCategory}
-              onChange={(v) => onFilterChange("category", v)}
-            />
-            <FilterDropdown
-              label="Author"
-              options={[]}
-              value={filterAuthor}
-              onChange={(v) => onFilterChange("author", v)}
-            />
-            <FilterDropdown
-              label="Format"
-              options={FORMATS}
-              value={filterFormat}
-              onChange={(v) => onFilterChange("format", v)}
-            />
-            <FilterDropdown
-              label="Language"
-              options={LANGUAGES}
-              value={filterLanguage}
-              onChange={(v) => onFilterChange("language", v)}
-            />
-
-            {hasActiveFilters && (
-              <button
-                onClick={onClearFilters}
-                className="h-10 rounded-full border border-red-200 bg-red-50 px-4 text-[13px] text-red-600 hover:bg-red-100 transition font-medium"
-              >
-                Clear filters
-              </button>
-            )}
           </div>
         </div>
+      </section>
+
+      <main className="mx-auto w-full max-w-[1440px] px-6 2xl:px-10 pt-10 pb-24">
 
         {/* ── Results header ── */}
         <div className="mt-12 flex justify-between items-center mb-6">
@@ -464,8 +583,11 @@ const Search = () => {
         {isGridView && (
           <div
             style={{
+              maxWidth: 1440,
+              margin: "0 auto",
+              padding: "0 48px 56px",
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))",
+              gridTemplateColumns: "repeat(5, 1fr)",
               gap: 18,
             }}
           >
@@ -475,7 +597,7 @@ const Search = () => {
               books.map((book) => (
                 <div
                   key={book.id}
-                  style={{ cursor: "pointer", border: "1px solid #e6ecf7", borderRadius: 8, overflow: "hidden", transition: "box-shadow 0.15s" }}
+                  style={{ cursor: "pointer", border: "1px solid #e6ecf7", borderRadius: 0, overflow: "hidden", transition: "box-shadow 0.15s" }}
                   onMouseOver={(e) => (e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)")}
                   onMouseOut={(e)  => (e.currentTarget.style.boxShadow = "none")}
                   onClick={() => onBookClick(book.id)}

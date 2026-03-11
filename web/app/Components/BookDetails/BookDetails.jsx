@@ -223,7 +223,7 @@ const BookDetails = ({ bookId }) => {
     <>
       <Nav />
       <div className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-6 py-8 font-sans">
+        <div className="max-w-[1320px] mx-auto px-6 py-8 font-sans">
 
           <div className="mb-8">
             <button
@@ -282,7 +282,7 @@ const BookDetails = ({ bookId }) => {
                     <button
                       onClick={() => setShowModal(true)}
                       disabled={!uploadId}
-                      className="flex-1 px-12 py-3 text-sm font-semibold rounded bg-orange-600 text-white hover:bg-orange-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex-1 px-12 py-3 text-sm font-semibold rounded bg-blue-900 text-white hover:bg-blue-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       Read
                     </button>

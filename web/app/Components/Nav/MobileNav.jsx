@@ -47,12 +47,12 @@ const MobileNav = () => {
 
       {/* Mobile Menu Content */}
       <div
-        className={`lg:hidden fixed top-0 left-0 right-0 z-50 bg-white transform transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed top-0 left-0 right-0 z-50 bg-white transform transition-transform duration-300 ease-in-out overflow-y-auto ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ top: "60px" }}
+        style={{ top: "64px", height: "calc(100vh - 64px)" }}
       >
-        <div className="px-6 py-6 space-y-6">
+        <div className="px-6 py-6 space-y-6 min-h-full">
           {/* Navigation Links */}
           <nav className="space-y-4">
             <Link

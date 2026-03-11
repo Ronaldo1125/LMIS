@@ -1,10 +1,9 @@
-import { Inter_Tight } from "next/font/google";
+import { Inter } from 'next/font/google';
 import "./globals.css";
 
-const interTight = Inter_Tight({
-  variable: "--font-inter-tight",
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+const interDisplay = Inter({
+  subsets: ['latin'],
+  display: 'swap',
 });
 
 export const metadata = {
@@ -15,10 +14,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${interTight.variable} antialiased`}
-        style={{ fontFamily: '"Inter Tight", system-ui, sans-serif' }}
-      >
+      <body className={interDisplay.className + " antialiased"}>
         {children}
       </body>
     </html>

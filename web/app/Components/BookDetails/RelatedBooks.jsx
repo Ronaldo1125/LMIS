@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { LayoutGrid, List } from "lucide-react";
+import { ChevronRight, BookOpen, LayoutGrid, List } from "lucide-react";
+import PDFThumbnail from "../Search/PDFThumbnail";
 
 const BOOK_COLORS = [
   "#1a3a6e",
@@ -33,6 +34,7 @@ const sampleBooks = [
     pages: 456,
     language: "English",
     category: "Community Development",
+    upload_id: "book_1",
     description: "This comprehensive textbook explores the theory and practice of community development in an increasingly complex and uncertain world. It provides students with the critical thinking skills and practical tools needed to work effectively with diverse communities.",
     rating: 4.2,
     reviews: 128,
@@ -54,6 +56,7 @@ const sampleBooks = [
     pages: 624,
     language: "English",
     category: "Social Policy & Practice",
+    upload_id: "book_2",
     description: "A comprehensive introduction to social policy that explores the key concepts, theories, and debates in the field. This edition covers contemporary policy issues and their impact on society.",
     rating: 4.5,
     reviews: 89,
@@ -75,6 +78,7 @@ const sampleBooks = [
     pages: 304,
     language: "English",
     category: "Research Methods",
+    upload_id: "book_3",
     description: "This book provides a clear and practical guide to research design, covering qualitative, quantitative, and mixed methods approaches. It includes numerous examples and practical applications.",
     rating: 4.7,
     reviews: 234,
@@ -96,6 +100,7 @@ const sampleBooks = [
     pages: 432,
     language: "English",
     category: "Urban Planning",
+    upload_id: "book_4",
     description: "An exploration of collaborative planning approaches in urban development, examining how different stakeholders can work together to shape better places and communities.",
     rating: 4.1,
     reviews: 67,
@@ -117,6 +122,7 @@ const sampleBooks = [
     pages: 320,
     language: "English",
     category: "Development Studies",
+    upload_id: "book_5",
     description: "This book provides a comprehensive introduction to development geography, exploring the complex relationships between development processes and spatial change.",
     rating: 4.3,
     reviews: 156,
@@ -282,8 +288,9 @@ const RelatedBooks = ({ currentBook }) => {
             margin: "0 auto",
             padding: "0 48px 56px",
             display: "grid",
-            gridTemplateColumns: "repeat(6, 1fr)",
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
             gap: 18,
+            justifyContent: "start",
           }}
         >
           {visible.map((book) => (
@@ -293,25 +300,14 @@ const RelatedBooks = ({ currentBook }) => {
               style={{
                 cursor: "pointer",
                 border: "1px solid #e6ecf7",
-                borderRadius:5,
+                borderRadius: 0,
                 overflow: "hidden",
               
               }}
              
             >
               {/* Cover */}
-              <div style={{ aspectRatio: "3/4", background: "#f6f8ff" }}>
-                <img
-                  src={book.coverImage}
-                  alt={book.title}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                />
-              </div>
+              <PDFThumbnail uploadId={book.upload_id} title={book.title} />
 
               {/* Minimal Info (ONLY Title, Author, Year) */}
               <div style={{ padding: "12px 12px 14px" }}>
