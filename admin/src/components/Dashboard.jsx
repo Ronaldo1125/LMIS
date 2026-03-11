@@ -1,5 +1,6 @@
 import { UsersIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import DashboardHeader from './DashboardComponents/Dashboardheader'
 import StatCard from './DashboardComponents/Statcard'
 import DateTimeCard from './DashboardComponents/Datetimecard'
@@ -150,14 +151,12 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
         .dash-section:nth-child(7) { animation-delay: 0.33s }
       `}</style>
 
-      {/* Login Notification */}
-      <div className="dash-section">
-        <LoginNotification />
-      </div>
+      {/* Login Notification - portaled to body to avoid stacking context issues */}
+      {createPortal(<LoginNotification />, document.body)}
 
       {/* Header */}
-      <div className="dash-section" style={{
-        position: 'sticky', top: 0, zIndex: 30,
+      <div style={{
+        position: 'sticky', top: 0,
         background: headerBg,
         borderBottom: isSticky ? `1px solid ${headerBorder}` : 'none',
         boxShadow: isSticky
