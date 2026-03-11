@@ -353,14 +353,6 @@ const MostDownloadedStats = ({ dark }) => {
         position: 'relative', overflow: 'hidden',
         transition: 'background 0.45s ease, border-color 0.45s ease',
       }}>
-        {/* Decorative corner */}
-        <div style={{
-          position: 'absolute', top: 0, right: 0,
-          width: '5rem', height: '5rem',
-          background: brand.secondary2Light, opacity: dark ? 0.04 : 0.1,
-          borderBottomLeftRadius: '100%', pointerEvents: 'none',
-        }} />
-
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -381,22 +373,20 @@ const MostDownloadedStats = ({ dark }) => {
             </div>
           </div>
 
-          {/* Total Downloads Badge */}
+          {/* Total Downloads — stat beside title */}
           <div style={{
-            background: C.totalBg, color: '#ffffff',
-            padding: '0.875rem 1.25rem', borderRadius: '0.625rem',
-            boxShadow: dark ? '0 2px 12px rgba(0,0,0,0.4)' : '0 2px 4px rgba(0,0,0,0.1)',
-            border: `2px solid ${C.totalBorder}`,
-            position: 'relative',
-            transition: 'background 0.45s ease, border-color 0.45s ease',
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.5rem 0.875rem', borderRadius: '2rem',
+            background: dark ? 'rgba(15,97,247,0.12)' : 'rgba(15,97,247,0.07)',
+            border: `1px solid ${dark ? 'rgba(15,97,247,0.25)' : 'rgba(15,97,247,0.18)'}`,
           }}>
-            <div style={{ fontSize: '0.625rem', fontWeight: 600, opacity: 0.8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              Total Downloads
-            </div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: '2px', letterSpacing: '-0.5px' }}>
+            <Download style={{ width: '0.8rem', height: '0.8rem', color: brand.darkBlue2, flexShrink: 0 }} />
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: dark ? '#93c5fd' : brand.darkBlue2, letterSpacing: '-0.01em' }}>
               {loading ? '—' : formatNumber(downloadStats.totalDownloads)}
-            </div>
-            <div style={{ position: 'absolute', top: '6px', right: '6px', width: '6px', height: '6px', background: brand.secondary2Medium, borderRadius: '50%' }} />
+            </span>
+            <span style={{ fontSize: '0.6875rem', color: dark ? '#4d7aaa' : '#6b8cae', fontWeight: 500 }}>
+              total downloads
+            </span>
           </div>
         </div>
 
