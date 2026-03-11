@@ -32,11 +32,6 @@ function UsersTable({
     default:   dark ? { bg: 'rgba(148,163,184,0.12)', color: '#94a3b8', border: '#334155' } : { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' },
   }
 
-  const statusColors = {
-    Active:   dark ? { bg: 'rgba(16,185,129,0.15)', color: '#6ee7b7', border: '#10b981' } : { bg: '#d1fae5', color: '#065f46', border: '#6ee7b7' },
-    Inactive: dark ? { bg: 'rgba(148,163,184,0.12)', color: '#94a3b8', border: '#334155' } : { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' },
-  }
-
   const getRoleBadgeStyle = (role) => {
     const c = badgeColors[role] || badgeColors.default
     return {
@@ -44,20 +39,6 @@ function UsersTable({
       borderRadius: '0.5rem', padding: '0.25rem 0.75rem',
       fontWeight: 600, fontSize: '0.8rem', display: 'inline-block',
     }
-  }
-
-  const getStatusBadge = (status) => {
-    const c = statusColors[status] || statusColors.Inactive
-    return (
-      <span style={{
-        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-        padding: '0.25rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.8rem', fontWeight: 600,
-        background: c.bg, color: c.color, border: `1px solid ${c.border}`,
-      }}>
-        {status === 'Active' ? <CheckCircle size={14} /> : <Circle size={14} />}
-        {status || 'Unknown'}
-      </span>
-    )
   }
 
   const renderActions = (user) => {
@@ -100,105 +81,106 @@ function UsersTable({
       )
     }
 
-    // ── Librarian row ────────────────────────────────────────────────────────────
-if (user.role === 'Librarian') {
-  return (
-    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-      {user.isActiveLibrarian ? (
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-          padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.85rem', fontWeight: 700,
-          background: '#f59e0b', color: '#fff',
-          boxShadow: '0 2px 8px rgba(251,191,36,0.15)',
-        }}>
-          <Crown size={16} />
-          Active Librarian
+    // ── Librarian row ─────────────────────────────────────────
+    if (user.role === 'Librarian') {
+      return (
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          {user.isActiveLibrarian ? (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+              padding: '0.5rem 1rem', borderRadius: '0.5rem', fontSize: '0.85rem', fontWeight: 700,
+              background: '#f59e0b', color: '#fff',
+              boxShadow: '0 2px 8px rgba(251,191,36,0.15)',
+            }}>
+              <Crown size={16} />
+              Active Librarian
+            </div>
+          ) : (
+            isAdmin && (
+              <button
+                onClick={() => onSetActiveLibrarian(user.id)}
+                style={{ ...btn, background: '#6366f1', color: '#fff' }}
+                title="Set as active librarian"
+                onMouseEnter={e => e.currentTarget.style.background = '#4338ca'}
+                onMouseLeave={e => e.currentTarget.style.background = '#6366f1'}
+              >
+                <Crown size={16} />
+                Set as Active
+              </button>
+            )
+          )}
+          {isAdmin && (
+            <button
+              onClick={() => onResetPassword(user)}
+              style={resetBtn}
+              onMouseEnter={e => e.currentTarget.style.background = '#1d4ed8'}
+              onMouseLeave={e => e.currentTarget.style.background = '#2563eb'}
+            >
+              <Key size={14} /> Reset Password
+            </button>
+          )}
         </div>
-      ) : (
-        isAdmin && (
-          <button
-            onClick={() => onSetActiveLibrarian(user.id)}
-            style={{ ...btn, background: '#6366f1', color: '#fff' }}
-            title="Set as active librarian"
-            onMouseEnter={e => e.currentTarget.style.background = '#4338ca'}
-            onMouseLeave={e => e.currentTarget.style.background = '#6366f1'}
-          >
-            <Crown size={16} />
-            Set as Active
-          </button>
-        )
-      )}
-      {isAdmin && (
-        <button
-          onClick={() => onResetPassword(user)}
-          style={resetBtn}
-          onMouseEnter={e => e.currentTarget.style.background = '#1d4ed8'}
-          onMouseLeave={e => e.currentTarget.style.background = '#2563eb'}
-        >
-          <Key size={14} /> Reset Password
-        </button>
-      )}
-    </div>
-  )
-}
+      )
+    }
 
-    // ── Patron row ───────────────────────────────────────────
+    // ── Patron row ────────────────────────────────────────────
     if (user.role === 'Patron') {
-  const canAct = isAdmin || isStaff
-  return (
-    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-      {canAct && (
-        <button
-          onClick={() => onMakeStaff(user)}
-          style={makeStaffBtn}
-          title="Promote this patron to Staff"
-          onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(16,185,129,0.28)' : '#a7f3d0'}
-          onMouseLeave={e => e.currentTarget.style.background = makeStaffBtn.background}
-        >
-          <UserCheck size={14} /> Make Staff
-        </button>
-      )}
-      {isAdmin && user.status === 'Active' && (
-        <button
-          onClick={() => onDeactivateAccount(user.id)}
-          style={deactivateBtn}
-          onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.28)' : '#fecaca'}
-          onMouseLeave={e => e.currentTarget.style.background = deactivateBtn.background}
-        >
-          <UserX size={14} /> Deactivate
-        </button>
-      )}
-      {!canAct && <span style={{ fontSize: '0.85rem', color: textMuted }}>No actions available</span>}
-    </div>
-  )
-}
+      const canAct = isAdmin || isStaff
+      return (
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {canAct && (
+            <button
+              onClick={() => onMakeStaff(user)}
+              style={makeStaffBtn}
+              title="Promote this patron to Staff"
+              onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(16,185,129,0.28)' : '#a7f3d0'}
+              onMouseLeave={e => e.currentTarget.style.background = makeStaffBtn.background}
+            >
+              <UserCheck size={14} /> Make Staff
+            </button>
+          )}
+          {isAdmin && user.status === 'Active' && (
+            <button
+              onClick={() => onDeactivateAccount(user.id)}
+              style={deactivateBtn}
+              onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.28)' : '#fecaca'}
+              onMouseLeave={e => e.currentTarget.style.background = deactivateBtn.background}
+            >
+              <UserX size={14} /> Deactivate
+            </button>
+          )}
+          {!canAct && <span style={{ fontSize: '0.85rem', color: textMuted }}>No actions available</span>}
+        </div>
+      )
+    }
 
-    // ── Staff row ────────────────────────────────────────────
+    // ── Staff row ─────────────────────────────────────────────
     if (user.role === 'Staff') {
-  const canAct = isAdmin || isStaff
-  return (
-    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-      {canAct ? (
-        <button
-          onClick={() => onMakePatron(user)}
-          style={{
-            ...btn,
-            background: dark ? 'rgba(251,191,36,0.15)' : '#fef9c3',
-            color: dark ? '#fde68a' : '#b45309',
-            border: `1px solid ${dark ? '#b45309' : '#fde68a'}`,
-          }}
-          title="Demote this staff to Patron"
-          onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(251,191,36,0.28)' : '#fde68a'}
-          onMouseLeave={e => e.currentTarget.style.background = dark ? 'rgba(251,191,36,0.15)' : '#fef9c3'}
-        >
-          <UserX size={14} /> Make Patron
-        </button>
-      ) : (
-        <span style={{ fontSize: '0.85rem', color: textMuted }}>No actions available</span>
-      )}
-    </div>
-  )
-}
+      const canAct = isAdmin || isStaff
+      return (
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {canAct ? (
+            <button
+              onClick={() => onMakePatron(user)}
+              style={{
+                ...btn,
+                background: dark ? 'rgba(251,191,36,0.15)' : '#fef9c3',
+                color: dark ? '#fde68a' : '#b45309',
+                border: `1px solid ${dark ? '#b45309' : '#fde68a'}`,
+              }}
+              title="Demote this staff to Patron"
+              onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(251,191,36,0.28)' : '#fde68a'}
+              onMouseLeave={e => e.currentTarget.style.background = dark ? 'rgba(251,191,36,0.15)' : '#fef9c3'}
+            >
+              <UserX size={14} /> Make Patron
+            </button>
+          ) : (
+            <span style={{ fontSize: '0.85rem', color: textMuted }}>No actions available</span>
+          )}
+        </div>
+      )
+    }
+
     return null
   }
 
@@ -228,7 +210,7 @@ if (user.role === 'Librarian') {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: theadBg, borderBottom: `1px solid ${divider}` }}>
-              {['Name', 'Email / Username', 'Role', 'Status', 'Date Added', 'Actions'].map(col => (
+              {['Name', 'Email / Username', 'Role', 'Date Added', 'Actions'].map(col => (
                 <th key={col} style={{
                   padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 700,
                   color: dark ? '#f8fafc' : textMuted, textTransform: 'uppercase', letterSpacing: '0.05em',
@@ -241,11 +223,9 @@ if (user.role === 'Librarian') {
               const isActiveLib = user.role === 'Librarian' && user.isActiveLibrarian
               const baseBg = isActiveLib ? (dark ? 'rgba(251,191,36,0.08)' : 'rgba(245,158,11,0.04)') : 'transparent'
 
-              // ── Safe display values ──────────────────────────
               const displayName   = user.name || user.full_name || user.username || 'Unknown'
               const displayEmail  = user.email || user.username || '—'
               const displayRole   = user.role  || 'Unknown'
-              const displayStatus = user.status || 'Inactive'
               const displayDate   = user.dateAdded || user.created_at
 
               return (
@@ -296,9 +276,6 @@ if (user.role === 'Librarian') {
                   <td style={{ padding: '1rem 1.5rem' }}>
                     <span style={getRoleBadgeStyle(displayRole)}>{displayRole}</span>
                   </td>
-
-                  {/* Status badge */}
-                  <td style={{ padding: '1rem 1.5rem' }}>{getStatusBadge(displayStatus)}</td>
 
                   {/* Date Added */}
                   <td style={{ padding: '0.75rem 1.5rem', color: dark ? '#f8fafc' : textSecondary, fontSize: '0.95rem', fontWeight: dark ? 600 : 400 }}>
