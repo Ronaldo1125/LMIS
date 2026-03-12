@@ -14,18 +14,10 @@ import NewsAnnouncements from './components/NewsAnnouncements'
 const getInitialAuthState = () => {
   const token = localStorage.getItem('authToken')
   const savedUser = localStorage.getItem('user')
-
   if (token && savedUser) {
-    return {
-      isAuthenticated: true,
-      user: JSON.parse(savedUser)
-    }
+    return { isAuthenticated: true, user: JSON.parse(savedUser) }
   }
-
-  return {
-    isAuthenticated: false,
-    user: null
-  }
+  return { isAuthenticated: false, user: null }
 }
 
 const normalizeUser = (raw) => {
@@ -45,45 +37,29 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const initialAuth = getInitialAuthState()
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuth.isAuthenticated)
-
-  // ── User state with localStorage sync ─────────────────────
-  const [user, setUserState] = useState(() => normalizeUser(initialAuth.user))
-
-  const setUser = (updater) => {
-    setUserState(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater
-      localStorage.setItem('user', JSON.stringify(next))
-      return next
-    })
-  }
-  // ───────────────────────────────────────────────────────────
+  // Normalize on load so the shape is always consistent
+  const [user, setUser] = useState(() => normalizeUser(initialAuth.user))
 
   // ── Dark mode ──────────────────────────────────────────────
   const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark')
 
   useEffect(() => {
     const root = document.documentElement
-    if (dark) {
-      root.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      root.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
+    if (dark) { root.classList.add('dark'); localStorage.setItem('theme', 'dark') }
+    else { root.classList.remove('dark'); localStorage.setItem('theme', 'light') }
   }, [dark])
-  // ───────────────────────────────────────────────────────────
 
   useEffect(() => {
     const pageTitles = {
-      dashboard:         'Dashboard',
-      cataloging:        'Cataloging',
-      accessions:        'Accessions',
-      acquisitions:      'Acquisitions',
-      'user-management': 'User Management',
-      'news':            'News and Announcements',
-      security:          'Security',
-      profile:           'My Profile',
-      help:              'Help & Support',
+      dashboard:        'Dashboard',
+      cataloging:       'Cataloging',
+      accessions:       'Accessions',
+      acquisitions:     'Acquisitions',
+      'user-management':'User Management',
+      'news': 'News and Announcements',
+      security:         'Security',
+      profile:          'My Profile',
+      help:             'Help & Support',
     }
     document.title = `${pageTitles[currentView] || 'LMIS'} | LMIS`
   }, [currentView])
@@ -91,7 +67,8 @@ function App() {
   const handleLoginSuccess = (userData) => {
     const normalized = normalizeUser(userData)
     setIsAuthenticated(true)
-    setUserState(normalized)
+    setUser(normalized)
+    // Keep localStorage in sync with the normalized shape
     localStorage.setItem('user', JSON.stringify(normalized))
   }
 
@@ -108,6 +85,7 @@ function App() {
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
+        // ✅ Pass setCurrentView and user so DashboardHeader can navigate
         return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
       case 'cataloging':
         return <Cataloging dark={dark} />
@@ -118,19 +96,11 @@ function App() {
       case 'acquisitions':
         return <Acquisitions dark={dark} />
       case 'news':
-        return <NewsAnnouncements dark={dark} />
+      return <NewsAnnouncements dark={dark} />
       case 'security':
         return <Security dark={dark} />
       case 'profile':
-        return (
-          <MyProfile
-            user={user}
-            setUser={setUser}
-            setCurrentView={setCurrentView}
-            dark={dark}
-            setDark={setDark}
-          />
-        )
+        return <MyProfile user={user} setCurrentView={setCurrentView} dark={dark} setDark={setDark} />
       case 'help':
         return <HelpSupport setCurrentView={setCurrentView} dark={dark} />
       case 'logout':
@@ -141,18 +111,14 @@ function App() {
     }
   }
 
-  if (!isAuthenticated) {
-    return <AccountLogin onLoginSuccess={handleLoginSuccess} />
-  }
+  if (!isAuthenticated) return <AccountLogin onLoginSuccess={handleLoginSuccess} />
 
   return (
-    <div
-      style={{
-        display: 'flex', flexDirection: 'row', height: '100vh',
-        background: dark ? '#0a1628' : '#f8fafc',
-        transition: 'background 0.45s ease',
-      }}
-    >
+    <div style={{
+      display: 'flex', flexDirection: 'row', height: '100vh',
+      background: dark ? '#07111f' : '#f8fafc',
+      transition: 'background 0.45s ease',
+    }}>
       <Sidebar
         isOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
@@ -166,7 +132,7 @@ function App() {
         overflowX: 'hidden',
         overflowY: 'auto',
         paddingLeft: '1.5rem',
-        background: dark ? '#0a1628' : '#f8fafc',
+        background: dark ? '#07111f' : '#f8fafc',
         transition: 'background 0.45s ease',
       }}>
         {renderView()}
