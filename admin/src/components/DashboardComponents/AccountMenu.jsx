@@ -14,17 +14,20 @@ const getRoleLabel = (r) => {
 const AccountMenu = ({ isOpen, onClose, user, isSticky, onMyProfile, onHelpSupport, dark }) => {
   const menuRef = useRef(null)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [avatarError, setAvatarError] = useState(false)
 
   const fullName     = user?.full_name || user?.username || 'Unknown'
-  const username     = user?.username || ''
   const role         = user?.role || ''
-  const email        = user?.email || `${username}@lmis-dro5.gov`
+  const avatarUrl    = user?.avatar || null
   const avatarLetter = fullName.charAt(0).toUpperCase()
 
   useEffect(() => {
     if (isOpen) { setTimeout(() => setIsAnimating(true), 10) }
     else { setIsAnimating(false) }
   }, [isOpen])
+
+  // Reset avatar error when user changes
+  useEffect(() => { setAvatarError(false) }, [user?.avatar])
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -98,10 +101,22 @@ const AccountMenu = ({ isOpen, onClose, user, isSticky, onMyProfile, onHelpSuppo
           <div style={{
             width: '3rem', height: '3rem', borderRadius: '9999px',
             background: 'rgba(255,255,255,0.18)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            border: '2px solid rgba(255,255,255,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, overflow: 'hidden',
           }}>
-            <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.125rem' }}>{avatarLetter}</span>
+            {avatarUrl && !avatarError ? (
+              <img
+                src={avatarUrl}
+                alt={fullName}
+                onError={() => setAvatarError(true)}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.125rem' }}>
+                {avatarLetter}
+              </span>
+            )}
           </div>
 
           {/* Info */}
@@ -109,9 +124,6 @@ const AccountMenu = ({ isOpen, onClose, user, isSticky, onMyProfile, onHelpSuppo
             <h4 style={{ margin: 0, fontWeight: 700, color: '#ffffff', fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {fullName}
             </h4>
-            <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {email}
-            </p>
             <span style={{
               display: 'inline-block', marginTop: '0.35rem',
               padding: '0.1rem 0.5rem', borderRadius: '999px',

@@ -23,6 +23,7 @@ router.get('/', async (req, res) => {
         END           AS is_active_librarian,
         created_at,
         last_login,
+        avatar,
         'adminpanel'  AS source
       FROM adminpanel_users
 
@@ -38,6 +39,7 @@ router.get('/', async (req, res) => {
         0             AS is_active_librarian,
         created_at,
         NULL          AS last_login,
+        avatar,
         'users'       AS source
       FROM users
 
@@ -45,16 +47,17 @@ router.get('/', async (req, res) => {
     `);
 
     const users = rows.map(row => ({
-      id:               row.id,
-      username:         row.username,
-      email:            row.email || row.username,
-      name:             row.full_name || row.username || 'Unknown',
-      role:             capitalizeRole(row.role),
-      status:           row.is_active ? 'Active' : 'Inactive',
-      dateAdded:        row.created_at,
-      lastLogin:        row.last_login || null,
-      source:           row.source,
+      id:                row.id,
+      username:          row.username,
+      email:             row.email || row.username,
+      name:              row.full_name || row.username || 'Unknown',
+      role:              capitalizeRole(row.role),
+      status:            row.is_active ? 'Active' : 'Inactive',
+      dateAdded:         row.created_at,
+      lastLogin:         row.last_login || null,
+      source:            row.source,
       isActiveLibrarian: row.is_active_librarian === 1 || row.is_active_librarian === true,
+      avatar:            row.avatar || null,
     }));
 
     res.json({ users });
