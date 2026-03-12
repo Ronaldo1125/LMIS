@@ -89,7 +89,6 @@ export default function DuplicateTitlesDetector({ dark = false }) {
     setTimeout(() => { setIsModalOpen(false); setSelected(null) }, 320)
   }
 
-  const totalDupes = duplicates.reduce((sum, d) => sum + d.count, 0)
   const redCount    = duplicates.filter(d => d.matchLevel === 'full').length
   const yellowCount = duplicates.filter(d => d.matchLevel === 'partial').length
 

@@ -78,7 +78,6 @@ function App() {
     localStorage.removeItem('userRole')
     sessionStorage.removeItem('loginNotification')
     setIsAuthenticated(false)
-    setUserState(null)
     setCurrentView('dashboard')
   }
 
