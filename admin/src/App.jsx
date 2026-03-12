@@ -14,22 +14,12 @@ import NewsAnnouncements from './components/NewsAnnouncements'
 const getInitialAuthState = () => {
   const token = localStorage.getItem('authToken')
   const savedUser = localStorage.getItem('user')
-
   if (token && savedUser) {
-    return {
-      isAuthenticated: true,
-      user: JSON.parse(savedUser)
-    }
+    return { isAuthenticated: true, user: JSON.parse(savedUser) }
   }
-
-  return {
-    isAuthenticated: false,
-    user: null
-  }
+  return { isAuthenticated: false, user: null }
 }
 
-// Normalize whatever shape comes back from the API/JWT into a consistent object
-// so every component can rely on: id, username, full_name, email, role
 const normalizeUser = (raw) => {
   if (!raw) return null
   return {
@@ -38,7 +28,7 @@ const normalizeUser = (raw) => {
     full_name: raw.full_name || raw.fullName || raw.name || raw.username || '',
     email:     raw.email     || `${raw.username || ''}@lmis-dro5.gov`,
     role:      raw.role      || '',
-    avatar:    raw.avatar    || null, 
+    avatar:    raw.avatar    || null,
   }
 }
 
@@ -47,35 +37,21 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const initialAuth = getInitialAuthState()
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuth.isAuthenticated)
-  // Normalize on load so the shape is always consistent
   const [user, setUser] = useState(() => normalizeUser(initialAuth.user))
-
-  // ── Dark mode ──────────────────────────────────────────────
   const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark')
 
   useEffect(() => {
     const root = document.documentElement
-    if (dark) {
-      root.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      root.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
+    if (dark) { root.classList.add('dark'); localStorage.setItem('theme', 'dark') }
+    else { root.classList.remove('dark'); localStorage.setItem('theme', 'light') }
   }, [dark])
-  // ───────────────────────────────────────────────────────────
 
   useEffect(() => {
     const pageTitles = {
-      dashboard:        'Dashboard',
-      cataloging:       'Cataloging',
-      accessions:       'Accessions',
-      acquisitions:     'Acquisitions',
-      'user-management':'User Management',
-      'news': 'News and Announcements',
-      security:         'Security',
-      profile:          'My Profile',
-      help:             'Help & Support',
+      dashboard: 'Dashboard', cataloging: 'Cataloging', accessions: 'Accessions',
+      acquisitions: 'Acquisitions', 'user-management': 'User Management',
+      news: 'News and Announcements', security: 'Security',
+      profile: 'My Profile', help: 'Help & Support',
     }
     document.title = `${pageTitles[currentView] || 'LMIS'} | LMIS`
   }, [currentView])
@@ -84,7 +60,6 @@ function App() {
     const normalized = normalizeUser(userData)
     setIsAuthenticated(true)
     setUser(normalized)
-    // Keep localStorage in sync with the normalized shape
     localStorage.setItem('user', JSON.stringify(normalized))
   }
 
@@ -100,45 +75,28 @@ function App() {
 
   const renderView = () => {
     switch (currentView) {
-      case 'dashboard':
-        // ✅ Pass setCurrentView and user so DashboardHeader can navigate
-        return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
-      case 'cataloging':
-        return <Cataloging dark={dark} />
-      case 'accessions':
-        return <Accessions dark={dark} />
-      case 'user-management':
-        return <UserManagement dark={dark} />
-      case 'acquisitions':
-        return <Acquisitions dark={dark} />
-      case 'news':
-      return <NewsAnnouncements dark={dark} />
-      case 'security':
-        return <Security dark={dark} />
-      case 'profile':
-        return <MyProfile user={user} setCurrentView={setCurrentView} dark={dark} setDark={setDark} />
-      case 'help':
-        return <HelpSupport setCurrentView={setCurrentView} dark={dark} />
-      case 'logout':
-        handleLogout()
-        return null
-      default:
-        return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
+      case 'dashboard':       return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
+      case 'cataloging':      return <Cataloging dark={dark} />
+      case 'accessions':      return <Accessions dark={dark} />
+      case 'user-management': return <UserManagement dark={dark} />
+      case 'acquisitions':    return <Acquisitions dark={dark} />
+      case 'news':            return <NewsAnnouncements dark={dark} />
+      case 'security':        return <Security dark={dark} />
+      case 'profile':         return <MyProfile user={user} setCurrentView={setCurrentView} dark={dark} setDark={setDark} />
+      case 'help':            return <HelpSupport setCurrentView={setCurrentView} dark={dark} />
+      case 'logout':          handleLogout(); return null
+      default:                return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
     }
   }
 
-  if (!isAuthenticated) {
-    return <AccountLogin onLoginSuccess={handleLoginSuccess} />
-  }
+  if (!isAuthenticated) return <AccountLogin onLoginSuccess={handleLoginSuccess} />
 
   return (
-    <div
-      style={{
-        display: 'flex', flexDirection: 'row', height: '100vh',
-        background: dark ? '#0a1628' : '#f8fafc',
-        transition: 'background 0.45s ease',
-      }}
-    >
+    <div style={{
+      display: 'flex', flexDirection: 'row', height: '100vh',
+      background: dark ? '#07111f' : '#f8fafc',
+      transition: 'background 0.45s ease',
+    }}>
       <Sidebar
         isOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
@@ -152,7 +110,7 @@ function App() {
         overflowX: 'hidden',
         overflowY: 'auto',
         paddingLeft: '1.5rem',
-        background: dark ? '#0a1628' : '#f8fafc',
+        background: dark ? '#07111f' : '#f8fafc',
         transition: 'background 0.45s ease',
       }}>
         {renderView()}
