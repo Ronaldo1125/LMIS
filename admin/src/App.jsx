@@ -37,7 +37,10 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const initialAuth = getInitialAuthState()
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuth.isAuthenticated)
+  // Normalize on load so the shape is always consistent
   const [user, setUser] = useState(() => normalizeUser(initialAuth.user))
+
+  // ── Dark mode ──────────────────────────────────────────────
   const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark')
 
   useEffect(() => {
@@ -48,10 +51,15 @@ function App() {
 
   useEffect(() => {
     const pageTitles = {
-      dashboard: 'Dashboard', cataloging: 'Cataloging', accessions: 'Accessions',
-      acquisitions: 'Acquisitions', 'user-management': 'User Management',
-      news: 'News and Announcements', security: 'Security',
-      profile: 'My Profile', help: 'Help & Support',
+      dashboard:        'Dashboard',
+      cataloging:       'Cataloging',
+      accessions:       'Accessions',
+      acquisitions:     'Acquisitions',
+      'user-management':'User Management',
+      'news': 'News and Announcements',
+      security:         'Security',
+      profile:          'My Profile',
+      help:             'Help & Support',
     }
     document.title = `${pageTitles[currentView] || 'LMIS'} | LMIS`
   }, [currentView])
@@ -60,6 +68,7 @@ function App() {
     const normalized = normalizeUser(userData)
     setIsAuthenticated(true)
     setUser(normalized)
+    // Keep localStorage in sync with the normalized shape
     localStorage.setItem('user', JSON.stringify(normalized))
   }
 
@@ -69,23 +78,36 @@ function App() {
     localStorage.removeItem('userRole')
     sessionStorage.removeItem('loginNotification')
     setIsAuthenticated(false)
-    setUser(null)
+    setUserState(null)
     setCurrentView('dashboard')
   }
 
   const renderView = () => {
     switch (currentView) {
-      case 'dashboard':       return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
-      case 'cataloging':      return <Cataloging dark={dark} />
-      case 'accessions':      return <Accessions dark={dark} />
-      case 'user-management': return <UserManagement dark={dark} />
-      case 'acquisitions':    return <Acquisitions dark={dark} />
-      case 'news':            return <NewsAnnouncements dark={dark} />
-      case 'security':        return <Security dark={dark} />
-      case 'profile':         return <MyProfile user={user} setCurrentView={setCurrentView} dark={dark} setDark={setDark} />
-      case 'help':            return <HelpSupport setCurrentView={setCurrentView} dark={dark} />
-      case 'logout':          handleLogout(); return null
-      default:                return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
+      case 'dashboard':
+        // ✅ Pass setCurrentView and user so DashboardHeader can navigate
+        return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
+      case 'cataloging':
+        return <Cataloging dark={dark} />
+      case 'accessions':
+        return <Accessions dark={dark} />
+      case 'user-management':
+        return <UserManagement dark={dark} />
+      case 'acquisitions':
+        return <Acquisitions dark={dark} />
+      case 'news':
+      return <NewsAnnouncements dark={dark} />
+      case 'security':
+        return <Security dark={dark} />
+      case 'profile':
+        return <MyProfile user={user} setCurrentView={setCurrentView} dark={dark} setDark={setDark} />
+      case 'help':
+        return <HelpSupport setCurrentView={setCurrentView} dark={dark} />
+      case 'logout':
+        handleLogout()
+        return null
+      default:
+        return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
     }
   }
 
