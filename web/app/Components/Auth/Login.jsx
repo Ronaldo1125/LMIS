@@ -22,14 +22,26 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
 
   /* ── Load Google Identity Services ── */
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return;
+    if (!GOOGLE_CLIENT_ID) {
+      console.log("Google Client ID not found");
+      return;
+    }
+
+    console.log("Initializing Google Sign-In with Client ID:", GOOGLE_CLIENT_ID);
 
     const init = () => {
-      if (!window.google || !googleBtnRef.current) return;
+      console.log("Google script loaded, initializing...");
+      if (!window.google || !googleBtnRef.current) {
+        console.log("Google not available or ref not ready");
+        return;
+      }
+      
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleGoogleCallback,
       });
+      
+      console.log("Rendering Google button");
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         type: "standard",
         theme: "outline",
@@ -40,18 +52,35 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
     };
 
     const scriptId = "google-gsi-script";
-    if (!document.getElementById(scriptId)) {
+    const existingScript = document.getElementById(scriptId);
+    
+    if (!existingScript) {
+      console.log("Loading Google script...");
       const script = document.createElement("script");
       script.id = scriptId;
       script.src = "https://accounts.google.com/gsi/client";
       script.async = true;
       script.defer = true;
+      script.onload = () => {
+        console.log("Google script loaded successfully");
+        init();
+      };
+      script.onerror = () => {
+        console.error("Failed to load Google script");
+      };
       document.head.appendChild(script);
-      script.onload = init;
-    } else if (window.google) {
+    } else if (window.google && window.google.accounts) {
+      console.log("Google script already loaded");
       init();
     } else {
-      const iv = setInterval(() => { if (window.google) { init(); clearInterval(iv); } }, 150);
+      console.log("Waiting for Google to load...");
+      const iv = setInterval(() => { 
+        if (window.google && window.google.accounts) { 
+          console.log("Google now available");
+          init(); 
+          clearInterval(iv); 
+        } 
+      }, 150);
       return () => clearInterval(iv);
     }
   }, []);
@@ -111,6 +140,7 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
     googleWrapper: {
       width: "100%", display: "flex",
       justifyContent: "center", minHeight: "44px", alignItems: "center",
+      flexDirection: "column",
     },
     errorBox: {
       backgroundColor: "#fef2f2", border: "1px solid #fecaca",
@@ -161,12 +191,14 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
             <div style={{ color: "#6b7280", fontSize: "14px", padding: "12px 0" }}>
               Signing you in…
             </div>
+          ) : GOOGLE_CLIENT_ID ? (
+            <div style={S.googleWrapper}>
+              <div ref={googleBtnRef} style={{ width: "100%", minHeight: "44px" }} />
+            </div>
           ) : (
-            GOOGLE_CLIENT_ID && (
-              <div style={S.googleWrapper}>
-                <div ref={googleBtnRef} style={{ width: "100%" }} />
-              </div>
-            )
+            <div style={{ color: "#dc2626", fontSize: "13px", padding: "12px 0" }}>
+              Google Sign-In is not configured. Please contact administrator.
+            </div>
           )}
 
           <p style={S.footer}>

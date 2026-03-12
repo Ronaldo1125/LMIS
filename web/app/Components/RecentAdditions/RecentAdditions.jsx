@@ -373,29 +373,6 @@ const RecentAdditions = () => {
           {/* View toggles and pagination - show beside title on mobile */}
           {windowWidth < 640 && (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {/* View toggles */}
-              {[
-                { grid: true,  Icon: GridIcon },
-                { grid: false, Icon: ListIcon },
-              ].map(({ grid, Icon }) => (
-                <button
-                  key={String(grid)}
-                  onClick={() => toggleView(grid)}
-                  title={grid ? "Grid view" : "List view"}
-                  style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    border: "1px solid #d1d8e8",
-                    background: isGridView === grid ? "#e8eeff" : "#fff",
-                    color: isGridView === grid ? "#003087" : "#6b7280",
-                    cursor: "pointer",
-                    display: "grid",
-                    placeItems: "center",
-                  }}
-                >
-                  <Icon size={14} />
-                </button>
-              ))}
-              
               <div style={{ width: 6 }} />
               
               {/* Pagination arrows */}
@@ -432,29 +409,6 @@ const RecentAdditions = () => {
         {/* Desktop controls */}
         {windowWidth >= 640 && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* View toggles - desktop only */}
-            {[
-              { grid: true,  Icon: GridIcon },
-              { grid: false, Icon: ListIcon },
-            ].map(({ grid, Icon }) => (
-              <button
-                key={String(grid)}
-                onClick={() => toggleView(grid)}
-                title={grid ? "Grid view" : "List view"}
-                style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  border: "1px solid #d1d8e8",
-                  background: isGridView === grid ? "#e8eeff" : "#fff",
-                  color: isGridView === grid ? "#003087" : "#6b7280",
-                  cursor: "pointer",
-                  display: "grid",
-                  placeItems: "center",
-                }}
-              >
-                <Icon size={16} />
-              </button>
-            ))}
-
             <div style={{ width: 8 }} />
 
             {/* Pagination arrows */}

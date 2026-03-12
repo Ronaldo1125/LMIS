@@ -21,7 +21,6 @@ const SkeletonCard = ({ large }) => (
   <div>
     <div style={{
       background: "#e8eef6",
-      borderRadius: 8,
       aspectRatio: "16/9",
       marginBottom: 18,
       animation: "pulse 1.5s ease-in-out infinite",
@@ -275,7 +274,6 @@ const News = () => {
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
-                  borderRadius: 8,
                   position: "relative",
                 }}>
                   {item.ogImage ? (

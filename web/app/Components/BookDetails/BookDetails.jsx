@@ -112,6 +112,78 @@ const BookDetails = ({ bookId }) => {
   const [showModal, setShowModal] = useState(false);
   const [downloadCount, setDownloadCount] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(0);
+
+  // ── responsive configuration ──────────────────────────────────────
+  const getResponsiveConfig = () => {
+    if (windowWidth < 640) { // Mobile
+      return {
+        containerPadding: "px-4 py-6",
+        backButtonPadding: "mb-6",
+        gridGap: "gap-6",
+        cardPadding: "p-6",
+        titleSize: "text-2xl",
+        authorSize: "text-sm",
+        buttonPadding: "px-6 py-3",
+        thumbnailHeight: "h-[400px]",
+        maxThumbnailWidth: "max-w-full",
+        infoGap: "gap-4",
+        sectionGap: "mt-6"
+      };
+    } else if (windowWidth < 768) { // Tablet
+      return {
+        containerPadding: "px-6 py-7",
+        backButtonPadding: "mb-7",
+        gridGap: "gap-8",
+        cardPadding: "p-7",
+        titleSize: "text-3xl",
+        authorSize: "text-sm",
+        buttonPadding: "px-8 py-3",
+        thumbnailHeight: "h-[500px]",
+        maxThumbnailWidth: "max-w-[500px]",
+        infoGap: "gap-5",
+        sectionGap: "mt-7"
+      };
+    } else if (windowWidth < 1024) { // Small desktop
+      return {
+        containerPadding: "px-6 py-8",
+        backButtonPadding: "mb-8",
+        gridGap: "gap-9",
+        cardPadding: "p-8",
+        titleSize: "text-3xl",
+        authorSize: "text-sm",
+        buttonPadding: "px-10 py-3",
+        thumbnailHeight: "h-[600px]",
+        maxThumbnailWidth: "max-w-[550px]",
+        infoGap: "gap-6",
+        sectionGap: "mt-8"
+      };
+    } else { // Large desktop
+      return {
+        containerPadding: "px-6 py-8",
+        backButtonPadding: "mb-8",
+        gridGap: "gap-10",
+        cardPadding: "p-8",
+        titleSize: "text-4xl",
+        authorSize: "text-sm",
+        buttonPadding: "px-12 py-3",
+        thumbnailHeight: "h-[700px]",
+        maxThumbnailWidth: "max-w-[600px]",
+        infoGap: "gap-8",
+        sectionGap: "mt-8"
+      };
+    }
+  };
+
+  const config = getResponsiveConfig();
+
+  // ── window resize listener ────────────────────────────────────────────
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -223,9 +295,8 @@ const BookDetails = ({ bookId }) => {
     <>
       <Nav />
       <div className="bg-white">
-        <div className="max-w-[1320px] mx-auto px-6 py-8 font-sans">
-
-          <div className="mb-8">
+        <div className={`max-w-[1320px] mx-auto ${config.containerPadding} font-sans`}>
+          <div className={config.backButtonPadding}>
             <button
               onClick={() => window.history.back()}
               className="text-gray-500 hover:text-gray-800 text-sm transition-colors duration-200 flex items-center gap-2"
@@ -236,27 +307,21 @@ const BookDetails = ({ bookId }) => {
               Back to Books
             </button>
           </div>
-
           <div className="bg-white overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 p-8">
-
-              {/* Left: PDF thumbnail */}
+            <div className={`grid grid-cols-1 lg:grid-cols-2 ${config.gridGap} ${config.cardPadding}`}>
               <div className="flex justify-center lg:justify-start">
-                <div className="w-full max-w-[600px]">
+                <div className={`w-full ${config.maxThumbnailWidth}`}>
                   <BookThumbnailPreview
                     uploadId={uploadId}
                     fallbackImage={coverImage}
                     title={book.title}
-                    className="h-[700px]"
+                    className={config.thumbnailHeight}
                   />
                 </div>
               </div>
-
-              {/* Right: Info */}
-              <div className="flex flex-col">
-                <h1 className="text-4xl font-semibold text-gray-900 leading-tight">{book.title}</h1>
-
-                <div className="mt-2 text-gray-500 text-sm">
+              <div className={`flex flex-col ${config.infoGap}`}>
+                <h1 className={`${config.titleSize} font-semibold text-gray-900 leading-tight`}>{book.title}</h1>
+                <div className={`mt-2 text-gray-500 ${config.authorSize}`}>
                   <span className="font-medium text-gray-700">{book.author}</span>
                   {book.date_of_publication && (
                     <>
@@ -265,8 +330,6 @@ const BookDetails = ({ bookId }) => {
                     </>
                   )}
                 </div>
-
-                {/* Download count badge */}
                 {downloadCount != null && downloadCount > 0 && (
                   <div className="mt-3 flex items-center gap-1.5 text-gray-400 text-xs">
                     <Download size={13} />
@@ -277,19 +340,19 @@ const BookDetails = ({ bookId }) => {
                 )}
 
                 {/* Buttons */}
-                <div className="mt-8 flex flex-col gap-5">
-                  <div className="flex gap-3 w-full max-w-2xl">
+                <div className={`${config.sectionGap} flex flex-col gap-5`}>
+                  <div className={`flex gap-3 w-full ${windowWidth < 640 ? 'flex-col' : ''}`}>
                     <button
                       onClick={() => setShowModal(true)}
                       disabled={!uploadId}
-                      className="flex-1 px-12 py-3 text-sm font-semibold rounded bg-blue-900 text-white hover:bg-blue-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      className={`flex-1 ${config.buttonPadding} text-sm font-semibold rounded bg-blue-900 text-white hover:bg-blue-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
                     >
                       Read
                     </button>
                     <button
                       onClick={handleDownloadBook}
                       disabled={!uploadId || downloading}
-                      className="flex-1 px-12 py-3 text-sm font-semibold rounded bg-gray-900 text-white hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className={`flex-1 ${config.buttonPadding} text-sm font-semibold rounded bg-gray-900 text-white hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
                     >
                       {downloading ? (
                         <>
@@ -302,7 +365,7 @@ const BookDetails = ({ bookId }) => {
                     </button>
                     <button
                       onClick={handleBookmark}
-                      className="px-6 py-3 text-sm font-semibold rounded border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center"
+                      className={`${config.buttonPadding} text-sm font-semibold rounded border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center`}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -375,17 +438,17 @@ const BookDetails = ({ bookId }) => {
       {/* Read Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden">
+          <div className={`bg-white rounded-lg w-full ${windowWidth < 640 ? 'max-w-full' : 'max-w-6xl'} max-h-[90vh] overflow-hidden`}>
             <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-xl font-semibold">{book.title || "Book Preview"}</h2>
+              <h2 className={`${windowWidth < 640 ? 'text-lg' : 'text-xl'} font-semibold`}>{book.title || "Book Preview"}</h2>
               <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700 text-2xl font-bold">×</button>
             </div>
-            <div className="h-[75vh]">
+            <div className={`${windowWidth < 640 ? 'h-[60vh]' : 'h-[75vh]'}`}>
               <PDFReader
                 uploadId={uploadId}
                 fallbackImage={coverImage}
                 title={book.title}
-                className="h-[700px]"
+                className={config.thumbnailHeight}
                 maxPages={5}
               />
             </div>

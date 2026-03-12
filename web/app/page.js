@@ -30,7 +30,7 @@ export default function Page() {
       
       <News />
       
-       <FreeAccess />
+      
       <Footer />
 
     </div>

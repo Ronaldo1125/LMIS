@@ -16,6 +16,7 @@ import Login from "../Auth/Login";
 
 import Register from "../Auth/Register";
 
+import MyProfile from "../MyProfile";
 
 
 const Nav = () => {
@@ -29,6 +30,8 @@ const Nav = () => {
   const [showLogin, setShowLogin]                 = useState(false);
 
   const [showRegister, setShowRegister]           = useState(false);
+
+  const [showMyProfile, setShowMyProfile]         = useState(false);
 
   const [user, setUser]                           = useState(null);
 
@@ -415,13 +418,11 @@ const Nav = () => {
 
 
 
-                    <Link
-
-                      href="/profile"
+                    <button
 
                       className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
 
-                      onClick={() => setIsProfileOpen(false)}
+                      onClick={() => { setIsProfileOpen(false); setShowMyProfile(true); }}
 
                     >
 
@@ -429,7 +430,7 @@ const Nav = () => {
 
                       My Profile
 
-                    </Link>
+                    </button>
 
 
 
@@ -557,9 +558,26 @@ const Nav = () => {
 
       )}
 
+
+
+      {/* MyProfile Modal */}
+
+      {showMyProfile && (
+
+        <MyProfile
+
+          onClose={() => setShowMyProfile(false)}
+
+          user={user}
+
+        />
+
+      )}
+
     </>
 
   );
+
 
 };
 
