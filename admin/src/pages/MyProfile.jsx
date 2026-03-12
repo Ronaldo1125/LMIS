@@ -1,22 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import {
-  KeyIcon, CheckIcon, SunIcon, MoonIcon, PaintBrushIcon,
+  KeyIcon, CheckIcon, SunIcon, MoonIcon,
   CameraIcon, ArrowPathIcon, PencilIcon, XMarkIcon,
   TrashIcon, ExclamationTriangleIcon, EyeIcon, EyeSlashIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 
-/*
-  Add to your global CSS (index.css):
-
-  *, *::before, *::after {
-    transition: background-color 0.4s ease, border-color 0.4s ease, color 0.3s ease, box-shadow 0.4s ease;
-  }
-*/
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const dicebearUrl = (seed) =>
-  `https://api.dicebear.com/9.x/pixel-art/svg?seed=${encodeURIComponent(seed)}`
+  `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(seed)}`
 
 const randomSeed = () => Math.random().toString(36).slice(2, 10)
 
@@ -71,16 +63,10 @@ const InlineField = ({ label, value, onSave, validate, C, dark, disabled }) => {
     if (trimmed === value) { setEditing(false); return }
     const validationErr = validate?.(trimmed)
     if (validationErr) { setErr(validationErr); return }
-    setLoading(true)
-    setErr('')
-    try {
-      await onSave(trimmed)
-      setEditing(false)
-    } catch (e) {
-      setErr(e.message)
-    } finally {
-      setLoading(false)
-    }
+    setLoading(true); setErr('')
+    try { await onSave(trimmed); setEditing(false) }
+    catch (e) { setErr(e.message) }
+    finally { setLoading(false) }
   }
 
   const handleKeyDown = (e) => {
@@ -101,7 +87,7 @@ const InlineField = ({ label, value, onSave, validate, C, dark, disabled }) => {
               onKeyDown={handleKeyDown}
               disabled={loading}
               style={{
-                flex: 1, background: C.inputBg, border: `1.5px solid #2563eb`,
+                flex: 1, background: C.inputBg, border: '1.5px solid #2563eb',
                 color: C.textPrimary, borderRadius: '0.5rem',
                 padding: '0.4rem 0.75rem', fontSize: '0.875rem', outline: 'none',
                 boxShadow: '0 0 0 3px rgba(37,99,235,0.15)',
@@ -134,9 +120,7 @@ const InlineField = ({ label, value, onSave, validate, C, dark, disabled }) => {
           }}
         >
           <span style={{ fontSize: '0.925rem', color: C.textPrimary, fontWeight: 600 }}>{value}</span>
-          {!disabled && (
-            <PencilIcon style={{ width: '0.75rem', height: '0.75rem', color: C.textMuted, flexShrink: 0, opacity: 0.6 }} />
-          )}
+          {!disabled && <PencilIcon style={{ width: '0.75rem', height: '0.75rem', color: C.textMuted, flexShrink: 0, opacity: 0.6 }} />}
         </button>
       )}
     </div>
@@ -179,7 +163,6 @@ const AvatarPicker = ({ currentAvatar, username, dark, onSave, onClose, C }) => 
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.textSecondary, fontSize: '1.25rem' }}>✕</button>
         </div>
 
-        {/* Preview + Shuffle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
           <div style={{
             width: '4.5rem', height: '4.5rem', flexShrink: 0, borderRadius: '0.875rem',
@@ -202,7 +185,6 @@ const AvatarPicker = ({ currentAvatar, username, dark, onSave, onClose, C }) => 
           </div>
         </div>
 
-        {/* Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.45rem', marginBottom: '1.25rem' }}>
           {seeds.map((seed, i) => {
             const url = dicebearUrl(seed)
@@ -329,25 +311,23 @@ const PasswordField = ({ label, value, onChange, placeholder, C }) => {
 // ─── Section Header ───────────────────────────────────────────────────────────
 const SectionHeader = ({ icon: Icon, title, subtitle, iconBg, iconColor }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-    <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.75rem', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <Icon style={{ width: '1.125rem', height: '1.125rem', color: iconColor }} />
+    <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <Icon style={{ width: '1rem', height: '1rem', color: iconColor }} />
     </div>
     <div>
-      <h3 style={{ fontWeight: 700, color: 'inherit', margin: 0, fontSize: '0.925rem' }}>{title}</h3>
-      <p style={{ fontSize: '0.72rem', margin: 0 }}>{subtitle}</p>
+      <h3 style={{ fontWeight: 700, color: 'inherit', margin: 0, fontSize: '0.875rem' }}>{title}</h3>
+      <p style={{ fontSize: '0.7rem', margin: 0 }}>{subtitle}</p>
     </div>
   </div>
 )
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
-  // ── Local user state (optimistic) ──────────────────────────────────────────
   const [localUser, setLocalUser] = useState(user || {})
   const [avatarUrl, setAvatarUrl] = useState(
     user?.avatar || dicebearUrl(user?.username || 'default')
   )
 
-  // Sync if parent user changes
   useEffect(() => {
     if (user) {
       setLocalUser(user)
@@ -355,7 +335,6 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
     }
   }, [user])
 
-  // Helper: optimistically update both local + parent user
   const updateUser = useCallback((patch) => {
     setLocalUser(prev => ({ ...prev, ...patch }))
     if (setUser) setUser(prev => ({ ...prev, ...patch }))
@@ -364,7 +343,6 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
   const [showPicker, setShowPicker] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  // Toasts
   const [toasts, setToasts] = useState([])
   const toast = (message, type = 'success') => {
     const id = Date.now()
@@ -372,12 +350,10 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3000)
   }
 
-  // Password form
   const [pwForm, setPwForm] = useState({ current: '', new: '', confirm: '' })
   const [pwError, setPwError] = useState('')
   const [pwLoading, setPwLoading] = useState(false)
 
-  // Username form
   const [unForm, setUnForm] = useState({ newUsername: '', password: '' })
   const [unError, setUnError] = useState('')
   const [unLoading, setUnLoading] = useState(false)
@@ -388,7 +364,6 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
 
   const token = () => localStorage.getItem('authToken')
 
-  // ── API calls ───────────────────────────────────────────────────────────────
   const saveFullName = async (newName) => {
     const res = await fetch(`http://localhost:5000/api/adminpanel-users/${localUser.id}/profile`, {
       method: 'PUT',
@@ -416,6 +391,10 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
   }
 
   const saveAvatar = async (url) => {
+  const previousUrl = avatarUrl
+  setAvatarUrl(url)             // ← optimistic update, instant reflection
+  updateUser({ avatar: url })
+  try {
     const res = await fetch(`http://localhost:5000/api/adminpanel-users/${localUser.id}/avatar`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
@@ -423,11 +402,13 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.message || 'Failed to save avatar.')
-    setAvatarUrl(url)
-    updateUser({ avatar: url })
     toast('Avatar updated!')
+  } catch (e) {
+    setAvatarUrl(previousUrl)   // ← revert on failure
+    updateUser({ avatar: previousUrl })
+    throw e
   }
-
+}
   const handlePasswordChange = async (e) => {
     e.preventDefault()
     setPwError('')
@@ -462,18 +443,15 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
     if (onLogout) onLogout()
   }
 
-  // ── Color system ────────────────────────────────────────────────────────────
   const C = {
     pageBg:        dark ? '#080f1e' : '#f0f4f8',
     cardBg:        dark ? '#0d1b2e' : '#ffffff',
-    cardBg2:       dark ? '#0f1f38' : '#fafcff',
     insetBg:       dark ? '#071020' : '#f8fafc',
     border:        dark ? '#172640' : '#e2e8f0',
     textPrimary:   dark ? '#dde8f5' : '#1e293b',
     textSecondary: dark ? '#6b8cae' : '#64748b',
     textMuted:     dark ? '#2e4d70' : '#94a3b8',
     inputBg:       dark ? '#071020' : '#ffffff',
-    bannerBg:      dark ? '#0a1628' : '#1e3a8a',
     accentBlue:    '#2563eb',
   }
 
@@ -483,14 +461,13 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
     borderRadius: '1.25rem',
     boxShadow: dark ? '0 4px 32px rgba(0,0,0,0.4)' : '0 2px 12px rgba(0,0,0,0.06)',
     overflow: 'hidden',
-    marginBottom: '1rem',
   }
 
   const insetCell = {
     background: C.insetBg,
     border: `1px solid ${C.border}`,
     borderRadius: '0.75rem',
-    padding: '0.875rem 1rem',
+    padding: '0.75rem 1rem',
   }
 
   const getRoleBadge = (r) => {
@@ -505,12 +482,23 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
   const roleLabels = { admin: 'Administrator', librarian: 'Librarian', staff: 'Staff', patron: 'Patron' }
   const badge = getRoleBadge(role)
 
+  const btnPrimary = {
+    padding: '0.65rem 1rem', borderRadius: '0.5rem', border: 'none',
+    background: dark ? '#1e3a6e' : '#2563eb', color: '#fff',
+    fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer',
+    transition: 'opacity 0.2s, transform 0.15s, box-shadow 0.2s',
+    width: '100%',
+  }
+
   return (
     <>
       <style>{`
         @keyframes slideInToast {
           from { opacity: 0; transform: translateX(2rem) scale(0.92); }
           to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        *, *::before, *::after {
+          transition: background-color 0.4s ease, border-color 0.4s ease, color 0.3s ease, box-shadow 0.4s ease;
         }
       `}</style>
 
@@ -530,309 +518,254 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
         />
       )}
 
-      <div style={{ minHeight: '100vh', background: C.pageBg, padding: '1.5rem 1rem', transition: 'background 0.4s ease' }}>
-        <div style={{ maxWidth: '38rem', margin: '0 auto' }}>
+      <div style={{ minHeight: '100vh', background: C.pageBg, padding: '1.5rem 1.25rem', transition: 'background 0.4s ease' }}>
+        <div style={{ maxWidth: '64rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-          {/* ── Profile Card ───────────────────────────────────────────────── */}
-          <div style={card}>
-            {/* Banner */}
-            <div style={{
-              height: '7rem', background: dark
-                ? 'linear-gradient(135deg, #0a1628 0%, #0d2247 50%, #091830 100%)'
-                : 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #1e40af 100%)',
-              position: 'relative', overflow: 'hidden',
-            }}>
-              {/* Subtle pattern overlay */}
+          {/* ── TOP ROW: Profile card + Theme toggle ─────────────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', alignItems: 'start' }}>
+
+            {/* Profile Card */}
+            <div style={card}>
               <div style={{
-                position: 'absolute', inset: 0, opacity: 0.06,
-                backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)',
-                backgroundSize: '32px 32px',
-              }} />
-            </div>
+                height: '6rem',
+                background: dark
+                  ? 'linear-gradient(135deg, #0a1628 0%, #0d2247 50%, #091830 100%)'
+                  : 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #1e40af 100%)',
+                position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{
+                  position: 'absolute', inset: 0, opacity: 0.06,
+                  backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)',
+                  backgroundSize: '32px 32px',
+                }} />
+              </div>
 
-            <div style={{ padding: '0 1.5rem 1.5rem' }}>
-              {/* Avatar row */}
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '-2.75rem', marginBottom: '1.125rem' }}>
-                <div style={{ position: 'relative' }}>
-                  <div style={{
-                    width: '5.5rem', height: '5.5rem', borderRadius: '1.125rem',
-                    border: `4px solid ${C.cardBg}`,
-                    boxShadow: dark ? '0 4px 20px rgba(0,0,0,0.6)' : '0 4px 16px rgba(0,0,0,0.12)',
-                    overflow: 'hidden', background: dark ? '#081422' : '#f0f7ff',
-                    cursor: 'pointer', transition: 'transform 0.2s ease',
-                  }}
-                    onClick={() => setShowPicker(true)}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                  >
-                    <img src={avatarUrl} alt={fullName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                    {/* Hover overlay */}
-                    <div style={{
-                      position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      opacity: 0, transition: 'opacity 0.2s',
-                    }}
-                      onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                      onMouseLeave={e => e.currentTarget.style.opacity = '0'}
+              <div style={{ padding: '0 1.5rem 1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '-2.5rem', marginBottom: '1rem' }}>
+                  <div style={{ position: 'relative' }}>
+                    <div
+                      style={{
+                        width: '5rem', height: '5rem', borderRadius: '1rem',
+                        border: `4px solid ${C.cardBg}`,
+                        boxShadow: dark ? '0 4px 20px rgba(0,0,0,0.6)' : '0 4px 16px rgba(0,0,0,0.12)',
+                        overflow: 'hidden', background: dark ? '#081422' : '#f0f7ff',
+                        cursor: 'pointer', transition: 'transform 0.2s ease',
+                      }}
+                      onClick={() => setShowPicker(true)}
+                      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
+                      onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                     >
-                      <CameraIcon style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} />
+                      <img src={avatarUrl} alt={fullName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     </div>
+                    <button
+                      onClick={() => setShowPicker(true)}
+                      style={{
+                        position: 'absolute', bottom: '-4px', right: '-4px',
+                        width: '1.4rem', height: '1.4rem', borderRadius: '50%',
+                        border: `2px solid ${C.cardBg}`, background: C.accentBlue,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                      }}
+                    >
+                      <CameraIcon style={{ width: '0.65rem', height: '0.65rem', color: '#fff' }} />
+                    </button>
                   </div>
-                  {/* Camera badge */}
-                  <button
-                    onClick={() => setShowPicker(true)}
-                    style={{
-                      position: 'absolute', bottom: '-6px', right: '-6px',
-                      width: '1.5rem', height: '1.5rem', borderRadius: '50%',
-                      border: `2px solid ${C.cardBg}`, background: C.accentBlue,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <CameraIcon style={{ width: '0.7rem', height: '0.7rem', color: '#fff' }} />
-                  </button>
-                </div>
-
-                {/* Role badge (top right) */}
-                <div style={{ paddingBottom: '0.5rem' }}>
                   <span style={{
                     background: badge.bg, color: badge.color,
-                    borderRadius: '999px', padding: '0.25rem 0.875rem',
-                    fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.02em',
+                    borderRadius: '999px', padding: '0.2rem 0.75rem',
+                    fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.02em',
+                    marginBottom: '0.5rem',
                   }}>
                     {roleLabels[role] || role}
                   </span>
                 </div>
-              </div>
 
-              {/* Inline-editable name / username */}
-              <div style={{ marginBottom: '1.25rem' }}>
-                <div style={{ marginBottom: '0.125rem' }}>
-                  <InlineField
-                    label="Display Name"
-                    value={fullName}
-                    onSave={saveFullName}
-                    validate={v => !v ? 'Name cannot be empty.' : v.length > 60 ? 'Too long (max 60 chars).' : null}
-                    C={C} dark={dark}
-                  />
-                </div>
-                <p style={{ fontSize: '0.8rem', color: C.textSecondary, margin: '0.2rem 0 0' }}>@{username}</p>
-              </div>
-
-              {/* Info cells */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem' }}>
-                <div style={insetCell}>
-                  <p style={{ fontSize: '0.6rem', color: C.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 0.25rem' }}>Role</p>
-                  <p style={{ fontSize: '0.875rem', color: C.textPrimary, fontWeight: 600, margin: 0 }}>{roleLabels[role] || role}</p>
-                </div>
-                <div style={insetCell}>
-                  <p style={{ fontSize: '0.6rem', color: C.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 0.25rem' }}>Username</p>
-                  <p style={{ fontSize: '0.875rem', color: C.textPrimary, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{username}</p>
+                {/* Horizontal: name + role cell + username cell */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', alignItems: 'start' }}>
+                  <div>
+                    <InlineField
+                      label="Display Name"
+                      value={fullName}
+                      onSave={saveFullName}
+                      validate={v => !v ? 'Name cannot be empty.' : v.length > 60 ? 'Too long (max 60 chars).' : null}
+                      C={C} dark={dark}
+                    />
+                    <p style={{ fontSize: '0.78rem', color: C.textSecondary, margin: '0.25rem 0 0' }}>@{username}</p>
+                  </div>
+                  <div style={insetCell}>
+                    <p style={{ fontSize: '0.6rem', color: C.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 0.2rem' }}>Role</p>
+                    <p style={{ fontSize: '0.85rem', color: C.textPrimary, fontWeight: 600, margin: 0 }}>{roleLabels[role] || role}</p>
+                  </div>
+                  <div style={insetCell}>
+                    <p style={{ fontSize: '0.6rem', color: C.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 0.2rem' }}>Username</p>
+                    <p style={{ fontSize: '0.85rem', color: C.textPrimary, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{username}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* ── Theme Toggle ────────────────────────────────────────────────── */}
-          <div style={{ ...card, padding: '1.25rem 1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{
-                  width: '2.25rem', height: '2.25rem', borderRadius: '0.75rem', flexShrink: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: dark ? 'rgba(168,85,247,0.12)' : 'rgba(245,158,11,0.12)',
-                }}>
-                  <div style={{ position: 'relative', width: '1.1rem', height: '1.1rem' }}>
-                    <SunIcon style={{ position: 'absolute', inset: 0, width: '1.1rem', height: '1.1rem', color: '#f59e0b', opacity: dark ? 0 : 1, transform: dark ? 'scale(0.3) rotate(90deg)' : 'scale(1) rotate(0deg)', transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)' }} />
-                    <MoonIcon style={{ position: 'absolute', inset: 0, width: '1.1rem', height: '1.1rem', color: '#e2d9f3', filter: dark ? 'drop-shadow(0 0 6px #c084fc)' : 'none', opacity: dark ? 1 : 0, transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0.3) rotate(-90deg)', transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)' }} />
-                  </div>
-                </div>
-                <div>
-                  <p style={{ fontSize: '0.875rem', fontWeight: 600, color: C.textPrimary, margin: 0 }}>{dark ? 'Dark Mode' : 'Light Mode'}</p>
-                  <p style={{ fontSize: '0.72rem', color: C.textSecondary, margin: 0 }}>{dark ? 'Switch to light' : 'Switch to dark'}</p>
+            {/* Theme Toggle — compact vertical pill */}
+            <div style={{ ...card, padding: '1.25rem', minWidth: '10rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.875rem', overflow: 'visible' }}>
+              <div style={{
+                width: '2.75rem', height: '2.75rem', borderRadius: '0.875rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: dark ? 'rgba(168,85,247,0.12)' : 'rgba(245,158,11,0.12)',
+              }}>
+                <div style={{ position: 'relative', width: '1.25rem', height: '1.25rem' }}>
+                  <SunIcon style={{ position: 'absolute', inset: 0, width: '1.25rem', height: '1.25rem', color: '#f59e0b', opacity: dark ? 0 : 1, transform: dark ? 'scale(0.3) rotate(90deg)' : 'scale(1) rotate(0deg)', transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)' }} />
+                  <MoonIcon style={{ position: 'absolute', inset: 0, width: '1.25rem', height: '1.25rem', color: '#e2d9f3', filter: dark ? 'drop-shadow(0 0 6px #c084fc)' : 'none', opacity: dark ? 1 : 0, transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0.3) rotate(-90deg)', transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)' }} />
                 </div>
               </div>
-
-              {/* Toggle switch */}
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: C.textPrimary, margin: '0 0 0.1rem' }}>{dark ? 'Dark Mode' : 'Light Mode'}</p>
+                <p style={{ fontSize: '0.68rem', color: C.textSecondary, margin: 0 }}>{dark ? 'Switch to light' : 'Switch to dark'}</p>
+              </div>
               <button onClick={() => setDark(p => !p)} aria-label="Toggle theme" style={{
                 position: 'relative', display: 'flex', alignItems: 'center',
                 width: '3.25rem', height: '1.75rem', borderRadius: '999px', padding: '0.2rem',
-                border: 'none', cursor: 'pointer', flexShrink: 0,
+                border: 'none', cursor: 'pointer',
                 background: dark ? '#6d28d9' : '#f59e0b',
                 boxShadow: dark ? '0 0 16px rgba(109,40,217,0.5)' : '0 0 16px rgba(245,158,11,0.45)',
-                outline: 'none', transition: 'background 0.4s ease, box-shadow 0.4s ease',
+                outline: 'none',
               }}>
                 <span style={{
                   width: '1.35rem', height: '1.35rem', borderRadius: '50%',
                   background: dark ? '#0d1b2e' : '#fff',
                   boxShadow: dark ? '0 1px 4px rgba(0,0,0,0.6)' : '0 1px 5px rgba(0,0,0,0.2)',
                   transform: dark ? 'translateX(1.5rem)' : 'translateX(0)',
-                  transition: 'transform 0.4s cubic-bezier(0.34,1.3,0.64,1), background 0.4s ease',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <span style={{ position: 'relative', width: '0.7rem', height: '0.7rem' }}>
-                    <SunIcon style={{ position: 'absolute', inset: 0, width: '0.7rem', height: '0.7rem', color: '#f59e0b', opacity: dark ? 0 : 1, transition: 'opacity 0.3s' }} />
-                    <MoonIcon style={{ position: 'absolute', inset: 0, width: '0.7rem', height: '0.7rem', color: '#e2d9f3', opacity: dark ? 1 : 0, transition: 'opacity 0.3s' }} />
-                  </span>
-                </span>
+                  transition: 'transform 0.4s cubic-bezier(0.34,1.3,0.64,1)',
+                  display: 'block',
+                }} />
               </button>
             </div>
           </div>
 
-          {/* ── Change Username ─────────────────────────────────────────────── */}
-          <div style={{ ...card, padding: '1.5rem' }}>
-            <SectionHeader
-              icon={PencilIcon}
-              title="Change Username"
-              subtitle={<span style={{ color: C.textSecondary }}>Update your login handle</span>}
-              iconBg={dark ? 'rgba(37,99,235,0.12)' : 'rgba(37,99,235,0.08)'}
-              iconColor={dark ? '#93c5fd' : '#2563eb'}
-            />
+          {/* ── MIDDLE ROW: Username + Password side by side ──────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'stretch' }}>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: C.textSecondary, marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>New Username</label>
-                <input
-                  type="text" value={unForm.newUsername}
-                  onChange={e => { setUnForm(p => ({ ...p, newUsername: e.target.value })); setUnError('') }}
-                  style={{ background: C.inputBg, border: `1px solid ${C.border}`, color: C.textPrimary, borderRadius: '0.5rem', padding: '0.625rem 1rem', width: '100%', fontSize: '0.875rem', outline: 'none', boxSizing: 'border-box' }}
-                  placeholder={`Current: @${username}`} autoComplete="off"
-                  onFocus={e => { e.target.style.borderColor = '#2563eb'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.15)' }}
-                  onBlur={e => { e.target.style.borderColor = C.border; e.target.style.boxShadow = 'none' }}
-                />
-                <p style={{ fontSize: '0.7rem', color: C.textMuted, margin: '0.3rem 0 0' }}>Letters, numbers, underscores. Min 3 characters.</p>
-              </div>
-
-              <PasswordField
-                label="Current Password (to confirm)"
-                value={unForm.password}
-                onChange={e => { setUnForm(p => ({ ...p, password: e.target.value })); setUnError('') }}
-                placeholder="Enter your current password"
-                C={C}
+            {/* Change Username */}
+            <div style={{ ...card, padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+              <SectionHeader
+                icon={PencilIcon}
+                title="Change Username"
+                subtitle={<span style={{ color: C.textSecondary }}>Update your login handle</span>}
+                iconBg={dark ? 'rgba(37,99,235,0.12)' : 'rgba(37,99,235,0.08)'}
+                iconColor={dark ? '#93c5fd' : '#2563eb'}
               />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: C.textSecondary, marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>New Username</label>
+                  <input
+                    type="text" value={unForm.newUsername}
+                    onChange={e => { setUnForm(p => ({ ...p, newUsername: e.target.value })); setUnError('') }}
+                    style={{ background: C.inputBg, border: `1px solid ${C.border}`, color: C.textPrimary, borderRadius: '0.5rem', padding: '0.575rem 0.875rem', width: '100%', fontSize: '0.85rem', outline: 'none', boxSizing: 'border-box' }}
+                    placeholder={`Current: @${username}`} autoComplete="off"
+                    onFocus={e => { e.target.style.borderColor = '#2563eb'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.15)' }}
+                    onBlur={e => { e.target.style.borderColor = C.border; e.target.style.boxShadow = 'none' }}
+                  />
+                  <p style={{ fontSize: '0.68rem', color: C.textMuted, margin: '0.25rem 0 0' }}>Letters, numbers, underscores. Min 3 chars.</p>
+                </div>
+                <PasswordField
+                  label="Current Password (to confirm)"
+                  value={unForm.password}
+                  onChange={e => { setUnForm(p => ({ ...p, password: e.target.value })); setUnError('') }}
+                  placeholder="Enter your current password"
+                  C={C}
+                />
+                {unError && <p style={{ fontSize: '0.78rem', margin: 0, borderRadius: '0.5rem', padding: '0.45rem 0.75rem', color: dark ? '#fca5a5' : '#dc2626', background: dark ? 'rgba(239,68,68,0.1)' : '#fef2f2', border: `1px solid ${dark ? 'rgba(239,68,68,0.2)' : '#fecaca'}` }}>{unError}</p>}
+                <button
+                  disabled={unLoading || !unForm.newUsername || !unForm.password}
+                  onClick={async () => {
+                    setUnError(''); setUnLoading(true)
+                    try { await saveUsername(unForm.newUsername.trim()) }
+                    catch (e) { setUnError(e.message) }
+                    finally { setUnLoading(false) }
+                  }}
+                  style={{ ...btnPrimary, opacity: (unLoading || !unForm.newUsername || !unForm.password) ? 0.5 : 1, cursor: (unLoading || !unForm.newUsername || !unForm.password) ? 'not-allowed' : 'pointer', marginTop: 'auto' }}
+                  onMouseEnter={e => { if (!unLoading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(37,99,235,0.3)' } }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
+                >
+                  {unLoading ? 'Updating…' : 'Update Username'}
+                </button>
+              </div>
+            </div>
 
-              {unError && <p style={{ fontSize: '0.8rem', margin: 0, borderRadius: '0.5rem', padding: '0.5rem 0.875rem', color: dark ? '#fca5a5' : '#dc2626', background: dark ? 'rgba(239,68,68,0.1)' : '#fef2f2', border: `1px solid ${dark ? 'rgba(239,68,68,0.2)' : '#fecaca'}` }}>{unError}</p>}
+            {/* Change Password */}
+            <div style={{ ...card, padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+              <SectionHeader
+                icon={KeyIcon}
+                title="Change Password"
+                subtitle={<span style={{ color: C.textSecondary }}>Keep your account secure</span>}
+                iconBg={dark ? 'rgba(37,99,235,0.12)' : 'rgba(37,99,235,0.08)'}
+                iconColor={dark ? '#93c5fd' : '#2563eb'}
+              />
+              <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
+                <PasswordField label="New Password" value={pwForm.new} onChange={e => setPwForm(p => ({ ...p, new: e.target.value }))} placeholder="Enter new password" C={C} />
+                <PasswordField label="Confirm New Password" value={pwForm.confirm} onChange={e => setPwForm(p => ({ ...p, confirm: e.target.value }))} placeholder="Confirm new password" C={C} />
 
-              <button
-                disabled={unLoading || !unForm.newUsername || !unForm.password}
-                onClick={async () => {
-                  setUnError(''); setUnLoading(true)
-                  try {
-                    await saveUsername(unForm.newUsername.trim())
-                    setUnForm({ newUsername: '', password: '' })
-                  } catch (e) { setUnError(e.message) }
-                  finally { setUnLoading(false) }
-                }}
-                style={{
-                  padding: '0.7rem', borderRadius: '0.5rem', border: 'none',
-                  background: dark ? '#1e3a6e' : '#2563eb',
-                  color: '#fff', fontWeight: 700, fontSize: '0.875rem',
-                  cursor: (unLoading || !unForm.newUsername || !unForm.password) ? 'not-allowed' : 'pointer',
-                  opacity: (unLoading || !unForm.newUsername || !unForm.password) ? 0.5 : 1,
-                  transition: 'opacity 0.2s, transform 0.15s, box-shadow 0.2s',
-                }}
-                onMouseEnter={e => { if (!unLoading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(37,99,235,0.3)' } }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
-              >
-                {unLoading ? 'Updating…' : 'Update Username'}
-              </button>
+                {pwForm.new && (() => {
+                  const len = pwForm.new.length
+                  const strength = len < 6 ? 0 : len < 8 ? 1 : len < 12 ? 2 : 3
+                  const labels = ['Too short', 'Weak', 'Good', 'Strong']
+                  const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e']
+                  return (
+                    <div>
+                      <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.2rem' }}>
+                        {[0, 1, 2, 3].map(i => (
+                          <div key={i} style={{ flex: 1, height: '3px', borderRadius: '999px', background: i <= strength ? colors[strength] : C.border, transition: 'background 0.3s' }} />
+                        ))}
+                      </div>
+                      <p style={{ fontSize: '0.68rem', color: colors[strength], margin: 0, fontWeight: 600 }}>{labels[strength]}</p>
+                    </div>
+                  )
+                })()}
+
+                {pwError && <p style={{ fontSize: '0.78rem', margin: 0, borderRadius: '0.5rem', padding: '0.45rem 0.75rem', color: dark ? '#fca5a5' : '#dc2626', background: dark ? 'rgba(239,68,68,0.1)' : '#fef2f2', border: `1px solid ${dark ? 'rgba(239,68,68,0.2)' : '#fecaca'}` }}>{pwError}</p>}
+
+                <button type="submit" disabled={pwLoading}
+                  style={{ ...btnPrimary, opacity: pwLoading ? 0.6 : 1, cursor: pwLoading ? 'not-allowed' : 'pointer', marginTop: 'auto' }}
+                  onMouseEnter={e => { if (!pwLoading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(37,99,235,0.3)' } }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
+                >
+                  {pwLoading ? 'Updating…' : 'Update Password'}
+                </button>
+              </form>
             </div>
           </div>
-
-          {/* ── Change Password ─────────────────────────────────────────────── */}
-          <div style={{ ...card, padding: '1.5rem' }}>
-            <SectionHeader
-              icon={KeyIcon}
-              title="Change Password"
-              subtitle={<span style={{ color: C.textSecondary }}>Keep your account secure</span>}
-              iconBg={dark ? 'rgba(37,99,235,0.12)' : 'rgba(37,99,235,0.08)'}
-              iconColor={dark ? '#93c5fd' : '#2563eb'}
-            />
-
-            <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-              <PasswordField label="New Password" value={pwForm.new} onChange={e => setPwForm(p => ({ ...p, new: e.target.value }))} placeholder="Enter new password" C={C} />
-              <PasswordField label="Confirm New Password" value={pwForm.confirm} onChange={e => setPwForm(p => ({ ...p, confirm: e.target.value }))} placeholder="Confirm new password" C={C} />
-
-              {/* Strength bar */}
-              {pwForm.new && (
-                <div>
-                  {(() => {
-                    const len = pwForm.new.length
-                    const strength = len < 6 ? 0 : len < 8 ? 1 : len < 12 ? 2 : 3
-                    const labels = ['Too short', 'Weak', 'Good', 'Strong']
-                    const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e']
-                    return (
-                      <div>
-                        <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.25rem' }}>
-                          {[0, 1, 2, 3].map(i => (
-                            <div key={i} style={{ flex: 1, height: '3px', borderRadius: '999px', background: i <= strength ? colors[strength] : C.border, transition: 'background 0.3s' }} />
-                          ))}
-                        </div>
-                        <p style={{ fontSize: '0.7rem', color: colors[strength], margin: 0, fontWeight: 600 }}>{labels[strength]}</p>
-                      </div>
-                    )
-                  })()}
-                </div>
-              )}
-
-              {pwError && <p style={{ fontSize: '0.8rem', margin: 0, borderRadius: '0.5rem', padding: '0.5rem 0.875rem', color: dark ? '#fca5a5' : '#dc2626', background: dark ? 'rgba(239,68,68,0.1)' : '#fef2f2', border: `1px solid ${dark ? 'rgba(239,68,68,0.2)' : '#fecaca'}` }}>{pwError}</p>}
-
-              <button type="submit" disabled={pwLoading} style={{
-                padding: '0.7rem', borderRadius: '0.5rem', border: 'none',
-                background: dark ? '#1e3a6e' : '#2563eb', color: '#fff', fontWeight: 700, fontSize: '0.875rem',
-                cursor: pwLoading ? 'not-allowed' : 'pointer', opacity: pwLoading ? 0.6 : 1,
-                transition: 'opacity 0.2s, transform 0.15s, box-shadow 0.2s',
-              }}
-                onMouseEnter={e => { if (!pwLoading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(37,99,235,0.3)' } }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
-              >
-                {pwLoading ? 'Updating…' : 'Update Password'}
-              </button>
-            </form>
-          </div>
-
-          {/* ── Danger Zone (librarians only) ───────────────────────────────── */}
+       {/* ── Danger Zone (librarians only) ───────────────────────────────── */}
           {role === 'librarian' && (
             <div style={{
               ...card,
-              padding: '1.5rem',
+              padding: '1.25rem 1.5rem',
               border: `1px solid ${dark ? 'rgba(239,68,68,0.2)' : '#fecaca'}`,
-              marginBottom: 0,
             }}>
-              <SectionHeader
-                icon={TrashIcon}
-                title="Danger Zone"
-                subtitle={<span style={{ color: dark ? '#f87171' : '#dc2626' }}>Permanent actions — proceed with caution</span>}
-                iconBg={dark ? 'rgba(239,68,68,0.12)' : '#fef2f2'}
-                iconColor={dark ? '#f87171' : '#dc2626'}
-              />
-
-              <div style={{ ...insetCell, borderColor: dark ? 'rgba(239,68,68,0.15)' : '#fecaca', background: dark ? 'rgba(239,68,68,0.04)' : '#fff5f5', marginBottom: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem', background: dark ? 'rgba(239,68,68,0.12)' : '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <TrashIcon style={{ width: '1rem', height: '1rem', color: dark ? '#f87171' : '#dc2626' }} />
+                  </div>
                   <div>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 600, color: C.textPrimary, margin: '0 0 0.2rem' }}>Delete Account</p>
-                    <p style={{ fontSize: '0.75rem', color: C.textSecondary, margin: 0, lineHeight: 1.5 }}>
-                      Once deleted, all your data is gone forever. This cannot be undone.
+                    <p style={{ fontSize: '0.875rem', fontWeight: 700, color: C.textPrimary, margin: '0 0 0.15rem' }}>Danger Zone</p>
+                    <p style={{ fontSize: '0.72rem', color: C.textSecondary, margin: 0 }}>
+                      Once deleted, all your data is gone forever. This <strong style={{ color: dark ? '#f87171' : '#dc2626' }}>cannot be undone</strong>.
                     </p>
                   </div>
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
-                    style={{
-                      flexShrink: 0, padding: '0.5rem 1rem', borderRadius: '0.5rem',
-                      border: `1px solid ${dark ? 'rgba(239,68,68,0.4)' : '#dc2626'}`,
-                      background: 'transparent', color: dark ? '#f87171' : '#dc2626',
-                      fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '0.4rem',
-                      transition: 'background 0.2s',
-                      whiteSpace: 'nowrap',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.1)' : '#fef2f2'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <TrashIcon style={{ width: '0.875rem', height: '0.875rem' }} />
-                    Delete
-                  </button>
                 </div>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  style={{
+                    flexShrink: 0, padding: '0.5rem 1.125rem', borderRadius: '0.5rem',
+                    border: `1px solid ${dark ? 'rgba(239,68,68,0.4)' : '#dc2626'}`,
+                    background: 'transparent', color: dark ? '#f87171' : '#dc2626',
+                    fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.1)' : '#fef2f2'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <TrashIcon style={{ width: '0.875rem', height: '0.875rem' }} />
+                  Delete Account
+                </button>
               </div>
             </div>
           )}
