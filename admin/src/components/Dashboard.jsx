@@ -140,7 +140,8 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
         }
         .dash-section {
           animation: dashFadeUp 0.45s ease both;
-          position: relative; z-index: 1;
+          position: relative;
+          z-index: 1;
         }
         .dash-section:nth-child(1) { animation-delay: 0.04s }
         .dash-section:nth-child(2) { animation-delay: 0.08s }
@@ -154,9 +155,11 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
       {/* Login Notification - portaled to body to avoid stacking context issues */}
       {createPortal(<LoginNotification />, document.body)}
 
-      {/* Header */}
+      {/* ── Header wrapper — must sit ABOVE all .dash-section children ── */}
       <div style={{
-        position: 'sticky', top: 0,
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,                          /* ← KEY FIX: higher than .dash-section (z-index:1) */
         background: headerBg,
         borderBottom: isSticky ? `1px solid ${headerBorder}` : 'none',
         boxShadow: isSticky
@@ -191,7 +194,6 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
       <div className="dash-section" style={{ marginTop: '2rem' }}>
         <div
           style={{
-            // Inline label color override so it respects dark prop
             '--label-c': labelColor,
           }}
         >
