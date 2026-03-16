@@ -4,9 +4,8 @@ import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 
 const rawCategories = [
-  { name: "Books & Monographs", icon: <BooksIcon /> },
-  { name: "Journals & Articles", icon: <PeriodicalIcon /> },
-  { name: "Databases & Reports", icon: <ReportIcon /> },
+  { name: "Books", icon: <BooksIcon /> },
+  { name: "Reports", icon: <ReportIcon /> },
   { name: "Sourcebooks", icon: <SourcebookIcon /> },
   { name: "Periodicals", icon: <PeriodicalIcon /> },
   { name: "Thesis / Research Papers", icon: <ThesisIcon /> },
@@ -63,7 +62,7 @@ export default function Category() {
     } else { // Large desktop
       return {
         sectionPadding: "py-16",
-        containerPadding: "px-6",
+        containerPadding: "px-12",
         titleSize: "text-[32px]",
         gridCols: "grid-cols-3",
         gap: "gap-6",
@@ -87,7 +86,7 @@ export default function Category() {
 
   return (
     <section className={`w-full bg-white ${config.sectionPadding}`}>
-      <div className={`max-w-[1440px] mx-auto ${config.containerPadding}`}>
+      <div className={`max-w-[1700px] mx-auto ${config.containerPadding}`}>
 
         {/* Title */}
         <div className={`flex justify-between items-center ${windowWidth < 640 ? 'flex-col gap-4' : ''} ${config.titleMargin}`}>
@@ -134,20 +133,14 @@ export default function Category() {
 
 function CategoryCard({ cat, index, config, windowWidth }) {
   const categoryData = {
-    "Books & Monographs": {
+    "Books": {
       description: "Browse our curated catalog of government publications, academic books, and policy documents across all development sectors.",
       bgColor: "bg-[#0b1c48]",
       textColor: "text-white",
       iconColor: "text-green-400",
     },
-    "Journals & Articles": {
-      description: "Access peer-reviewed journals and research articles on economics, planning, infrastructure, and sustainable development.",
-      bgColor: "bg-white",
-      textColor: "text-[#0b1c48]",
-      iconColor: "text-blue-500",
-    },
-    "Databases & Reports": {
-      description: "Dive into statistical databases, annual reports, and data repositories produced by DEPDev and partner agencies.",
+    "Reports": {
+      description: "Dive into annual reports and data repositories produced by DEPDev and partner agencies.",
       bgColor: "bg-[#d4af37]",
       textColor: "text-[#0b1c48]",
       iconColor: "text-purple-500",

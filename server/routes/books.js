@@ -364,7 +364,7 @@ router.get("/:id/related", optionalAuthMiddleware, async (req, res) => {
     const [sourceRows] = await pool.query(
       `SELECT id, category, author, subjects
        FROM books
-       WHERE id = ? AND is_archived = 0 AND is_accessioned = 1`,
+       WHERE id = ? AND is_archived = 0`,
       [bookId]
     );
 
@@ -435,7 +435,6 @@ router.get("/:id/related", optionalAuthMiddleware, async (req, res) => {
       FROM books b
       WHERE b.id            != ?
         AND b.is_archived    = 0
-        AND b.is_accessioned = 1
         AND EXISTS (
           SELECT 1 FROM accessions a
           WHERE a.book_id = b.id AND a.is_archived = 0

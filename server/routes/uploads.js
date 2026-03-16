@@ -317,6 +317,171 @@ router.get('/:id/preview', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// ─── Extract PDF page as image ─────────────────────────────────────────────────────
+router.get('/:id/page/:pageNum', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { id, pageNum } = req.params;
+    const page = parseInt(pageNum);
+    
+    if (!page || page < 1) {
+      return res.status(400).json({ message: 'Invalid page number' });
+    }
+
+    const [uploads] = await pool.query(
+      `SELECT u.*, b.access_level
+       FROM uploads u
+       JOIN books b ON u.book_id = b.id
+       WHERE u.id = ? AND u.status = 'active' AND u.mime_type = 'application/pdf'`,
+      [id]
+    );
+
+    if (uploads.length === 0) {
+      return res.status(404).json({ message: 'PDF file not found' });
+    }
+
+    const upload = uploads[0];
+
+    // Access control: staff_only books require admin, librarian, or staff.
+    if (upload.access_level === 'staff_only') {
+      const role = req.user?.role?.toLowerCase();
+      const isStaff = ['admin', 'librarian', 'staff'].includes(role);
+      if (!isStaff) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
+
+    // Check if file exists
+    try {
+      await fs.access(upload.file_path);
+    } catch {
+      return res.status(404).json({ message: 'File not found on server' });
+    }
+
+    const pdfPoppler = require('pdf-poppler');
+    const path = require('path');
+    const os = require('os');
+
+    // Create temp directory for page extraction
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-page-'));
+    const outputPath = path.join(tempDir, `page-${page}.png`);
+
+    try {
+      // Extract the specific page
+      await pdfPoppler.convert(upload.file_path, outputPath, {
+        format: 'png',
+        page: page,
+        density: 150 // Good quality for web display
+      });
+
+      // Check if the page was extracted successfully
+      try {
+        await fs.access(outputPath);
+      } catch {
+        return res.status(400).json({ message: 'Page number exceeds total pages' });
+      }
+
+      // Stream the extracted page image
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'private, max-age=3600');
+      
+      createReadStream(outputPath).pipe(res);
+
+      // Clean up temp file after response
+      res.on('finish', async () => {
+        try {
+          await fs.unlink(outputPath);
+          await fs.rmdir(tempDir);
+        } catch (error) {
+          console.error('Error cleaning up temp files:', error);
+        }
+      });
+
+    } catch (error) {
+      // Clean up on error
+      try {
+        await fs.rmdir(tempDir);
+      } catch {}
+      
+      console.error('Error extracting PDF page:', error);
+      res.status(500).json({ message: 'Error extracting PDF page' });
+    }
+
+  } catch (error) {
+    console.error('Error in page endpoint:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── Get PDF info (total pages, etc.) ─────────────────────────────────────────────
+router.get('/:id/info', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const [uploads] = await pool.query(
+      `SELECT u.*, b.access_level
+       FROM uploads u
+       JOIN books b ON u.book_id = b.id
+       WHERE u.id = ? AND u.status = 'active' AND u.mime_type = 'application/pdf'`,
+      [req.params.id]
+    );
+
+    if (uploads.length === 0) {
+      return res.status(404).json({ message: 'PDF file not found' });
+    }
+
+    const upload = uploads[0];
+
+    // Access control: staff_only books require admin, librarian, or staff.
+    if (upload.access_level === 'staff_only') {
+      const role = req.user?.role?.toLowerCase();
+      const isStaff = ['admin', 'librarian', 'staff'].includes(role);
+      if (!isStaff) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
+
+    // Check if file exists
+    try {
+      await fs.access(upload.file_path);
+    } catch {
+      return res.status(404).json({ message: 'File not found on server' });
+    }
+
+    const pdfPoppler = require('pdf-poppler');
+    const path = require('path');
+    const os = require('os');
+
+    // Create temp directory for info extraction
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-info-'));
+
+    try {
+      // Get PDF info including page count
+      const info = await pdfPoppler.info(upload.file_path);
+      
+      res.json({
+        total_pages: info.pages,
+        title: info.title || upload.original_name,
+        author: info.author || null,
+        created: info.creationDate || null,
+        modified: info.modDate || null
+      });
+
+    } catch (error) {
+      console.error('Error getting PDF info:', error);
+      res.status(500).json({ message: 'Error getting PDF info' });
+    } finally {
+      // Clean up temp directory
+      try {
+        await fs.rmdir(tempDir);
+      } catch (error) {
+        console.error('Error cleaning up temp directory:', error);
+      }
+    }
+
+  } catch (error) {
+    console.error('Error in info endpoint:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // ─── Download file ─────────────────────────────────────────────────────────────
 router.get('/:id/download', authMiddleware, async (req, res) => {
   try {
