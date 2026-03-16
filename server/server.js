@@ -78,6 +78,9 @@ app.use('/api/acquisitions', acquisitionsRoutes);
 const newsAnnouncementsRoutes = require('./routes/newsAnnouncements');
 app.use('/api', newsAnnouncementsRoutes);
 
+const bookmarksRouter = require('./routes/bookmarks');
+app.use('/api/bookmarks', bookmarksRouter);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);

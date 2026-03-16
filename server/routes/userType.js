@@ -4,8 +4,8 @@ const pool = require('../config/connection');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
 router.use(authMiddleware);
+// routes/userType.js
 router.use(roleMiddleware(['Staff', 'admin', 'librarian']));
-
 // ─── GET /api/usertype ────────────────────────────────────────────────────────
 router.get('/', async (req, res) => {
   try {
@@ -66,7 +66,6 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch users.' });
   }
 });
-
 // ─── GET /api/usertype/stats ──────────────────────────────────────────────────
 router.get('/stats', async (req, res) => {
   try {
@@ -99,7 +98,6 @@ router.get('/stats', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch stats.' });
   }
 });
-
 // ─── GET /api/usertype/patrons/count ─────────────────────────────────────────
 router.get('/patrons/count', async (req, res) => {
   try {
@@ -112,7 +110,6 @@ router.get('/patrons/count', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch patron count.' });
   }
 });
-
 // ─── PATCH /api/usertype/:id/user-type ───────────────────────────────────────
 router.patch('/:id/user-type', async (req, res) => {
   try {
@@ -153,11 +150,9 @@ router.patch('/:id/user-type', async (req, res) => {
     res.status(500).json({ message: 'Failed to update user type.' });
   }
 });
-
 // ─── Helper ───────────────────────────────────────────────────────────────────
 function capitalizeRole(role) {
   if (!role) return 'Unknown';
   return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
 }
-
 module.exports = router;

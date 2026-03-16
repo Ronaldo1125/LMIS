@@ -179,4 +179,74 @@ router.post('/google', async (req, res) => {
   }
 });
 
+/* ═══════════════════════════════════════════════════════
+   PATCH /api/auth/:id/profile
+   Update profile fields for Patron/Staff accounts only.
+   Scoped strictly to the `users` table — never touches
+   `adminpanel_users` (admins/librarians have their own routes).
+═══════════════════════════════════════════════════════ */
+router.patch('/:id/profile', async (req, res) => {
+  const { id } = req.params;
+  const { full_name, username, email, avatar } = req.body;
+
+  if (!id || isNaN(Number(id)))
+    return res.status(400).json({ message: 'Invalid account ID.' });
+
+  try {
+    const [userRows] = await pool.query(
+      'SELECT id FROM users WHERE id = ?', [id]
+    );
+    if (userRows.length === 0)
+      return res.status(404).json({ message: 'Account not found.' });
+
+    await pool.query(
+      `UPDATE users
+       SET full_name = COALESCE(?, full_name),
+           username  = COALESCE(?, username),
+           email     = COALESCE(?, email),
+           avatar    = COALESCE(?, avatar)
+       WHERE id = ?`,
+      [full_name ?? null, username ?? null, email ?? null, avatar ?? null, id]
+    );
+
+    res.json({ message: 'Profile updated.' });
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ message: 'Failed to update profile.' });
+  }
+});
+
+/* ═══════════════════════════════════════════════════════
+   DELETE /api/auth/:id
+   Permanently delete a Patron/Staff account.
+   Scoped strictly to the `users` table — adminpanel_users
+   accounts are never touched here.
+═══════════════════════════════════════════════════════ */
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || isNaN(Number(id)))
+    return res.status(400).json({ message: 'Invalid account ID.' });
+
+  try {
+    // Only allow deletion of rows in the `users` table
+    const [userRows] = await pool.query(
+      'SELECT id, user_type FROM users WHERE id = ?', [id]
+    );
+    if (userRows.length === 0)
+      return res.status(404).json({ message: 'Account not found.' });
+
+    // Delete related data first to respect FK constraints.
+    // Extend this list to match your actual schema.
+    await pool.query('DELETE FROM bookmarks WHERE user_id = ?', [id]);
+    await pool.query('DELETE FROM borrows   WHERE user_id = ?', [id]);
+    await pool.query('DELETE FROM users     WHERE id      = ?', [id]);
+
+    return res.status(200).json({ message: 'Account deleted successfully.' });
+  } catch (err) {
+    console.error('Delete account error:', err);
+    return res.status(500).json({ message: 'Server error while deleting account.' });
+  }
+});
+
 module.exports = router;
