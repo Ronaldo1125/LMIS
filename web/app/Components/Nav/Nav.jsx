@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, User, ChevronDown } from "lucide-react";
+import { LogOut, User, ChevronDown, Bell } from "lucide-react";
 import MobileNav from "./MobileNav";
 import Login from "../Auth/Login";
 import Register from "../Auth/Register";
@@ -35,6 +35,7 @@ const Nav = () => {
   const [isScrolled, setIsScrolled]               = useState(false);
   const [isVisible, setIsVisible]                 = useState(true);
   const [lastScrollY, setLastScrollY]             = useState(0);
+  const [hasNotifications, setHasNotifications]   = useState(false);
 
   const profileRef = useRef(null);
   const collectionBtnRef = useRef(null);
@@ -324,7 +325,13 @@ const Nav = () => {
 
             {user ? (
               /* ── LOGGED IN: profile chip ── */
-              <div ref={profileRef} className="relative flex items-center">
+              <div ref={profileRef} className="relative flex items-center gap-3">
+                <button className="relative p-2 rounded-full hover:bg-gray-100 transition">
+                  <Bell size={18} className="text-gray-600" />
+                  {hasNotifications && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </button>
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center gap-2 rounded-full pr-2 pl-1 py-1 hover:bg-gray-100 transition"
