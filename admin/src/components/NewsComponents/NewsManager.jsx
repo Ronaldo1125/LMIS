@@ -7,9 +7,6 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
-const FONT_DISPLAY = '"Sora", -apple-system, BlinkMacSystemFont, sans-serif'
-const INTER        = '"DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-
 const CATEGORIES = ['Education', 'Events', 'Policy', 'Technology', 'General']
 
 const CATEGORY_STYLES = {
@@ -28,24 +25,22 @@ const truncateUrl = (url, max = 42) =>
 
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
-  // NOTE: Do NOT set Content-Type here — the browser sets it automatically for FormData (multipart)
 })
 
 const StatusBadge = ({ ok, message }) => (
   <div style={{
     borderRadius: '0.45rem', padding: '0.55rem 0.875rem',
-    fontSize: '0.8rem', fontWeight: 500, marginBottom: '1.125rem',
+    fontSize: '0.875rem', fontWeight: 500, marginBottom: '1.125rem',
     background: ok ? 'rgba(5,150,105,0.09)' : 'rgba(239,68,68,0.09)',
     border: `1px solid ${ok ? 'rgba(5,150,105,0.22)' : 'rgba(239,68,68,0.22)'}`,
     color: ok ? '#059669' : '#ef4444',
-    fontFamily: INTER,
   }}>
     {message}
   </div>
 )
 
 const FieldError = ({ msg }) =>
-  msg ? <p style={{ margin: '0.25rem 0 0', fontSize: '0.72rem', color: '#ef4444', fontFamily: INTER }}>{msg}</p> : null
+  msg ? <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#ef4444' }}>{msg}</p> : null
 
 // ── Thumbnail upload / preview widget ───────────────────────────────────────
 const ThumbnailUpload = ({ file, preview, onFile, onClear, dark, inputBg, inputBorder, textMuted, accent, error }) => {
@@ -66,9 +61,7 @@ const ThumbnailUpload = ({ file, preview, onFile, onClear, dark, inputBg, inputB
   const handleDrop = (e) => {
     e.preventDefault()
     const dropped = e.dataTransfer.files[0]
-    if (dropped && dropped.type.startsWith('image/')) {
-      onFile(dropped)
-    }
+    if (dropped && dropped.type.startsWith('image/')) onFile(dropped)
   }
 
   const handleDragOver = (e) => { e.preventDefault() }
@@ -76,46 +69,16 @@ const ThumbnailUpload = ({ file, preview, onFile, onClear, dark, inputBg, inputB
   if (preview) {
     return (
       <div style={{ position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', border: `1.5px solid ${accent}` }}>
-        <img
-          src={preview}
-          alt="Thumbnail preview"
-          style={{ width: '100%', height: '9rem', objectFit: 'cover', display: 'block' }}
-        />
-        {/* Overlay: filename + clear */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0,
-          background: 'linear-gradient(transparent, rgba(0,0,0,0.65))',
-          padding: '0.4rem 0.6rem 0.45rem',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <span style={{ fontSize: '0.68rem', color: '#fff', fontFamily: INTER, opacity: 0.9, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <img src={preview} alt="Thumbnail preview" style={{ width: '100%', height: '9rem', objectFit: 'cover', display: 'block' }} />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.65))', padding: '0.4rem 0.6rem 0.45rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '0.75rem', color: '#fff', opacity: 0.9, maxWidth: '80%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {file?.name || 'thumbnail'}
           </span>
-          <button
-            type="button"
-            onClick={onClear}
-            style={{
-              background: 'rgba(255,255,255,0.18)', border: 'none', borderRadius: '50%',
-              width: '1.35rem', height: '1.35rem', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', flexShrink: 0,
-            }}
-            title="Remove thumbnail"
-          >
+          <button type="button" onClick={onClear} style={{ background: 'rgba(255,255,255,0.18)', border: 'none', borderRadius: '50%', width: '1.35rem', height: '1.35rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }} title="Remove thumbnail">
             <XMarkIcon style={{ width: '0.7rem', height: '0.7rem' }} />
           </button>
         </div>
-        {/* Click to replace */}
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          style={{
-            position: 'absolute', top: '0.4rem', right: '0.4rem',
-            background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '0.3rem',
-            padding: '0.2rem 0.5rem', cursor: 'pointer', color: '#fff',
-            fontSize: '0.65rem', fontFamily: INTER, fontWeight: 600,
-          }}
-        >
+        <button type="button" onClick={() => inputRef.current?.click()} style={{ position: 'absolute', top: '0.4rem', right: '0.4rem', background: 'rgba(0,0,0,0.45)', border: 'none', borderRadius: '0.3rem', padding: '0.2rem 0.5rem', cursor: 'pointer', color: '#fff', fontSize: '0.75rem', fontWeight: 600 }}>
           Replace
         </button>
         <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) onFile(e.target.files[0]); e.target.value = '' }} />
@@ -135,10 +98,10 @@ const ThumbnailUpload = ({ file, preview, onFile, onClear, dark, inputBg, inputB
       >
         <div style={{ padding: '1.1rem 0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
           <PhotoIcon style={{ width: '1.5rem', height: '1.5rem', color: textMuted, opacity: 0.6 }} />
-          <span style={{ fontSize: '0.73rem', color: textMuted, fontFamily: INTER, textAlign: 'center', lineHeight: 1.4 }}>
+          <span style={{ fontSize: '0.875rem', color: textMuted, textAlign: 'center', lineHeight: 1.4 }}>
             <span style={{ color: accent, fontWeight: 600 }}>Click to upload</span> or drag &amp; drop
           </span>
-          <span style={{ fontSize: '0.65rem', color: textMuted, opacity: 0.7, fontFamily: INTER }}>
+          <span style={{ fontSize: '0.75rem', color: textMuted, opacity: 0.7 }}>
             PNG, JPG, GIF, WebP · max 5 MB
           </span>
         </div>
@@ -154,8 +117,8 @@ const NewsManager = ({ dark }) => {
   const [loading,       setLoading]       = useState(true)
   const [fetchError,    setFetchError]    = useState('')
   const [form,          setForm]          = useState({ title: '', url: '', category: 'General' })
-  const [thumbFile,     setThumbFile]     = useState(null)   // File object
-  const [thumbPreview,  setThumbPreview]  = useState(null)   // data-URL for preview
+  const [thumbFile,     setThumbFile]     = useState(null)
+  const [thumbPreview,  setThumbPreview]  = useState(null)
   const [errors,        setErrors]        = useState({})
   const [submitting,    setSubmitting]    = useState(false)
   const [status,        setStatus]        = useState(null)
@@ -185,7 +148,6 @@ const NewsManager = ({ dark }) => {
 
   useEffect(() => { fetchNews() }, [fetchNews])
 
-  // Generate local preview URL whenever a new file is chosen
   const handleThumbFile = (file) => {
     setThumbFile(file)
     const reader = new FileReader()
@@ -208,26 +170,18 @@ const NewsManager = ({ dark }) => {
     const e = validate()
     if (Object.keys(e).length) { setErrors(e); return }
     setSubmitting(true); setStatus(null)
-
     try {
-      // Use FormData so we can include the image file
       const fd = new FormData()
       fd.append('title',    form.title.trim())
       fd.append('url',      form.url.trim())
       fd.append('category', form.category)
       if (thumbFile) fd.append('thumbnail', thumbFile)
-
-      const res = await fetch(`${API_BASE}/news`, {
-        method: 'POST',
-        headers: authHeaders(), // no Content-Type — browser sets multipart boundary
-        body: fd,
-      })
+      const res = await fetch(`${API_BASE}/news`, { method: 'POST', headers: authHeaders(), body: fd })
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.message || `Error ${res.status}`) }
       const created = await res.json()
       setNewsList(prev => [created, ...prev])
       setForm({ title: '', url: '', category: 'General' })
-      clearThumb()
-      setErrors({})
+      clearThumb(); setErrors({})
       setStatus({ ok: true, message: 'Article published successfully.' })
       setTimeout(() => setStatus(null), 3500)
     } catch (err) {
@@ -255,19 +209,19 @@ const NewsManager = ({ dark }) => {
   }
 
   const inputStyle = (hasErr) => ({
-    width: '100%', padding: '0.6rem 0.875rem',
-    borderRadius: '0.45rem',
+    width: '100%', padding: '0.625rem 0.875rem',
+    borderRadius: '0.5rem',
     border: `1px solid ${hasErr ? '#ef4444' : inputBorder}`,
     background: inputBg, color: textPrimary,
-    fontSize: '0.8375rem', outline: 'none',
+    fontSize: '0.875rem', outline: 'none',
     transition: 'border-color 0.18s ease',
-    boxSizing: 'border-box', fontFamily: INTER,
+    boxSizing: 'border-box',
   })
 
   const labelStyle = {
-    display: 'block', fontSize: '0.72rem', fontWeight: 700,
+    display: 'block', fontSize: '0.75rem', fontWeight: 600,
     color: textMuted, marginBottom: '0.375rem',
-    letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: INTER,
+    letterSpacing: '0.05em', textTransform: 'uppercase',
   }
 
   const sectionHeader = (icon, title, count) => (
@@ -276,12 +230,12 @@ const NewsManager = ({ dark }) => {
         <div style={{ width: '1.875rem', height: '1.875rem', borderRadius: '0.4rem', background: accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {icon}
         </div>
-        <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: textPrimary, letterSpacing: '-0.01em', fontFamily: FONT_DISPLAY }}>
+        <span style={{ fontSize: '1rem', fontWeight: 700, color: textPrimary, letterSpacing: '-0.01em' }}>
           {title}
         </span>
       </div>
       {count !== undefined && (
-        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: accent, background: accentLight, borderRadius: '9999px', padding: '0.15rem 0.6rem', letterSpacing: '0.03em', fontFamily: INTER }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: accent, background: accentLight, borderRadius: '9999px', padding: '0.15rem 0.6rem', letterSpacing: '0.03em' }}>
           {count}
         </span>
       )}
@@ -298,7 +252,6 @@ const NewsManager = ({ dark }) => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
 
-          {/* Title */}
           <div>
             <label style={labelStyle}>Article Title</label>
             <input style={inputStyle(!!errors.title)} placeholder="e.g. DepEd Releases New Guidelines…"
@@ -310,7 +263,6 @@ const NewsManager = ({ dark }) => {
             <FieldError msg={errors.title} />
           </div>
 
-          {/* URL */}
           <div>
             <label style={labelStyle}>Article URL</label>
             <div style={{ position: 'relative' }}>
@@ -325,7 +277,6 @@ const NewsManager = ({ dark }) => {
             <FieldError msg={errors.url} />
           </div>
 
-          {/* Category */}
           <div>
             <label style={labelStyle}>Category</label>
             <select style={{ ...inputStyle(false), cursor: 'pointer' }} value={form.category}
@@ -336,36 +287,27 @@ const NewsManager = ({ dark }) => {
             </select>
           </div>
 
-          {/* Thumbnail upload */}
           <div>
             <label style={labelStyle}>
               Thumbnail
               <span style={{ marginLeft: '0.3rem', fontWeight: 400, opacity: 0.6, textTransform: 'none', letterSpacing: 0 }}>— optional</span>
             </label>
             <ThumbnailUpload
-              file={thumbFile}
-              preview={thumbPreview}
-              onFile={handleThumbFile}
-              onClear={clearThumb}
-              dark={dark}
-              border={border}
-              inputBg={inputBg}
-              inputBorder={inputBorder}
-              textMuted={textMuted}
-              accent={accent}
-              error={errors.thumbnail}
+              file={thumbFile} preview={thumbPreview}
+              onFile={handleThumbFile} onClear={clearThumb}
+              dark={dark} border={border} inputBg={inputBg} inputBorder={inputBorder}
+              textMuted={textMuted} accent={accent} error={errors.thumbnail}
             />
             <FieldError msg={errors.thumbnail} />
           </div>
 
-          {/* Submit */}
           <button onClick={handleSubmit} disabled={submitting} style={{
             width: '100%', padding: '0.65rem',
             background: submitting ? (dark ? '#1c3461' : '#94a3b8') : accent,
-            color: '#ffffff', border: 'none', borderRadius: '0.45rem',
-            fontSize: '0.8375rem', fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer',
+            color: '#ffffff', border: 'none', borderRadius: '0.5rem',
+            fontSize: '0.875rem', fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem',
-            letterSpacing: '0.01em', fontFamily: INTER,
+            letterSpacing: '0.01em',
             boxShadow: submitting ? 'none' : '0 2px 10px rgba(21,74,154,0.28)',
             transition: 'background 0.18s ease, opacity 0.18s ease',
           }}>
@@ -380,89 +322,62 @@ const NewsManager = ({ dark }) => {
         {sectionHeader(<NewspaperIcon style={{ width: '0.9rem', height: '0.9rem', color: accent }} />, 'Published Articles', newsList.length)}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-0.75rem', marginBottom: '1rem' }}>
-          <button onClick={fetchNews} disabled={loading} style={{
-            background: 'transparent', border: `1px solid ${border}`,
-            borderRadius: '0.4rem', padding: '0.3rem 0.6rem',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            color: textMuted, display: 'flex', alignItems: 'center', gap: '0.3rem',
-            fontSize: '0.72rem', fontWeight: 600, fontFamily: INTER,
-            transition: 'border-color 0.18s ease, color 0.18s ease',
-          }}
+          <button onClick={fetchNews} disabled={loading} style={{ background: 'transparent', border: `1px solid ${border}`, borderRadius: '0.4rem', padding: '0.3rem 0.6rem', cursor: loading ? 'not-allowed' : 'pointer', color: textMuted, display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', fontWeight: 600, transition: 'border-color 0.18s ease, color 0.18s ease' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = border; e.currentTarget.style.color = textMuted }}
-          >
+            onMouseLeave={e => { e.currentTarget.style.borderColor = border; e.currentTarget.style.color = textMuted }}>
             <ArrowPathIcon style={{ width: '0.75rem', height: '0.75rem', animation: loading ? 'spin 1s linear infinite' : 'none' }} />
             Refresh
           </button>
         </div>
 
         {loading ? (
-          <div style={{ padding: '3rem 0', textAlign: 'center', color: textMuted, fontSize: '0.8375rem', fontFamily: INTER }}>
-            Loading articles…
-          </div>
+          <div style={{ padding: '3rem 0', textAlign: 'center', color: textMuted, fontSize: '0.875rem' }}>Loading articles…</div>
         ) : fetchError ? (
-          <div style={{ padding: '1rem', borderRadius: '0.45rem', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', color: '#ef4444', fontSize: '0.8rem', textAlign: 'center', fontFamily: INTER }}>
+          <div style={{ padding: '1rem', borderRadius: '0.5rem', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', color: '#ef4444', fontSize: '0.875rem', textAlign: 'center' }}>
             {fetchError}
-            <button onClick={fetchNews} style={{ display: 'block', margin: '0.625rem auto 0', fontSize: '0.75rem', color: '#ef4444', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '0.35rem', padding: '0.3rem 0.7rem', cursor: 'pointer', fontFamily: INTER }}>Retry</button>
+            <button onClick={fetchNews} style={{ display: 'block', margin: '0.625rem auto 0', fontSize: '0.75rem', color: '#ef4444', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '0.35rem', padding: '0.3rem 0.7rem', cursor: 'pointer' }}>Retry</button>
           </div>
         ) : newsList.length === 0 ? (
           <div style={{ padding: '3.5rem 0', textAlign: 'center', color: textMuted }}>
             <NewspaperIcon style={{ width: '2rem', height: '2rem', margin: '0 auto 0.625rem', opacity: 0.3 }} />
-            <p style={{ margin: 0, fontSize: '0.8375rem', fontFamily: INTER }}>No articles published yet.</p>
+            <p style={{ margin: 0, fontSize: '0.875rem' }}>No articles published yet.</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', maxHeight: '60vh', overflowY: 'auto', paddingRight: '0.25rem' }}>
             {newsList.map(item => {
               const cat = CATEGORY_STYLES[item.category] || CATEGORY_STYLES.General
-              const isConfirming  = deleteConfirm === item.id
+              const isConfirming   = deleteConfirm === item.id
               const isDeletingThis = deleting === item.id
               return (
-                <div key={item.id} style={{
-                  background: isConfirming ? (dark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.04)') : bg2,
-                  border: `1px solid ${isConfirming ? 'rgba(239,68,68,0.22)' : border}`,
-                  borderRadius: '0.625rem',
-                  overflow: 'hidden',
-                  transition: 'all 0.18s ease',
-                }}>
-                  {/* Thumbnail strip — shown if present */}
+                <div key={item.id} style={{ background: isConfirming ? (dark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.04)') : bg2, border: `1px solid ${isConfirming ? 'rgba(239,68,68,0.22)' : border}`, borderRadius: '0.625rem', overflow: 'hidden', transition: 'all 0.18s ease' }}>
                   {item.thumbnail && (
                     <div style={{ height: '6.5rem', overflow: 'hidden', position: 'relative' }}>
-                      <img
-                        src={item.thumbnail}
-                        alt=""
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                        onError={e => { e.currentTarget.parentElement.style.display = 'none' }}
-                      />
-                      <div style={{
-                        position: 'absolute', inset: 0,
-                        background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.18))',
-                      }} />
+                      <img src={item.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={e => { e.currentTarget.parentElement.style.display = 'none' }} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.18))' }} />
                     </div>
                   )}
-
                   <div style={{ padding: '0.8rem 0.975rem' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem', flexWrap: 'wrap' }}>
-                          <span style={{ background: cat.bg, color: cat.text, borderRadius: '9999px', padding: '0.05rem 0.55rem', fontSize: '0.6375rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0, fontFamily: INTER }}>
+                          <span style={{ background: cat.bg, color: cat.text, borderRadius: '9999px', padding: '0.05rem 0.55rem', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0 }}>
                             {item.category}
                           </span>
-                          <span style={{ fontSize: '0.68rem', color: textMuted, fontFamily: INTER }}>
+                          <span style={{ fontSize: '0.75rem', color: textMuted }}>
                             {formatDate(item.created_at || item.addedAt)}
                           </span>
                         </div>
-                        <p style={{ margin: '0 0 0.25rem', fontSize: '0.8375rem', fontWeight: 600, color: textPrimary, lineHeight: 1.4, fontFamily: INTER }}>
+                        <p style={{ margin: '0 0 0.25rem', fontSize: '0.875rem', fontWeight: 600, color: textPrimary, lineHeight: 1.4 }}>
                           {item.title}
                         </p>
                         <a href={item.url} target="_blank" rel="noopener noreferrer"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.7rem', color: accent, textDecoration: 'none', opacity: 0.85, fontFamily: INTER }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem', color: accent, textDecoration: 'none', opacity: 0.85 }}
                           onMouseEnter={e => e.currentTarget.style.opacity = '1'}
                           onMouseLeave={e => e.currentTarget.style.opacity = '0.85'}>
                           {truncateUrl(item.url)}
                           <ArrowTopRightOnSquareIcon style={{ width: '0.65rem', height: '0.65rem' }} />
                         </a>
                       </div>
-
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.3rem', flexShrink: 0 }}>
                         {!isConfirming ? (
                           <button onClick={() => setDeleteConfirm(item.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: textMuted, padding: '0.25rem', borderRadius: '0.35rem', transition: 'color 0.15s ease, background 0.15s ease' }}
@@ -472,10 +387,10 @@ const NewsManager = ({ dark }) => {
                           </button>
                         ) : (
                           <div style={{ display: 'flex', gap: '0.3rem' }}>
-                            <button onClick={() => handleDelete(item.id)} disabled={isDeletingThis} style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: '0.35rem', border: 'none', cursor: isDeletingThis ? 'not-allowed' : 'pointer', background: '#ef4444', color: '#ffffff', fontFamily: INTER, opacity: isDeletingThis ? 0.7 : 1 }}>
+                            <button onClick={() => handleDelete(item.id)} disabled={isDeletingThis} style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.25rem 0.625rem', borderRadius: '0.35rem', border: 'none', cursor: isDeletingThis ? 'not-allowed' : 'pointer', background: '#ef4444', color: '#ffffff', opacity: isDeletingThis ? 0.7 : 1 }}>
                               {isDeletingThis ? 'Removing…' : 'Remove'}
                             </button>
-                            <button onClick={() => setDeleteConfirm(null)} style={{ fontSize: '0.72rem', fontWeight: 600, padding: '0.25rem 0.625rem', borderRadius: '0.35rem', border: `1px solid ${border}`, cursor: 'pointer', background: 'transparent', color: textMuted, fontFamily: INTER }}>
+                            <button onClick={() => setDeleteConfirm(null)} style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.25rem 0.625rem', borderRadius: '0.35rem', border: `1px solid ${border}`, cursor: 'pointer', background: 'transparent', color: textMuted }}>
                               Cancel
                             </button>
                           </div>
