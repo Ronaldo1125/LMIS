@@ -37,6 +37,8 @@ const Nav = () => {
   const [lastScrollY, setLastScrollY]             = useState(0);
 
   const profileRef = useRef(null);
+  const collectionBtnRef = useRef(null);
+  const dropdownRef = useRef(null);
   const router     = useRouter();
 
   /* ── Scroll behavior ── */
@@ -162,28 +164,150 @@ const Nav = () => {
               <li>
                 <Link href="/catalog" className="hover:text-black/80 transition">New release</Link>
               </li>
-              <li className="relative">
-                <div
-                  className="flex items-center cursor-pointer hover:text-black/80 transition"
+              {/* COLLECTION — British Museum style */}
+              <li className="relative h-16 flex items-center">
+                <button
+                  ref={collectionBtnRef}
                   onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
+                  className="flex items-center gap-1 hover:text-black/70 transition relative h-full"
+                  style={{ paddingBottom: "2px" }}
                 >
-                  <Link href="/contact">Collection</Link>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                    strokeWidth="1.5" stroke="currentColor" className="w-3 h-3 ml-1">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                  </svg>
-                </div>
-                <div className={`absolute left-0 mt-2 w-56 bg-black/95 border border-white/10 rounded-md shadow-xl py-1 z-50 transition-all duration-200 ${
-                  isCollectionsOpen ? "opacity-100 visible" : "opacity-0 invisible"
-                }`}>
-                  <Link href="/collections/books"       className="block px-4 py-2 text-sm text-white hover:bg-white/10">Books</Link>
-                  <Link href="/collections/sourcebooks" className="block px-4 py-2 text-sm text-white hover:bg-white/10">Sourcebooks</Link>
-                  <Link href="/collections/periodicals" className="block px-4 py-2 text-sm text-white hover:bg-white/10">Periodicals</Link>
-                  <Link href="/collections/thesis"      className="block px-4 py-2 text-sm text-white hover:bg-white/10">Thesis/Research Papers</Link>
-                  <Link href="/collections/statute"     className="block px-4 py-2 text-sm text-white hover:bg-white/10">Statute/Legal Documents</Link>
-                  <Link href="/collections/guides"      className="block px-4 py-2 text-sm text-white hover:bg-white/10">Guide Manuals</Link>
-                  <Link href="/collections/reports"     className="block px-4 py-2 text-sm text-white hover:bg-white/10">Reports</Link>
-                  <Link href="/collections/reference"   className="block px-4 py-2 text-sm text-white hover:bg-white/10">Reference Material</Link>
+                  Collection
+                  <ChevronDown
+                    size={14}
+                    style={{
+                      transition: "transform 0.3s ease",
+                      transform: isCollectionsOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    }}
+                  />
+                  {/* Active underline */}
+                  <span
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: "2px",
+                      backgroundColor: "rgb(25,18,101)",
+                      transform: isCollectionsOpen ? "scaleX(1)" : "scaleX(0)",
+                      transition: "transform 0.25s ease",
+                      transformOrigin: "left",
+                    }}
+                  />
+                </button>
+
+                {/* ── MEGA MENU DROPDOWN ── */}
+                <div
+                  ref={dropdownRef}
+                  style={{
+                    position: "fixed",
+                    top: "64px",
+                    left: 0,
+                    right: 0,
+                    zIndex: 50,
+                    overflow: "hidden",
+                    // Clip animation: max-height 0 → full height
+                    maxHeight: isCollectionsOpen ? "280px" : "0px",
+                    transition: "max-height 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
+                    pointerEvents: isCollectionsOpen ? "all" : "none",
+                  }}
+                >
+                  <div style={{ background: "#fff", position: "relative" }}>
+
+                    {/* Menu items */}
+                    <div
+                      style={{
+                        maxWidth: "1440px",
+                        margin: "0 auto",
+                        display: "grid",
+                        gridTemplateColumns: "repeat(3, 1fr)",
+                        gap: "0 30px",
+                        padding: "28px 40px 24px",
+                        position: "relative",
+                        zIndex: 2,
+                      }}
+                    >
+                      {/* COL 1 */}
+                      <div>
+                        {[
+                          { label: "Books", href: "/collections/books" },
+                          { label: "Sourcebooks", href: "/collections/sourcebooks" },
+                          { label: "Periodicals", href: "/collections/periodicals" },
+                        ].map((item, i) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              padding: "14px 0",
+                              borderBottom: "1px solid rgba(0,0,0,0.12)",
+                              color: "#000",
+                              textDecoration: "none",
+                              fontSize: "14px",
+                            }}
+                          >
+                            <span>{item.label}</span>
+                            <ArrowCircle />
+                          </Link>
+                        ))}
+                      </div>
+
+                      {/* COL 2 */}
+                      <div>
+                        {[
+                          { label: "Thesis / Research Papers", href: "/collections/thesis" },
+                          { label: "Statute / Legal Documents", href: "/collections/statute" },
+                          { label: "Guide Manuals", href: "/collections/guides" },
+                        ].map((item, i) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              padding: "14px 0",
+                              borderBottom: "1px solid rgba(0,0,0,0.12)",
+                              color: "#000",
+                              textDecoration: "none",
+                              fontSize: "14px",
+                            }}
+                          >
+                            <span>{item.label}</span>
+                            <ArrowCircle />
+                          </Link>
+                        ))}
+                      </div>
+
+                      {/* COL 3 */}
+                      <div>
+                        {[
+                          { label: "Reports", href: "/collections/reports" },
+                          { label: "Reference Materials", href: "/collections/reference" },
+                        ].map((item, i) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              padding: "14px 0",
+                              borderBottom: "1px solid rgba(0,0,0,0.12)",
+                              color: "#000",
+                              textDecoration: "none",
+                              fontSize: "14px",
+                            }}
+                          >
+                            <span>{item.label}</span>
+                            <ArrowCircle />
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </li>
               <li>
@@ -309,5 +433,20 @@ const Nav = () => {
     </>
   );
 };
+
+/* ── Small arrow-circle icon ── */
+const ArrowCircle = () => (
+  <span style={{
+    width: "24px", height: "24px",
+    backgroundColor: "rgb(25,18,101)",
+    borderRadius: "50%",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    flexShrink: 0, marginLeft: "12px",
+  }}>
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  </span>
+);
 
 export default Nav;
