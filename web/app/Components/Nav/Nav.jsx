@@ -3,32 +3,43 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, LogOut, User, ChevronDown, Bell } from "lucide-react";
+import { LogOut, User, ChevronDown } from "lucide-react";
 import MobileNav from "./MobileNav";
 import Login from "../Auth/Login";
 import Register from "../Auth/Register";
 import MyProfile from "../MyProfile";
 
+const dicebearUrl = (seed) =>
+  `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(seed)}`;
+
+// ── FIX: Extract seed from either a full DiceBear URL or a plain seed string ──
+const extractSeed = (avatarValue) => {
+  if (!avatarValue) return "default";
+  try {
+    const url = new URL(avatarValue);
+    return url.searchParams.get("seed") || avatarValue;
+  } catch {
+    return avatarValue; // already a plain seed string
+  }
+};
 
 const Nav = () => {
+  const [isBookmarksOpen, setIsBookmarksOpen]     = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
-  const [showMyProfile, setShowMyProfile] = useState(false);
-  const [user, setUser] = useState(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [hasNotifications, setHasNotifications] = useState(false);
+  const [searchQuery, setSearchQuery]             = useState("");
+  const [showLogin, setShowLogin]                 = useState(false);
+  const [showRegister, setShowRegister]           = useState(false);
+  const [showMyProfile, setShowMyProfile]         = useState(false);
+  const [user, setUser]                           = useState(null);
+  const [isProfileOpen, setIsProfileOpen]         = useState(false);
+  const [isScrolled, setIsScrolled]               = useState(false);
+  const [isVisible, setIsVisible]                 = useState(true);
+  const [lastScrollY, setLastScrollY]             = useState(0);
 
   const profileRef = useRef(null);
-  const collectionBtnRef = useRef(null);
-  const dropdownRef = useRef(null);
-  const router = useRouter();
+  const router     = useRouter();
 
-  /* Scroll behavior */
+  /* ── Scroll behavior ── */
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -44,7 +55,7 @@ const Nav = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  /* Load user */
+  /* ── Read user from localStorage on mount ── */
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
@@ -52,7 +63,7 @@ const Nav = () => {
     }
   }, []);
 
-  /* Close profile on outside click */
+  /* ── Close profile dropdown on outside click ── */
   useEffect(() => {
     const handler = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -63,22 +74,22 @@ const Nav = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  /* Close dropdown when clicking outside */
-  useEffect(() => {
-    const handler = (e) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target) &&
-        collectionBtnRef.current &&
-        !collectionBtnRef.current.contains(e.target)
-      ) {
-        setIsCollectionsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
+  const handleLoginSuccess = (data) => {
+    setUser(data.user);
+    setShowLogin(false);
+  };
+
+  const handleRegisterSuccess = (data) => {
+    setUser(data.user);
+    setShowRegister(false);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -88,299 +99,154 @@ const Nav = () => {
     router.push("/");
   };
 
-  /* Avatar */
+  const handleUserUpdate = (updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
+  /* First name only for display */
+  const displayName = user?.full_name?.split(" ")[0] || user?.username || "";
+
+  /* ── FIX: Avatar now uses extractSeed so full URLs and plain seeds both work ── */
   const Avatar = () => {
-    const initials = (user?.full_name || user?.username || "?")
-      .split(" ")
-      .map((w) => w[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
+    const seed = extractSeed(user?.avatar || user?.username || "default");
     return (
-      <div style={{
-        width: "34px", height: "34px", borderRadius: "50%",
-        backgroundColor: "rgb(25,18,101)", color: "#fff",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: "13px", fontWeight: "700",
-        border: "2px solid rgba(255,255,255,0.25)",
-      }}>
-        {initials}
+      <div
+        style={{
+          width: "34px",
+          height: "34px",
+          borderRadius: "50%",
+          overflow: "hidden",
+          flexShrink: 0,
+          border: "2px solid rgba(25,18,101,0.15)",
+          backgroundColor: "#f4f4f5",
+        }}
+      >
+        <img
+          src={dicebearUrl(seed)}
+          alt="avatar"
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
       </div>
     );
   };
 
   return (
     <>
+      {/* Mobile Navigation */}
       <MobileNav />
 
-      <nav
-        className={`hidden lg:block fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out bg-white ${
-          isVisible ? "translate-y-0" : "-translate-y-full"
-        }`}
-      >
+      {/* Desktop Navigation */}
+      <nav className={`hidden lg:block fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out bg-white ${
+        isVisible ? "transform translate-y-0" : "transform -translate-y-full"
+      }`}>
         <div className="w-full h-16 flex items-center">
 
-          {/* LOGO */}
-          <div className="flex items-center px-6 min-w-[220px]">
-            <Link href="/">
-              <img src="/assets/other/depdevlogo.png" alt="Logo" className="h-7 w-auto" />
+          {/* LEFT: LOGO */}
+          <div className="flex items-center px-4 sm:px-6 lg:px-8 min-w-[220px]">
+            <Link href="/" className="block">
+              <img
+                src="/assets/other/depdevlogo.png"
+                alt="Logo"
+                className="h-4 w-auto sm:h-6 lg:h-8"
+              />
             </Link>
           </div>
 
           {/* CENTER NAV */}
-          <div className="flex-1 flex justify-center">
-            <ul className="flex items-center gap-10 text-sm font-medium text-black">
-
+          <div className="flex-1 flex justify-center items-center">
+            <ul className="flex items-center gap-6 lg:gap-10 text-black text-xs sm:text-xs lg:text-sm font-medium">
               <li>
-                <Link href="/search" className="hover:text-black/70 transition">
-                  Browse
-                </Link>
+                <Link href="/about" className="hover:text-black/80 transition">Browse</Link>
               </li>
-
               <li>
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    // If not on homepage, navigate first
-                    if (window.location.pathname !== '/') {
-                      window.location.href = '/#recent-additions';
-                      return;
-                    }
-                    // Smooth scroll to section
-                    const element = document.querySelector('#recent-additions');
-                    if (element) {
-                      const offset = 80; // Account for header
-                      const elementPosition = element.getBoundingClientRect().top;
-                      const offsetPosition = elementPosition + window.pageYOffset - offset;
-                      window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth'
-                      });
-                    }
-                  }}
-                  className="hover:text-black/70 transition"
-                >
-                  New Release
-                </button>
+                <Link href="/catalog" className="hover:text-black/80 transition">New release</Link>
               </li>
-
-              {/* COLLECTION — British Museum style */}
-              <li className="relative h-16 flex items-center">
-                <button
-                  ref={collectionBtnRef}
-                  onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
-                  className="flex items-center gap-1 hover:text-black/70 transition relative h-full"
-                  style={{ paddingBottom: "2px" }}
-                >
-                  Collection
-                  <ChevronDown
-                    size={14}
-                    style={{
-                      transition: "transform 0.3s ease",
-                      transform: isCollectionsOpen ? "rotate(180deg)" : "rotate(0deg)",
-                    }}
-                  />
-                  {/* Active underline */}
-                  <span
-                    style={{
-                      position: "absolute",
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: "2px",
-                      backgroundColor: "rgb(25,18,101)",
-                      transform: isCollectionsOpen ? "scaleX(1)" : "scaleX(0)",
-                      transition: "transform 0.25s ease",
-                      transformOrigin: "left",
-                    }}
-                  />
-                </button>
-
-                {/* ── MEGA MENU DROPDOWN ── */}
+              <li className="relative">
                 <div
-                  ref={dropdownRef}
-                  style={{
-                    position: "fixed",
-                    top: "64px",
-                    left: 0,
-                    right: 0,
-                    zIndex: 50,
-                    overflow: "hidden",
-                    // Clip animation: max-height 0 → full height
-                    maxHeight: isCollectionsOpen ? "280px" : "0px",
-                    transition: "max-height 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
-                    pointerEvents: isCollectionsOpen ? "all" : "none",
-                  }}
+                  className="flex items-center cursor-pointer hover:text-black/80 transition"
+                  onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
                 >
-                  <div style={{ background: "#fff", position: "relative" }}>
-
-                    {/* Menu items */}
-                    <div
-                      style={{
-                        maxWidth: "1440px",
-                        margin: "0 auto",
-                        display: "grid",
-                        gridTemplateColumns: "repeat(3, 1fr)",
-                        gap: "0 30px",
-                        padding: "28px 40px 24px",
-                        position: "relative",
-                        zIndex: 2,
-                      }}
-                    >
-                      {/* COL 1 */}
-                      <div>
-                        {[
-                          { label: "Books", href: "/collections/books" },
-                          { label: "Sourcebooks", href: "/collections/sourcebooks" },
-                          { label: "Periodicals", href: "/collections/periodicals" },
-                        ].map((item, i) => (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              padding: "14px 0",
-                              borderBottom: "1px solid rgba(0,0,0,0.12)",
-                              color: "#000",
-                              textDecoration: "none",
-                              fontSize: "14px",
-                            }}
-                          >
-                            <span>{item.label}</span>
-                            <ArrowCircle />
-                          </Link>
-                        ))}
-                      </div>
-
-                      {/* COL 2 */}
-                      <div>
-                        {[
-                          { label: "Thesis / Research Papers", href: "/collections/thesis" },
-                          { label: "Statute / Legal Documents", href: "/collections/statute" },
-                          { label: "Guide Manuals", href: "/collections/guides" },
-                        ].map((item, i) => (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              padding: "14px 0",
-                              borderBottom: "1px solid rgba(0,0,0,0.12)",
-                              color: "#000",
-                              textDecoration: "none",
-                              fontSize: "14px",
-                            }}
-                          >
-                            <span>{item.label}</span>
-                            <ArrowCircle />
-                          </Link>
-                        ))}
-                      </div>
-
-                      {/* COL 3 */}
-                      <div>
-                        {[
-                          { label: "Reports", href: "/collections/reports" },
-                          { label: "Reference Materials", href: "/collections/reference" },
-                        ].map((item, i) => (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              padding: "14px 0",
-                              borderBottom: "1px solid rgba(0,0,0,0.12)",
-                              color: "#000",
-                              textDecoration: "none",
-                              fontSize: "14px",
-                            }}
-                          >
-                            <span>{item.label}</span>
-                            <ArrowCircle />
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-
-
-                  </div>
+                  <Link href="/contact">Collection</Link>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    strokeWidth="1.5" stroke="currentColor" className="w-3 h-3 ml-1">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </div>
+                <div className={`absolute left-0 mt-2 w-56 bg-black/95 border border-white/10 rounded-md shadow-xl py-1 z-50 transition-all duration-200 ${
+                  isCollectionsOpen ? "opacity-100 visible" : "opacity-0 invisible"
+                }`}>
+                  <Link href="/collections/books"       className="block px-4 py-2 text-sm text-white hover:bg-white/10">Books</Link>
+                  <Link href="/collections/sourcebooks" className="block px-4 py-2 text-sm text-white hover:bg-white/10">Sourcebooks</Link>
+                  <Link href="/collections/periodicals" className="block px-4 py-2 text-sm text-white hover:bg-white/10">Periodicals</Link>
+                  <Link href="/collections/thesis"      className="block px-4 py-2 text-sm text-white hover:bg-white/10">Thesis/Research Papers</Link>
+                  <Link href="/collections/statute"     className="block px-4 py-2 text-sm text-white hover:bg-white/10">Statute/Legal Documents</Link>
+                  <Link href="/collections/guides"      className="block px-4 py-2 text-sm text-white hover:bg-white/10">Guide Manuals</Link>
+                  <Link href="/collections/reports"     className="block px-4 py-2 text-sm text-white hover:bg-white/10">Reports</Link>
+                  <Link href="/collections/reference"   className="block px-4 py-2 text-sm text-white hover:bg-white/10">Reference Material</Link>
                 </div>
               </li>
-
               <li>
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    // If not on homepage, navigate first
-                    if (window.location.pathname !== '/') {
-                      window.location.href = '/#news';
-                      return;
-                    }
-                    // Smooth scroll to section
-                    const element = document.querySelector('#news');
-                    if (element) {
-                      const offset = 80; // Account for header
-                      const elementPosition = element.getBoundingClientRect().top;
-                      const offsetPosition = elementPosition + window.pageYOffset - offset;
-                      window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth'
-                      });
-                    }
-                  }}
-                  className="hover:text-black/70 transition"
-                >
-                  News
-                </button>
+                <Link href="/about" className="hover:text-black/80 transition">About</Link>
               </li>
-
+              <li>
+                <Link href="/news" className="hover:text-black/80 transition">News</Link>
+              </li>
             </ul>
           </div>
 
-          {/* RIGHT SIDE */}
-          <div className="flex items-center min-w-[220px] justify-between">
+          {/* RIGHT: Auth area */}
+          <div className="flex items-center px-4 sm:px-6 lg:px-8 min-w-[220px] justify-end">
+
             {user ? (
-              <div ref={profileRef} className="relative flex items-center gap-3">
-                <button className="relative p-2 rounded-full hover:bg-gray-100 transition">
-                  <Bell size={18} className="text-gray-600" />
-                  {hasNotifications && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-                  )}
-                </button>
+              /* ── LOGGED IN: profile chip ── */
+              <div ref={profileRef} className="relative flex items-center">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-gray-100 transition"
+                  className="flex items-center gap-2 rounded-full pr-2 pl-1 py-1 hover:bg-gray-100 transition"
                 >
                   <Avatar />
-                  <span className="text-sm font-semibold text-gray-800">
-                    {user?.full_name?.split(" ")[0] || user?.username}
+                  <span className="text-sm font-semibold text-gray-800 max-w-[110px] truncate">
+                    {displayName}
                   </span>
-                  <ChevronDown size={14} />
+                  <ChevronDown
+                    size={14}
+                    className={`text-gray-500 transition-transform duration-200 ${isProfileOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
+
+                {/* Profile dropdown */}
                 {isProfileOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-52 bg-white border rounded-xl shadow-xl py-2">
+                  <div
+                    className="absolute right-0 top-full mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-xl py-1.5 z-50"
+                    style={{ boxShadow: "0 8px 32px rgba(0,48,135,0.13)" }}
+                  >
+                    {/* User info header */}
+                    <div className="px-4 py-2.5 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{user.full_name}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    </div>
+
                     <button
-                      onClick={() => setShowMyProfile(true)}
-                      className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 w-full text-left"
+                      className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                      onClick={() => { setIsProfileOpen(false); setShowMyProfile(true); }}
                     >
-                      <User size={15} /> My Profile
+                      <User size={15} className="text-gray-400" />
+                      My Profile
                     </button>
+
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left"
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
                     >
-                      <LogOut size={15} /> Sign Out
+                      <LogOut size={15} />
+                      Sign Out
                     </button>
                   </div>
                 )}
               </div>
             ) : (
+              /* ── LOGGED OUT: Login + Register ── */
               <>
                 <button
                   onClick={() => setShowLogin(true)}
@@ -390,71 +256,58 @@ const Nav = () => {
                 </button>
                 <button
                   onClick={() => setShowRegister(true)}
-                  className="h-16 flex-1 flex items-center justify-center text-white font-semibold"
-                  style={{ backgroundColor: "rgb(25,18,101)" }}
+                  className="h-16 px-10 flex items-center justify-center text-white font-semibold backdrop-blur-sm hover:bg-[#143961]/80 transition"
+                  style={{ backgroundColor: "rgb(25, 18, 101)", width: "200px", marginRight: "-32px" }}
                 >
                   Register
                 </button>
               </>
             )}
           </div>
-
         </div>
       </nav>
 
-      {/* Dim overlay behind dropdown */}
-      <div
-        style={{
-          position: "fixed",
-          top: "64px",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0,0,0,0.25)",
-          opacity: isCollectionsOpen ? 1 : 0,
-          pointerEvents: isCollectionsOpen ? "all" : "none",
-          transition: "opacity 0.4s ease",
-          zIndex: 40,
-        }}
-        onClick={() => setIsCollectionsOpen(false)}
-      />
-
+      {/* PAGE SPACER */}
       <div className="h-16" />
 
+      {/* Overlay for bookmarks */}
+      {isBookmarksOpen && (
+        <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsBookmarksOpen(false)} />
+      )}
+
+      {/* Close collections dropdown on outside click */}
+      {isCollectionsOpen && (
+        <div className="fixed inset-0 z-40" onClick={() => setIsCollectionsOpen(false)} />
+      )}
+
+      {/* Login Modal */}
       {showLogin && (
         <Login
           onClose={() => setShowLogin(false)}
-          onSuccess={(data) => { setUser(data.user); setShowLogin(false); }}
+          onSuccess={handleLoginSuccess}
           onSwitchToRegister={() => { setShowLogin(false); setShowRegister(true); }}
         />
       )}
+
+      {/* Register Modal */}
       {showRegister && (
         <Register
           onClose={() => setShowRegister(false)}
-          onSuccess={(data) => { setUser(data.user); setShowRegister(false); }}
+          onSuccess={handleRegisterSuccess}
           onSwitchToLogin={() => { setShowRegister(false); setShowLogin(true); }}
         />
       )}
+
+      {/* MyProfile Modal */}
       {showMyProfile && (
-        <MyProfile onClose={() => setShowMyProfile(false)} user={user} />
+        <MyProfile
+          onClose={() => setShowMyProfile(false)}
+          user={user}
+          onUserUpdate={handleUserUpdate}
+        />
       )}
     </>
   );
 };
-
-/* ── Small arrow-circle icon ── */
-const ArrowCircle = () => (
-  <span style={{
-    width: "24px", height: "24px",
-    backgroundColor: "rgb(25,18,101)",
-    borderRadius: "50%",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    flexShrink: 0, marginLeft: "12px",
-  }}>
-    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
-  </span>
-);
 
 export default Nav;

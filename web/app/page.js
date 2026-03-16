@@ -3,7 +3,7 @@ import FrequentlySearched from "./Components/FrequentlySearched/FrequentlySearch
 import RecentAdditions from "./Components/RecentAdditions/RecentAdditions";
 import Category from "./Components/Category/Category";
 import News from "./Components/News/News";
-import AboutLibrary from "./Components/AboutLibrary/AboutLibrary";
+import AboutLibrary from "./Components/Auth/AboutLibrary/AboutLibrary";
 import Footer from "./Components/Footer/Footer";
 import FreeAccess from "./Components/FreeAccess/FreeAccess";
 
