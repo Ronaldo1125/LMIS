@@ -309,14 +309,14 @@ const PasswordField = ({ label, value, onChange, placeholder, C }) => {
 }
 
 // ─── Section Header ───────────────────────────────────────────────────────────
-const SectionHeader = ({ icon: Icon, title, subtitle, iconBg, iconColor }) => (
+const SectionHeader = ({ icon: Icon, title, subtitle, iconBg, iconColor, textPrimary, textSecondary }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
     <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
       <Icon style={{ width: '1rem', height: '1rem', color: iconColor }} />
     </div>
     <div>
-      <h3 style={{ fontWeight: 700, color: 'inherit', margin: 0, fontSize: '0.875rem' }}>{title}</h3>
-      <p style={{ fontSize: '0.7rem', margin: 0 }}>{subtitle}</p>
+      <h3 style={{ fontWeight: 700, color: textPrimary, margin: 0, fontSize: '0.875rem' }}>{title}</h3>
+      <p style={{ fontSize: '0.7rem', color: textSecondary, margin: 0 }}>{subtitle}</p>
     </div>
   </div>
 )
@@ -342,6 +342,7 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
 
   const [showPicker, setShowPicker] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [avatarHover, setAvatarHover] = useState(false)
 
   const [toasts, setToasts] = useState([])
   const toast = (message, type = 'success') => {
@@ -542,32 +543,31 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
 
               <div style={{ padding: '0 1.5rem 1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '-2.5rem', marginBottom: '1rem' }}>
-                  <div style={{ position: 'relative' }}>
-                    <div
-                      style={{
-                        width: '5rem', height: '5rem', borderRadius: '1rem',
-                        border: `4px solid ${C.cardBg}`,
-                        boxShadow: dark ? '0 4px 20px rgba(0,0,0,0.6)' : '0 4px 16px rgba(0,0,0,0.12)',
-                        overflow: 'hidden', background: dark ? '#081422' : '#f0f7ff',
-                        cursor: 'pointer', transition: 'transform 0.2s ease',
-                      }}
-                      onClick={() => setShowPicker(true)}
-                      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
-                      onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                    >
+                  <div
+                    style={{ position: 'relative', width: '5rem', height: '5rem', cursor: 'pointer', flexShrink: 0 }}
+                    onClick={() => setShowPicker(true)}
+                    onMouseEnter={() => setAvatarHover(true)}
+                    onMouseLeave={() => setAvatarHover(false)}
+                  >
+                    <div style={{
+                      width: '5rem', height: '5rem', borderRadius: '50%',
+                      border: `3px solid ${C.cardBg}`,
+                      boxShadow: dark ? '0 4px 20px rgba(0,0,0,0.6)' : '0 4px 16px rgba(0,0,0,0.12)',
+                      overflow: 'hidden', background: dark ? '#081422' : '#f0f7ff',
+                    }}>
                       <img src={avatarUrl} alt={fullName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     </div>
-                    <button
-                      onClick={() => setShowPicker(true)}
-                      style={{
-                        position: 'absolute', bottom: '-4px', right: '-4px',
-                        width: '1.4rem', height: '1.4rem', borderRadius: '50%',
-                        border: `2px solid ${C.cardBg}`, background: C.accentBlue,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                      }}
-                    >
-                      <CameraIcon style={{ width: '0.65rem', height: '0.65rem', color: '#fff' }} />
-                    </button>
+                    <div style={{
+                      position: 'absolute', inset: 0, borderRadius: '50%',
+                      background: 'rgba(0,0,0,0.52)',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.2rem',
+                      opacity: avatarHover ? 1 : 0,
+                      transition: 'opacity 0.2s ease',
+                      pointerEvents: 'none',
+                    }}>
+                      <CameraIcon style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} />
+                      <span style={{ fontSize: '0.52rem', color: '#fff', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Edit</span>
+                    </div>
                   </div>
                   <span style={{
                     background: badge.bg, color: badge.color,
@@ -647,9 +647,11 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
               <SectionHeader
                 icon={PencilIcon}
                 title="Change Username"
-                subtitle={<span style={{ color: C.textSecondary }}>Update your login handle</span>}
+                subtitle="Update your login handle"
                 iconBg={dark ? 'rgba(37,99,235,0.12)' : 'rgba(37,99,235,0.08)'}
                 iconColor={dark ? '#93c5fd' : '#2563eb'}
+                textPrimary={C.textPrimary}
+                textSecondary={C.textSecondary}
               />
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
                 <div>
@@ -694,9 +696,11 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
               <SectionHeader
                 icon={KeyIcon}
                 title="Change Password"
-                subtitle={<span style={{ color: C.textSecondary }}>Keep your account secure</span>}
+                subtitle="Keep your account secure"
                 iconBg={dark ? 'rgba(37,99,235,0.12)' : 'rgba(37,99,235,0.08)'}
                 iconColor={dark ? '#93c5fd' : '#2563eb'}
+                textPrimary={C.textPrimary}
+                textSecondary={C.textSecondary}
               />
               <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
                 <PasswordField label="New Password" value={pwForm.new} onChange={e => setPwForm(p => ({ ...p, new: e.target.value }))} placeholder="Enter new password" C={C} />
@@ -731,7 +735,8 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
               </form>
             </div>
           </div>
-       {/* ── Danger Zone (librarians only) ───────────────────────────────── */}
+
+          {/* ── Danger Zone (librarians only) ───────────────────────────────── */}
           {role === 'librarian' && (
             <div style={{
               ...card,
