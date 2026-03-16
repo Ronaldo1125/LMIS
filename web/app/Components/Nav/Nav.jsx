@@ -12,6 +12,17 @@ import MyProfile from "../MyProfile";
 const dicebearUrl = (seed) =>
   `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(seed)}`;
 
+// ── FIX: Extract seed from either a full DiceBear URL or a plain seed string ──
+const extractSeed = (avatarValue) => {
+  if (!avatarValue) return "default";
+  try {
+    const url = new URL(avatarValue);
+    return url.searchParams.get("seed") || avatarValue;
+  } catch {
+    return avatarValue; // already a plain seed string
+  }
+};
+
 const Nav = () => {
   const [isBookmarksOpen, setIsBookmarksOpen]     = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
@@ -88,24 +99,17 @@ const Nav = () => {
     router.push("/");
   };
 
-  /**
-   * Called by MyProfile after a successful avatar or profile save.
-   * Updates Nav state so the avatar chip re-renders immediately,
-   * and writes the merged user back to localStorage so it survives refresh.
-   */
   const handleUserUpdate = (updatedUser) => {
     setUser(updatedUser);
-    // Storage is already patched inside MyProfile via persistUserChanges,
-    // but we overwrite here too so the Nav's copy is always in sync.
     localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
   /* First name only for display */
   const displayName = user?.full_name?.split(" ")[0] || user?.username || "";
 
-  /* ── Avatar using dicebear thumbs (same style as MyProfile) ── */
+  /* ── FIX: Avatar now uses extractSeed so full URLs and plain seeds both work ── */
   const Avatar = () => {
-    const seed = user?.avatar || user?.username || "default";
+    const seed = extractSeed(user?.avatar || user?.username || "default");
     return (
       <div
         style={{

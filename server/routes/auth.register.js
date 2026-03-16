@@ -19,6 +19,7 @@ const safeUser = (u) => ({
   id: u.id, username: u.username, email: u.email,
   full_name: u.full_name, user_type: u.user_type,
   is_active: u.is_active, created_at: u.created_at,
+  avatar: u.avatar ?? null, 
 });
 
 const isValidUsername = (u) => /^[a-zA-Z0-9_]{3,30}$/.test(u);

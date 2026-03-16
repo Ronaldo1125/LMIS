@@ -23,12 +23,6 @@ const authFetch = (path, options = {}) =>
 
 const randomSeed = () => Math.random().toString(36).substring(2, 10);
 
-/**
- * Patch the stored user object in whichever storage holds it.
- * This ensures avatar/profile changes survive a page refresh or relogin
- * (as long as the same token is reused — on fresh login the server's
- * response will carry the updated avatar since it's now saved in MySQL).
- */
 const persistUserChanges = (changes) => {
   for (const storage of [localStorage, sessionStorage]) {
     const raw = storage.getItem("user");
@@ -38,6 +32,17 @@ const persistUserChanges = (changes) => {
         storage.setItem("user", JSON.stringify({ ...parsed, ...changes }));
       } catch {}
     }
+  }
+};
+
+// ── Extract seed from either a full DiceBear URL or a plain seed string ────
+const extractSeed = (avatarValue) => {
+  if (!avatarValue) return "default";
+  try {
+    const url = new URL(avatarValue);
+    return url.searchParams.get("seed") || avatarValue;
+  } catch {
+    return avatarValue; // already a plain seed string
   }
 };
 
@@ -107,11 +112,6 @@ function DeleteAccountModal({ username, onConfirm, onCancel, deleting }) {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────
-// Props:
-//   onClose      — close the modal
-//   user         — user object from parent state (not directly from storage)
-//   onUserUpdate — (updatedUser) => void  ← parent must implement this to
-//                  update its own state so the navbar/header re-renders
 export default function MyProfile({ onClose, user, onUserUpdate }) {
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
@@ -119,11 +119,9 @@ export default function MyProfile({ onClose, user, onUserUpdate }) {
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // avatarSeed is the local display value — initialised from the stored user
   const [avatarSeed, setAvatarSeed] = useState(
-    () => user?.avatar || user?.username || "default"
+    () => extractSeed(user?.avatar || user?.username || "default")
   );
-  // track whether the user picked a *different* avatar that hasn't been saved yet
   const [avatarChanged, setAvatarChanged] = useState(false);
   const [avatarSaving, setAvatarSaving] = useState(false);
   const [avatarSuccess, setAvatarSuccess] = useState(false);
@@ -142,7 +140,7 @@ export default function MyProfile({ onClose, user, onUserUpdate }) {
   const [deleting, setDeleting]               = useState(false);
   const [deleteError, setDeleteError]         = useState(null);
 
-  const [bookmarks, setBookmarks]         = useState([]);
+  const [bookmarks, setBookmarks]               = useState([]);
   const [bookmarksLoading, setBookmarksLoading] = useState(false);
   const [bookmarksError, setBookmarksError]     = useState(null);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
@@ -151,6 +149,26 @@ export default function MyProfile({ onClose, user, onUserUpdate }) {
     { id: "profile",    label: "Profile",    icon: User },
     { id: "bookmarked", label: "Bookmarked", icon: Bookmark },
   ];
+
+  // ── FIX: Sync avatarSeed whenever user.avatar changes (e.g. after re-login) ──
+  useEffect(() => {
+    if (user?.avatar) {
+      setAvatarSeed(extractSeed(user.avatar));
+      setAvatarChanged(false);
+    } else if (user?.username) {
+      setAvatarSeed(user.username);
+      setAvatarChanged(false);
+    }
+  }, [user?.avatar, user?.username]);
+
+  // ── FIX: Sync formData whenever user prop changes (e.g. after re-login) ──
+  useEffect(() => {
+    setFormData({
+      fullName: user?.full_name || "",
+      username: user?.username  || "",
+      email:    user?.email     || "",
+    });
+  }, [user?.full_name, user?.username, user?.email]);
 
   // ── Bookmarks ────────────────────────────────────────────────────────────
   const fetchBookmarks = async (page = 1) => {
@@ -182,7 +200,7 @@ export default function MyProfile({ onClose, user, onUserUpdate }) {
   }, [activeTab]);
 
   // ── Avatar ───────────────────────────────────────────────────────────────
-  const savedAvatarSeed = user?.avatar || user?.username || "default";
+  const savedAvatarSeed = extractSeed(user?.avatar || user?.username || "default");
 
   const handlePickSeed = (seed) => {
     setAvatarSeed(seed);
@@ -197,16 +215,16 @@ export default function MyProfile({ onClose, user, onUserUpdate }) {
   const handleSaveAvatar = async () => {
     setAvatarSaving(true);
     try {
+      const fullAvatarUrl = dicebearUrl(avatarSeed);
+
       const res = await authFetch(`/api/auth/${user?.id}/profile`, {
         method: "PATCH",
-        body: JSON.stringify({ avatar: avatarSeed }),
+        body: JSON.stringify({ avatar: fullAvatarUrl }),
       });
       if (!res.ok) throw new Error();
 
-      // 1. Write back to storage → survives refresh & relogin with same token
-      persistUserChanges({ avatar: avatarSeed });
-      // 2. Tell parent to update its state → navbar/header re-renders immediately
-      onUserUpdate?.({ ...user, avatar: avatarSeed });
+      persistUserChanges({ avatar: fullAvatarUrl });
+      onUserUpdate?.({ ...user, avatar: fullAvatarUrl });
 
       setAvatarChanged(false);
       setAvatarSuccess(true);
@@ -247,7 +265,6 @@ export default function MyProfile({ onClose, user, onUserUpdate }) {
         body: JSON.stringify({
           full_name: formData.fullName,
           username:  formData.username,
-          // email is intentionally omitted — it is not editable
         }),
       });
       if (!res.ok) {
@@ -260,9 +277,7 @@ export default function MyProfile({ onClose, user, onUserUpdate }) {
         username:  formData.username,
       };
 
-      // 1. Write back to storage
       persistUserChanges(updatedFields);
-      // 2. Tell parent to update its state
       onUserUpdate?.({ ...user, ...updatedFields });
 
       setSaveSuccess(true);
@@ -312,8 +327,8 @@ export default function MyProfile({ onClose, user, onUserUpdate }) {
     Technology: "bg-violet-50 text-violet-600 border border-violet-200",
     default:    "bg-zinc-100 text-zinc-500 border border-zinc-200",
   };
-  const getCat      = (cat)  => categoryClass[cat] || categoryClass.default;
-  const roleColor   = {
+  const getCat       = (cat)  => categoryClass[cat] || categoryClass.default;
+  const roleColor    = {
     Admin:     "bg-red-50 text-red-600 border border-red-200",
     Librarian: "bg-violet-50 text-violet-600 border border-violet-200",
     Staff:     "bg-amber-50 text-amber-600 border border-amber-200",
