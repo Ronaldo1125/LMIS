@@ -123,7 +123,7 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
     position: "relative",
     width: "100%",
     aspectRatio: "3/4",
-    background: "#f6f8ff",
+    background: "#fff",
     overflow: "hidden",
     display: "flex",
     alignItems: "center",

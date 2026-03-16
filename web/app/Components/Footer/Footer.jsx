@@ -53,7 +53,7 @@ const Footer = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   return (
-    <footer className={`w-full bg-[#1C1B1A] text-white ${config.footerPadding}`}>
+    <footer className={`w-full bg-[#000011] text-white ${config.footerPadding}`}>
       <div className="w-full mx-auto">
         <div className={`grid ${config.gridCols} ${config.gridGap}`}>
           {/* About Section */}
@@ -76,7 +76,7 @@ const Footer = () => {
           </div>
 
           {/* Resources */}
-          <div className="md:col-span-2">
+          <div>
             <h3 className={`${config.titleSize} font-semibold mb-4`}>Resources</h3>
             <ul className="space-y-2">
               <li><a href="#" className={`${config.textSize} text-gray-300 hover:text-[#D0674B] transition-colors`}>Books</a></li>
@@ -104,7 +104,7 @@ const Footer = () => {
         <div className={`${config.bottomPadding} border-t border-gray-700`}>
           <div className={`flex flex-col md:flex-row justify-between items-center`}>
             <p className={`${config.textSize} text-gray-400`}>
-              © 2026 LMIS. All rights reserved. Made by Paw Patrol
+              © {new Date().getFullYear()} LMIS. All rights reserved. Made by Paw Patrol
             </p>
             <div className={`flex ${config.socialGap} ${config.bottomMargin}`}>
               <a href="#" className={`${config.textSize} text-gray-400 hover:text-[#D0674B] transition-colors`}>Privacy Policy</a>

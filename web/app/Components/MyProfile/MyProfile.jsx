@@ -3,7 +3,24 @@
 import React, { useState } from "react";
 import { X, User, Shield, Lock, Download, Bookmark, Edit2, LogOut } from "lucide-react";
 
+/* ---------- INPUT COMPONENT ---------- */
+
+function Input({ label, ...props }) {
+  return (
+    <div className="space-y-1">
+      <label className="text-sm text-gray-500">{label}</label>
+      <input
+        {...props}
+        className="w-full border border-gray-200 px-4 py-4 text-sm focus:outline-none focus:border-black transition rounded-md"
+      />
+    </div>
+  );
+}
+
+/* ---------- MAIN COMPONENT ---------- */
+
 export default function MyProfile({ onClose, user }) {
+
   const [activeTab, setActiveTab] = useState("profile");
   const [avatar, setAvatar] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -27,35 +44,52 @@ export default function MyProfile({ onClose, user }) {
     { id: "bookmarked", label: "Bookmarked", icon: Bookmark },
   ];
 
+  /* ---------- INPUT CHANGE ---------- */
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
+
     setIsEditing(true);
   };
 
+  /* ---------- AVATAR CHANGE ---------- */
+
   const handleAvatarChange = (e) => {
+
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
+
     reader.onload = () => {
       setAvatar(reader.result);
       setIsEditing(true);
     };
+
     reader.readAsDataURL(file);
   };
 
+  /* ---------- LOGOUT ---------- */
+
   const handleLogout = () => {
+
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
+
     window.location.href = "/";
   };
 
+  /* ---------- CLEAR ---------- */
+
   const handleClear = () => {
+
     setFormData({
       fullName: user?.full_name || "Anton",
       username: user?.username || "anton234",
@@ -66,35 +100,39 @@ export default function MyProfile({ onClose, user }) {
       newPassword: "",
       confirmPassword: "",
     });
+
     setAvatar(null);
     setIsEditing(false);
   };
 
+  /* ---------- SAVE ---------- */
+
   const handleSave = () => {
-    // Here you would typically save the data to your backend
+
     console.log("Saving data:", formData);
-    if (avatar) {
-      console.log("Avatar changed");
-    }
+
     setIsEditing(false);
-    // You could add a success message here
   };
 
-  const Input = ({ label, ...props }) => (
-    <div className="space-y-1">
-      <label className="text-sm text-gray-500">{label}</label>
-      <input
-        {...props}
-        className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black transition"
-      />
-    </div>
-  );
+  /* ---------- SWITCH TAB ---------- */
+
+  const handleTabChange = (tab) => {
+
+    setActiveTab(tab);
+
+    // reset editing state when switching tabs
+    setIsEditing(false);
+  };
+
+  /* ---------- CONTENT ---------- */
 
   const renderContent = () => {
+
     switch (activeTab) {
+
       case "profile":
         return (
-          <div className="max-w-xl space-y-8">
+          <div className="max-w-lg space-y-4">
             <h2 className="text-2xl font-semibold">Profile</h2>
 
             <Input
@@ -122,7 +160,7 @@ export default function MyProfile({ onClose, user }) {
 
       case "account":
         return (
-          <div className="max-w-xl space-y-8">
+          <div className="max-w-lg space-y-4">
             <h2 className="text-2xl font-semibold">Account</h2>
 
             <Input
@@ -140,21 +178,6 @@ export default function MyProfile({ onClose, user }) {
               onChange={handleChange}
             />
 
-            <div className="space-y-1">
-              <label className="text-sm text-gray-500">Country</label>
-              <select
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
-                className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black"
-              >
-                <option value="">Select country</option>
-                <option value="PH">Philippines</option>
-                <option value="US">United States</option>
-                <option value="UK">United Kingdom</option>
-              </select>
-            </div>
-
             <button className="text-red-600 text-sm hover:underline pt-2">
               Close Account
             </button>
@@ -163,7 +186,7 @@ export default function MyProfile({ onClose, user }) {
 
       case "password":
         return (
-          <div className="max-w-xl space-y-8">
+          <div className="max-w-lg space-y-4">
             <h2 className="text-2xl font-semibold">Password</h2>
 
             <Input
@@ -210,15 +233,21 @@ export default function MyProfile({ onClose, user }) {
     }
   };
 
+  /* ---------- UI ---------- */
+
+  const editableTabs = ["profile", "account", "password"];
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
-      <div className="bg-white w-[950px] max-w-[95vw] h-[640px] shadow-2xl flex">
+      <div className="bg-white w-[820px] max-w-[90vw] h-[640px] shadow-2xl flex border border-gray-200 rounded-lg">
 
-        {/* Sidebar */}
-        <div className="w-[240px] border-r bg-gray-50 flex flex-col items-center p-6">
+        {/* SIDEBAR */}
+
+        <div className="w-[240px] bg-gray-50 flex flex-col items-center p-6 border-r border-gray-200">
 
           {/* Avatar */}
+
           <div className="relative mb-10">
 
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-400 to-red-400 overflow-hidden flex items-center justify-center">
@@ -247,15 +276,18 @@ export default function MyProfile({ onClose, user }) {
 
           </div>
 
-          {/* Menu */}
+          {/* MENU */}
+
           <nav className="w-full space-y-1">
+
             {menu.map((item) => {
+
               const Icon = item.icon;
 
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => handleTabChange(item.id)}
                   className={`flex items-center gap-3 w-full px-3 py-2 text-sm text-left transition ${
                     activeTab === item.id
                       ? "bg-gray-200 font-medium"
@@ -267,22 +299,27 @@ export default function MyProfile({ onClose, user }) {
                 </button>
               );
             })}
+
           </nav>
 
-          {/* Logout Button */}
-          <div className="mt-auto pt-4 border-t border-gray-200">
+          {/* LOGOUT */}
+
+          <div className="mt-auto pt-6 w-full">
+
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 w-full px-3 py-2 text-sm text-left transition hover:bg-gray-100 text-gray-700"
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-gray-200 hover:bg-gray-300 transition text-gray-800"
             >
-              <LogOut size={16} />
-              Logout
+              <LogOut size={18} />
+              <span className="text-sm font-medium">Logout</span>
             </button>
+
           </div>
 
         </div>
 
-        {/* Content */}
+        {/* CONTENT */}
+
         <div className="flex-1 relative p-10 overflow-y-auto">
 
           <button
@@ -294,27 +331,32 @@ export default function MyProfile({ onClose, user }) {
 
           {renderContent()}
 
-          {/* Clear and Save Buttons */}
-          {isEditing && (
-            <div className="absolute bottom-6 right-6 flex gap-2">
+          {isEditing && editableTabs.includes(activeTab) && (
+
+            <div className="absolute bottom-6 right-6 flex gap-3">
+
               <button
                 onClick={handleClear}
-                className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition"
+                className="px-4 py-2 text-gray-600 transition"
               >
                 Clear
               </button>
+
               <button
                 onClick={handleSave}
-                className="px-4 py-2 text-sm bg-black text-white rounded hover:bg-gray-800 transition"
+                className="px-10 py-2 text-sm bg-black text-white rounded hover:bg-gray-800 transition"
               >
                 Save
               </button>
+
             </div>
+
           )}
 
         </div>
 
       </div>
+
     </div>
   );
 }

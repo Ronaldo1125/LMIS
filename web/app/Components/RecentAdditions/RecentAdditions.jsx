@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import PDFThumbnail from "../Search/PDFThumbnail";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -15,92 +15,64 @@ const formatDate = (raw) => {
 
 const API_BASE = "http://localhost:5000";
 
-// Pull the JWT stored by your auth flow (adjust key name if different)
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token") || localStorage.getItem("authToken") || "";
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-const SPINE_COLORS = [
-  "#1a3a6e","#0e5c8a","#1a4d6e","#283593","#115f7a",
-  "#0a3d62","#1b4f72","#154360","#1a5276","#0e3460",
-];
-const spineColor = (id) => SPINE_COLORS[id % SPINE_COLORS.length];
-
-// ─── PlaceholderCover ────────────────────────────────────────────────────────
-
-const PlaceholderCover = ({ title, color }) => (
-  <div
-    style={{
-      width: "100%",
-      height: "100%",
-      background: color,
-      display: "flex",
-      alignItems: "flex-end",
-      padding: "10px 8px",
-    }}
-  >
-    <span
-      style={{
-        fontSize: 11,
-        fontWeight: 700,
-        color: "rgba(255,255,255,0.85)",
-        lineHeight: 1.3,
-        display: "-webkit-box",
-        WebkitLineClamp: 4,
-        WebkitBoxOrient: "vertical",
-        overflow: "hidden",
-      }}
-    >
-      {title}
-    </span>
-  </div>
-);
-
 // ─── BookCard (grid) ─────────────────────────────────────────────────────────
 
 const BookCard = ({ book, onClick }) => {
-  const [imgFailed, setImgFailed] = useState(false);
-  const hasCover = !!book.upload_id && !imgFailed;
-  // ✅ Use relative path, same as FrequentlySearched
-  const coverSrc = book.upload_id ? `/api/book-cover/${book.upload_id}` : null;
+  const [hovered, setHovered] = useState(false);
 
   return (
     <div
       onClick={() => onClick(book)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         cursor: "pointer",
-        border: "1px solid #e6ecf7",
-        borderRadius: 5,
-        overflow: "hidden",
-        transition: "box-shadow 0.18s, transform 0.18s",
-      }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.boxShadow = "0 4px 18px rgba(0,48,135,0.12)";
-        e.currentTarget.style.transform = "translateY(-2px)";
-      }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.boxShadow = "none";
-        e.currentTarget.style.transform = "none";
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      {/* Cover */}
-      <div style={{ aspectRatio: "3/4", background: "#f6f8ff", overflow: "hidden", position: "relative" }}>
-        {hasCover ? (
-          <Image
-            src={coverSrc}
-            alt={book.title}
-            onError={() => setImgFailed(true)}
-            fill
-            style={{ objectFit: "cover" }}
-          />
-        ) : (
-          <PlaceholderCover title={book.title} color={spineColor(book.id)} />
-        )}
+      {/* Cover with hover overlay */}
+      <div style={{ position: "relative", overflow: "hidden" }}>
+        <PDFThumbnail uploadId={book.upload_id} title={book.title} />
+
+        {/* Read overlay */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(0,0,0,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: hovered ? 1 : 0,
+            transition: "opacity 0.2s ease",
+            pointerEvents: "none",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#fff",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              padding: "8px 18px",
+              border: "1.5px solid rgba(255,255,255,0.7)",
+              borderRadius: 4,
+            }}
+          >
+            Read
+          </span>
+        </div>
       </div>
 
-      {/* Info: title · author · date_of_publication */}
-      <div style={{ padding: "12px 12px 14px" }}>
+      {/* Info */}
+      <div style={{ padding: "12px 0px 14px" }}>
         <div
           title={book.title}
           style={{
@@ -113,6 +85,7 @@ const BookCard = ({ book, onClick }) => {
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
+            textAlign: "left",
           }}
         >
           {book.title}
@@ -145,14 +118,13 @@ const BookCard = ({ book, onClick }) => {
 // ─── BookRow (list) ──────────────────────────────────────────────────────────
 
 const BookRow = ({ book, onClick, isLast }) => {
-  const [imgFailed, setImgFailed] = useState(false);
-  const hasCover = !!book.upload_id && !imgFailed;
-  // ✅ Use relative path, same as FrequentlySearched
-  const coverSrc = book.upload_id ? `/api/book-cover/${book.upload_id}` : null;
+  const [hovered, setHovered] = useState(false);
 
   return (
     <div
       onClick={() => onClick(book)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         display: "flex",
         alignItems: "center",
@@ -160,32 +132,40 @@ const BookRow = ({ book, onClick, isLast }) => {
         padding: "14px 16px",
         borderBottom: isLast ? "none" : "1px solid #eef2ff",
         cursor: "pointer",
-        transition: "background 0.15s",
+        background: hovered ? "#f8faff" : "#fff",
+        transition: "background 0.15s ease",
       }}
-      onMouseOver={(e) => (e.currentTarget.style.background = "#f7faff")}
-      onMouseOut={(e) => (e.currentTarget.style.background = "#fff")}
     >
       <div
         style={{
           width: 44,
           height: 58,
-          borderRadius: 6,
           overflow: "hidden",
           flexShrink: 0,
           border: "1px solid #e6ecf7",
           position: "relative",
         }}
       >
-        {hasCover ? (
-          <Image
-            src={coverSrc}
-            alt={book.title}
-            onError={() => setImgFailed(true)}
-            fill
-            style={{ objectFit: "cover" }}
-          />
-        ) : (
-          <PlaceholderCover title="" color={spineColor(book.id)} />
+        <PDFThumbnail
+          uploadId={book.upload_id}
+          title={book.title}
+          style={{ aspectRatio: "unset", width: "100%", height: "100%" }}
+        />
+        {hovered && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.45)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+              Read
+            </span>
+          </div>
         )}
       </div>
 
@@ -234,25 +214,9 @@ const BookRow = ({ book, onClick, isLast }) => {
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 
-const GRID_PAGE_SIZE = 6;
-const LIST_PAGE_SIZE = 5;
+const LIST_PAGE_SIZE = 10;
 
-const GridIcon = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-    <rect x="3" y="3" width="7" height="7" rx="1"/>
-    <rect x="14" y="3" width="7" height="7" rx="1"/>
-    <rect x="3" y="14" width="7" height="7" rx="1"/>
-    <rect x="14" y="14" width="7" height="7" rx="1"/>
-  </svg>
-);
-
-const ListIcon = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-    <line x1="3" y1="6" x2="21" y2="6"/>
-    <line x1="3" y1="12" x2="21" y2="12"/>
-    <line x1="3" y1="18" x2="21" y2="18"/>
-  </svg>
-);
+const ROWS = 2; // always show 2 rows in grid view
 
 const RecentAdditions = () => {
   const [isGridView, setIsGridView] = useState(true);
@@ -263,7 +227,25 @@ const RecentAdditions = () => {
   const [error, setError]           = useState(null);
   const [windowWidth, setWindowWidth] = useState(0);
 
-  const pageSize = isGridView ? GRID_PAGE_SIZE : LIST_PAGE_SIZE;
+  // ─── Responsive config ──────────────────────────────────────────────────────
+  const getResponsiveConfig = useCallback(() => {
+    if (windowWidth < 640) {
+      return { headerPadding: "20px 16px 16px", contentPadding: "0 16px 32px", columns: 2, gap: 28, titleSize: 24, showHeaderText: true };
+    } else if (windowWidth < 768) {
+      return { headerPadding: "32px 24px 16px", contentPadding: "0 24px 40px", columns: 3, gap: 36, titleSize: 26, showHeaderText: true };
+    } else if (windowWidth < 1024) {
+      return { headerPadding: "40px 32px 18px", contentPadding: "0 32px 48px", columns: 4, gap: 40, titleSize: 28, showHeaderText: false };
+    } else if (windowWidth < 1280) {
+      return { headerPadding: "40px 32px 18px", contentPadding: "0 32px 48px", columns: 5, gap: 40, titleSize: 28, showHeaderText: false };
+    } else {
+      return { headerPadding: "44px 48px 18px", contentPadding: "0 48px 56px", columns: 6, gap: 40, titleSize: 28, showHeaderText: false };
+    }
+  }, [windowWidth]);
+
+  const config = getResponsiveConfig();
+
+  // Page size = columns × 2 rows for grid; fixed for list
+  const pageSize = isGridView ? config.columns * ROWS : LIST_PAGE_SIZE;
 
   const toggleView = (grid) => {
     setIsGridView(grid);
@@ -271,6 +253,7 @@ const RecentAdditions = () => {
   };
 
   const fetchBooks = useCallback(async () => {
+    if (windowWidth === 0) return; // wait until we know the width
     setLoading(true);
     setError(null);
     try {
@@ -287,7 +270,7 @@ const RecentAdditions = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize]);
+  }, [page, pageSize, windowWidth]);
 
   const handleBookClick = (book) => {
     window.location.href = `/book/${book.book_id ?? book.id}`;
@@ -296,175 +279,106 @@ const RecentAdditions = () => {
   const canPrev = page > 1;
   const canNext = page < totalPages;
 
-  // Responsive configuration
-  const getResponsiveConfig = () => {
-    if (windowWidth < 640) { // Mobile
-      return {
-        headerPadding: "20px 16px 16px",
-        contentPadding: "0 16px 32px",
-        gridColumns: "repeat(2, 1fr)",
-        gap: 12,
-        titleSize: 24,
-        showHeaderText: true
-      };
-    } else if (windowWidth < 768) { // Tablet
-      return {
-        headerPadding: "32px 24px 16px",
-        contentPadding: "0 24px 40px",
-        gridColumns: "repeat(3, 1fr)",
-        gap: 16,
-        titleSize: 26,
-        showHeaderText: true
-      };
-    } else if (windowWidth < 1024) { // Small desktop
-      return {
-        headerPadding: "40px 32px 18px",
-        contentPadding: "0 32px 48px",
-        gridColumns: "repeat(4, 1fr)",
-        gap: 18,
-        titleSize: 28,
-        showHeaderText: false
-      };
-    } else { // Large desktop
-      return {
-        headerPadding: "44px 48px 18px",
-        contentPadding: "0 48px 56px",
-        gridColumns: "repeat(5, 1fr)",
-        gap: 18,
-        titleSize: 28,
-        showHeaderText: false
-      };
-    }
-  };
-
-  const config = getResponsiveConfig();
-
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Reset to page 1 when columns change (breakpoint crossed)
+  useEffect(() => {
+    setPage(1);
+  }, [config.columns]);
 
   useEffect(() => {
     fetchBooks();
   }, [fetchBooks]);
 
+  // ─── Pagination button style ─────────────────────────────────────────────
+  const paginationBtn = (disabled, isMobile) => ({
+    width: isMobile ? 36 : 40,
+    height: isMobile ? 32 : 36,
+    borderRadius: isMobile ? 8 : 12,
+    border: "1px solid #d1d8e8",
+    background: "#fff",
+    cursor: disabled ? "not-allowed" : "pointer",
+    opacity: disabled ? 0.45 : 1,
+    display: "grid",
+    placeItems: "center",
+  });
+
+  const isMobile = windowWidth < 640;
+
   return (
     <div style={{ background: "#fff" }}>
-      {/* Header */}
+      {/* ── Header ── */}
       <div
         style={{
-          maxWidth: 1440,
+          maxWidth: 1700,
           margin: "0 auto",
           padding: config.headerPadding,
           display: "flex",
-          alignItems: windowWidth < 640 ? "flex-start" : "center",
+          alignItems: isMobile ? "flex-start" : "center",
           justifyContent: "space-between",
           gap: 16,
-          flexDirection: windowWidth < 640 ? "column" : "row",
+          flexDirection: isMobile ? "column" : "row",
         }}
       >
         <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h2 style={{ fontSize: config.titleSize, fontWeight: 700, color: "#000000ff", margin: 0, letterSpacing: "-0.01em" }}>
-            {config.showHeaderText && windowWidth < 640 ? "Recent" : "Recent Additions"}
+          <h2 style={{ fontSize: config.titleSize, fontWeight: 700, color: "#000", margin: 0, letterSpacing: "-0.01em" }}>
+            {config.showHeaderText && isMobile ? "Recent" : "Recent Additions"}
           </h2>
-          
-          {/* View toggles and pagination - show beside title on mobile */}
-          {windowWidth < 640 && (
+
+          {/* Mobile: arrows beside title */}
+          {isMobile && (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 6 }} />
-              
-              {/* Pagination arrows */}
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={!canPrev || loading}
-                style={{
-                  width: 36, height: 32, borderRadius: 8,
-                  border: "1px solid #d1d8e8", background: "#fff",
-                  cursor: (!canPrev || loading) ? "not-allowed" : "pointer",
-                  opacity: (!canPrev || loading) ? 0.45 : 1,
-                  display: "grid", placeItems: "center",
-                }}
-              >
+              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!canPrev || loading} style={paginationBtn(!canPrev || loading, true)}>
                 <ChevronLeft size={16} />
               </button>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={!canNext || loading}
-                style={{
-                  width: 36, height: 32, borderRadius: 8,
-                  border: "1px solid #d1d8e8", background: "#fff",
-                  cursor: (!canNext || loading) ? "not-allowed" : "pointer",
-                  opacity: (!canNext || loading) ? 0.45 : 1,
-                  display: "grid", placeItems: "center",
-                }}
-              >
+              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={!canNext || loading} style={paginationBtn(!canNext || loading, true)}>
                 <ChevronRight size={16} />
               </button>
             </div>
           )}
         </div>
 
-        {/* Desktop controls */}
-        {windowWidth >= 640 && (
+        {/* Desktop: arrows on right */}
+        {!isMobile && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 8 }} />
-
-            {/* Pagination arrows */}
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={!canPrev || loading}
-              style={{
-                width: 40, height: 36, borderRadius: 12,
-                border: "1px solid #d1d8e8", background: "#fff",
-                cursor: (!canPrev || loading) ? "not-allowed" : "pointer",
-                opacity: (!canPrev || loading) ? 0.45 : 1,
-                display: "grid", placeItems: "center",
-              }}
-            >
+            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!canPrev || loading} style={paginationBtn(!canPrev || loading, false)}>
               <ChevronLeft size={18} />
             </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={!canNext || loading}
-              style={{
-                width: 40, height: 36, borderRadius: 12,
-                border: "1px solid #d1d8e8", background: "#fff",
-                cursor: (!canNext || loading) ? "not-allowed" : "pointer",
-                opacity: (!canNext || loading) ? 0.45 : 1,
-                display: "grid", placeItems: "center",
-              }}
-            >
+            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={!canNext || loading} style={paginationBtn(!canNext || loading, false)}>
               <ChevronRight size={18} />
             </button>
           </div>
         )}
       </div>
 
-      {/* Loading */}
+      {/* ── Loading ── */}
       {loading && (
-        <div style={{ maxWidth: 1440, margin: "0 auto", padding: config.contentPadding, color: "#6b7280", fontSize: 14, textAlign: "center" }}>
+        <div style={{ maxWidth: 1700, margin: "0 auto", padding: config.contentPadding, color: "#6b7280", fontSize: 14, textAlign: "center" }}>
           Loading…
         </div>
       )}
 
-      {/* Error */}
+      {/* ── Error ── */}
       {error && (
-        <div style={{ maxWidth: 1440, margin: "0 auto", padding: config.contentPadding, color: "#dc2626", fontSize: 14, textAlign: "center" }}>
+        <div style={{ maxWidth: 1700, margin: "0 auto", padding: config.contentPadding, color: "#dc2626", fontSize: 14, textAlign: "center" }}>
           Failed to load: {error}
         </div>
       )}
 
-      {/* Grid view */}
+      {/* ── Grid view ── */}
       {!loading && !error && isGridView && (
         <div
           style={{
-            maxWidth: 1440,
+            maxWidth: 1700,
             margin: "0 auto",
             padding: config.contentPadding,
             display: "grid",
-            gridTemplateColumns: config.gridColumns,
+            gridTemplateColumns: `repeat(${config.columns}, 1fr)`,
             gap: config.gap,
           }}
         >
@@ -474,11 +388,11 @@ const RecentAdditions = () => {
         </div>
       )}
 
-      {/* List view */}
+      {/* ── List view ── */}
       {!loading && !error && !isGridView && (
         <div
           style={{
-            maxWidth: 1440,
+            maxWidth: 1700,
             margin: "0 auto",
             padding: config.contentPadding,
             border: "1px solid #e6ecf7",
@@ -498,9 +412,9 @@ const RecentAdditions = () => {
         </div>
       )}
 
-      {/* Empty */}
+      {/* ── Empty ── */}
       {!loading && !error && books.length === 0 && (
-        <div style={{ maxWidth: 1440, margin: "0 auto", padding: config.contentPadding, color: "#6b7280", fontSize: 14, textAlign: "center" }}>
+        <div style={{ maxWidth: 1700, margin: "0 auto", padding: config.contentPadding, color: "#6b7280", fontSize: 14, textAlign: "center" }}>
           No recent additions found.
         </div>
       )}

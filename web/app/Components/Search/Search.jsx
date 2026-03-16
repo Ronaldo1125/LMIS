@@ -310,8 +310,60 @@ const Search = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState(null);
+  const [windowWidth, setWindowWidth] = useState(0);
 
   const LIMIT = 24;
+
+  // ── window resize listener ────────────────────────────────────────────
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ── responsive configuration ──────────────────────────────────────
+  const getResponsiveConfig = () => {
+    if (windowWidth < 640) { // Mobile
+      return {
+        headerPadding: "20px 16px 16px",
+        contentPadding: "0 16px 32px",
+        gridColumns: "repeat(2, 1fr)",
+        gap: 28,
+        titleSize: 24,
+        showHeaderText: true
+      };
+    } else if (windowWidth < 768) { // Tablet
+      return {
+        headerPadding: "32px 24px 16px",
+        contentPadding: "0 24px 40px",
+        gridColumns: "repeat(4, 1fr)",
+        gap: 36,
+        titleSize: 26,
+        showHeaderText: true
+      };
+    } else if (windowWidth < 1024) { // Small desktop
+      return {
+        headerPadding: "40px 32px 18px",
+        contentPadding: "0 32px 48px",
+        gridColumns: "repeat(5, 1fr)",
+        gap: 40,
+        titleSize: 28,
+        showHeaderText: false
+      };
+    } else { // Large desktop
+      return {
+        headerPadding: "44px 48px 18px",
+        contentPadding: "0 48px 56px",
+        gridColumns: "repeat(6, 1fr)",
+        gap: 40,
+        titleSize: 28,
+        showHeaderText: false
+      };
+    }
+  };
+
+  const config = getResponsiveConfig();
 
   // ── load dynamic filter options ───────────────────────────────────────────
   useEffect(() => {
@@ -480,7 +532,7 @@ const Search = () => {
 
       {/* HERO */}
       <section className="w-full bg-blue-900 pt-16 pb-20">
-        <div className="max-w-[1440px] mx-auto px-6 2xl:px-10">
+        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-12 2xl:px-12">
           <h1 className="text-[40px] font-medium text-white mb-8">{pageTitle}</h1>
 
           {/* Search bar */}
@@ -624,7 +676,7 @@ const Search = () => {
         </div>
       </section>
 
-      <main className="mx-auto w-full max-w-[1440px] px-6 2xl:px-10 pt-10 pb-24">
+      <main className="mx-auto w-full max-w-[1700px] px-4 sm:px-6 md:px-8 lg:px-12 xl:px-12 2xl:px-12 pt-10 pb-24">
 
         {/* Active filter chips */}
         {activeFilters.length > 0 && (
@@ -664,17 +716,20 @@ const Search = () => {
 
         {/* Grid View */}
         {isGridView && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 18, paddingBottom: 56 }}>
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: config.gridColumns, 
+            gap: config.gap, 
+            paddingBottom: 56 
+          }}>
             {loading ? <SkeletonGrid count={LIMIT} /> : books.map((book) => (
               <div
                 key={book.id}
-                style={{ cursor: "pointer", border: "1px solid #e6ecf7", overflow: "hidden", transition: "box-shadow 0.15s" }}
-                onMouseOver={(e) => (e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)")}
-                onMouseOut={(e)  => (e.currentTarget.style.boxShadow = "none")}
+                style={{ cursor: "pointer", overflow: "hidden" }}
                 onClick={() => onBookClick(book.id)}
               >
                 <PDFThumbnail uploadId={book.upload_id} title={book.title} />
-                <div style={{ padding: "12px 12px 14px" }}>
+                <div style={{ padding: "12px 0px 14px", textAlign: "left" }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", lineHeight: 1.3, marginBottom: 6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                     {book.title}
                   </div>
@@ -699,16 +754,14 @@ const Search = () => {
 
         {/* List View */}
         {!isGridView && (
-          <div style={{ border: "1px solid #e6ecf7", borderRadius: 14, overflow: "hidden", background: "#fff" }}>
+          <div style={{ border: "1px solid #e6ecf7", overflow: "hidden", background: "#fff" }}>
             {loading ? <SkeletonList count={LIMIT} /> : books.map((book, idx) => (
               <div
                 key={book.id}
-                style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderBottom: idx < books.length - 1 ? "1px solid #eef2ff" : "none", cursor: "pointer", transition: "background 0.15s" }}
-                onMouseOver={(e) => (e.currentTarget.style.background = "#f7faff")}
-                onMouseOut={(e)  => (e.currentTarget.style.background = "#fff")}
+                style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderBottom: idx < books.length - 1 ? "1px solid #eef2ff" : "none", cursor: "pointer" }}
                 onClick={() => onBookClick(book.id)}
               >
-                <div style={{ width: 44, height: 58, borderRadius: 8, overflow: "hidden", flexShrink: 0, border: "1px solid #e6ecf7" }}>
+                <div style={{ width: 44, height: 58, overflow: "hidden", flexShrink: 0, border: "1px solid #e6ecf7" }}>
                   <PDFThumbnail uploadId={book.upload_id} title={book.title} style={{ aspectRatio: "unset", width: "100%", height: "100%" }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>

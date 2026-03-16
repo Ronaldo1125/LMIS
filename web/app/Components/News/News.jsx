@@ -161,7 +161,7 @@ const News = () => {
           alignItems: windowWidth < 640 ? "flex-start" : "center",
           justifyContent: "space-between",
           padding: config.headerPadding,
-          maxWidth: 1440,
+          maxWidth: 1700,
           marginLeft: "auto",
           marginRight: "auto",
           gap: 16,
@@ -232,14 +232,14 @@ const News = () => {
 
         {/* ── Error state ── */}
         {error && (
-          <div style={{ maxWidth: 1440, margin: "0 auto", padding: `0 ${config.contentPadding} 40px`, color: "#dc2626", fontSize: 14 }}>
+          <div style={{ maxWidth: 1700, margin: "0 auto", padding: `0 ${config.contentPadding} 40px`, color: "#dc2626", fontSize: 14 }}>
             Failed to load news: {error}
           </div>
         )}
 
         {/* ── News Grid ── */}
         <div style={{
-          maxWidth: 1440,
+          maxWidth: 1700,
           margin: "0 auto",
           padding: config.contentPadding,
           display: "grid",

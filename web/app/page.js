@@ -11,26 +11,24 @@ export default function Page() {
 
   return (
 
-    <div className="min-w-[320px]">
-
+    <div>
 
       <LandingPage />
 
-     
+      <div id="recent-additions">
+        <RecentAdditions />
+      </div>
 
-       <RecentAdditions />
-       
- 
-      <FrequentlySearched />
-     
+      <div id="frequently-searched">
+        <FrequentlySearched />
+      </div>
+
       <Category />
-    
-      
-      
-      
-      <News />
-      
-      
+
+      <div id="news">
+        <News />
+      </div>
+
       <Footer />
 
     </div>
