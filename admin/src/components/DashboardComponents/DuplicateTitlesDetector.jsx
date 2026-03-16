@@ -44,7 +44,6 @@ export default function DuplicateTitlesDetector({ dark = false }) {
         const data = await res.json()
         const books = data.books || []
 
-        // Group by normalized title
         const titleGroups = {}
         books.forEach(book => {
           const key = normalize(book.title)
@@ -53,9 +52,6 @@ export default function DuplicateTitlesDetector({ dark = false }) {
           titleGroups[key].push(book)
         })
 
-        // For each title group, determine match level:
-        // RED   = same title + same author (fully duplicated)
-        // YELLOW = same title only, different authors (partial)
         const dupes = Object.values(titleGroups)
           .filter(g => g.length > 1)
           .map(g => {
@@ -64,12 +60,11 @@ export default function DuplicateTitlesDetector({ dark = false }) {
             return {
               title: g[0].title,
               count: g.length,
-              matchLevel: allSameAuthor ? 'full' : 'partial', // full=red, partial=yellow
+              matchLevel: allSameAuthor ? 'full' : 'partial',
               books: g,
             }
           })
           .sort((a, b) => {
-            // red first, then by count
             if (a.matchLevel !== b.matchLevel) return a.matchLevel === 'full' ? -1 : 1
             return b.count - a.count
           })
@@ -94,7 +89,6 @@ export default function DuplicateTitlesDetector({ dark = false }) {
     setTimeout(() => { setIsModalOpen(false); setSelected(null) }, 320)
   }
 
-  const totalDupes = duplicates.reduce((sum, d) => sum + d.count, 0)
   const redCount    = duplicates.filter(d => d.matchLevel === 'full').length
   const yellowCount = duplicates.filter(d => d.matchLevel === 'partial').length
 
@@ -105,6 +99,8 @@ export default function DuplicateTitlesDetector({ dark = false }) {
         padding: '20px 22px', boxShadow: shadow,
         borderTop: '2.5px solid #ef4444',
         transition: 'background 0.35s ease, border-color 0.35s ease',
+        minWidth: 0,
+        overflow: 'hidden',
       }}>
         <style>{`
           @keyframes dup-up   { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
@@ -115,7 +111,7 @@ export default function DuplicateTitlesDetector({ dark = false }) {
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
             <div style={{
               width: 34, height: 34, borderRadius: 9, flexShrink: 0,
               background: dark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.08)',
@@ -124,15 +120,15 @@ export default function DuplicateTitlesDetector({ dark = false }) {
             }}>
               <Copy size={15} color="#ef4444" strokeWidth={2.2} />
             </div>
-            <div>
-              <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: dark ? '#e2ecf8' : '#334155', letterSpacing: '-0.02em', fontFamily: "'Sora', sans-serif" }}>
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: dark ? '#e2ecf8' : '#334155', letterSpacing: '-0.02em', fontFamily: "'Sora', sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 Duplicate Titles
               </h2>
-              <p style={{ margin: 0, fontSize: 11, color: txt2 }}>Books with matching title or author</p>
+              <p style={{ margin: 0, fontSize: 11, color: txt2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Books with matching title or author</p>
             </div>
           </div>
           {!loading && duplicates.length > 0 && (
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 8 }}>
               {redCount > 0 && (
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 4,
@@ -174,7 +170,7 @@ export default function DuplicateTitlesDetector({ dark = false }) {
             <p style={{ margin: '4px 0 0', fontSize: 11, color: txt2 }}>Your collection looks clean</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto' }}>
             {duplicates.slice(0, 5).map((dupe, i) => {
               const accentColor = dupe.matchLevel === 'full' ? '#ef4444' : '#f59e0b'
               return (
@@ -188,13 +184,14 @@ export default function DuplicateTitlesDetector({ dark = false }) {
                     background: surf, border: `1px solid ${bdr}`,
                     borderLeft: `3px solid ${accentColor}`,
                     animation: `dup-up 0.35s ease ${i * 0.05}s both`,
+                    minWidth: 0,
                   }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: txt1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {dupe.title}
                     </p>
-                    <p style={{ margin: '2px 0 0', fontSize: 10, color: txt2 }}>
+                    <p style={{ margin: '2px 0 0', fontSize: 10, color: txt2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {dupe.matchLevel === 'full' ? 'Same title & author' : 'Same title, different authors'}
                     </p>
                   </div>
@@ -243,14 +240,14 @@ export default function DuplicateTitlesDetector({ dark = false }) {
               padding: '14px 18px', borderBottom: `1px solid ${bdr}`,
               background: dark ? '#07111f' : '#f8fafc', borderRadius: '16px 16px 0 0', flexShrink: 0,
             }}>
-              <div>
+              <div style={{ minWidth: 0, flex: 1 }}>
                 <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: txt1, fontFamily: "'Sora', sans-serif" }}>
                   {selected.count} copies found
                 </h2>
-                <p style={{ margin: '2px 0 0', fontSize: 11, color: txt2 }}>"{selected.title}"</p>
+                <p style={{ margin: '2px 0 0', fontSize: 11, color: txt2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>"{selected.title}"</p>
               </div>
               <button onClick={closeModal}
-                style={{ padding: 6, background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', transition: 'background 0.15s' }}
+                style={{ padding: 6, background: 'transparent', border: 'none', borderRadius: 7, cursor: 'pointer', transition: 'background 0.15s', flexShrink: 0, marginLeft: 8 }}
                 onMouseEnter={e => e.currentTarget.style.background = dark ? '#1a3356' : '#f1f5f9'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                 <X size={16} color={txt2} />
@@ -268,14 +265,15 @@ export default function DuplicateTitlesDetector({ dark = false }) {
                     border: `1px solid ${bdr}`,
                     borderLeft: `3px solid ${accentColor}`,
                     background: dark ? '#0c1c34' : '#ffffff',
+                    minWidth: 0,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: txt1, flex: 1 }}>{book.title}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: txt1, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{book.title}</span>
                       <span style={{ fontSize: 10, color: txt2, flexShrink: 0, fontFamily: "'DM Mono', monospace" }}>
                         {formatDate(dateAdded)}
                       </span>
                     </div>
-                    <p style={{ margin: '4px 0 0', fontSize: 11, color: txt2 }}>
+                    <p style={{ margin: '4px 0 0', fontSize: 11, color: txt2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       by {book.author || 'Unknown'} · {book.category || 'Uncategorized'}
                     </p>
                     {book.accession_no && (

@@ -95,9 +95,7 @@ const CollectionByCategory = ({ dark }) => {
   const txt2     = dark ? '#6b8cae' : '#64748b'
   const txt3     = dark ? '#2e4d70' : '#94a3b8'
   const surface  = dark ? '#07111f' : '#f8fafc'
-  const modalBg  = dark ? '#0c1c34' : '#ffffff'
-  const hdBg     = dark ? '#07111f' : '#f8fafc'
-
+  
   const cardStyle = {
     background: bg, border: `1px solid ${bdr}`,
     borderRadius: 12,

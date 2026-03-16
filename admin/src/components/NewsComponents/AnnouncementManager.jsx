@@ -7,10 +7,6 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
-// Font only — all colors are original
-const FONT_DISPLAY = '"Sora", -apple-system, BlinkMacSystemFont, sans-serif'
-const INTER        = '"DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-
 const AUDIENCES = [
   { value: 'all',    label: 'All Users' },
   { value: 'Patron', label: 'Patrons Only' },
@@ -42,18 +38,17 @@ const authHeaders = () => ({
 const StatusBadge = ({ ok, message }) => (
   <div style={{
     borderRadius: '0.45rem', padding: '0.55rem 0.875rem',
-    fontSize: '0.8rem', fontWeight: 500, marginBottom: '1.125rem',
+    fontSize: '0.875rem', fontWeight: 500, marginBottom: '1.125rem',
     background: ok ? 'rgba(5,150,105,0.09)' : 'rgba(239,68,68,0.09)',
     border: `1px solid ${ok ? 'rgba(5,150,105,0.22)' : 'rgba(239,68,68,0.22)'}`,
     color: ok ? '#059669' : '#ef4444',
-    fontFamily: INTER,
   }}>
     {message}
   </div>
 )
 
 const FieldError = ({ msg }) =>
-  msg ? <p style={{ margin: '0.25rem 0 0', fontSize: '0.72rem', color: '#ef4444', fontFamily: INTER }}>{msg}</p> : null
+  msg ? <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#ef4444' }}>{msg}</p> : null
 
 const AnnouncementManager = ({ dark }) => {
   const [announcements, setAnnouncements] = useState([])
@@ -67,7 +62,6 @@ const AnnouncementManager = ({ dark }) => {
   const [expanded,   setExpanded]   = useState(null)
   const fileInputRef = useRef(null)
 
-  // ── Original colors ───────────────────────────────────────────────────────
   const bg          = dark ? '#0d1b2e' : '#ffffff'
   const bg2         = dark ? '#07111f' : '#f8fafc'
   const bg3         = dark ? '#0b1525' : '#f1f5f9'
@@ -139,19 +133,19 @@ const AnnouncementManager = ({ dark }) => {
   }
 
   const inputStyle = (hasErr) => ({
-    width: '100%', padding: '0.6rem 0.875rem',
-    borderRadius: '0.45rem',
+    width: '100%', padding: '0.625rem 0.875rem',
+    borderRadius: '0.5rem',
     border: `1px solid ${hasErr ? '#ef4444' : inputBorder}`,
     background: inputBg, color: textPrimary,
-    fontSize: '0.8375rem', outline: 'none',
+    fontSize: '0.875rem', outline: 'none',
     transition: 'border-color 0.18s ease',
-    boxSizing: 'border-box', fontFamily: INTER,
+    boxSizing: 'border-box',
   })
 
   const labelStyle = {
-    display: 'block', fontSize: '0.72rem', fontWeight: 700,
+    display: 'block', fontSize: '0.75rem', fontWeight: 600,
     color: textMuted, marginBottom: '0.375rem',
-    letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: INTER,
+    letterSpacing: '0.05em', textTransform: 'uppercase',
   }
 
   const getPriorityStyle = (p) => PRIORITIES.find(x => x.value === p) || PRIORITIES[0]
@@ -163,12 +157,12 @@ const AnnouncementManager = ({ dark }) => {
         <div style={{ width: '1.875rem', height: '1.875rem', borderRadius: '0.4rem', background: accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {icon}
         </div>
-        <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: textPrimary, letterSpacing: '-0.01em', fontFamily: FONT_DISPLAY }}>
+        <span style={{ fontSize: '1rem', fontWeight: 700, color: textPrimary, letterSpacing: '-0.01em' }}>
           {title}
         </span>
       </div>
       {count !== undefined && (
-        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: accent, background: accentLight, borderRadius: '9999px', padding: '0.15rem 0.6rem', letterSpacing: '0.03em', fontFamily: INTER }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: accent, background: accentLight, borderRadius: '9999px', padding: '0.15rem 0.6rem', letterSpacing: '0.03em' }}>
           {count}
         </span>
       )}
@@ -196,7 +190,7 @@ const AnnouncementManager = ({ dark }) => {
 
           <div>
             <label style={labelStyle}>Message Body</label>
-            <textarea style={{ ...inputStyle(!!errors.description), resize: 'vertical', minHeight: '6.5rem', padding: '0.6rem 0.875rem', lineHeight: 1.55 }}
+            <textarea style={{ ...inputStyle(!!errors.description), resize: 'vertical', minHeight: '6.5rem', padding: '0.625rem 0.875rem', lineHeight: 1.55 }}
               placeholder="Write your announcement here..."
               value={form.description}
               onChange={e => { setForm(f => ({ ...f, description: e.target.value })); setErrors(er => ({ ...er, description: '' })) }}
@@ -228,19 +222,19 @@ const AnnouncementManager = ({ dark }) => {
 
           <div>
             <label style={labelStyle}>Attachments (max {MAX_FILES})</label>
-            <div onClick={() => fileInputRef.current?.click()} style={{ border: `1px dashed ${inputBorder}`, borderRadius: '0.45rem', padding: '0.7rem 1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: textMuted, fontSize: '0.8rem', fontFamily: INTER, transition: 'border-color 0.18s ease, color 0.18s ease' }}
+            <div onClick={() => fileInputRef.current?.click()} style={{ border: `1px dashed ${inputBorder}`, borderRadius: '0.5rem', padding: '0.7rem 1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: textMuted, fontSize: '0.875rem', transition: 'border-color 0.18s ease, color 0.18s ease' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = inputBorder; e.currentTarget.style.color = textMuted }}>
               <PaperClipIcon style={{ width: '0.9rem', height: '0.9rem', flexShrink: 0 }} />
               <span>Click to attach files</span>
-              <span style={{ marginLeft: 'auto', fontSize: '0.7rem' }}>{files.length}/{MAX_FILES}</span>
+              <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}>{files.length}/{MAX_FILES}</span>
             </div>
             <input ref={fileInputRef} type="file" multiple style={{ display: 'none' }} onChange={handleFileChange} />
             <FieldError msg={errors.files} />
             {files.length > 0 && (
               <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                 {files.map((f, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: bg3, border: `1px solid ${border}`, borderRadius: '0.375rem', padding: '0.35rem 0.625rem', fontSize: '0.75rem', color: textMuted, fontFamily: INTER }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: bg3, border: `1px solid ${border}`, borderRadius: '0.375rem', padding: '0.35rem 0.625rem', fontSize: '0.75rem', color: textMuted }}>
                     <span style={{ color: textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{f.name}</span>
                     <span style={{ marginLeft: '0.5rem', flexShrink: 0 }}>{formatFileSize(f.size)}</span>
                     <button onClick={e => { e.stopPropagation(); removeFile(i) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: textMuted, padding: '0 0 0 0.4rem', display: 'flex' }}>
@@ -255,10 +249,10 @@ const AnnouncementManager = ({ dark }) => {
           <button onClick={handleSubmit} disabled={submitting} style={{
             width: '100%', padding: '0.65rem',
             background: submitting ? (dark ? '#1c3461' : '#94a3b8') : accent,
-            color: '#ffffff', border: 'none', borderRadius: '0.45rem',
-            fontSize: '0.8375rem', fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer',
+            color: '#ffffff', border: 'none', borderRadius: '0.5rem',
+            fontSize: '0.875rem', fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem',
-            letterSpacing: '0.01em', fontFamily: INTER,
+            letterSpacing: '0.01em',
             boxShadow: submitting ? 'none' : '0 2px 10px rgba(21,74,154,0.28)',
             transition: 'background 0.18s ease',
           }}>
@@ -273,7 +267,7 @@ const AnnouncementManager = ({ dark }) => {
         {sectionHeader(<MegaphoneIcon style={{ width: '0.9rem', height: '0.9rem', color: accent }} />, 'Sent Announcements', announcements.length)}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-0.75rem', marginBottom: '1rem' }}>
-          <button onClick={fetchAnnouncements} disabled={loading} style={{ background: 'transparent', border: `1px solid ${border}`, borderRadius: '0.4rem', padding: '0.3rem 0.6rem', cursor: loading ? 'not-allowed' : 'pointer', color: textMuted, display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', fontWeight: 600, fontFamily: INTER, transition: 'border-color 0.18s ease, color 0.18s ease' }}
+          <button onClick={fetchAnnouncements} disabled={loading} style={{ background: 'transparent', border: `1px solid ${border}`, borderRadius: '0.4rem', padding: '0.3rem 0.6rem', cursor: loading ? 'not-allowed' : 'pointer', color: textMuted, display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', fontWeight: 600, transition: 'border-color 0.18s ease, color 0.18s ease' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = border; e.currentTarget.style.color = textMuted }}>
             <ArrowPathIcon style={{ width: '0.75rem', height: '0.75rem', animation: loading ? 'spin 1s linear infinite' : 'none' }} />
@@ -282,16 +276,16 @@ const AnnouncementManager = ({ dark }) => {
         </div>
 
         {loading ? (
-          <div style={{ padding: '3rem 0', textAlign: 'center', color: textMuted, fontSize: '0.8375rem', fontFamily: INTER }}>Loading announcements…</div>
+          <div style={{ padding: '3rem 0', textAlign: 'center', color: textMuted, fontSize: '0.875rem' }}>Loading announcements…</div>
         ) : fetchError ? (
-          <div style={{ padding: '1rem', borderRadius: '0.45rem', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', color: '#ef4444', fontSize: '0.8rem', textAlign: 'center', fontFamily: INTER }}>
+          <div style={{ padding: '1rem', borderRadius: '0.5rem', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', color: '#ef4444', fontSize: '0.875rem', textAlign: 'center' }}>
             {fetchError}
-            <button onClick={fetchAnnouncements} style={{ display: 'block', margin: '0.625rem auto 0', fontSize: '0.75rem', color: '#ef4444', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '0.35rem', padding: '0.3rem 0.7rem', cursor: 'pointer', fontFamily: INTER }}>Retry</button>
+            <button onClick={fetchAnnouncements} style={{ display: 'block', margin: '0.625rem auto 0', fontSize: '0.75rem', color: '#ef4444', background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '0.35rem', padding: '0.3rem 0.7rem', cursor: 'pointer' }}>Retry</button>
           </div>
         ) : announcements.length === 0 ? (
           <div style={{ padding: '3.5rem 0', textAlign: 'center', color: textMuted }}>
             <MegaphoneIcon style={{ width: '2rem', height: '2rem', margin: '0 auto 0.625rem', opacity: 0.3 }} />
-            <p style={{ margin: 0, fontSize: '0.8375rem', fontFamily: INTER }}>No announcements sent yet.</p>
+            <p style={{ margin: 0, fontSize: '0.875rem' }}>No announcements sent yet.</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', maxHeight: '62vh', overflowY: 'auto', paddingRight: '0.25rem' }}>
@@ -302,17 +296,17 @@ const AnnouncementManager = ({ dark }) => {
               const hasAtt = ann.attachments?.length > 0
               return (
                 <div key={ann.id} style={{ background: bg2, border: `1px solid ${border}`, borderRadius: '0.625rem', overflow: 'hidden', transition: 'border-color 0.18s ease' }}>
-                  <button onClick={() => setExpanded(isOpen ? null : ann.id)} style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.8rem 0.975rem', display: 'flex', alignItems: 'center', gap: '0.65rem', textAlign: 'left', fontFamily: INTER }}>
+                  <button onClick={() => setExpanded(isOpen ? null : ann.id)} style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.8rem 0.975rem', display: 'flex', alignItems: 'center', gap: '0.65rem', textAlign: 'left' }}>
                     <PIcon style={{ width: '0.875rem', height: '0.875rem', color: pStyle.color, flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: '0.8375rem', fontWeight: 600, color: textPrimary, lineHeight: 1.3, fontFamily: INTER }}>
+                      <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: textPrimary, lineHeight: 1.3 }}>
                         {ann.subject}
                       </p>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.68rem', color: textMuted, fontFamily: INTER }}>{formatDate(ann.sent_at || ann.created_at)}</span>
-                        <span style={{ fontSize: '0.6375rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: pStyle.color, background: `${pStyle.color}18`, borderRadius: '9999px', padding: '0.05rem 0.5rem', fontFamily: INTER }}>{pStyle.label}</span>
-                        <span style={{ fontSize: '0.6375rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: accent, background: accentLight, borderRadius: '9999px', padding: '0.05rem 0.5rem', fontFamily: INTER }}>{audienceLabel(ann.audience)}</span>
-                        {hasAtt && <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.68rem', color: textMuted, fontFamily: INTER }}><PaperClipIcon style={{ width: '0.65rem', height: '0.65rem' }} />{ann.attachments.length}</span>}
+                        <span style={{ fontSize: '0.75rem', color: textMuted }}>{formatDate(ann.sent_at || ann.created_at)}</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: pStyle.color, background: `${pStyle.color}18`, borderRadius: '9999px', padding: '0.05rem 0.5rem' }}>{pStyle.label}</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: accent, background: accentLight, borderRadius: '9999px', padding: '0.05rem 0.5rem' }}>{audienceLabel(ann.audience)}</span>
+                        {hasAtt && <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', fontSize: '0.75rem', color: textMuted }}><PaperClipIcon style={{ width: '0.65rem', height: '0.65rem' }} />{ann.attachments.length}</span>}
                       </div>
                     </div>
                     <ChevronDownIcon style={{ width: '0.875rem', height: '0.875rem', color: textMuted, flexShrink: 0, transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.18s ease' }} />
@@ -320,13 +314,13 @@ const AnnouncementManager = ({ dark }) => {
 
                   {isOpen && (
                     <div style={{ padding: '0 0.975rem 0.9rem', borderTop: `1px solid ${border}` }}>
-                      <p style={{ margin: '0.75rem 0 0', fontSize: '0.8125rem', color: textMuted, lineHeight: 1.65, whiteSpace: 'pre-wrap', fontFamily: INTER }}>{ann.description}</p>
+                      <p style={{ margin: '0.75rem 0 0', fontSize: '0.875rem', color: textMuted, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{ann.description}</p>
                       {hasAtt && (
                         <div style={{ marginTop: '0.75rem' }}>
                           <p style={{ ...labelStyle, marginBottom: '0.3rem' }}>Attachments</p>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                             {ann.attachments.map(att => (
-                              <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: textMuted, background: bg3, border: `1px solid ${border}`, borderRadius: '0.35rem', padding: '0.3rem 0.6rem', fontFamily: INTER }}>
+                              <div key={att.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: textMuted, background: bg3, border: `1px solid ${border}`, borderRadius: '0.35rem', padding: '0.3rem 0.6rem' }}>
                                 <PaperClipIcon style={{ width: '0.75rem', height: '0.75rem', flexShrink: 0 }} />
                                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.file_name}</span>
                                 <span style={{ flexShrink: 0 }}>{formatFileSize(att.file_size)}</span>

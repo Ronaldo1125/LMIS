@@ -15,7 +15,7 @@ const BooksTable = ({ books = [], onEdit, onView, onDelete, onArchive, dark }) =
 
   // ── Theme Configuration ────────────────────────────────────
   const tableBg      = dark ? '#0f1f38' : '#ffffff'
-  const tableBorder  = dark ? '#1a3356' : '#e2e8f0'
+  const tableBorder  = dark ? '#1e3a5f' : '#e2e8f0'
   const headerBg     = dark ? '#0d1d35' : 'var(--dark-blue-1, #154A9A)'
   const rowHover     = dark ? '#162a4a' : '#f8fafc'
   const textPrimary  = dark ? '#dde8f5' : '#1e293b'
@@ -85,7 +85,8 @@ const BooksTable = ({ books = [], onEdit, onView, onDelete, onArchive, dark }) =
                   left: 0,
                   zIndex: 20,
                   background: headerBg,
-                  borderBottom: `1px solid ${tableBorder}`
+                  borderBottom: `1px solid ${tableBorder}`,
+                  borderRight: `1px solid ${tableBorder}`,
                 }}>
                   Category
                 </th>
@@ -99,6 +100,7 @@ const BooksTable = ({ books = [], onEdit, onView, onDelete, onArchive, dark }) =
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em',
                     borderBottom: `1px solid ${tableBorder}`,
+                    borderRight: `1px solid ${tableBorder}`,
                     whiteSpace: 'nowrap'
                   }}>
                     {head}
@@ -131,6 +133,7 @@ const BooksTable = ({ books = [], onEdit, onView, onDelete, onArchive, dark }) =
                     zIndex: 10,
                     background: stickyColumnBg,
                     borderBottom: `1px solid ${tableBorder}`,
+                    borderRight: `1px solid ${tableBorder}`,
                     transition: 'background 0.45s ease'
                   }}>
                     <span style={{
@@ -145,48 +148,55 @@ const BooksTable = ({ books = [], onEdit, onView, onDelete, onArchive, dark }) =
                       {renderValue(book.category)}
                     </span>
                   </td>
-                  <td style={{ padding: '1rem 1.5rem', color: textSecondary, fontSize: '0.875rem', borderBottom: `1px solid ${tableBorder}` }}>
+                  <td style={{ padding: '1rem 1.5rem', color: textSecondary, fontSize: '0.875rem', borderBottom: `1px solid ${tableBorder}`, borderRight: `1px solid ${tableBorder}` }}>
                     {renderValue(book.call_number)}
                   </td>
-                  <td style={{ padding: '1rem 1.5rem', borderBottom: `1px solid ${tableBorder}`, minWidth: '240px' }}>
+                  <td style={{ padding: '1rem 1.5rem', borderBottom: `1px solid ${tableBorder}`, borderRight: `1px solid ${tableBorder}`, minWidth: '240px' }}>
                     <div style={{ fontWeight: 600, color: textPrimary, fontSize: '0.875rem' }}>
                       {renderValue(book.title)}
                     </div>
                   </td>
-                  <td style={{ padding: '1rem 1.5rem', color: textSecondary, fontSize: '0.875rem', borderBottom: `1px solid ${tableBorder}` }}>
+                  <td style={{ padding: '1rem 1.5rem', color: textSecondary, fontSize: '0.875rem', borderBottom: `1px solid ${tableBorder}`, borderRight: `1px solid ${tableBorder}` }}>
                     {renderValue(book.author)}
                   </td>
-                  <td style={{ padding: '1rem 1.5rem', color: textMuted, fontSize: '0.8125rem', fontFamily: 'monospace', borderBottom: `1px solid ${tableBorder}` }}>
+                  <td style={{ padding: '1rem 1.5rem', color: textMuted, fontSize: '0.8125rem', fontFamily: 'monospace', borderBottom: `1px solid ${tableBorder}`, borderRight: `1px solid ${tableBorder}` }}>
                     {renderValue(book.isbn)}
                   </td>
                   <td style={{ padding: '1rem 1.5rem', borderBottom: `1px solid ${tableBorder}` }}>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      <ActionBtn
-                        icon={book.is_accessioned ? LockClosedIcon : PencilSquareIcon}
-                        hoverColor={book.is_accessioned ? '#ef4444' : (dark ? '#60a5fa' : '#2563eb')}
-                        title={book.is_accessioned ? 'Already in Accession' : 'Edit'}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          if (book.is_accessioned) {
+                    <div style={{ display: 'flex', gap: '0.25rem', justifyContent: book.is_accessioned ? 'center' : 'flex-start' }}>
+                      {book.is_accessioned ? (
+                        <ActionBtn
+                          icon={LockClosedIcon}
+                          hoverColor="#ef4444"
+                          title="Locked — already in Accession"
+                          onClick={(e) => {
+                            e.stopPropagation()
                             setLockedMsg(true)
                             setTimeout(() => setLockedMsg(false), 2500)
-                          } else {
-                            onEdit && onEdit(book)
-                          }
-                        }}
-                      />
-                      <ActionBtn 
-                        icon={ArchiveBoxIcon} 
-                        hoverColor="#f59e0b" 
-                        title="Archive"
-                        onClick={(e) => { e.stopPropagation(); handleArchiveClick(book); }} 
-                      />
-                      <ActionBtn 
-                        icon={TrashIcon} 
-                        hoverColor="#ef4444" 
-                        title="Delete"
-                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(book); }} 
-                      />
+                          }}
+                        />
+                      ) : (
+                        <>
+                          <ActionBtn
+                            icon={PencilSquareIcon}
+                            hoverColor={dark ? '#60a5fa' : '#2563eb'}
+                            title="Edit"
+                            onClick={(e) => { e.stopPropagation(); onEdit && onEdit(book) }}
+                          />
+                          <ActionBtn
+                            icon={ArchiveBoxIcon}
+                            hoverColor="#f59e0b"
+                            title="Archive"
+                            onClick={(e) => { e.stopPropagation(); handleArchiveClick(book) }}
+                          />
+                          <ActionBtn
+                            icon={TrashIcon}
+                            hoverColor="#ef4444"
+                            title="Delete"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteClick(book) }}
+                          />
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -229,12 +239,10 @@ const BooksTable = ({ books = [], onEdit, onView, onDelete, onArchive, dark }) =
           setArchiveModal({ isOpen: false, book: null, reason: '' });
         }}
         title="Archive Book"
-        message={`Why are you archiving "${archiveModal.book?.title}"?`}
-        confirmText="Archive"
+        message={`Are you sure you want to archive "${archiveModal.book?.title}"? This action can be reversed later.`}
+        confirmText="Yes"
+        cancelText="No"
         confirmColor="amber"
-        showInput={true}
-        inputValue={archiveModal.reason}
-        onInputChange={(val) => setArchiveModal(prev => ({ ...prev, reason: val }))}
       />
 
       {/* Locked Toast Popup */}

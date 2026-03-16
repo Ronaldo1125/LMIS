@@ -17,13 +17,13 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
   const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: HomeIcon },
-    { id: 'cataloging', label: 'Cataloging', icon: BookOpenIcon },
-    { id: 'accessions', label: 'Accessions', icon: DocumentPlusIcon },
-    { id: 'acquisitions', label: 'Acquisitions', icon: ClipboardDocumentCheckIcon },
-    { id: 'news', label: 'Announcements', icon: NewspaperIcon },
-    { id: 'user-management', label: 'User Management', icon: UsersIcon },
-    { id: 'security', label: 'Security', icon: ShieldCheckIcon },
+    { id: 'dashboard',        label: 'Dashboard',       icon: HomeIcon },
+    { id: 'cataloging',       label: 'Cataloging',       icon: BookOpenIcon },
+    { id: 'accessions',       label: 'Accessions',       icon: DocumentPlusIcon },
+    { id: 'acquisitions',     label: 'Acquisitions',     icon: ClipboardDocumentCheckIcon },
+    { id: 'news',             label: 'Announcements',    icon: NewspaperIcon },
+    { id: 'user-management',  label: 'User Management',  icon: UsersIcon },
+    { id: 'security',         label: 'Security',         icon: ShieldCheckIcon },
   ]
 
   const footerItems = [
@@ -35,11 +35,11 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
     setCurrentView('logout')
   }
 
-  const sidebarBg     = dark ? '#0a1628' : '#154A9A'
-  const activeBg      = dark ? '#1a3356' : '#0F61F7'
-  const hoverBg       = dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.10)'
-  const borderColor   = dark ? '#1a3356' : 'rgba(255,255,255,0.10)'
-  const toggleBtnBg   = dark ? '#0f1f38' : '#ffffff'
+  const sidebarBg       = dark ? '#0a1628' : '#154A9A'
+  const activeBg        = dark ? '#1a3356' : '#0F61F7'
+  const hoverBg         = dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.10)'
+  const borderColor     = dark ? '#1a3356' : 'rgba(255,255,255,0.10)'
+  const toggleBtnBg     = dark ? '#0f1f38' : '#ffffff'
   const toggleBtnBorder = dark ? '#1a3356' : '#e2e8f0'
   const toggleIconColor = dark ? '#93c5fd' : '#374151'
 
@@ -53,7 +53,6 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
           width: isOpen ? '16rem' : '5rem',
           transition: 'width 0.3s ease, background 0.45s ease',
           position: 'relative',
-          boxShadow: dark ? '2px 0 20px rgba(0,0,0,0.4)' : '2px 0 10px rgba(0,0,0,0.1)',
         }}
       >
         {/* Toggle Button */}
@@ -68,21 +67,19 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
             width: '2rem', height: '2rem',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', zIndex: 10,
-            boxShadow: dark ? '0 2px 12px rgba(0,0,0,0.5)' : '0 2px 6px rgba(0,0,0,0.15)',
-            transition: 'background 0.45s ease, border-color 0.45s ease, box-shadow 0.45s ease',
+            transition: 'background 0.45s ease, border-color 0.45s ease',
             padding: 0,
           }}
           title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
         >
-          {isOpen ? (
-            <ChevronDoubleLeftIcon style={{ width: '1.25rem', height: '1.25rem', color: toggleIconColor }} />
-          ) : (
-            <ChevronDoubleRightIcon style={{ width: '1.25rem', height: '1.25rem', color: toggleIconColor }} />
-          )}
+          {isOpen
+            ? <ChevronDoubleLeftIcon  style={{ width: '1.25rem', height: '1.25rem', color: toggleIconColor }} />
+            : <ChevronDoubleRightIcon style={{ width: '1.25rem', height: '1.25rem', color: toggleIconColor }} />
+          }
         </button>
 
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-          {/* Logo Section */}
+          {/* Logo */}
           <div style={{
             padding: '1rem',
             borderBottom: `1px solid ${borderColor}`,
@@ -90,11 +87,7 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
             justifyContent: isOpen ? 'flex-start' : 'center',
             transition: 'border-color 0.45s ease',
           }}>
-            <img
-              src="/LOGO.svg"
-              alt="LMIS Logo"
-              style={{ width: '3rem', height: '3rem', flexShrink: 0, filter: 'brightness(0) invert(1)' }}
-            />
+            <img src="/LOGO.svg" alt="LMIS Logo" style={{ width: '3rem', height: '3rem', flexShrink: 0, filter: 'brightness(0) invert(1)' }} />
             <div style={{
               display: 'flex', flexDirection: 'column', marginLeft: '0.75rem',
               opacity: isOpen ? 1 : 0,
@@ -102,12 +95,8 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
               overflow: 'hidden',
               transition: 'opacity 0.3s ease, width 0.3s ease',
             }}>
-              <h1 style={{ fontSize: '0.875rem', fontWeight: 700, whiteSpace: 'nowrap', lineHeight: 1.2, margin: 0 }}>
-                Library Management
-              </h1>
-              <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', lineHeight: 1.2, margin: 0 }}>
-                Information System
-              </p>
+              <h1 style={{ fontSize: '0.875rem', fontWeight: 700, whiteSpace: 'nowrap', lineHeight: 1.2, margin: 0 }}>Library Management</h1>
+              <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', lineHeight: 1.2, margin: 0 }}>Information System</p>
             </div>
           </div>
 
@@ -129,8 +118,7 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
                     border: 'none', cursor: 'pointer',
                     justifyContent: isOpen ? 'flex-start' : 'center',
                     gap: isOpen ? '0.75rem' : 0,
-                    boxShadow: isActive && dark ? '0 2px 12px rgba(0,0,0,0.3)' : isActive ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
-                    transition: 'background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease',
+                    transition: 'background 0.2s ease, color 0.2s ease',
                   }}
                   onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = hoverBg }}
                   onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
@@ -157,7 +145,6 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
               const Icon = item.icon
               const isActive = currentView === item.id
               const isLogout = item.id === 'logout'
-
               return (
                 <button
                   key={item.id}
@@ -191,7 +178,6 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
               )
             })}
 
-            {/* Version Info */}
             <div style={{
               fontSize: '0.625rem', color: 'rgba(255,255,255,0.6)',
               opacity: isOpen ? 1 : 0,
@@ -206,7 +192,6 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
         </div>
       </aside>
 
-      {/* Logout Confirmation Modal */}
       <ConfirmationModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}

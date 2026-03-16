@@ -3,8 +3,8 @@ import {
   ArrowLeftIcon, BookOpenIcon, XMarkIcon,
   ArrowLeftCircleIcon, ArrowRightCircleIcon,
   WrenchScrewdriverIcon, Squares2X2Icon, ChevronRightIcon,
-  MagnifyingGlassIcon, ChevronDownIcon, LightBulbIcon,
-  ShieldCheckIcon, QuestionMarkCircleIcon, ClockIcon,
+  MagnifyingGlassIcon, LightBulbIcon,
+  ShieldCheckIcon, ClockIcon,
   CheckCircleIcon, InformationCircleIcon,
 } from '@heroicons/react/24/outline'
 
@@ -836,29 +836,9 @@ const troubleshootingGuides = [
   { key:'datasync',            label:'Data Synchronization Errors', accent:'#7c3aed' },
 ]
 
-const faqData = [
-  { q:'How do I reset a user\'s password?',
-    a:'Go to User Management → click the user\'s name → click "Reset Password". A reset link is emailed to their registered address. You can also set a temporary password manually from the Edit User screen.' },
-  { q:'Can I recover a deleted book record?',
-    a:'Yes — within 30 days. Go to Cataloging → Recycle Bin (bottom of the sidebar). Find the record and click Restore. After 30 days, records are permanently deleted and cannot be recovered.' },
-  { q:'How do I export data to Excel or PDF?',
-    a:'From any list view, apply your filters, then click the Export button in the top-right corner. Choose CSV, Excel, or PDF. The export includes all currently visible and filtered rows.' },
-  { q:'Why can\'t I see the Security or User Management module?',
-    a:'These modules are only visible to Admin role users. Ask your system administrator to upgrade your account role. The change takes effect on your next login.' },
-  { q:'How do I add a new supplier to the approved list?',
-    a:'Go to Acquisitions → Supplier List → Add Supplier. Fill in the name, contact, and payment terms. The supplier will immediately appear in all relevant dropdowns across the system.' },
-  { q:'What is the difference between ISBN and Accession Number?',
-    a:'An ISBN identifies a book title and edition — the same across every copy worldwide. An Accession Number is a unique ID assigned to each individual physical copy when it enters your library. One ISBN can have many accession numbers.' },
-  { q:'How do I transfer a book copy to another branch?',
-    a:'Open the book record in Cataloging → click Actions → Transfer → select the destination branch → confirm. Location and availability update immediately on both sides.' },
-  { q:'My record shows "Out of Sync" — what should I do?',
-    a:'First try refreshing the page (F5). If it persists, log out and log back in to force a full re-sync. Then open the affected record and verify the data. All sync events are logged under Security → System Log.' },
-]
-
 const searchIndex = [
   ...systemGuides.map(g => ({ type:'guide', key:g.key, label:g.label })),
   ...troubleshootingGuides.map(g => ({ type:'guide', key:g.key, label:g.label })),
-  ...faqData.map((f, i) => ({ type:'faq', index:i, label:f.q })),
 ]
 
 function doSearch(q) {
@@ -877,8 +857,6 @@ export default function HelpSupport({ setCurrentView, dark }) {
   const [pageIndex,   setPageIndex]   = useState(0)
   const [searchQ,     setSearchQ]     = useState('')
   const [searchRes,   setSearchRes]   = useState([])
-  const [openFaq,     setOpenFaq]     = useState(null)
-  const [activeTab,   setActiveTab]   = useState('guides')
 
   const openGuide  = key => { setActiveGuide(key); setPageIndex(0); setSearchQ(''); setSearchRes([]) }
   const closeModal = ()  => { setActiveGuide(null); setPageIndex(0) }
@@ -934,13 +912,11 @@ export default function HelpSupport({ setCurrentView, dark }) {
               </div>
               <div>
                 <h1 style={{ fontSize:'1.5rem', fontWeight:800, color:'#fff', margin:0, letterSpacing:'-0.02em' }}>Help & Support</h1>
-                <p style={{ fontSize:'0.8125rem', color:'rgba(255,255,255,0.55)', margin:'0.2rem 0 0' }}>Illustrated step-by-step guides and FAQs for LMIS</p>
+                <p style={{ fontSize:'0.8125rem', color:'rgba(255,255,255,0.55)', margin:'0.2rem 0 0' }}>Illustrated step-by-step guides for LMIS</p>
               </div>
             </div>
             <div style={{ display:'flex', gap:'0.5rem' }}>
-              {['9 Guides','8 FAQs'].map(c => (
-                <span key={c} style={{ background:'rgba(255,255,255,0.12)', borderRadius:'999px', padding:'0.275rem 0.75rem', fontSize:'0.72rem', color:'rgba(255,255,255,0.8)', fontWeight:600 }}>{c}</span>
-              ))}
+              <span style={{ background:'rgba(255,255,255,0.12)', borderRadius:'999px', padding:'0.275rem 0.75rem', fontSize:'0.72rem', color:'rgba(255,255,255,0.8)', fontWeight:600 }}>9 Guides</span>
             </div>
           </div>
 
@@ -948,7 +924,7 @@ export default function HelpSupport({ setCurrentView, dark }) {
           <div style={{ position:'relative' }}>
             <MagnifyingGlassIcon style={{ position:'absolute', left:'1rem', top:'50%', transform:'translateY(-50%)', width:'1rem', height:'1rem', color:'rgba(255,255,255,0.45)', pointerEvents:'none' }} />
             <input value={searchQ} onChange={e => handleSearch(e.target.value)}
-              placeholder="Search guides, FAQs, or describe your problem..."
+              placeholder="Search guides or describe your problem..."
               style={{ width:'100%', boxSizing:'border-box', padding:'0.8rem 2.75rem', borderRadius:'0.875rem', border:'1px solid rgba(255,255,255,0.18)', background:'rgba(255,255,255,0.1)', color:'#fff', fontSize:'0.9rem', outline:'none', backdropFilter:'blur(8px)', transition:'border-color 0.2s' }}
               onFocus={e => e.target.style.borderColor = 'rgba(255,255,255,0.48)'}
               onBlur={e  => e.target.style.borderColor = 'rgba(255,255,255,0.18)'} />
@@ -962,13 +938,11 @@ export default function HelpSupport({ setCurrentView, dark }) {
               <div style={{ position:'absolute', left:0, right:0, top:'calc(100% + 0.5rem)', background:card, border:`1px solid ${bdr}`, borderRadius:'0.875rem', zIndex:40, boxShadow:'0 16px 48px rgba(0,0,0,0.35)', overflow:'hidden' }}>
                 {searchRes.length > 0 ? searchRes.map((r, i) => (
                   <button key={i}
-                    onClick={() => { r.type==='guide' ? openGuide(r.key) : (setActiveTab('faq'), setOpenFaq(r.index), setSearchQ(''), setSearchRes([])) }}
+                    onClick={() => openGuide(r.key)}
                     style={{ display:'flex', alignItems:'center', gap:'0.75rem', width:'100%', textAlign:'left', padding:'0.75rem 1rem', background:'transparent', border:'none', borderBottom:i<searchRes.length-1?`1px solid ${div}`:'none', cursor:'pointer' }}
                     onMouseEnter={e => e.currentTarget.style.background = hov}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <span style={{ fontSize:'0.7rem', padding:'0.2rem 0.5rem', borderRadius:'4px', background:r.type==='guide'?ic+'20':'#10b98120', color:r.type==='guide'?ic:'#10b981', fontWeight:700 }}>
-                      {r.type==='guide' ? 'Guide' : 'FAQ'}
-                    </span>
+                    <span style={{ fontSize:'0.7rem', padding:'0.2rem 0.5rem', borderRadius:'4px', background:ic+'20', color:ic, fontWeight:700 }}>Guide</span>
                     <span style={{ fontSize:'0.875rem', color:tp, fontWeight:500 }}>{r.label}</span>
                     <ChevronRightIcon style={{ width:'0.875rem', height:'0.875rem', color:tm, marginLeft:'auto' }} />
                   </button>
@@ -1003,57 +977,19 @@ export default function HelpSupport({ setCurrentView, dark }) {
           ))}
         </div>
 
-        {/* tabs */}
-        <div style={{ display:'flex', gap:'0.3rem', marginBottom:'1.125rem', background:card, border:`1px solid ${bdr}`, borderRadius:'0.875rem', padding:'0.3rem' }}>
-          {[{ key:'guides', label:'System Guides' }, { key:'faq', label:'FAQ' }].map(t => (
-            <button key={t.key} onClick={() => setActiveTab(t.key)}
-              style={{ flex:1, padding:'0.575rem 0', borderRadius:'0.625rem', border:'none', cursor:'pointer', fontSize:'0.8rem', fontWeight:600, transition:'all 0.2s',
-                background: activeTab===t.key ? (d?'#1a3356':'#dbeafe') : 'transparent',
-                color:      activeTab===t.key ? (d?'#93c5fd':'#1d4ed8') : ts }}>
-              {t.label}
-            </button>
-          ))}
+        {/* guides grid */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1.125rem' }}>
+          <GuideCard icon={<Squares2X2Icon style={{ width:'1.125rem', height:'1.125rem', color:ic }} />}
+            title="System Guides" subtitle="Illustrated walkthroughs for every module"
+            guides={systemGuides} onOpen={openGuide} dark={d}
+            cardBg={card} cardBorder={bdr} textPrimary={tp} textSecondary={ts}
+            textMuted={tm} hoverBg={hov} divider={div} iconBoxBg={ibox} />
+          <GuideCard icon={<WrenchScrewdriverIcon style={{ width:'1.125rem', height:'1.125rem', color:ic }} />}
+            title="Troubleshooting" subtitle="Solutions to common issues and errors"
+            guides={troubleshootingGuides} onOpen={openGuide} dark={d}
+            cardBg={card} cardBorder={bdr} textPrimary={tp} textSecondary={ts}
+            textMuted={tm} hoverBg={hov} divider={div} iconBoxBg={ibox} />
         </div>
-
-        {/* guides tab */}
-        {activeTab === 'guides' && (
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1.125rem' }}>
-            <GuideCard icon={<Squares2X2Icon style={{ width:'1.125rem', height:'1.125rem', color:ic }} />}
-              title="System Guide" subtitle="Illustrated walkthroughs for every module"
-              guides={systemGuides} onOpen={openGuide} dark={d}
-              cardBg={card} cardBorder={bdr} textPrimary={tp} textSecondary={ts}
-              textMuted={tm} hoverBg={hov} divider={div} iconBoxBg={ibox} />
-            <GuideCard icon={<WrenchScrewdriverIcon style={{ width:'1.125rem', height:'1.125rem', color:ic }} />}
-              title="Troubleshooting" subtitle="Solutions to common issues and errors"
-              guides={troubleshootingGuides} onOpen={openGuide} dark={d}
-              cardBg={card} cardBorder={bdr} textPrimary={tp} textSecondary={ts}
-              textMuted={tm} hoverBg={hov} divider={div} iconBoxBg={ibox} />
-          </div>
-        )}
-
-        {/* faq tab */}
-        {activeTab === 'faq' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
-            <p style={{ fontSize:'0.7rem', color:tm, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.08em', margin:'0 0 0.5rem' }}>Frequently Asked Questions</p>
-            {faqData.map((f, i) => (
-              <div key={i} style={{ background:card, border:`1px solid ${openFaq===i?ic+'55':bdr}`, borderRadius:'0.875rem', overflow:'hidden', transition:'border-color 0.2s' }}>
-                <button onClick={() => setOpenFaq(openFaq===i ? null : i)}
-                  style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', padding:'0.9375rem 1.25rem', background:'transparent', border:'none', cursor:'pointer', textAlign:'left', gap:'1rem' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:'0.625rem' }}>
-                    <QuestionMarkCircleIcon style={{ width:'1rem', height:'1rem', color:openFaq===i?ic:tm, flexShrink:0, transition:'color 0.2s' }} />
-                    <span style={{ fontSize:'0.875rem', fontWeight:600, color:tp }}>{f.q}</span>
-                  </div>
-                  <ChevronDownIcon style={{ width:'1rem', height:'1rem', color:tm, flexShrink:0, transform:openFaq===i?'rotate(180deg)':'none', transition:'transform 0.25s' }} />
-                </button>
-                {openFaq === i && (
-                  <div style={{ padding:'0 1.25rem 1.125rem', borderTop:`1px solid ${div}` }}>
-                    <p style={{ fontSize:'0.875rem', color:ts, lineHeight:1.75, margin:'0.875rem 0 0' }}>{f.a}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* contact banner */}
         <div style={{ marginTop:'1.25rem', background:d?'rgba(37,99,235,0.07)':'#eff6ff', border:`1px solid ${d?'rgba(37,99,235,0.18)':'#bfdbfe'}`, borderRadius:'0.875rem', padding:'1rem 1.375rem', display:'flex', alignItems:'center', gap:'1rem', flexWrap:'wrap' }}>

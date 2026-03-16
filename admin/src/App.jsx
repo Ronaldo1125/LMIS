@@ -14,22 +14,12 @@ import NewsAnnouncements from './components/NewsAnnouncements'
 const getInitialAuthState = () => {
   const token = localStorage.getItem('authToken')
   const savedUser = localStorage.getItem('user')
-
   if (token && savedUser) {
-    return {
-      isAuthenticated: true,
-      user: JSON.parse(savedUser)
-    }
+    return { isAuthenticated: true, user: JSON.parse(savedUser) }
   }
-
-  return {
-    isAuthenticated: false,
-    user: null
-  }
+  return { isAuthenticated: false, user: null }
 }
 
-// Normalize whatever shape comes back from the API/JWT into a consistent object
-// so every component can rely on: id, username, full_name, email, role
 const normalizeUser = (raw) => {
   if (!raw) return null
   return {
@@ -38,7 +28,7 @@ const normalizeUser = (raw) => {
     full_name: raw.full_name || raw.fullName || raw.name || raw.username || '',
     email:     raw.email     || `${raw.username || ''}@lmis-dro5.gov`,
     role:      raw.role      || '',
-    avatar:    raw.avatar    || null, 
+    avatar:    raw.avatar    || null,
   }
 }
 
@@ -55,15 +45,9 @@ function App() {
 
   useEffect(() => {
     const root = document.documentElement
-    if (dark) {
-      root.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      root.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
+    if (dark) { root.classList.add('dark'); localStorage.setItem('theme', 'dark') }
+    else { root.classList.remove('dark'); localStorage.setItem('theme', 'light') }
   }, [dark])
-  // ───────────────────────────────────────────────────────────
 
   useEffect(() => {
     const pageTitles = {
@@ -94,7 +78,6 @@ function App() {
     localStorage.removeItem('userRole')
     sessionStorage.removeItem('loginNotification')
     setIsAuthenticated(false)
-    setUser(null)
     setCurrentView('dashboard')
   }
 
@@ -127,18 +110,14 @@ function App() {
     }
   }
 
-  if (!isAuthenticated) {
-    return <AccountLogin onLoginSuccess={handleLoginSuccess} />
-  }
+  if (!isAuthenticated) return <AccountLogin onLoginSuccess={handleLoginSuccess} />
 
   return (
-    <div
-      style={{
-        display: 'flex', flexDirection: 'row', height: '100vh',
-        background: dark ? '#0a1628' : '#f8fafc',
-        transition: 'background 0.45s ease',
-      }}
-    >
+    <div style={{
+      display: 'flex', flexDirection: 'row', height: '100vh',
+      background: dark ? '#07111f' : '#f8fafc',
+      transition: 'background 0.45s ease',
+    }}>
       <Sidebar
         isOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
@@ -152,7 +131,7 @@ function App() {
         overflowX: 'hidden',
         overflowY: 'auto',
         paddingLeft: '1.5rem',
-        background: dark ? '#0a1628' : '#f8fafc',
+        background: dark ? '#07111f' : '#f8fafc',
         transition: 'background 0.45s ease',
       }}>
         {renderView()}

@@ -4,8 +4,8 @@ import AnnouncementManager from './NewsComponents/AnnouncementManager';
 import { NewspaperIcon, MegaphoneIcon } from '@heroicons/react/24/outline';
 import { Megaphone } from 'lucide-react';
 
-export const FONT_DISPLAY = '"Sora", -apple-system, BlinkMacSystemFont, sans-serif';
-export const FONT_BODY    = '"DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+export const FONT_DISPLAY = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+export const FONT_BODY    = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 export const INTER = FONT_BODY;
 
 const NewsAnnouncements = ({ dark }) => {
@@ -32,7 +32,6 @@ const NewsAnnouncements = ({ dark }) => {
     <>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet" />
 
       <div style={{
         minHeight: '100vh',
