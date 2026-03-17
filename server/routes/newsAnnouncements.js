@@ -7,6 +7,32 @@ const pool = require('../config/connection');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 const { getLinkPreview } = require('link-preview-js');
 
+// ── Role constants ───────────────────────────────────────────────────────────
+// Admin-panel roles (JWT payload has `role`)
+const ADMIN_PANEL_ROLES = ['admin', 'librarian'];
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Returns true if the requester is an admin-panel user.
+ * Admin-panel tokens carry `role`; web-client tokens carry `user_type`.
+ */
+const isAdminPanelUser = (user) => !!user.role && ADMIN_PANEL_ROLES.includes(user.role);
+
+/**
+ * Attach attachments array to each announcement row.
+ */
+const withAttachments = async (announcements) => {
+  for (const ann of announcements) {
+    const [files] = await pool.query(
+      'SELECT * FROM announcement_attachments WHERE announcement_id = ?',
+      [ann.id]
+    );
+    ann.attachments = files;
+  }
+  return announcements;
+};
+
 // ── Multer: announcement attachments ────────────────────────────────────────
 const announcementStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -38,7 +64,7 @@ const thumbnailStorage = multer.diskStorage({
 });
 const uploadThumbnail = multer({
   storage: thumbnailStorage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|webp/;
     const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
@@ -55,17 +81,15 @@ const uploadThumbnail = multer({
 // GET all news links (public)
 router.get('/news', async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT * FROM news_links ORDER BY created_at DESC'
-    );
+    const [rows] = await pool.query('SELECT * FROM news_links ORDER BY created_at DESC');
     res.json(rows);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch news', error: err.message });
   }
 });
 
-// GET preview metadata for a URL (admin only — still useful for title/description autofill)
-router.get('/news/preview', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+// GET preview metadata for a URL (admin panel only)
+router.get('/news/preview', authMiddleware, roleMiddleware(...ADMIN_PANEL_ROLES), async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).json({ message: 'URL is required' });
 
@@ -74,7 +98,6 @@ router.get('/news/preview', authMiddleware, roleMiddleware('admin'), async (req,
       timeout: 5000,
       headers: { 'user-agent': 'Mozilla/5.0 (compatible; LinkPreview/1.0)' },
     });
-
     res.json({
       title: preview.title || null,
       description: preview.description || null,
@@ -85,20 +108,19 @@ router.get('/news/preview', authMiddleware, roleMiddleware('admin'), async (req,
   }
 });
 
-// POST add news link with optional thumbnail upload (admin only)
+// POST add news link (admin only)
 router.post(
   '/news',
   authMiddleware,
   roleMiddleware('admin'),
-  uploadThumbnail.single('thumbnail'), // field name: "thumbnail"
+  uploadThumbnail.single('thumbnail'),
   async (req, res) => {
     const { title, url, category, description } = req.body;
     if (!title || !url)
       return res.status(400).json({ message: 'Title and URL are required' });
 
-    // Build thumbnail path — served as a static URL from your express static middleware
     const thumbnailPath = req.file
-      ? `/${req.file.path.replace(/\\/g, '/')}` // e.g. /uploads/news-thumbnails/xyz.jpg
+      ? `/${req.file.path.replace(/\\/g, '/')}`
       : null;
 
     try {
@@ -106,18 +128,16 @@ router.post(
         'INSERT INTO news_links (title, url, category, thumbnail, description) VALUES (?, ?, ?, ?, ?)',
         [title, url, category || 'General', thumbnailPath, description || null]
       );
-
       const [rows] = await pool.query('SELECT * FROM news_links WHERE id = ?', [result.insertId]);
       res.status(201).json(rows[0]);
     } catch (err) {
-      // Clean up uploaded file if DB insert fails
       if (req.file) fs.unlink(req.file.path, () => {});
       res.status(500).json({ message: 'Failed to add news', error: err.message });
     }
   }
 );
 
-// DELETE news link — also removes thumbnail file (admin only)
+// DELETE news link (admin only)
 router.delete('/news/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => {
   try {
     const [existing] = await pool.query('SELECT thumbnail FROM news_links WHERE id = ?', [req.params.id]);
@@ -126,11 +146,9 @@ router.delete('/news/:id', authMiddleware, roleMiddleware('admin'), async (req, 
     const [result] = await pool.query('DELETE FROM news_links WHERE id = ?', [req.params.id]);
     if (result.affectedRows === 0) return res.status(404).json({ message: 'News not found' });
 
-    // Remove thumbnail file from disk if it was a local upload
     const thumb = existing[0].thumbnail;
     if (thumb && thumb.startsWith('/uploads/')) {
-      const filePath = thumb.replace(/^\//, ''); // strip leading slash
-      fs.unlink(filePath, () => {}); // fire-and-forget
+      fs.unlink(thumb.replace(/^\//, ''), () => {});
     }
 
     res.json({ message: 'News removed' });
@@ -141,50 +159,72 @@ router.delete('/news/:id', authMiddleware, roleMiddleware('admin'), async (req, 
 
 // ── ANNOUNCEMENTS ───────────────────────────────────────────────────────────
 
-// GET announcements filtered by requesting user's type
+/**
+ * GET /announcements
+ *
+ * Admin panel  → sees ALL announcements (sent-history / management view)
+ * Web client   → sees only announcements where audience = 'all' OR audience = their user_type
+ */
 router.get('/announcements', authMiddleware, async (req, res) => {
   try {
-    const userType = req.user.user_type;
+    let announcements;
 
-    const [announcements] = await pool.query(
-      `SELECT * FROM announcements
-       WHERE audience = 'all' OR audience = ?
-       ORDER BY sent_at DESC`,
-      [userType]
-    );
-
-    for (const ann of announcements) {
-      const [files] = await pool.query(
-        'SELECT * FROM announcement_attachments WHERE announcement_id = ?',
-        [ann.id]
+    if (isAdminPanelUser(req.user)) {
+      // Admin / Librarian: full history
+      [announcements] = await pool.query(
+        'SELECT * FROM announcements ORDER BY sent_at DESC'
       );
-      ann.attachments = files;
+    } else {
+      // Web client: Patron or Staff — filter by their user_type
+      const userType = req.user.user_type; // 'Patron' | 'Staff'
+      if (!userType) return res.status(403).json({ message: 'Access denied' });
+
+      [announcements] = await pool.query(
+        `SELECT * FROM announcements
+         WHERE audience = 'all' OR audience = ?
+         ORDER BY sent_at DESC`,
+        [userType]
+      );
     }
 
+    await withAttachments(announcements);
     res.json(announcements);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch announcements', error: err.message });
   }
 });
 
-// POST send announcement with optional file attachments (admin only)
+/**
+ * POST /announcements
+ * Admin + Librarian can create.
+ * created_by and creator_role are pulled from the JWT — never from req.body.
+ */
 router.post(
   '/announcements',
   authMiddleware,
-  roleMiddleware('admin'),
+  roleMiddleware(...ADMIN_PANEL_ROLES),
   uploadAnnouncement.array('attachments', 5),
   async (req, res) => {
-    const { subject, description, audience, priority } = req.body;
+    const { subject, description, audience } = req.body;
     if (!subject || !description)
       return res.status(400).json({ message: 'Subject and description are required' });
+
+    const validAudiences = ['all', 'Patron', 'Staff'];
+    const safeAudience = validAudiences.includes(audience) ? audience : 'all';
+
+    // Pull identity from the verified JWT — never trust req.body for this
+    const createdBy   = req.user.id;
+    const creatorRole = req.user.role;
+    if (!createdBy) return res.status(400).json({ message: 'Creator ID missing from token' });
 
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
 
       const [result] = await conn.query(
-        'INSERT INTO announcements (subject, description, audience, priority) VALUES (?, ?, ?, ?)',
-        [subject, description, audience || 'all', priority || 'normal']
+        `INSERT INTO announcements (subject, description, audience, created_by, creator_role)
+         VALUES (?, ?, ?, ?, ?)`,
+        [subject, description, safeAudience, createdBy, creatorRole]
       );
       const announcementId = result.insertId;
 
@@ -193,7 +233,9 @@ router.post(
           announcementId, f.originalname, f.path, f.size, f.mimetype,
         ]);
         await conn.query(
-          'INSERT INTO announcement_attachments (announcement_id, file_name, file_path, file_size, file_type) VALUES ?',
+          `INSERT INTO announcement_attachments
+             (announcement_id, file_name, file_path, file_size, file_type)
+           VALUES ?`,
           [fileValues]
         );
       }
@@ -201,16 +243,108 @@ router.post(
       await conn.commit();
 
       const [rows] = await pool.query('SELECT * FROM announcements WHERE id = ?', [announcementId]);
-      const [files] = await pool.query(
-        'SELECT * FROM announcement_attachments WHERE announcement_id = ?',
-        [announcementId]
-      );
-      rows[0].attachments = files;
-
+      await withAttachments(rows);
       res.status(201).json(rows[0]);
     } catch (err) {
       await conn.rollback();
+      if (req.files) req.files.forEach(f => fs.unlink(f.path, () => {}));
       res.status(500).json({ message: 'Failed to send announcement', error: err.message });
+    } finally {
+      conn.release();
+    }
+  }
+);
+
+/**
+ * PATCH /announcements/:id
+ * Admin  → can edit any announcement
+ * Librarian → can only edit announcements they created (created_by = their id)
+ */
+router.patch(
+  '/announcements/:id',
+  authMiddleware,
+  roleMiddleware(...ADMIN_PANEL_ROLES),
+  async (req, res) => {
+    const { id } = req.params;
+    const { subject, description, audience } = req.body;
+
+    try {
+      const [existing] = await pool.query('SELECT * FROM announcements WHERE id = ?', [id]);
+      if (!existing.length) return res.status(404).json({ message: 'Announcement not found' });
+
+      const ann = existing[0];
+
+      // Ownership check: librarians can only edit their own
+      if (req.user.role === 'librarian' && ann.created_by !== req.user.id) {
+        return res.status(403).json({ message: 'You can only edit your own announcements' });
+      }
+
+      const validAudiences = ['all', 'Patron', 'Staff'];
+      const updatedSubject     = subject     ?? ann.subject;
+      const updatedDescription = description ?? ann.description;
+      const updatedAudience    = validAudiences.includes(audience) ? audience : ann.audience;
+
+      await pool.query(
+        'UPDATE announcements SET subject = ?, description = ?, audience = ? WHERE id = ?',
+        [updatedSubject, updatedDescription, updatedAudience, id]
+      );
+
+      const [rows] = await pool.query('SELECT * FROM announcements WHERE id = ?', [id]);
+      await withAttachments(rows);
+      res.json(rows[0]);
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to update announcement', error: err.message });
+    }
+  }
+);
+
+/**
+ * DELETE /announcements/:id
+ * Admin  → can delete any announcement
+ * Librarian → can only delete announcements they created
+ */
+router.delete(
+  '/announcements/:id',
+  authMiddleware,
+  roleMiddleware(...ADMIN_PANEL_ROLES),
+  async (req, res) => {
+    const { id } = req.params;
+    const conn = await pool.getConnection();
+
+    try {
+      await conn.beginTransaction();
+
+      const [existing] = await conn.query('SELECT * FROM announcements WHERE id = ?', [id]);
+      if (!existing.length) {
+        await conn.rollback();
+        return res.status(404).json({ message: 'Announcement not found' });
+      }
+
+      // Ownership check: librarians can only delete their own
+      if (req.user.role === 'librarian' && existing[0].created_by !== req.user.id) {
+        await conn.rollback();
+        return res.status(403).json({ message: 'You can only delete your own announcements' });
+      }
+
+      const [attachments] = await conn.query(
+        'SELECT file_path FROM announcement_attachments WHERE announcement_id = ?',
+        [id]
+      );
+
+      await conn.query('DELETE FROM announcement_attachments WHERE announcement_id = ?', [id]);
+      await conn.query('DELETE FROM announcements WHERE id = ?', [id]);
+
+      await conn.commit();
+
+      // Delete attachment files from disk after successful commit
+      attachments.forEach(({ file_path }) => {
+        if (file_path) fs.unlink(file_path, () => {});
+      });
+
+      res.json({ message: 'Announcement deleted' });
+    } catch (err) {
+      await conn.rollback();
+      res.status(500).json({ message: 'Failed to delete announcement', error: err.message });
     } finally {
       conn.release();
     }
