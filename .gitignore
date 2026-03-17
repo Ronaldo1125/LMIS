@@ -40,4 +40,5 @@ pids
 coverage/
 
 # Uploads
-server/uploads/
+server/uploads/*
+!server/uploads/.gitkeep

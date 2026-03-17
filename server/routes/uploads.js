@@ -101,7 +101,6 @@ const syncBookDigitalFields = async (connection, bookId) => {
     [count > 0 ? 1 : 0, count, bookId]
   );
 };
-
 // ─── Upload file(s) for a book ─────────────────────────────────────────────────
 router.post('/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), upload.array('files', 5), async (req, res) => {
   const connection = await pool.getConnection();
@@ -228,7 +227,6 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), up
     connection.release();
   }
 });
-
 // ─── Get all uploads for a book ────────────────────────────────────────────────
 router.get('/book/:bookId', authMiddleware, async (req, res) => {
   try {
@@ -248,31 +246,61 @@ router.get('/book/:bookId', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Error fetching uploads' });
   }
 });
-
-// ─── Get single upload details ─────────────────────────────────────────────────
-router.get('/:id', authMiddleware, async (req, res) => {
+// ─── Get upload statistics ─────────────────────────────────────────────────────
+router.get('/meta/statistics', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   try {
-    const [uploads] = await pool.query(
-      `SELECT u.*, b.title as book_title 
-       FROM uploads u
-       JOIN books b ON u.book_id = b.id
-       WHERE u.id = ?`,
-      [req.params.id]
-    );
+    const [stats] = await pool.query(`
+      SELECT 
+        COUNT(*) as total_uploads,
+        COUNT(DISTINCT book_id) as books_with_files,
+        SUM(file_size) as total_storage_bytes,
+        SUM(download_count) as total_downloads,
+        AVG(file_size) as avg_file_size,
+        file_type,
+        COUNT(*) as count_by_type
+      FROM uploads 
+      WHERE status = 'active'
+      GROUP BY file_type
+    `);
 
-    if (uploads.length === 0) {
-      return res.status(404).json({ message: 'Upload not found' });
-    }
+    const [recentUploads] = await pool.query(`
+      SELECT u.*, b.title as book_title
+      FROM uploads u
+      JOIN books b ON u.book_id = b.id
+      WHERE u.status = 'active'
+      ORDER BY u.upload_date DESC
+      LIMIT 10
+    `);
 
-    res.json(uploads[0]);
+    const [topDownloads] = await pool.query(`
+      SELECT u.*, b.title as book_title, b.category as book_category
+      FROM uploads u
+      JOIN books b ON u.book_id = b.id
+      WHERE u.status = 'active'
+      ORDER BY u.download_count DESC
+      LIMIT 10
+    `);
+
+    const totalBytes = stats.reduce((sum, stat) => sum + (parseInt(stat.total_storage_bytes, 10) || 0), 0);
+    const totalStorageGB = (totalBytes / 1024 / 1024 / 1024).toFixed(2);
+
+    res.json({
+      summary: {
+        totalUploads: stats.reduce((sum, stat) => sum + (parseInt(stat.count_by_type, 10) || 0), 0),
+        booksWithFiles: stats[0]?.books_with_files || 0,
+        totalStorageGB: totalStorageGB,
+        totalDownloads: stats.reduce((sum, stat) => sum + (parseInt(stat.total_downloads, 10) || 0), 0)
+      },
+      byFileType: stats,
+      recentUploads: recentUploads,
+      topDownloads: topDownloads
+    });
+
   } catch (error) {
-    console.error('Error fetching upload:', error);
-    res.status(500).json({ message: 'Error fetching upload' });
+    console.error('Error fetching upload statistics:', error);
+    res.status(500).json({ message: 'Error fetching statistics' });
   }
 });
-
-// ─── Preview file (stream for in-browser rendering, does NOT increment download_count) ──
-// Uses optionalAuthMiddleware so guests can preview public-access books.
 // Staff-only books still require a valid token.
 router.get('/:id/preview', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -316,7 +344,169 @@ router.get('/:id/preview', optionalAuthMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Error previewing file' });
   }
 });
+// ─── Extract PDF page as image ─────────────────────────────────────────────────────
+router.get('/:id/page/:pageNum', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { id, pageNum } = req.params;
+    const page = parseInt(pageNum);
+    
+    if (!page || page < 1) {
+      return res.status(400).json({ message: 'Invalid page number' });
+    }
 
+    const [uploads] = await pool.query(
+      `SELECT u.*, b.access_level
+       FROM uploads u
+       JOIN books b ON u.book_id = b.id
+       WHERE u.id = ? AND u.status = 'active' AND u.mime_type = 'application/pdf'`,
+      [id]
+    );
+
+    if (uploads.length === 0) {
+      return res.status(404).json({ message: 'PDF file not found' });
+    }
+
+    const upload = uploads[0];
+
+    // Access control: staff_only books require admin, librarian, or staff.
+    if (upload.access_level === 'staff_only') {
+      const role = req.user?.role?.toLowerCase();
+      const isStaff = ['admin', 'librarian', 'staff'].includes(role);
+      if (!isStaff) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
+
+    // Check if file exists
+    try {
+      await fs.access(upload.file_path);
+    } catch {
+      return res.status(404).json({ message: 'File not found on server' });
+    }
+
+    const pdfPoppler = require('pdf-poppler');
+    const path = require('path');
+    const os = require('os');
+
+    // Create temp directory for page extraction
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-page-'));
+    const outputPath = path.join(tempDir, `page-${page}.png`);
+
+    try {
+      // Extract the specific page
+      await pdfPoppler.convert(upload.file_path, outputPath, {
+        format: 'png',
+        page: page,
+        density: 150 // Good quality for web display
+      });
+
+      // Check if the page was extracted successfully
+      try {
+        await fs.access(outputPath);
+      } catch {
+        return res.status(400).json({ message: 'Page number exceeds total pages' });
+      }
+
+      // Stream the extracted page image
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'private, max-age=3600');
+      
+      createReadStream(outputPath).pipe(res);
+
+      // Clean up temp file after response
+      res.on('finish', async () => {
+        try {
+          await fs.unlink(outputPath);
+          await fs.rmdir(tempDir);
+        } catch (error) {
+          console.error('Error cleaning up temp files:', error);
+        }
+      });
+
+    } catch (error) {
+      // Clean up on error
+      try {
+        await fs.rmdir(tempDir);
+      } catch {}
+      
+      console.error('Error extracting PDF page:', error);
+      res.status(500).json({ message: 'Error extracting PDF page' });
+    }
+
+  } catch (error) {
+    console.error('Error in page endpoint:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+// ─── Get PDF info (total pages, etc.) ─────────────────────────────────────────────
+router.get('/:id/info', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const [uploads] = await pool.query(
+      `SELECT u.*, b.access_level
+       FROM uploads u
+       JOIN books b ON u.book_id = b.id
+       WHERE u.id = ? AND u.status = 'active' AND u.mime_type = 'application/pdf'`,
+      [req.params.id]
+    );
+
+    if (uploads.length === 0) {
+      return res.status(404).json({ message: 'PDF file not found' });
+    }
+
+    const upload = uploads[0];
+
+    // Access control: staff_only books require admin, librarian, or staff.
+    if (upload.access_level === 'staff_only') {
+      const role = req.user?.role?.toLowerCase();
+      const isStaff = ['admin', 'librarian', 'staff'].includes(role);
+      if (!isStaff) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
+
+    // Check if file exists
+    try {
+      await fs.access(upload.file_path);
+    } catch {
+      return res.status(404).json({ message: 'File not found on server' });
+    }
+
+    const pdfPoppler = require('pdf-poppler');
+    const path = require('path');
+    const os = require('os');
+
+    // Create temp directory for info extraction
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pdf-info-'));
+
+    try {
+      // Get PDF info including page count
+      const info = await pdfPoppler.info(upload.file_path);
+      
+      res.json({
+        total_pages: info.pages,
+        title: info.title || upload.original_name,
+        author: info.author || null,
+        created: info.creationDate || null,
+        modified: info.modDate || null
+      });
+
+    } catch (error) {
+      console.error('Error getting PDF info:', error);
+      res.status(500).json({ message: 'Error getting PDF info' });
+    } finally {
+      // Clean up temp directory
+      try {
+        await fs.rmdir(tempDir);
+      } catch (error) {
+        console.error('Error cleaning up temp directory:', error);
+      }
+    }
+
+  } catch (error) {
+    console.error('Error in info endpoint:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 // ─── Download file ─────────────────────────────────────────────────────────────
 router.get('/:id/download', authMiddleware, async (req, res) => {
   try {
@@ -354,7 +544,58 @@ router.get('/:id/download', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Error downloading file' });
   }
 });
+// ─── Verify file integrity ─────────────────────────────────────────────────────
+router.post('/:id/verify', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+  try {
+    const [uploads] = await pool.query(
+      'SELECT * FROM uploads WHERE id = ?',
+      [req.params.id]
+    );
 
+    if (uploads.length === 0) {
+      return res.status(404).json({ message: 'Upload not found' });
+    }
+
+    const upload = uploads[0];
+
+    try {
+      await fs.access(upload.file_path);
+    } catch {
+      return res.status(404).json({ 
+        message: 'File not found on server',
+        integrity: 'failed'
+      });
+    }
+
+    const currentChecksum = await calculateChecksum(upload.file_path);
+    const isValid = currentChecksum === upload.checksum;
+
+    const userId = req.user.email || req.user.username;
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    const userAgent = req.get('user-agent');
+    await logUploadAction(
+      req.params.id, 
+      'verified', 
+      userId, 
+      ipAddress, 
+      userAgent,
+      isValid ? 'Integrity check passed' : 'Integrity check FAILED'
+    );
+
+    res.json({
+      integrity: isValid ? 'valid' : 'corrupted',
+      message: isValid 
+        ? 'File integrity verified successfully' 
+        : 'File has been modified or corrupted',
+      storedChecksum: upload.checksum,
+      currentChecksum: currentChecksum
+    });
+
+  } catch (error) {
+    console.error('Error verifying file:', error);
+    res.status(500).json({ message: 'Error verifying file integrity' });
+  }
+});
 // ─── Set primary file ──────────────────────────────────────────────────────────
 router.patch('/:id/set-primary', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   const connection = await pool.getConnection();
@@ -396,7 +637,6 @@ router.patch('/:id/set-primary', authMiddleware, roleMiddleware('admin', 'librar
     connection.release();
   }
 });
-
 // ─── Delete ALL uploads for a book ────────────────────────────────────────────
 router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   const connection = await pool.getConnection();
@@ -456,7 +696,6 @@ router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin', 'libraria
     connection.release();
   }
 });
-
 // ─── Delete single upload ──────────────────────────────────────────────────────
 router.delete('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   const connection = await pool.getConnection();
@@ -506,11 +745,14 @@ router.delete('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), asyn
   }
 });
 
-// ─── Verify file integrity ─────────────────────────────────────────────────────
-router.post('/:id/verify', authMiddleware, roleMiddleware('admin'), async (req, res) => {
+// ─── Get single upload details ─────────────────────────────────────────────────
+router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const [uploads] = await pool.query(
-      'SELECT * FROM uploads WHERE id = ?',
+      `SELECT u.*, b.title as book_title 
+       FROM uploads u
+       JOIN books b ON u.book_id = b.id
+       WHERE u.id = ?`,
       [req.params.id]
     );
 
@@ -518,99 +760,10 @@ router.post('/:id/verify', authMiddleware, roleMiddleware('admin'), async (req, 
       return res.status(404).json({ message: 'Upload not found' });
     }
 
-    const upload = uploads[0];
-
-    try {
-      await fs.access(upload.file_path);
-    } catch {
-      return res.status(404).json({ 
-        message: 'File not found on server',
-        integrity: 'failed'
-      });
-    }
-
-    const currentChecksum = await calculateChecksum(upload.file_path);
-    const isValid = currentChecksum === upload.checksum;
-
-    const userId = req.user.email || req.user.username;
-    const ipAddress = req.ip || req.connection.remoteAddress;
-    const userAgent = req.get('user-agent');
-    await logUploadAction(
-      req.params.id, 
-      'verified', 
-      userId, 
-      ipAddress, 
-      userAgent,
-      isValid ? 'Integrity check passed' : 'Integrity check FAILED'
-    );
-
-    res.json({
-      integrity: isValid ? 'valid' : 'corrupted',
-      message: isValid 
-        ? 'File integrity verified successfully' 
-        : 'File has been modified or corrupted',
-      storedChecksum: upload.checksum,
-      currentChecksum: currentChecksum
-    });
-
+    res.json(uploads[0]);
   } catch (error) {
-    console.error('Error verifying file:', error);
-    res.status(500).json({ message: 'Error verifying file integrity' });
-  }
-});
-// ─── Get upload statistics ─────────────────────────────────────────────────────
-router.get('/meta/statistics', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
-  try {
-    const [stats] = await pool.query(`
-      SELECT 
-        COUNT(*) as total_uploads,
-        COUNT(DISTINCT book_id) as books_with_files,
-        SUM(file_size) as total_storage_bytes,
-        SUM(download_count) as total_downloads,
-        AVG(file_size) as avg_file_size,
-        file_type,
-        COUNT(*) as count_by_type
-      FROM uploads 
-      WHERE status = 'active'
-      GROUP BY file_type
-    `);
-
-    const [recentUploads] = await pool.query(`
-      SELECT u.*, b.title as book_title
-      FROM uploads u
-      JOIN books b ON u.book_id = b.id
-      WHERE u.status = 'active'
-      ORDER BY u.upload_date DESC
-      LIMIT 10
-    `);
-
-    const [topDownloads] = await pool.query(`
-      SELECT u.*, b.title as book_title, b.category as book_category
-      FROM uploads u
-      JOIN books b ON u.book_id = b.id
-      WHERE u.status = 'active'
-      ORDER BY u.download_count DESC
-      LIMIT 10
-    `);
-
-    const totalBytes = stats.reduce((sum, stat) => sum + (parseInt(stat.total_storage_bytes, 10) || 0), 0);
-    const totalStorageGB = (totalBytes / 1024 / 1024 / 1024).toFixed(2);
-
-    res.json({
-      summary: {
-        totalUploads: stats.reduce((sum, stat) => sum + (parseInt(stat.count_by_type, 10) || 0), 0),
-        booksWithFiles: stats[0]?.books_with_files || 0,
-        totalStorageGB: totalStorageGB,
-        totalDownloads: stats.reduce((sum, stat) => sum + (parseInt(stat.total_downloads, 10) || 0), 0)
-      },
-      byFileType: stats,
-      recentUploads: recentUploads,
-      topDownloads: topDownloads
-    });
-
-  } catch (error) {
-    console.error('Error fetching upload statistics:', error);
-    res.status(500).json({ message: 'Error fetching statistics' });
+    console.error('Error fetching upload:', error);
+    res.status(500).json({ message: 'Error fetching upload' });
   }
 });
 
