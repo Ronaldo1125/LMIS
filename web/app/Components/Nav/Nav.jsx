@@ -185,6 +185,9 @@ const Nav = () => {
           <div className="flex-1 flex justify-center items-center">
             <ul className="flex items-center gap-6 lg:gap-10 text-black text-xs sm:text-xs lg:text-sm font-medium">
               <li>
+                <Link href="/" className="hover:text-black/80 transition">Home</Link>
+              </li>
+              <li>
                 <button 
                   onClick={handleBrowseToSearch}
                   className="hover:text-black/80 transition"
