@@ -77,6 +77,19 @@ const Nav = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const handleSmoothScroll = (e, targetId) => {
+    e.preventDefault();
+    if (window.location.pathname !== "/") {
+      window.location.href = `/${targetId}`;
+      return;
+    }
+    const el = document.querySelector(targetId);
+    if (el) {
+      const offsetPosition = el.getBoundingClientRect().top + window.pageYOffset - 80;
+      window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+    }
+  };
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -160,6 +173,9 @@ const Nav = () => {
           <div className="flex-1 flex justify-center items-center">
             <ul className="flex items-center gap-6 lg:gap-10 text-black text-xs sm:text-xs lg:text-sm font-medium">
               <li>
+                <Link href="/" className="hover:text-black/80 transition">Home</Link>
+              </li>
+              <li>
                 <Link href="/about" className="hover:text-black/80 transition">Browse</Link>
               </li>
               <li>
@@ -218,7 +234,7 @@ const Nav = () => {
                     {/* Menu items */}
                     <div
                       style={{
-                        maxWidth: "1440px",
+                        maxWidth: "1600px",
                         margin: "0 auto",
                         display: "grid",
                         gridTemplateColumns: "repeat(3, 1fr)",
@@ -312,10 +328,12 @@ const Nav = () => {
                 </div>
               </li>
               <li>
-                <Link href="/about" className="hover:text-black/80 transition">About</Link>
-              </li>
-              <li>
-                <Link href="/news" className="hover:text-black/80 transition">News</Link>
+                <button 
+                  onClick={(e) => handleSmoothScroll(e, "#news")}
+                  className="hover:text-black/80 transition"
+                >
+                  News
+                </button>
               </li>
             </ul>
           </div>

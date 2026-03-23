@@ -1,283 +1,77 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronRight, ChevronLeft, BookOpen } from "lucide-react";
 import PDFThumbnail from "../Search/PDFThumbnail";
 
-// ─── helpers ────────────────────────────────────────────────────────────────
-
-const formatDate = (raw) => {
-  if (!raw) return "—";
-  const d = new Date(raw);
-  if (isNaN(d)) return raw;
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-};
-
-const API_BASE = "http://localhost:5000";
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token") || localStorage.getItem("authToken") || "";
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
-// ─── BookCard (grid) ─────────────────────────────────────────────────────────
-
-const BookCard = ({ book, onClick }) => {
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <div
-      onClick={() => onClick(book)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        cursor: "pointer",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* Cover with hover overlay */}
-      <div style={{ position: "relative", overflow: "hidden" }}>
-        <PDFThumbnail uploadId={book.upload_id} title={book.title} />
-
-        {/* Read overlay */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: hovered ? 1 : 0,
-            transition: "opacity 0.2s ease",
-            pointerEvents: "none",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#fff",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              padding: "8px 18px",
-              border: "1.5px solid rgba(255,255,255,0.7)",
-              borderRadius: 4,
-            }}
-          >
-            Read
-          </span>
-        </div>
-      </div>
-
-      {/* Info */}
-      <div style={{ padding: "12px 0px 14px" }}>
-        <div
-          title={book.title}
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: "#111827",
-            lineHeight: 1.25,
-            marginBottom: 6,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            textAlign: "left",
-          }}
-        >
-          {book.title}
-        </div>
-        <div
-          style={{
-            fontSize: 12,
-            color: "#4b5563",
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 10,
-            flexWrap: "wrap",
-          }}
-        >
-          <span
-            style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}
-            title={book.author}
-          >
-            {book.author}
-          </span>
-          <span style={{ color: "#6b7280", fontWeight: 600, whiteSpace: "nowrap" }}>
-            {formatDate(book.date_of_publication)}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ─── BookRow (list) ──────────────────────────────────────────────────────────
-
-const BookRow = ({ book, onClick, isLast }) => {
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <div
-      onClick={() => onClick(book)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 14,
-        padding: "14px 16px",
-        borderBottom: isLast ? "none" : "1px solid #eef2ff",
-        cursor: "pointer",
-        background: hovered ? "#f8faff" : "#fff",
-        transition: "background 0.15s ease",
-      }}
-    >
-      <div
-        style={{
-          width: 44,
-          height: 58,
-          overflow: "hidden",
-          flexShrink: 0,
-          border: "1px solid #e6ecf7",
-          position: "relative",
-        }}
-      >
-        <PDFThumbnail
-          uploadId={book.upload_id}
-          title={book.title}
-          style={{ aspectRatio: "unset", width: "100%", height: "100%" }}
-        />
-        {hovered && (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "rgba(0,0,0,0.45)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-              Read
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          title={book.title}
-          style={{
-            fontSize: 14,
-            fontWeight: 700,
-            color: "#111827",
-            lineHeight: 1.25,
-            marginBottom: 4,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {book.title}
-        </div>
-        <div
-          style={{
-            fontSize: 12,
-            color: "#4b5563",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <span
-            style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 }}
-            title={book.author}
-          >
-            {book.author}
-          </span>
-          <span style={{ fontWeight: 600, color: "#6b7280", whiteSpace: "nowrap" }}>
-            {formatDate(book.date_of_publication)}
-          </span>
-        </div>
-      </div>
-
-      <ChevronRight size={18} style={{ opacity: 0.4, flexShrink: 0 }} />
-    </div>
-  );
-};
-
-// ─── Main ────────────────────────────────────────────────────────────────────
-
-const LIST_PAGE_SIZE = 10;
-
-const ROWS = 2; // always show 2 rows in grid view
-
 const RecentAdditions = () => {
-  const [isGridView, setIsGridView] = useState(true);
-  const [page, setPage]             = useState(1);
-  const [books, setBooks]           = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState(null);
+  const router = useRouter();
+
+  const [books,   setBooks]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(null);
   const [windowWidth, setWindowWidth] = useState(0);
 
-  // ─── Responsive config ──────────────────────────────────────────────────────
-  const getResponsiveConfig = useCallback(() => {
+  const getResponsiveConfig = () => {
     if (windowWidth < 640) {
-      return { headerPadding: "20px 16px 16px", contentPadding: "0 16px 32px", columns: 2, gap: 28, titleSize: 24, showHeaderText: true };
+      return {
+        sectionPadding: "20px 16px 32px",
+        titleSize:      24,
+        showHeaderText: true,
+        cardWidth:      140,
+        cardHeight:     187,
+        gap:            12,
+      };
     } else if (windowWidth < 768) {
-      return { headerPadding: "32px 24px 16px", contentPadding: "0 24px 40px", columns: 3, gap: 36, titleSize: 26, showHeaderText: true };
+      return {
+        sectionPadding: "32px 24px 40px",
+        titleSize:      26,
+        showHeaderText: true,
+        cardWidth:      160,
+        cardHeight:     213,
+        gap:            16,
+      };
     } else if (windowWidth < 1024) {
-      return { headerPadding: "40px 32px 18px", contentPadding: "0 32px 48px", columns: 4, gap: 40, titleSize: 28, showHeaderText: false };
+      return {
+        sectionPadding: "40px 32px 48px",
+        titleSize:      28,
+        showHeaderText: false,
+        cardWidth:      180,
+        cardHeight:     240,
+        gap:            20,
+      };
     } else if (windowWidth < 1280) {
-      return { headerPadding: "40px 32px 18px", contentPadding: "0 32px 48px", columns: 5, gap: 40, titleSize: 28, showHeaderText: false };
+      return {
+        sectionPadding: "40px 32px 48px",
+        titleSize:      28,
+        showHeaderText: false,
+        cardWidth:      200,
+        cardHeight:     267,
+        gap:            20,
+      };
+    } else if (windowWidth <= 1440) {
+      return {
+        sectionPadding: "40px 32px 48px",
+        titleSize:      28,
+        showHeaderText: false,
+        cardWidth:      210,
+        cardHeight:     280,
+        gap:            20,
+      };
     } else {
-      return { headerPadding: "44px 48px 18px", contentPadding: "0 48px 56px", columns: 6, gap: 40, titleSize: 28, showHeaderText: false };
+      return {
+        sectionPadding: "44px 48px 56px",
+        titleSize:      28,
+        showHeaderText: false,
+        cardWidth:      220,
+        cardHeight:     293,
+        gap:            24,
+      };
     }
-  }, [windowWidth]);
+  };
 
   const config = getResponsiveConfig();
-
-  // Page size = columns × 2 rows for grid; fixed for list
-  const pageSize = isGridView ? config.columns * ROWS : LIST_PAGE_SIZE;
-
-  const toggleView = (grid) => {
-    setIsGridView(grid);
-    setPage(1);
-  };
-
-  const fetchBooks = useCallback(async () => {
-    if (windowWidth === 0) return; // wait until we know the width
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/acquisitions?page=${page}&limit=${pageSize}`, {
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      if (!json.success) throw new Error(json.message || "Unknown error");
-      setBooks(json.data);
-      setTotalPages(json.pagination.totalPages);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, windowWidth]);
-
-  const handleBookClick = (book) => {
-    window.location.href = `/book/${book.book_id ?? book.id}`;
-  };
-
-  const canPrev = page > 1;
-  const canNext = page < totalPages;
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -286,139 +80,242 @@ const RecentAdditions = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Reset to page 1 when columns change (breakpoint crossed)
   useEffect(() => {
-    setPage(1);
-  }, [config.columns]);
-
-  useEffect(() => {
+    let isMounted = true;
+    const fetchBooks = async () => {
+      try {
+        const r = await fetch(`http://localhost:5000/api/acquisitions`);
+        if (!r.ok) throw new Error(`Server error ${r.status}`);
+        const data = await r.json();
+        if (isMounted) { setBooks(data.data ?? []); setError(null); }
+      } catch (err) {
+        console.error("[RecentAdditions] fetch error:", err);
+        if (isMounted) setError("Failed to load recent additions.");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
     fetchBooks();
-  }, [fetchBooks]);
+    return () => { isMounted = false; };
+  }, []);
 
-  // ─── Pagination button style ─────────────────────────────────────────────
-  const paginationBtn = (disabled, isMobile) => ({
-    width: isMobile ? 36 : 40,
-    height: isMobile ? 32 : 36,
-    borderRadius: isMobile ? 8 : 12,
-    border: "1px solid #d1d8e8",
-    background: "#fff",
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.45 : 1,
-    display: "grid",
-    placeItems: "center",
-  });
+  const scrollRef = useRef();
+  const scroll = (dir) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const scrollAmount = (config.cardWidth + config.gap) * 3;
+    el.scrollBy({ left: dir === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
+  };
 
-  const isMobile = windowWidth < 640;
+  const handleBookClick = (book) => {
+    const id = book.book_id ?? book.id;
+    if (!id) return;
+    router.push(`/book/${id}`);
+  };
+
+  const SkeletonCard = () => (
+    <div style={{
+      minWidth: config.cardWidth, maxWidth: config.cardWidth, flexShrink: 0,
+      border: "1px solid #e5e7eb", overflow: "hidden",
+      animation: "pulse 1.5s ease-in-out infinite",
+    }}>
+      <div style={{ width: "100%", height: config.cardHeight, background: "#eef2fb" }} />
+      <div style={{ padding: "12px 12px 14px" }}>
+        <div style={{ height: 13, background: "#eef2fb", marginBottom: 8, borderRadius: 3 }} />
+        <div style={{ height: 11, background: "#eef2fb", width: "60%", borderRadius: 3 }} />
+      </div>
+    </div>
+  );
+
+  const EmptyState = () => (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      justifyContent: "center", padding: "60px 0", color: "#9ca3af", gap: 12, width: "100%",
+    }}>
+      <BookOpen size={40} strokeWidth={1.2} />
+      <p style={{ margin: 0, fontSize: 14 }}>No recent additions available</p>
+    </div>
+  );
+
+  const ErrorState = () => (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      justifyContent: "center", padding: "60px 0", color: "#ef4444", gap: 12, width: "100%",
+    }}>
+      <p style={{ margin: 0, fontSize: 14 }}>{error}</p>
+      <button onClick={() => window.location.reload()} style={{
+        fontSize: 13, color: "#003087", background: "none",
+        border: "1px solid #003087", borderRadius: 8,
+        padding: "6px 16px", cursor: "pointer",
+      }}>Retry</button>
+    </div>
+  );
 
   return (
-    <div style={{ background: "#fff" }}>
-      {/* ── Header ── */}
-      <div
-        style={{
-          maxWidth: 1700,
+    <>
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.5; }
+        }
+        .book-card {
+          cursor: pointer;
+          overflow: hidden;
+          transition: all 0.2s ease;
+        }
+        .book-card:hover {
+          border-color: #1e3a8a !important;
+        }
+        .nav-btn {
+          border-radius: 12px;
+          border: 1px solid #d1d8e8;
+          background: #fff;
+          display: grid;
+          place-items: center;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s;
+        }
+        .nav-btn:hover {
+          background: #f0f4ff;
+          border-color: #003087;
+        }
+      `}</style>
+
+      <div style={{ background: "#fff" }}>
+        <div style={{
+          maxWidth: 1600,
           margin: "0 auto",
-          padding: config.headerPadding,
-          display: "flex",
-          alignItems: isMobile ? "flex-start" : "center",
-          justifyContent: "space-between",
-          gap: 16,
-          flexDirection: isMobile ? "column" : "row",
-        }}
-      >
-        <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <h2 style={{ fontSize: config.titleSize, fontWeight: 700, color: "#000", margin: 0, letterSpacing: "-0.01em" }}>
-            {config.showHeaderText && isMobile ? "Recent" : "Recent Additions"}
-          </h2>
+          padding: config.sectionPadding,
+          overflow: "hidden",
+        }}>
 
-          {/* Mobile: arrows beside title */}
-          {isMobile && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!canPrev || loading} style={paginationBtn(!canPrev || loading, true)}>
-                <ChevronLeft size={16} />
-              </button>
-              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={!canNext || loading} style={paginationBtn(!canNext || loading, true)}>
-                <ChevronRight size={16} />
-              </button>
+          {/* ── Header ── */}
+          <div style={{
+            display: "flex",
+            alignItems: windowWidth < 640 ? "flex-start" : "center",
+            justifyContent: "space-between",
+            marginBottom: 24,
+            flexDirection: windowWidth < 640 ? "column" : "row",
+            gap: 16,
+          }}>
+            <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h2 style={{ fontSize: config.titleSize, fontWeight: 600, color: "#000", margin: 0 }}>
+                {config.showHeaderText && windowWidth < 640 ? "New" : "Recent Additions"}
+              </h2>
+
+              {/* Mobile arrows */}
+              {windowWidth < 640 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <button className="nav-btn" onClick={() => scroll("left")} style={{ width: 36, height: 32 }}>
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button className="nav-btn" onClick={() => scroll("right")} style={{ width: 36, height: 32 }}>
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Desktop: arrows on right */}
-        {!isMobile && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={!canPrev || loading} style={paginationBtn(!canPrev || loading, false)}>
-              <ChevronLeft size={18} />
-            </button>
-            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={!canNext || loading} style={paginationBtn(!canNext || loading, false)}>
-              <ChevronRight size={18} />
-            </button>
+            {/* Desktop arrows */}
+            {windowWidth >= 640 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                <button className="nav-btn" onClick={() => scroll("left")} style={{ width: 40, height: 36 }}>
+                  <ChevronLeft size={18} />
+                </button>
+                <button className="nav-btn" onClick={() => scroll("right")} style={{ width: 40, height: 36 }}>
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* ── Scroll Row ── */}
+          <div
+            ref={scrollRef}
+            style={{
+              display: "flex",
+              gap: config.gap,
+              overflowX: "hidden",
+            }}
+          >
+            {loading && Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)}
+            {!loading && error && <ErrorState />}
+            {!loading && !error && books.length === 0 && <EmptyState />}
+
+            {!loading && !error && books.map((book) => (
+              <div
+                key={book.book_id ?? book.id}
+                className="book-card"
+                onClick={() => handleBookClick(book)}
+                style={{
+                  minWidth: config.cardWidth,
+                  maxWidth: config.cardWidth,
+                  flexShrink: 0,
+                  border: "1px solid #d1d5db",
+                  borderRadius: 0,
+                }}
+              >
+                {/* Cover */}
+                <div style={{
+                  width: "100%",
+                  height: config.cardHeight,
+                  background: "#f0f4ff",
+                  position: "relative",
+                }}>
+                  {book.upload_id ? (
+                    <PDFThumbnail uploadId={book.upload_id} title={book.title} />
+                  ) : (
+                    <div style={{
+                      width: "100%", height: "100%", background: "#fff",
+                      display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "center",
+                      padding: "16px 10px", boxSizing: "border-box",
+                    }}>
+                      <BookOpen size={28} color="#000" strokeWidth={1.2} style={{ marginBottom: 10 }} />
+                      <span style={{
+                        color: "#000", fontSize: 11, fontWeight: 600,
+                        textAlign: "center", lineHeight: 1.3,
+                        display: "-webkit-box", WebkitLineClamp: 4,
+                        WebkitBoxOrient: "vertical", overflow: "hidden",
+                      }}>
+                        {book.title}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div style={{ padding: "12px 12px 14px" }}>
+                  <div style={{
+                    fontSize: 13, fontWeight: 700, color: "#111827",
+                    lineHeight: 1.25, marginBottom: 6,
+                    display: "-webkit-box", WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical", overflow: "hidden",
+                  }}>
+                    {book.title}
+                  </div>
+                  <div style={{
+                    fontSize: 12, color: "#4b5563",
+                    display: "flex", justifyContent: "space-between", gap: 8,
+                  }}>
+                    <span style={{
+                      overflow: "hidden", textOverflow: "ellipsis",
+                      whiteSpace: "nowrap", flex: 1,
+                    }} title={book.author}>
+                      {book.author || "Unknown Author"}
+                    </span>
+                    <span style={{ color: "#6b7280", fontWeight: 600, flexShrink: 0 }}>
+                      {book.year ?? "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
       </div>
-
-      {/* ── Loading ── */}
-      {loading && (
-        <div style={{ maxWidth: 1700, margin: "0 auto", padding: config.contentPadding, color: "#6b7280", fontSize: 14, textAlign: "center" }}>
-          Loading…
-        </div>
-      )}
-
-      {/* ── Error ── */}
-      {error && (
-        <div style={{ maxWidth: 1700, margin: "0 auto", padding: config.contentPadding, color: "#dc2626", fontSize: 14, textAlign: "center" }}>
-          Failed to load: {error}
-        </div>
-      )}
-
-      {/* ── Grid view ── */}
-      {!loading && !error && isGridView && (
-        <div
-          style={{
-            maxWidth: 1700,
-            margin: "0 auto",
-            padding: config.contentPadding,
-            display: "grid",
-            gridTemplateColumns: `repeat(${config.columns}, 1fr)`,
-            gap: config.gap,
-          }}
-        >
-          {books.map((book) => (
-            <BookCard key={book.id} book={book} onClick={handleBookClick} />
-          ))}
-        </div>
-      )}
-
-      {/* ── List view ── */}
-      {!loading && !error && !isGridView && (
-        <div
-          style={{
-            maxWidth: 1700,
-            margin: "0 auto",
-            padding: config.contentPadding,
-            border: "1px solid #e6ecf7",
-            borderRadius: 14,
-            overflow: "hidden",
-            background: "#fff",
-          }}
-        >
-          {books.map((book, index) => (
-            <BookRow
-              key={book.id}
-              book={book}
-              onClick={handleBookClick}
-              isLast={index === books.length - 1}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* ── Empty ── */}
-      {!loading && !error && books.length === 0 && (
-        <div style={{ maxWidth: 1700, margin: "0 auto", padding: config.contentPadding, color: "#6b7280", fontSize: 14, textAlign: "center" }}>
-          No recent additions found.
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 

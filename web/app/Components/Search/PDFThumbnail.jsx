@@ -5,32 +5,14 @@ import { BookOpen } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-/**
- * PDFThumbnail
- *
- * Renders the first page of a PDF upload as a cover image using PDF.js.
- *
- * Props:
- *   uploadId   – the `upload_id` returned by the search API
- *   title      – used for alt text / aria-label
- *   className  – optional class override for the wrapper
- *   style      – optional inline styles for the wrapper
- *
- * It fetches the PDF from:
- *   GET /api/uploads/:uploadId/file
- *   (Authorization: Bearer <token> if present in localStorage/sessionStorage)
- *
- * Adjust the URL below if your endpoint differs.
- */
-
 function getToken() {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("token") || sessionStorage.getItem("token") || null;
 }
 
-// PDF.js CDN — loaded once globally
-const PDFJS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+const PDFJS_CDN    = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
 const PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const CMAP_URL     = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/";
 
 let pdfjsLoadPromise = null;
 
@@ -54,12 +36,42 @@ function loadPdfJs() {
 }
 
 export default function PDFThumbnail({ uploadId, title = "Book cover", style, className }) {
-  const canvasRef = useRef(null);
-  const [status, setStatus] = useState("idle"); // idle | loading | done | error
+  const canvasRef  = useRef(null);
+  const wrapperRef = useRef(null);
+  const [status, setStatus] = useState("idle");
+
+  // Fallback cover: show title text when PDF can't be rendered
+  const FallbackCover = () => (
+    <div style={{
+      width: "100%",
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "16px 10px",
+      boxSizing: "border-box",
+      gap: 8,
+    }}>
+      <BookOpen size={24} color="#9ca3af" strokeWidth={1.2} />
+      <span style={{
+        color: "#6b7280",
+        fontSize: 10,
+        fontWeight: 600,
+        textAlign: "center",
+        lineHeight: 1.3,
+        display: "-webkit-box",
+        WebkitLineClamp: 4,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+      }}>
+        {title}
+      </span>
+    </div>
+  );
 
   useEffect(() => {
     if (!uploadId) return;
-
     let cancelled = false;
     setStatus("loading");
 
@@ -68,47 +80,59 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
         const pdfjs = await loadPdfJs();
         if (cancelled) return;
 
-        // Stream the PDF for preview (does not increment download_count)
-        const pdfUrl = `${API_BASE}/api/uploads/${uploadId}/preview`;
-
         const token = getToken();
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        // Fetch the PDF as an ArrayBuffer so we can pass auth headers
-        const res = await fetch(pdfUrl, { headers });
+        // FIX 1: cache: "no-store" prevents ERR_CACHE_WRITE_FAILURE
+        const res = await fetch(`${API_BASE}/api/uploads/${uploadId}/preview`, {
+          headers,
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
         const buffer = await res.arrayBuffer();
         if (cancelled) return;
 
-        const pdf = await pdfjs.getDocument({ data: buffer }).promise;
+        // FIX 2: provide cMapUrl + cMapPacked to fix font loading warnings
+        const pdf = await pdfjs.getDocument({
+          data: buffer,
+          cMapUrl: CMAP_URL,
+          cMapPacked: true,
+        }).promise;
         if (cancelled) return;
 
         const page = await pdf.getPage(1);
         if (cancelled) return;
 
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+        const canvas  = canvasRef.current;
+        const wrapper = wrapperRef.current;
+        if (!canvas || !wrapper) return;
 
-        // Scale to fit the canvas width (retina-aware)
-        const desiredWidth = canvas.parentElement?.clientWidth || 170;
-        const deviceRatio  = window.devicePixelRatio || 1;
-        const viewport     = page.getViewport({ scale: 1 });
-        const scale        = (desiredWidth / viewport.width) * deviceRatio;
-        const scaled       = page.getViewport({ scale });
+        const deviceRatio = window.devicePixelRatio || 1;
+        const PADDING     = 12;
+        const containerW  = (wrapper.offsetWidth  || 200) - PADDING;
+        const containerH  = (wrapper.offsetHeight || 267) - PADDING;
+
+        const viewport = page.getViewport({ scale: 1 });
+        const scale = Math.min(
+          (containerW * deviceRatio) / viewport.width,
+          (containerH * deviceRatio) / viewport.height,
+        ) * 0.8;
+
+        const scaled = page.getViewport({ scale });
 
         canvas.width  = scaled.width;
         canvas.height = scaled.height;
         canvas.style.width  = `${scaled.width  / deviceRatio}px`;
         canvas.style.height = `${scaled.height / deviceRatio}px`;
 
-        const ctx = canvas.getContext("2d");
-        await page.render({ canvasContext: ctx, viewport: scaled }).promise;
-        if (cancelled) return;
+        await page.render({ canvasContext: canvas.getContext("2d"), viewport: scaled }).promise;
 
+        if (cancelled) return;
         setStatus("done");
       } catch (err) {
         if (!cancelled) {
-          console.warn("[PDFThumbnail] render failed:", err);
+          console.warn("[PDFThumbnail]", err);
           setStatus("error");
         }
       }
@@ -118,56 +142,55 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
     return () => { cancelled = true; };
   }, [uploadId]);
 
-  // ── Wrapper keeps the 3:4 book-cover aspect ratio ──────────────────────
-  const wrapperStyle = {
-    position: "relative",
-    width: "100%",
-    aspectRatio: "3/4",
-    background: "#fff",
-    overflow: "hidden",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    ...style,
-  };
-
   return (
-    <div style={wrapperStyle} className={className} aria-label={title}>
-
-      {/* Loading shimmer */}
+    <div
+      ref={wrapperRef}
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        background: "#ffffff",
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "6px",
+        boxSizing: "border-box",
+        ...style,
+      }}
+      className={className}
+      aria-label={title}
+    >
+      {/* SHIMMER while loading */}
       {status === "loading" && (
-        <div
-          style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(90deg, #f0f4ff 25%, #e0e7ff 50%, #f0f4ff 75%)",
-            backgroundSize: "200% 100%",
-            animation: "pdf-shimmer 1.4s infinite",
-          }}
-        />
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(90deg, #f9fafb 25%, #f3f4f6 50%, #f9fafb 75%)",
+          backgroundSize: "200% 100%",
+          animation: "pdf-shimmer 1.4s infinite",
+        }} />
       )}
 
-      {/* Canvas — hidden until rendered */}
+      {/* CANVAS when done */}
       <canvas
         ref={canvasRef}
         style={{
           display: status === "done" ? "block" : "none",
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
+          maxWidth: "100%",
+          maxHeight: "100%",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.08)",
+          borderRadius: "2px",
         }}
       />
 
-      {/* Fallback icon */}
-      {(status === "idle" || status === "error" || !uploadId) && (
-        <div style={{ color: "#c7d2e7" }}>
-          <BookOpen size={32} />
-        </div>
+      {/* FALLBACK: show title instead of blank when error or no uploadId */}
+      {(status === "error" || status === "idle" || !uploadId) && (
+        <FallbackCover />
       )}
 
-      {/* Shimmer keyframes — injected once */}
       <style>{`
         @keyframes pdf-shimmer {
-          0%   { background-position: 200% 0; }
+          0%   { background-position:  200% 0; }
           100% { background-position: -200% 0; }
         }
       `}</style>

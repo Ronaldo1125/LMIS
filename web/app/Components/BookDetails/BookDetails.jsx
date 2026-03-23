@@ -4,7 +4,13 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import RelatedBooks from "./RelatedBooks";
 import Nav from "../Nav/Nav";
 import dynamic from "next/dynamic";
-import { BookOpen, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+import { BookOpen, Download, ZoomIn, ZoomOut, Sun, Moon, Columns, AlignJustify, Bookmark, BookmarkCheck } from "lucide-react";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+
+pdfjs.GlobalWorkerOptions.workerSrc =
+  `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const FullScreenPDFReader = dynamic(
   () => import("../PDFReader/PDFReader"),
@@ -18,479 +24,596 @@ function getToken() {
   return localStorage.getItem("token") || sessionStorage.getItem("token") || null;
 }
 
-// ─── PDF.js loader ────────────────────────────────────────────────────────────
-let _pdfJsPromise = null;
-function loadPdfJs() {
-  if (_pdfJsPromise) return _pdfJsPromise;
-  _pdfJsPromise = new Promise((resolve, reject) => {
-    const BASE = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174";
-    const done = () => {
-      const lib = window["pdfjs-dist/build/pdf"];
-      if (!lib) { _pdfJsPromise = null; reject(new Error("PDF.js global missing")); return; }
-      lib.GlobalWorkerOptions.workerSrc = `${BASE}/pdf.worker.min.js`;
-      resolve(lib);
-    };
-    if (window["pdfjs-dist/build/pdf"]) { done(); return; }
-    const existing = document.querySelector("script[data-pdfjs]");
-    if (existing) { existing.addEventListener("load", done); return; }
-    const s = document.createElement("script");
-    s.src = `${BASE}/pdf.min.js`;
-    s.setAttribute("data-pdfjs", "true");
-    s.onload = done;
-    s.onerror = () => { _pdfJsPromise = null; reject(new Error("CDN load failed")); };
-    document.head.appendChild(s);
-  });
-  return _pdfJsPromise;
-}
-
-// ─── Single canvas page ───────────────────────────────────────────────────────
-function BpCanvas({ pdfDoc, pageNum, scale, style }) {
-  const ref     = useRef(null);
-  const taskRef = useRef(null);
-  const lastKey = useRef("");
-
-  useEffect(() => {
-    if (!pdfDoc || !pageNum || pageNum < 1 || pageNum > pdfDoc.numPages) return;
-    const k = `${pageNum}@${scale.toFixed(3)}`;
-    if (lastKey.current === k) return;
-    lastKey.current = k;
-    let dead = false;
-
-    (async () => {
-      try {
-        const page = await pdfDoc.getPage(pageNum);
-        const vp   = page.getViewport({ scale });
-        const c    = ref.current;
-        if (!c || dead) return;
-        c.width  = vp.width;
-        c.height = vp.height;
-        if (taskRef.current) taskRef.current.cancel();
-        taskRef.current = page.render({ canvasContext: c.getContext("2d"), viewport: vp });
-        await taskRef.current.promise;
-      } catch (e) {
-        if (e?.name !== "RenderingCancelledException") console.warn(e);
-      }
-    })();
-    return () => { dead = true; if (taskRef.current) taskRef.current.cancel(); };
-  }, [pdfDoc, pageNum, scale]);
-
-  return <canvas ref={ref} style={{ display: "block", ...style }} />;
-}
-
-// ─── Flip CSS (injected once) ─────────────────────────────────────────────────
-const BP_CSS = `
-  @keyframes bpspin { to { transform: rotate(360deg) } }
-  @keyframes bp-rtl  { from{transform:rotateY(0)} to{transform:rotateY(-180deg)} }
-  @keyframes bp-ltr  { from{transform:rotateY(0)} to{transform:rotateY(180deg)}  }
-  .bp-flip-card {
-    position:absolute; top:0; bottom:0; width:50%;
-    transform-style:preserve-3d; will-change:transform;
-    pointer-events:none; z-index:20;
+// ─── CSS ──────────────────────────────────────────────────────────────────────
+const ALL_CSS = `
+  @keyframes bd-spin { to { transform: rotate(360deg) } }
+  @keyframes bd-fade-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-  .bp-flip-card.r { right:0; transform-origin:left center; }
-  .bp-flip-card.l { left:0;  transform-origin:right center; }
-  .bp-face {
-    position:absolute; inset:0;
-    backface-visibility:hidden; -webkit-backface-visibility:hidden;
-    overflow:hidden; background:#fff;
+
+  /* ════════════════════════════════════
+     MODERN VIEWER — matches right panel
+  ════════════════════════════════════ */
+
+  .bpv-root {
+    display: flex; flex-direction: column;
+    width: 100%; height: 100%; overflow: hidden;
+    background: #fff;
+    border: 1.5px solid #f4f4f4;
   }
-  .bp-face.back { transform:rotateY(180deg); }
-  .bp-sheen {
-    position:absolute; inset:0; pointer-events:none;
-    background:linear-gradient(110deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.02) 45%,rgba(0,0,0,.07) 100%);
+
+  /* Toolbar — clean white bar with pill buttons */
+  .bpv-toolbar {
+    display: flex; align-items: center; gap: 4px;
+    height: 48px; padding: 0 14px; flex-shrink: 0;
+    background: #f4f4f4;
+    border-bottom: 1px solid #f4f4f4;
   }
-  .bp-rtl { animation:bp-rtl .50s cubic-bezier(.645,.045,.355,1) forwards; }
-  .bp-ltr { animation:bp-ltr .50s cubic-bezier(.645,.045,.355,1) forwards; }
-  .bp-scroll-area::-webkit-scrollbar { width:3px }
-  .bp-scroll-area::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:2px }
+
+  /* Title in toolbar */
+  .bpv-tb-title {
+    flex: 1; font-size: 12px; font-weight: 500; color: rgb(18,18,18);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 8px;
+  }
+
+  .bpv-tb-sep { width: 1px; height: 16px; background: #e5e7eb; margin: 0 6px; flex-shrink: 0; }
+
+  /* Pill group wrapper for toggle buttons */
+  .bpv-pill-group {
+    display: flex; align-items: center;
+    background: #f3f4f6; padding: 2px; gap: 1px;
+  }
+
+  /* Individual toolbar icon button */
+  .bpv-tb-btn {
+    width: 28px; height: 28px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: transparent; color: #9ca3af;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+  }
+  .bpv-tb-btn:hover:not(:disabled) { background: #f3f4f6; color: rgb(18,18,18); }
+  .bpv-tb-btn:disabled { opacity: 0.3; cursor: default; }
+  .bpv-tb-btn.active { background: #fff; color: rgb(18,18,18); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+
+  /* Zoom % badge */
+  .bpv-zoom-pct {
+    font-size: 11px; font-weight: 500; color: #6b7280;
+    min-width: 34px; text-align: center; flex-shrink: 0;
+  }
+
+  /* Canvas scroll area */
+  .bpv-scroll {
+    flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 16px 36px; gap: 0;
+    background: #f9fafb;
+  }
+  .bpv-scroll::-webkit-scrollbar { width: 3px; }
+  .bpv-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.12); border-radius: 3px; }
+  .bpv-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.35); border-radius: 3px; }
+  .bpv-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.55); }
+
+  .bpv-scroll-inner {
+    width: 100%; overflow-x: auto;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .bpv-scroll-inner::-webkit-scrollbar { height: 3px; }
+  .bpv-scroll-inner::-webkit-scrollbar-track { background: rgba(0,0,0,0.12); border-radius: 3px; }
+  .bpv-scroll-inner::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.35); border-radius: 3px; }
+
+  /* Pages */
+  .bpv-spread { display: flex; align-items: flex-start; gap: 0; margin-bottom: 20px; }
+  .bpv-spread-page {
+    flex-shrink: 0; line-height: 0; background: #fff; position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.08);
+  }
+  .bpv-spread-page .react-pdf__Page { display: block !important; }
+  .bpv-spread-page .react-pdf__Page canvas { display: block; }
+
+  .bpv-spine {
+    width: 2px; flex-shrink: 0; align-self: stretch;
+    background: #e5e7eb;
+  }
+  .bpv-blank { flex-shrink: 0; background: #f3f4f6; }
+
+  .bpv-single {
+    margin-bottom: 20px; line-height: 0; background: #fff;
+    position: relative; flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.08);
+  }
+  .bpv-single .react-pdf__Page { display: block !important; }
+  .bpv-single .react-pdf__Page canvas { display: block; }
+
+  /* CTA fade — softer white gradient */
+  .bpv-last-fade {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(to top, rgba(249,250,251,0.98) 50%, transparent);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-end; padding-bottom: 20px; gap: 10px; z-index: 5;
+  }
+  .bpv-cta-hint {
+    font-size: 11px; color: #9ca3af; font-weight: 400;
+  }
+  .bpv-cta-btn {
+    padding: 9px 22px; background: rgb(18,18,18); color: #fff;
+    border: none;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: background 0.15s;
+  }
+  .bpv-cta-btn:hover { background: #333; }
+
+  /* Loading / error states */
+  .bpv-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 12px; padding: 80px 0; width: 100%;
+  }
+  .bpv-state-text {
+    font-size: 12px; color: #9ca3af; letter-spacing: 0.02em;
+  }
+  .bpv-spinner {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid #e5e7eb; border-top-color: rgb(18,18,18);
+    animation: bd-spin 0.8s linear infinite;
+  }
+
+  /* Bottom bar */
+  .bpv-bottom {
+    display: flex; align-items: center; gap: 8px;
+    height: 44px; padding: 0 14px; flex-shrink: 0;
+    background: #fff; border-top: 1px solid #f4f4f4;
+  }
+  .bpv-pg-label { font-size: 12px; color: #6b7280; }
+  .bpv-pg-label b { font-weight: 600; color: rgb(18,18,18); }
+  .bpv-bottom-sep { flex: 1; }
+
+  /* ── Preview wrapper sizing ── */
+  .bp-preview-wrapper { width: 100%; min-height: 280px; height: 360px; }
+  @media (min-width: 480px)  { .bp-preview-wrapper { height: 420px; } }
+  @media (min-width: 640px)  { .bp-preview-wrapper { height: 500px; } }
+  @media (min-width: 1024px) { .bp-preview-wrapper { height: 720px; } }
+  @media (min-width: 1280px) { .bp-preview-wrapper { height: 800px; } }
+
+  /* ── Responsive layout ── */
+  .bd-main-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (min-width: 1024px) {
+    .bd-main-grid {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      gap: 2.5rem;
+    }
+  }
+
+  /* Mobile page padding */
+  .bd-page-wrap { max-width: 1700px; margin: 0 auto; padding: 20px 16px 48px; }
+  @media (min-width: 640px)  { .bd-page-wrap { padding: 24px 24px 56px; } }
+  @media (min-width: 1024px) { .bd-page-wrap { padding: 28px 32px 64px; } }
+
+  /* Mobile back button spacing */
+  .bd-back-wrap { margin-bottom: 20px; }
+  @media (min-width: 640px) { .bd-back-wrap { margin-bottom: 28px; } }
+
+  /* Title scales down on mobile */
+  .bd-title {
+    font-size: clamp(18px, 3vw, 26px);
+    font-weight: 700; line-height: 1.15;
+    color: #000; margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  /* Stats row wraps nicely on small screens */
+  .bd-stats-row { display: flex; align-items: center; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+
+  /* Actions stack on very small screens */
+  .bd-actions { display: flex; gap: 8px; margin-bottom: 28px; }
+  @media (max-width: 360px) {
+    .bd-actions { flex-wrap: wrap; }
+    .bd-btn-primary, .bd-btn-secondary { min-width: calc(50% - 4px); }
+  }
+
+  /* Info rows readable on mobile */
+  .bd-info-row {
+    display: flex; align-items: baseline;
+    justify-content: space-between; gap: 12px;
+    padding: 9px 0; border-bottom: 1px solid #f4f4f4;
+  }
+  @media (max-width: 480px) {
+    .bd-info-row { flex-direction: column; gap: 2px; }
+    .bd-info-value { text-align: left; }
+  }
+
+  /* Toolbar wraps on very narrow viewer */
+  .bpv-toolbar { flex-wrap: nowrap; overflow: hidden; }
+  .bpv-tb-title { min-width: 0; }
+  @media (max-width: 480px) {
+    .bpv-zoom-pct { display: none; }
+  }
+
+  /* ════════════════════════════════════
+     MODERN RIGHT PANEL
+  ════════════════════════════════════ */
+  .bd-panel {
+    display: flex; flex-direction: column; min-width: 0;
+    animation: bd-fade-up 0.3s ease both;
+  }
+
+  .bd-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: #6b7280;
+    background: none; border: none; cursor: pointer;
+    padding: 0; transition: color 0.15s; font-family: inherit;
+  }
+  .bd-back:hover { color: rgb(18,18,18); }
+
+  /* Genre pill */
+  .bd-genre-pill {
+    display: inline-flex; align-items: center;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.03em;
+    color: #1e40af; background: #dbeafe;
+    padding: 3px 12px;
+    width: fit-content; align-self: flex-start; margin-bottom: 14px;
+  }
+
+  /* Title — handled in responsive block below */
+
+  /* Byline */
+  .bd-byline {
+    font-size: 14px; color: #6b7280; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .bd-byline-author { color: rgb(18,18,18); font-weight: 500; }
+  .bd-byline-dot { color: #d1d5db; }
+  .bd-byline-year { color: #9ca3af; }
+
+  /* Stats, actions, info rows — see responsive block */
+  .bd-stat-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; color: #6b7280;
+    padding: 4px 10px;
+  }
+  .bd-avail {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500; padding: 4px 12px;
+  }
+  .bd-avail.ok  { color: #dc2626; }
+  .bd-avail.no  { color: #dc2626; }
+  .bd-avail-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .bd-avail.ok .bd-avail-dot  { background: #dc2626; }
+  .bd-avail.no .bd-avail-dot  { background: #dc2626; }
+
+  /* Buttons */
+  .bd-btn-primary {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 11px 0; background: #1e40af; color: #fff;
+    border: none;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: transform 0.1s; font-family: inherit;
+  }
+  .bd-btn-primary:active:not(:disabled) { transform: scale(0.98); }
+  .bd-btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .bd-btn-secondary {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 11px 0; background: #f4f4f4; color: #000;
+    border: 1.5px solid #f4f4f4;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+  }
+  .bd-btn-secondary:hover:not(:disabled) { border-color: #9ca3af; background: #f9fafb; }
+  .bd-btn-secondary:active:not(:disabled) { transform: scale(0.98); }
+  .bd-btn-secondary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .bd-btn-icon {
+    width: 44px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #fff; color: #000;
+    border: 1.5px solid #f4f4f4;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .bd-btn-icon.on    { background: #fffbeb; color: #d97706; border-color: #fcd34d; }
+
+  /* Divider */
+  .bd-divider { height: 1px; background: #f3f4f6; margin: 0 0 22px; }
+
+  /* Info section */
+  .bd-info-section { margin-bottom: 24px; }
+  .bd-info-heading {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: #9ca3af; margin-bottom: 4px;
+  }
+  .bd-info-row:last-child { border-bottom: none; }
+  .bd-info-label { font-size: 13px; color: #9ca3af; flex-shrink: 0; min-width: 90px; }
+  .bd-info-value { font-size: 13px; color: #000; font-weight: 500; text-align: right; word-break: break-word; }
+  .bd-info-value.mono { font-family: 'Courier New', monospace; font-size: 12px; }
+  .bd-info-value.muted { color: #d1d5db; font-weight: 400; font-style: italic; }
+
+  /* Notes */
+  .bd-notes-card {
+    background: #fffbeb; border: 1px solid #f4f4f4;
+    padding: 14px 16px;
+  }
+  .bd-notes-card-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #d97706; margin-bottom: 6px;
+  }
+  .bd-notes-text { font-size: 13px; color: #78350f; line-height: 1.6; }
 `;
-function injectBpCss() {
-  if (typeof document === "undefined" || document.getElementById("bp-css")) return;
-  const s = document.createElement("style"); s.id = "bp-css"; s.textContent = BP_CSS;
+
+function injectCss() {
+  if (typeof document === "undefined" || document.getElementById("bd-css")) return;
+  const s = document.createElement("style");
+  s.id = "bd-css";
+  s.textContent = ALL_CSS;
   document.head.appendChild(s);
 }
 
+// ─── Theme tokens (viewer only) ───────────────────────────────────────────────
+const THEMES = {
+  dark: {
+    bg: "rgba(30,64,115,1)", toolbar: "rgba(22,50,92,1)", border: "1px solid rgba(15,38,72,1)", sep: "rgba(15,38,72,1)",
+    titleColor: "#fff", btnColor: "rgba(255,255,255,0.85)",
+    btnHoverBg: "rgba(255,255,255,0.2)", btnHoverColor: "#fff",
+    activeBg: "rgba(255,255,255,0.25)", activeColor: "#fff",
+    scrollBg: "rgba(30,64,115,1)", bottomBg: "rgba(22,50,92,1)", bottomBorder: "1px solid rgba(15,38,72,1)",
+    pgLabelColor: "rgba(255,255,255,0.8)", pgLabelBold: "#fff",
+    spinBorder: "rgba(15,38,72,1)", spinTop: "#fff",
+    stateColor: "#fff", scrollThumb: "rgba(255,255,255,0.55)", pctColor: "#fff",
+  },
+  light: {
+    bg: "#f0f4f8", toolbar: "#fff", border: "0.5px solid #d0e4f5", sep: "#d0e4f5",
+    titleColor: "rgb(18,18,18)", btnColor: "#7aaad0",
+    btnHoverBg: "#e8f2fc", btnHoverColor: "#1e6db5",
+    activeBg: "#ddeefa", activeColor: "#1e6db5",
+    scrollBg: "#edf3fa", bottomBg: "#fff", bottomBorder: "0.5px solid #e0eaf5",
+    pgLabelColor: "rgb(18,18,18)", pgLabelBold: "rgb(18,18,18)",
+    spinBorder: "#d0e4f5", spinTop: "#1e6db5",
+    stateColor: "rgb(18,18,18)", scrollThumb: "#b8d4ef", pctColor: "rgb(18,18,18)",
+  },
+};
+
 const PREVIEW_PAGES = 5;
-const BV = { DOUBLE: "double", SCROLL: "scroll" };
 
 // ─── BookPreview ──────────────────────────────────────────────────────────────
 const BookPreview = ({ uploadId, title, onReadClick }) => {
-  const [pdfDoc,   setPdfDoc]   = useState(null);
-  const [status,   setStatus]   = useState("loading");
-  const [total,    setTotal]    = useState(0);
-  const [page,     setPage]     = useState(1);
-  const [scale,    setScale]    = useState(0.6);
-  const [view,     setView]     = useState(BV.DOUBLE);
-  const [pageSize, setPageSize] = useState(null); // { w, h } at scale=1
-  // Flip state
-  const [flipDir,  setFlipDir]  = useState(null);
-  const [snapPage, setSnapPage] = useState(null);
-  const flipping = useRef(false);
+  const [blobUrl, setBlobUrl] = useState(null);
+  const [fetchStatus, setFetchStatus] = useState("idle");
+  const [numPages, setNumPages] = useState(null);
+  const [scale, setScale] = useState(0.65);
+  const [pdfError, setPdfError] = useState(false);
+  const [twoUp, setTwoUp] = useState(false);
 
-  const containerRef = useRef(null);
-  const pageRefs     = useRef({});
+  const scrollRef = useRef(null);
+  const [areaW, setAreaW] = useState(0);
 
-  useEffect(() => { injectBpCss(); }, []);
-
-  // ── Load PDF ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!uploadId) { setStatus("error"); return; }
-    let dead = false;
-    setStatus("loading");
+    if (!scrollRef.current) return;
+    const ro = new ResizeObserver(([e]) => setAreaW(e.contentRect.width));
+    ro.observe(scrollRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!uploadId) {
+      setFetchStatus("error");
+      return;
+    }
+
+    let cancelled = false;
+    setFetchStatus("loading");
+
     (async () => {
       try {
-        const lib   = await loadPdfJs();
         const token = getToken();
-        const res   = await fetch(`${API_BASE_URL}/api/uploads/${uploadId}/preview`, {
+        const res = await fetch(`${API_BASE_URL}/api/uploads/${uploadId}/preview`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           credentials: "include",
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const buf = await res.arrayBuffer();
-        if (dead) return;
-        const doc = await lib.getDocument({ data: buf }).promise;
-        if (dead) return;
-        setPdfDoc(doc);
-        setTotal(doc.numPages);
 
-        // Store natural page size (at scale=1) for auto-fit
-        const p0  = await doc.getPage(1);
-        const vp0 = p0.getViewport({ scale: 1 });
-        setPageSize({ w: vp0.width, h: vp0.height });
+        if (!res.ok) throw new Error();
 
-        setStatus("ready");
-      } catch (e) {
-        if (!dead) { console.warn(e); setStatus("error"); }
+        const blob = await res.blob();
+        if (cancelled) return;
+
+        setBlobUrl(URL.createObjectURL(blob));
+        setFetchStatus("done");
+      } catch {
+        if (!cancelled) setFetchStatus("error");
       }
     })();
-    return () => { dead = true; };
+
+    return () => {
+      cancelled = true;
+      setBlobUrl(prev => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+    };
   }, [uploadId]);
 
-  // ── Auto-fit scale whenever container resizes or pageSize is known ──────────
-  const computeScale = useCallback(() => {
-    if (!pageSize || !containerRef.current) return;
-    const el = containerRef.current;
-    // Use getBoundingClientRect for accurate rendered dimensions
-    const rect = el.getBoundingClientRect();
-    const W = rect.width  || el.clientWidth;
-    const H = rect.height || el.clientHeight;
-    const availH = H - 38 - 40; // minus top bar (38) + bottom bar (40)
-    if (availH <= 0 || W <= 0) return;
-    const scaleByW = view === BV.DOUBLE
-      ? (W * 0.46) / pageSize.w
-      : (W * 0.88) / pageSize.w;
-    const scaleByH = (availH * 0.90) / pageSize.h;
-    const s = Math.max(0.12, Math.min(scaleByW, scaleByH, 3));
-    setScale(+(s.toFixed(3)));
-  }, [pageSize, view]);
+  const clamp = s => Math.min(Math.max(s, 0.4), 2);
 
-  useEffect(() => {
-    // Delay one frame so the container has its final rendered size
-    const id = requestAnimationFrame(() => computeScale());
-    return () => cancelAnimationFrame(id);
-  }, [computeScale]);
+  const baseW = areaW > 0 ? areaW - 40 : 700;
+  const pageW = twoUp ? Math.floor((baseW - 4) / 2) : baseW;
+  const scaledW = Math.round(pageW * clamp(scale));
 
-  // Re-fit on window resize
-  useEffect(() => {
-    const handler = () => computeScale();
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, [computeScale]);
-
-  const maxPage = Math.min(PREVIEW_PAGES, total);
-
-  // ── Flip logic ──────────────────────────────────────────────────────────────
-  const sL = snapPage ?? page;
-  const sR = sL + 1 <= maxPage ? sL + 1 : null;
-  const canFlipNext = page + 2 <= maxPage;
-  const canFlipPrev = page > 1;
-
-  const flipNext = () => {
-    if (flipping.current || !canFlipNext) return;
-    flipping.current = true; setSnapPage(page); setFlipDir("next");
-  };
-  const flipPrev = () => {
-    if (flipping.current || !canFlipPrev) return;
-    flipping.current = true; setSnapPage(page); setFlipDir("prev");
-  };
-  const onFlipEnd = () => {
-    if (flipDir === "next") setPage(p => Math.min(maxPage, p + 2));
-    if (flipDir === "prev") setPage(p => Math.max(1, p - 2));
-    setFlipDir(null); setSnapPage(null); flipping.current = false;
-  };
-  const frontPage = flipDir === "next" ? sR  : sL;
-  const backPage  = flipDir === "next"
-    ? (sL + 2 <= maxPage ? sL + 2 : null)
-    : (sL - 1 >= 1 ? sL - 1 : null);
-
-  // ── Scroll nav ──────────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (view !== BV.SCROLL) return;
-    const el = pageRefs.current[page];
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [page, view]);
-
-  const zoomIn  = () => setScale(s => Math.min(+(s + 0.1).toFixed(3), 3));
-  const zoomOut = () => setScale(s => Math.max(+(s - 0.1).toFixed(3), 0.15));
-
-  const pageLabel = view === BV.DOUBLE && sR
-    ? `${page}–${page + 1} / ${maxPage}`
-    : `${page} / ${maxPage}`;
-
-  const isLastPreview = (n) => n === maxPage && total > PREVIEW_PAGES;
-
-  // ── Preview CTA overlay ─────────────────────────────────────────────────────
-  const PreviewBanner = () => (
-    <div style={{
-      position: "absolute", bottom: 0, left: 0, right: 0, height: "44%",
-      background: "linear-gradient(to top, rgba(17,17,17,.97) 40%, transparent)",
-      display: "flex", flexDirection: "column", alignItems: "center",
-      justifyContent: "flex-end", paddingBottom: 16, gap: 8, zIndex: 10,
-    }}>
-      <span style={{ color: "#666", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-        This is a preview
-      </span>
-      <button onClick={onReadClick} style={{
-        padding: "7px 20px", background: "#fff", color: "#111",
-        border: "none", borderRadius: 4, fontSize: 11,
-        fontWeight: 600, cursor: "pointer",
-      }}>
-        Read Full Book
-      </button>
-    </div>
-  );
-
-  const barBg  = "#111";
-  const barBdr = "#2c2c2c";
-
-  const iconBtn = (onClick, disabled, title, children) => (
-    <button
-      onClick={onClick} disabled={disabled} title={title}
-      style={{
-        background: "none", border: "none", padding: "2px 4px",
-        cursor: disabled ? "default" : "pointer",
-        color: disabled ? "#3a3a3a" : "#888",
-        display: "flex", alignItems: "center", flexShrink: 0,
-        transition: "color .12s",
-      }}
-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.color = "#fff"; }}
-      onMouseLeave={e => { e.currentTarget.style.color = disabled ? "#3a3a3a" : "#888"; }}
-    >
-      {children}
-    </button>
-  );
-
-  const viewBtn = (v, children, label) => (
-    <button
-      onClick={() => setView(v)} title={label}
-      style={{
-        background: view === v ? "rgba(255,255,255,.15)" : "none",
-        border: "none", padding: "3px 5px", borderRadius: 4,
-        cursor: "pointer", color: view === v ? "#fff" : "#777",
-        display: "flex", alignItems: "center", flexShrink: 0,
-        transition: "color .12s",
-      }}
-      onMouseEnter={e => { if (view !== v) e.currentTarget.style.color = "#ccc"; }}
-      onMouseLeave={e => { e.currentTarget.style.color = view === v ? "#fff" : "#777"; }}
-    >
-      {children}
-    </button>
-  );
+  const totalPrev = numPages ? Math.min(5, numPages) : 0;
 
   return (
-    <div ref={containerRef} style={{
-      display: "flex", flexDirection: "column",
-      width: "100%", height: "100%",
-      background: "#1c1c1c",
-      border: "1px solid #2c2c2c",
-      borderRadius: 8, overflow: "hidden",
-      fontFamily: "system-ui, sans-serif",
-      userSelect: "none",
-      minHeight: 0, // allows flex children to shrink properly
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      height: "100%",
+      background: "#e8e8e8",
     }}>
 
-      {/* Top bar */}
+      {/* ───────── Toolbar ───────── */}
       <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        height: 38, padding: "0 12px", flexShrink: 0,
-        background: barBg, borderBottom: `1px solid ${barBdr}`,
+        height: 42,
+        padding: "0 12px",
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        background: "rgba(255,255,255,0.7)",
+        backdropFilter: "blur(8px)",
+        borderBottom: "1px solid #f4f4f4"
       }}>
-        <div style={{ display: "flex", gap: 5 }}>
-          {["#ff5f57","#febc2e","#28c840"].map((c, i) => (
-            <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />
-          ))}
-        </div>
         <span style={{
-          color: "#777", fontSize: 11, letterSpacing: "0.03em",
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          maxWidth: "55%", textAlign: "center",
+          flex: 1,
+          fontSize: 12,
+          color: "#111",
+          opacity: 0.6,
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          textOverflow: "ellipsis"
         }}>
           {title}
         </span>
-        <span style={{ color: "#555", fontSize: 10 }}>
-          {status === "ready" ? "Preview" : ""}
+
+        <button onClick={() => setTwoUp(false)}>
+          <AlignJustify size={12} strokeWidth={1.5} />
+        </button>
+
+        <button onClick={() => setTwoUp(true)}>
+          <Columns size={12} strokeWidth={1.5} />
+        </button>
+
+        <button onClick={() => setScale(s => clamp(s - 0.1))}>
+          <ZoomOut size={12} strokeWidth={1.5} />
+        </button>
+
+        <span style={{ fontSize: 11, color: "#9ca3af" }}>
+          {Math.round(scale * 100)}%
         </span>
+
+        <button onClick={() => setScale(s => clamp(s + 0.1))}>
+          <ZoomIn size={12} strokeWidth={1.5} />
+        </button>
       </div>
 
-      {/* Content */}
-      <div style={{ flex: 1, overflow: "hidden", background: "#3a3a3a", position: "relative", minHeight: 0 }}>
+      {/* ───────── Scroll Area ───────── */}
+      <div
+        ref={scrollRef}
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          display: "flex",
+          justifyContent: "center",
+          padding: "50px 0 80px",
+        }}
+      >
+        <div style={{
+          width: "100%",
+          maxWidth: 900,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center"
+        }}>
 
-        {/* Loading */}
-        {status === "loading" && (
-          <div style={{ height:"100%",display:"flex",flexDirection:"column",
-            alignItems:"center",justifyContent:"center",gap:10,color:"#666" }}>
-            <div style={{ width:26,height:26,border:"3px solid #333",borderTopColor:"#888",
-              borderRadius:"50%",animation:"bpspin 0.9s linear infinite" }} />
-            <span style={{ fontSize:12 }}>Loading preview…</span>
-          </div>
-        )}
+          {(fetchStatus === "loading") && (
+            <div style={{ marginTop: 100, color: "#999" }}>
+              Loading preview...
+            </div>
+          )}
 
-        {/* Error */}
-        {status === "error" && (
-          <div style={{ height:"100%",display:"flex",flexDirection:"column",
-            alignItems:"center",justifyContent:"center",gap:8,color:"#555" }}>
-            <BookOpen size={32} style={{ opacity:0.35 }} />
-            <span style={{ fontSize:12 }}>Preview unavailable</span>
-          </div>
-        )}
+          {(fetchStatus === "error" || pdfError) && (
+            <div style={{ marginTop: 100, color: "#999" }}>
+              Preview unavailable
+            </div>
+          )}
 
-        {/* Scroll mode */}
-        {status === "ready" && pdfDoc && view === BV.SCROLL && (
-          <div className="bp-scroll-area"
-            style={{ height:"100%", overflowY:"scroll", padding:"16px 0" }}>
-            <div style={{ display:"flex",flexDirection:"column",alignItems:"center",gap:12 }}>
-              {Array.from({ length: maxPage }, (_, i) => i + 1).map(n => (
-                <div key={n}
-                  ref={el => { pageRefs.current[n] = el; }}
-                  style={{ boxShadow:"0 6px 28px rgba(0,0,0,.55)",lineHeight:0,
-                    background:"#fff",position:"relative" }}>
-                  <BpCanvas pdfDoc={pdfDoc} pageNum={n} scale={scale} />
-                  {isLastPreview(n) && <PreviewBanner />}
+          {blobUrl && (
+            <Document
+              file={blobUrl}
+              onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+              onLoadError={() => setPdfError(true)}
+            >
+              {Array.from({ length: totalPrev }, (_, i) => i + 1).map(n => (
+                <div
+                  key={n}
+                  style={{
+                    marginBottom: 32,
+                    background: "#fff",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+                    transition: "0.2s"
+                  }}
+                >
+                  <Page
+                    pageNumber={n}
+                    width={scaledW}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                  />
+
+                  {n === totalPrev && numPages > 5 && (
+                    <div style={{
+                      position: "relative",
+                      height: 120,
+                      marginTop: -120,
+                      background: "linear-gradient(to top, white, transparent)",
+                      display: "flex",
+                      alignItems: "flex-end",
+                      justifyContent: "center",
+                      paddingBottom: 20
+                    }}>
+                      <button
+                        onClick={onReadClick}
+                        style={{
+                          padding: "8px 18px",
+                          borderRadius: 999,
+                          background: "#111",
+                          color: "#fff",
+                          border: "none",
+                          fontSize: 12,
+                          cursor: "pointer"
+                        }}
+                      >
+                        Read Full Book
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
-            </div>
-          </div>
-        )}
-
-        {/* Two-page flip mode */}
-        {status === "ready" && pdfDoc && view === BV.DOUBLE && (
-          <div style={{
-            height:"100%", perspective:"2200px",
-            display:"flex",alignItems:"center",justifyContent:"center",
-            position:"relative",
-          }}>
-            <div style={{
-              display:"flex",alignItems:"stretch",position:"relative",
-              filter:"drop-shadow(0 14px 40px rgba(0,0,0,.70))",
-            }}>
-              {/* Left page */}
-              <div style={{ background:"#fff",lineHeight:0,position:"relative",zIndex:1 }}>
-                {sL && <BpCanvas pdfDoc={pdfDoc} pageNum={sL} scale={scale} />}
-                {sL && isLastPreview(sL) && !flipDir && <PreviewBanner />}
-                <div style={{ position:"absolute",inset:"0 0 0 auto",width:18,pointerEvents:"none",
-                  background:"linear-gradient(to right,transparent,rgba(0,0,0,.18))" }} />
-              </div>
-              {/* Right page */}
-              <div style={{ background:"#fff",lineHeight:0,position:"relative",zIndex:1,minWidth:1 }}>
-                {sR
-                  ? <BpCanvas pdfDoc={pdfDoc} pageNum={sR} scale={scale} />
-                  : <div style={{ width:"100%",height:"100%",background:"#f4f3ee" }} />}
-                <div style={{ position:"absolute",inset:"0 auto 0 0",width:18,pointerEvents:"none",
-                  background:"linear-gradient(to left,transparent,rgba(0,0,0,.14))" }} />
-                {sR && isLastPreview(sR) && !flipDir && <PreviewBanner />}
-              </div>
-
-              {/* Flip card */}
-              {flipDir && (
-                <div
-                  className={`bp-flip-card ${flipDir==="next"?"r bp-rtl":"l bp-ltr"}`}
-                  onAnimationEnd={onFlipEnd}
-                >
-                  <div className="bp-face">
-                    {frontPage && <BpCanvas pdfDoc={pdfDoc} pageNum={frontPage} scale={scale}
-                      style={{ width:"100%",height:"100%" }} />}
-                    <div className="bp-sheen" />
-                  </div>
-                  <div className="bp-face back">
-                    {backPage && <BpCanvas pdfDoc={pdfDoc} pageNum={backPage} scale={scale}
-                      style={{ width:"100%",height:"100%" }} />}
-                    <div className="bp-sheen" style={{ transform:"scaleX(-1)" }} />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Edge click zones */}
-            {!flipDir && (
-              <>
-                <button onClick={flipPrev} disabled={!canFlipPrev}
-                  style={{ position:"absolute",left:0,top:0,bottom:0,width:"14%",
-                    background:"transparent",border:"none",zIndex:30,
-                    cursor:canFlipPrev?"pointer":"default" }} />
-                <button onClick={flipNext} disabled={!canFlipNext}
-                  style={{ position:"absolute",right:0,top:0,bottom:0,width:"14%",
-                    background:"transparent",border:"none",zIndex:30,
-                    cursor:canFlipNext?"pointer":"default" }} />
-              </>
-            )}
-          </div>
-        )}
+            </Document>
+          )}
+        </div>
       </div>
 
-      {/* Bottom toolbar */}
+      {/* ───────── Bottom ───────── */}
       <div style={{
-        display:"flex",alignItems:"center",height:40,padding:"0 8px",
-        background:barBg,borderTop:`1px solid ${barBdr}`,
-        gap:2,flexShrink:0,
+        height: 40,
+        display: "flex",
+        alignItems: "center",
+        padding: "0 12px",
+        background: "rgba(255,255,255,0.7)",
+        borderTop: "1px solid #f4f4f4"
       }}>
-        <span style={{ color:"#555",fontSize:10,whiteSpace:"nowrap",minWidth:52,flexShrink:0 }}>
-          p.{pageLabel}
+        <span style={{ fontSize: 11, color: "#9ca3af" }}>
+          {totalPrev} pages preview
         </span>
-
-        <input type="range" min={1} max={maxPage||1} value={page}
-          onChange={e => {
-            const v = +e.target.value;
-            const t = view===BV.DOUBLE ? (v%2===0?v-1:v) : v;
-            setPage(Math.max(1, Math.min(maxPage, t)));
-          }}
-          style={{ flex:1,minWidth:20,height:3,accentColor:"#fff",cursor:"pointer" }}
-        />
-
-        {iconBtn(view===BV.DOUBLE?flipPrev:()=>setPage(p=>Math.max(1,p-1)), page<=1, "Previous",
-          <ChevronLeft size={13} strokeWidth={1.8} />)}
-        {iconBtn(view===BV.DOUBLE?flipNext:()=>setPage(p=>Math.min(maxPage,p+1)), page>=maxPage, "Next",
-          <ChevronRight size={13} strokeWidth={1.8} />)}
-
-        <div style={{ width:1,height:14,background:"rgba(255,255,255,.1)",margin:"0 2px",flexShrink:0 }} />
-
-        {viewBtn(BV.DOUBLE,
-          <svg width="14" height="12" viewBox="0 0 17 14" fill="none" stroke="currentColor" strokeWidth="1.7">
-            <rect x="0.8" y="0.8" width="6.5" height="12.4" rx="0.5"/>
-            <rect x="9.7" y="0.8" width="6.5" height="12.4" rx="0.5"/>
-          </svg>,
-          "Two pages"
-        )}
-        {viewBtn(BV.SCROLL,
-          <svg width="12" height="13" viewBox="0 0 13 16" fill="none" stroke="currentColor" strokeWidth="1.7">
-            <rect x="1" y="1" width="11" height="14" rx="0.5"/>
-            <line x1="3" y1="5" x2="10" y2="5"/>
-            <line x1="3" y1="8" x2="10" y2="8"/>
-            <line x1="3" y1="11" x2="8" y2="11"/>
-          </svg>,
-          "Scroll"
-        )}
-
-        <div style={{ width:1,height:14,background:"rgba(255,255,255,.1)",margin:"0 2px",flexShrink:0 }} />
-
-        {iconBtn(zoomOut, scale<=0.15, "Zoom out", <ZoomOut size={13} strokeWidth={1.8} />)}
-        <span style={{ color:"#555",fontSize:9,width:24,textAlign:"center",flexShrink:0 }}>
-          {Math.round(scale*100)}%
-        </span>
-        {iconBtn(zoomIn, scale>=3, "Zoom in", <ZoomIn size={13} strokeWidth={1.8} />)}
       </div>
+
     </div>
   );
 };
+
+// ─── InfoRow helper ───────────────────────────────────────────────────────────
+function InfoRow({ label, value, mono }) {
+  return (
+    <div className="bd-info-row">
+      <span className="bd-info-label">{label}</span>
+      <span className={`bd-info-value${!value ? " muted" : mono ? " mono" : ""}`}>
+        {value || "—"}
+      </span>
+    </div>
+  );
+}
 
 // ─── Main BookDetails ─────────────────────────────────────────────────────────
 const BookDetails = ({ bookId }) => {
@@ -501,6 +624,8 @@ const BookDetails = ({ bookId }) => {
   const [downloadCount, setDownloadCount] = useState(null);
   const [downloading,   setDownloading]   = useState(false);
   const [bookmarked,    setBookmarked]    = useState(false);
+
+  useEffect(() => { injectCss(); }, []);
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -561,9 +686,11 @@ const BookDetails = ({ bookId }) => {
     <>
       <Nav />
       <div className="flex justify-center items-center h-96">
-        <div className="flex flex-col items-center gap-3 text-gray-500">
-          <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
-          <span>Loading book details...</span>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-800 rounded-full animate-spin" />
+          <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af" }}>
+            Loading
+          </span>
         </div>
       </div>
     </>
@@ -573,8 +700,10 @@ const BookDetails = ({ bookId }) => {
     <>
       <Nav />
       <div className="flex justify-center items-center h-96 flex-col gap-4">
-        <div className="text-red-500 text-lg font-medium">{error}</div>
-        <button onClick={() => window.history.back()} className="text-gray-500 hover:text-gray-800 text-sm underline">
+        <p style={{ fontSize: 14, color: "rgb(18,18,18)" }}>{error}</p>
+        <button onClick={() => window.history.back()}
+          style={{ fontSize: 12, color: "#6b7280", background: "none", border: "none",
+            cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3, fontFamily: "inherit" }}>
           Go back
         </button>
       </div>
@@ -587,181 +716,170 @@ const BookDetails = ({ bookId }) => {
   const coverImage  = "/assets/BooksImages/2.avif";
   const accessionNo = book.accession?.accession_no || "—";
   const isAvailable = book.copies > 0;
+  const pubYear     = book.date_of_publication ? new Date(book.date_of_publication).getFullYear() : null;
+  const pubDateFull = book.date_of_publication
+    ? new Date(book.date_of_publication).toLocaleDateString("en-US", { year: "numeric", month: "short" })
+    : null;
 
   return (
     <>
       <Nav />
       <div className="bg-white">
-        <div className="max-w-[1700px] mx-auto px-4 sm:px-6 py-6 sm:py-8 font-sans">
+        <div className="bd-page-wrap">
 
-          {/* Back button */}
-          <div className="mb-6">
-            <button
-              onClick={() => window.history.back()}
-              className="text-gray-500 hover:text-gray-800 text-sm transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          {/* Back */}
+          <div className="bd-back-wrap">
+            <button className="bd-back" onClick={() => window.history.back()}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               Back to Books
             </button>
           </div>
 
-          {/* Main grid — stacks on mobile, side-by-side on desktop */}
-          <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-8 lg:gap-10">
+          {/* Main grid — 1 col mobile, 3fr/2fr on lg+ */}
+          <div className="bd-main-grid">
 
-            {/* ── Left: Preview ── */}
-            <div className="w-full">
+            {/* Left: PDF Preview */}
+            <div style={{ minWidth: 0, width: "100%" }}>
               {uploadId ? (
-                <div className="w-full">
-                  <style>{`
-                    .bp-preview-wrapper {
-                      width: 100%;
-                      /* Mobile: taller aspect ratio so toolbar + pages all fit */
-                      aspect-ratio: 1.2 / 1;
-                      min-height: 320px;
-                    }
-                    @media (min-width: 640px) {
-                      .bp-preview-wrapper {
-                        aspect-ratio: 1.35 / 1;
-                        min-height: 380px;
-                      }
-                    }
-                    @media (min-width: 1024px) {
-                      .bp-preview-wrapper {
-                        aspect-ratio: unset !important;
-                        height: 720px !important;
-                        min-height: unset !important;
-                      }
-                    }
-                    @media (min-width: 1280px) {
-                      .bp-preview-wrapper {
-                        height: 800px !important;
-                      }
-                    }
-                  `}</style>
-                  <div className="bp-preview-wrapper rounded-lg overflow-hidden">
-                    <BookPreview
-                      uploadId={uploadId}
-                      title={book.title}
-                      onReadClick={() => setShowReader(true)}
-                    />
-                  </div>
+                <div className="bp-preview-wrapper" style={{ overflow: "hidden" }}>
+                  <BookPreview
+                    uploadId={uploadId}
+                    title={book.title}
+                    onReadClick={() => setShowReader(true)}
+                  />
                 </div>
               ) : (
-                <div className="w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center"
-                  style={{ aspectRatio: "1.35 / 1" }}>
-                  <img src={coverImage} alt={book.title} className="w-full h-full object-cover" />
+                <div style={{ width: "100%", aspectRatio: "1.35/1", overflow: "hidden",
+                  border: "1px solid #e5e7eb", background: "#f9fafb" }}>
+                  <img src={coverImage} alt={book.title}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
               )}
             </div>
 
-            {/* ── Right: Info ── */}
-            <div className="flex flex-col">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 leading-tight">
-                {book.title}
-              </h1>
+            {/* Right: Modern panel */}
+            <div className="bd-panel">
 
-              <div className="mt-2 text-gray-500 text-sm">
-                <span className="font-medium text-gray-700">{book.author}</span>
-                {book.date_of_publication && (
+              {/* Genre pill */}
+              <span className="bd-genre-pill">{book.category || "Books"}</span>
+
+              {/* Title */}
+              <h1 className="bd-title">{book.title}</h1>
+
+              {/* Author + year */}
+              <div className="bd-byline">
+                <span className="bd-byline-author">{book.author || "Unknown Author"}</span>
+                {pubYear && (
                   <>
-                    <span className="mx-2">•</span>
-                    <span>{new Date(book.date_of_publication).getFullYear()}</span>
+                    <span className="bd-byline-dot">·</span>
+                    <span className="bd-byline-year">{pubYear}</span>
                   </>
                 )}
               </div>
 
-              {downloadCount != null && downloadCount > 0 && (
-                <div className="mt-3 flex items-center gap-1.5 text-gray-400 text-xs">
-                  <Download size={13} />
-                  <span>{downloadCount.toLocaleString()} download{downloadCount !== 1 ? "s" : ""}</span>
+              {/* Stats */}
+              <div className="bd-stats-row">
+                <span className={`bd-avail ${isAvailable ? "ok" : "no"}`}>
+                  <span className="bd-avail-dot" />
+                  {isAvailable ? "Available" : "Unavailable"}
+                </span>
+
+                {book.copies != null && (
+                  <span className="bd-stat-chip">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                    </svg>
+                    {book.copies} {book.copies === 1 ? "copy" : "copies"}
+                  </span>
+                )}
+
+                {downloadCount != null && downloadCount > 0 && (
+                  <span className="bd-stat-chip">
+                    <Download size={12} />
+                    {downloadCount.toLocaleString()}
+                  </span>
+                )}
+
+                {book.upload?.file_type && (
+                  <span className="bd-stat-chip">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    {book.upload.file_type.toUpperCase()}
+                  </span>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="bd-actions">
+                <button onClick={() => setShowReader(true)} disabled={!uploadId}
+                  className="bd-btn-primary">
+                  <BookOpen size={15} /> Read
+                </button>
+                <button onClick={handleDownloadBook} disabled={!uploadId || downloading}
+                  className="bd-btn-secondary">
+                  {downloading ? (
+                    <>
+                      <div style={{ width: 14, height: 14, border: "2px solid #e5e7eb",
+                        borderTopColor: "rgb(18,18,18)", borderRadius: "50%",
+                        animation: "bd-spin 0.9s linear infinite" }} />
+                      Saving…
+                    </>
+                  ) : (
+                    <><Download size={15} /> Download</>
+                  )}
+                </button>
+                <button onClick={() => setBookmarked(b => !b)}
+                  className={`bd-btn-icon ${bookmarked ? "on" : ""}`}
+                  title={bookmarked ? "Remove bookmark" : "Bookmark"}>
+                  {bookmarked ? <BookmarkCheck size={17} /> : <Bookmark size={17} />}
+                </button>
+              </div>
+
+              <div className="bd-divider" />
+
+              {/* Bibliographic */}
+              <div className="bd-info-section">
+                <div className="bd-info-heading">Bibliographic Details</div>
+                <InfoRow label="Author"    value={book.author} />
+                <InfoRow label="Editor"    value={book.editor} />
+                <InfoRow label="Edition"   value={book.edition} />
+                <InfoRow label="Publisher" value={book.publisher} />
+                <InfoRow label="Published" value={pubDateFull} />
+                <InfoRow label="ISBN"      value={book.isbn} />
+                <InfoRow label="ISSN"      value={book.issn} />
+                <InfoRow label="Call No."  value={book.call_number} mono />
+                <InfoRow label="Subjects"  value={book.subjects} />
+                <InfoRow label="Extent"    value={book.extent} />
+                <InfoRow label="Accession No." value={accessionNo} />
+                {book.accession?.date_accessioned && (
+                  <InfoRow
+                    label="Date Accessioned"
+                    value={new Date(book.accession.date_accessioned).toLocaleDateString("en-US",
+                      { year: "numeric", month: "short", day: "numeric" })}
+                  />
+                )}
+                {book.access_level && (
+                  <InfoRow
+                    label="Access Level"
+                    value={book.access_level === "staff_only" ? "Staff Only" : "Public"}
+                  />
+                )}
+              </div>
+
+              {/* Notes */}
+              {book.notes && (
+                <div className="bd-notes-card">
+                  <div className="bd-notes-card-label">Notes</div>
+                  <p className="bd-notes-text">{book.notes}</p>
                 </div>
               )}
 
-              {/* Action buttons */}
-              <div className="mt-6 flex flex-col gap-4">
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowReader(true)}
-                    disabled={!uploadId}
-                    className="flex-1 py-3 text-sm font-semibold rounded bg-blue-900 text-white hover:bg-blue-950 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    <BookOpen size={15} />
-                    Read
-                  </button>
-                  <button
-                    onClick={handleDownloadBook}
-                    disabled={!uploadId || downloading}
-                    className="flex-1 py-3 text-sm font-semibold rounded bg-gray-900 text-white hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {downloading ? (
-                      <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Downloading…</>
-                    ) : (
-                      <><Download size={15} />Download</>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setBookmarked(b => !b)}
-                    className={`px-5 py-3 text-sm font-semibold rounded border transition-colors flex items-center justify-center ${
-                      bookmarked ? "bg-amber-50 border-amber-300 text-amber-600" : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    <svg className="w-5 h-5" fill={bookmarked?"currentColor":"none"} stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div>
-                  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border ${
-                    isAvailable ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"
-                  }`}>
-                    <span className={`h-2 w-2 rounded-full ${isAvailable?"bg-green-500":"bg-red-500"}`} />
-                    {isAvailable ? "Available" : "Currently Unavailable"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Metadata */}
-              <div className="mt-6 border-t border-gray-200 pt-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
-                  <InfoRow label="Author"           value={book.author || "—"} />
-                  <InfoRow label="Editor"           value={book.editor || "—"} />
-                  <InfoRow label="Edition"          value={book.edition || "—"} />
-                  <InfoRow label="Publisher"        value={book.publisher || "—"} />
-                  <InfoRow label="Publication Date" value={book.date_of_publication
-                    ? new Date(book.date_of_publication).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})
-                    : "—"} />
-                  <InfoRow label="ISBN"         value={book.isbn || "—"} />
-                  <InfoRow label="ISSN"         value={book.issn || "—"} />
-                  <InfoRow label="Category"     value={book.category || "—"} />
-                  <InfoRow label="Call Number"  value={book.call_number || "—"} />
-                  <InfoRow label="Subjects"     value={book.subjects || "—"} />
-                  <InfoRow label="Extent"       value={book.extent || "—"} />
-                  <InfoRow label="Copies"       value={book.copies ?? "—"} />
-                  <InfoRow label="Accession No." value={accessionNo} />
-                  {book.accession?.date_accessioned && (
-                    <InfoRow label="Date Accessioned"
-                      value={new Date(book.accession.date_accessioned).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})} />
-                  )}
-                  {book.access_level && (
-                    <InfoRow label="Access Level" value={book.access_level==="staff_only"?"Staff Only":"Public"} />
-                  )}
-                  {book.upload && (
-                    <>
-                      <InfoRow label="File Type" value={book.upload.file_type?.toUpperCase()||"—"} />
-                      {downloadCount != null && <InfoRow label="Downloads" value={downloadCount.toLocaleString()} />}
-                    </>
-                  )}
-                </div>
-                {book.notes && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-xs text-gray-500 mb-1">Notes</p>
-                    <p className="text-sm text-gray-700">{book.notes}</p>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -780,14 +898,5 @@ const BookDetails = ({ bookId }) => {
     </>
   );
 };
-
-function InfoRow({ label, value }) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-3">
-      <span className="text-gray-500 flex-shrink-0">{label}</span>
-      <span className="text-gray-900 font-medium text-right">{value}</span>
-    </div>
-  );
-}
 
 export default BookDetails;
