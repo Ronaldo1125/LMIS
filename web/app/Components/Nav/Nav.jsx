@@ -144,6 +144,11 @@ const Nav = () => {
     }
   };
 
+  const handleBrowseToSearch = (e) => {
+    e.preventDefault();
+    router.push("/search");
+  };
+
   const displayName = user?.full_name?.split(" ")[0] || user?.username || "";
 
   const Avatar = () => {
@@ -180,10 +185,20 @@ const Nav = () => {
           <div className="flex-1 flex justify-center items-center">
             <ul className="flex items-center gap-6 lg:gap-10 text-black text-xs sm:text-xs lg:text-sm font-medium">
               <li>
-                <Link href="/" className="hover:text-black/80 transition">Home</Link>
+                <button 
+                  onClick={handleBrowseToSearch}
+                  className="hover:text-black/80 transition"
+                >
+                  Browse
+                </button>
               </li>
               <li>
-                <Link href="/catalog" className="hover:text-black/80 transition">New release</Link>
+                <button 
+                  onClick={(e) => handleSmoothScroll(e, "#recent-additions")}
+                  className="hover:text-black/80 transition"
+                >
+                  New release
+                </button>
               </li>
 
               {/* COLLECTION — British Museum style */}
