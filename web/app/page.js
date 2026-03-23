@@ -6,6 +6,8 @@ import News from "./Components/News/News";
 import AboutLibrary from "./Components/Auth/AboutLibrary/AboutLibrary";
 import Footer from "./Components/Footer/Footer";
 import FreeAccess from "./Components/FreeAccess/FreeAccess";
+import ReportsSection from "./Components/Reports/Reports";
+import ThesisPapersSection from "./Components/ThesisPapers/ThesisPapers";
 
 export default function Page() {
 
@@ -23,7 +25,17 @@ export default function Page() {
         <FrequentlySearched />
       </div>
 
+       <div id="thesis-papers">
+        <ThesisPapersSection />
+      </div>
+
+      <div id="reports">
+        <ReportsSection />
+
       <Category />
+
+     
+      </div>
 
       <div id="news">
         <News />

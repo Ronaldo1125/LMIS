@@ -171,7 +171,7 @@ const RelatedBooks = ({ currentBookId }) => {
         gridColumns: "repeat(auto-fill, minmax(200px, 1fr))",
         gap: 40,
         titleSize: 28,
-        maxWidth: 1700,
+        maxWidth: 1600,
       };
     }
   }, [windowWidth]);
@@ -244,7 +244,7 @@ const RelatedBooks = ({ currentBookId }) => {
 
         {/* Section header */}
         <div style={{
-          maxWidth: config.maxWidth || 1700,
+          maxWidth: config.maxWidth || 1600,
           margin: "0 auto",
           padding: config.headerPadding,
         }}>
@@ -256,7 +256,7 @@ const RelatedBooks = ({ currentBookId }) => {
         {/* Loading skeletons */}
         {loading && (
           <div style={{
-            maxWidth: config.maxWidth || 1700,
+            maxWidth: config.maxWidth || 1600,
             margin: "0 auto",
             padding: config.contentPadding,
             display: "grid",
@@ -269,7 +269,7 @@ const RelatedBooks = ({ currentBookId }) => {
 
         {/* Error */}
         {error && !loading && (
-          <div style={{ maxWidth: config.maxWidth || 1700, margin: "0 auto", padding: config.contentPadding }}>
+          <div style={{ maxWidth: config.maxWidth || 1600, margin: "0 auto", padding: config.contentPadding }}>
             <p style={{ fontSize: 13, color: "#ef4444" }}>Could not load related books.</p>
           </div>
         )}
@@ -277,7 +277,7 @@ const RelatedBooks = ({ currentBookId }) => {
         {/* Book grid */}
         {!loading && !error && books.length > 0 && (
           <div style={{
-            maxWidth: config.maxWidth || 1700,
+            maxWidth: config.maxWidth || 1600,
             margin: "0 auto",
             padding: config.contentPadding,
             display: "grid",
