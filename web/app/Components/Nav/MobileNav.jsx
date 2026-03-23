@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000") + "/api";
+
 // ── Premium SVG Icon Set ────────────────────────────────────────────────────
 
 const IconMenu = () => (
@@ -90,31 +92,222 @@ const IconNewspaper = () => (
   </svg>
 );
 
-const IconStar = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2l2.9 6.3 6.9.9-5 4.9 1.2 6.9L12 17.8l-6 3.2 1.2-6.9-5-4.9 6.9-.9z"/>
-  </svg>
-);
+// ── Saved Tab Component ─────────────────────────────────────────────────────
 
-const IconShield = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <path d="M12 2l8 4v6c0 5-3.5 9.7-8 11C7.5 21.7 4 17 4 12V6l8-4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-    <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
+const SavedTab = ({ closeMenu }) => {
+  const [bookmarks, setBookmarks]     = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState(null);
+  const [page, setPage]               = useState(1);
+  const [totalPages, setTotalPages]   = useState(1);
+  const [total, setTotal]             = useState(0);
+
+  const getToken = () =>
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+
+  const fetchBookmarks = async (p = 1) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/bookmarks?page=${p}&limit=6`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setBookmarks(data.bookmarks);
+      setTotal(data.pagination.total);
+      setTotalPages(data.pagination.totalPages);
+      setPage(data.pagination.page);
+    } catch {
+      setError("Could not load bookmarks.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeBookmark = async (bookId) => {
+    try {
+      await fetch(`${API_BASE}/bookmarks/${bookId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      setBookmarks((prev) => prev.filter((b) => b.id !== bookId));
+      setTotal((prev) => prev - 1);
+    } catch {}
+  };
+
+  useEffect(() => { fetchBookmarks(1); }, []);
+
+  /* Loading */
+  if (loading) return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <style>{`@keyframes mnavPulse { 0%,100%{opacity:0.5} 50%{opacity:1} }`}</style>
+      {[...Array(4)].map((_, i) => (
+        <div key={i} style={{
+          height: "60px", borderRadius: "12px", background: "#f0f0f0",
+          opacity: 1 - i * 0.2, animation: "mnavPulse 1.4s ease-in-out infinite",
+        }} />
+      ))}
+    </div>
+  );
+
+  /* Error */
+  if (error) return (
+    <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "12px 14px", color: "#dc2626", fontSize: "13px" }}>
+      {error}
+    </div>
+  );
+
+  /* Empty state */
+  if (bookmarks.length === 0) return (
+    <div style={{ textAlign: "center", padding: "0 12px 24px" }}>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "22px" }}>
+        <svg width="120" height="98" viewBox="0 0 120 98" fill="none">
+          <rect x="6" y="32" width="88" height="58" rx="4" fill="none" stroke="#1a1a1a" strokeWidth="2.4"/>
+          <path d="M6 32 Q6 22 15 22 L40 22 Q48 22 50 32" fill="none" stroke="#1a1a1a" strokeWidth="2.4" strokeLinejoin="round"/>
+          <line x1="22" y1="52" x2="70" y2="52" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round"/>
+          <line x1="22" y1="63" x2="56" y2="63" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round"/>
+          <path d="M78 20 Q90 10 100 20" stroke="#1a1a1a" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="3.5 4.5" fill="none"/>
+          <circle cx="100" cy="25" r="5.5" fill="none" stroke="#1a1a1a" strokeWidth="2.2"/>
+          <circle cx="100" cy="25" r="2" fill="#1a1a1a"/>
+        </svg>
+      </div>
+      <p style={{ margin: "0 0 10px", fontSize: "17px", fontWeight: "800", color: "#111", letterSpacing: "-0.3px" }}>
+        Explore all you want to read
+      </p>
+      <p style={{ margin: "0 0 22px", fontSize: "13.5px", color: "#666", lineHeight: 1.55 }}>
+        Save your favorite titles, and access them easily.
+      </p>
+      <Link
+        href="/search"
+        onClick={closeMenu}
+        style={{ fontSize: "14px", fontWeight: "800", color: "#111", textDecoration: "none" }}
+      >
+        Explore Library
+      </Link>
+    </div>
+  );
+
+  /* Bookmark list */
+  return (
+    <div>
+      {/* Count badge */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
+        <span style={{ fontSize: "11px", color: "#888", background: "#f4f4f4", border: "1px solid #e8e8e8", padding: "3px 10px", borderRadius: "20px" }}>
+          {total} saved
+        </span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+        {bookmarks.map((book) => (
+          <div
+            key={book.id}
+            style={{
+              display: "flex", alignItems: "flex-start", gap: "10px",
+              padding: "11px 13px", background: "#f7f7f7", borderRadius: "12px",
+              border: "1px solid #eeeeee",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Link
+                href={`/book/${book.id}`}
+                onClick={closeMenu}
+                style={{ textDecoration: "none" }}
+                onMouseEnter={e => e.currentTarget.querySelector("p").style.textDecoration = "underline"}
+                onMouseLeave={e => e.currentTarget.querySelector("p").style.textDecoration = "none"}
+              >
+                <p style={{
+                  margin: "0 0 4px", fontSize: "13px", fontWeight: "600", color: "#111",
+                  lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {book.title}
+                </p>
+              </Link>
+              <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "11px", color: "#888" }}>{book.author}</span>
+                {book.category && (
+                  <span style={{
+                    fontSize: "10px", padding: "2px 7px", borderRadius: "20px",
+                    background: "#ececec", color: "#555", fontWeight: "600",
+                  }}>
+                    {book.category}
+                  </span>
+                )}
+                {book.has_digital_copy === 1 && (
+                  <span style={{
+                    fontSize: "10px", padding: "2px 7px", borderRadius: "20px",
+                    background: "#f0fdf4", color: "#16a34a",
+                    border: "1px solid #bbf7d0", fontWeight: "600",
+                  }}>
+                    Digital
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Remove button */}
+            <button
+              onClick={() => removeBookmark(book.id)}
+              title="Remove bookmark"
+              style={{
+                flexShrink: 0, marginTop: "1px", background: "none",
+                border: "none", cursor: "pointer", padding: "3px",
+                borderRadius: "6px", color: "#ccc",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.background = "#fef2f2"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "#ccc"; e.currentTarget.style.background = "none"; }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
+                <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginTop: "14px" }}>
+          <button
+            onClick={() => fetchBookmarks(page - 1)}
+            disabled={page <= 1}
+            style={{
+              width: "30px", height: "30px", borderRadius: "8px",
+              border: "1px solid #e0e0e0", background: "#fff",
+              cursor: page <= 1 ? "not-allowed" : "pointer",
+              opacity: page <= 1 ? 0.35 : 1, fontSize: "14px", color: "#555",
+            }}
+          >←</button>
+          <span style={{ fontSize: "11px", color: "#999" }}>{page} / {totalPages}</span>
+          <button
+            onClick={() => fetchBookmarks(page + 1)}
+            disabled={page >= totalPages}
+            style={{
+              width: "30px", height: "30px", borderRadius: "8px",
+              border: "1px solid #e0e0e0", background: "#fff",
+              cursor: page >= totalPages ? "not-allowed" : "pointer",
+              opacity: page >= totalPages ? 0.35 : 1, fontSize: "14px", color: "#555",
+            }}
+          >→</button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ── Main Component ──────────────────────────────────────────────────────────
 
 const MobileNav = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen]                     = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen]       = useState(false);
   const [activeProfileTab, setActiveProfileTab] = useState("profile");
-  const [user, setUser] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [avatarSeed, setAvatarSeed] = useState("felix");
-  const [avatarPage, setAvatarPage] = useState(0);
-  const [formData, setFormData] = useState({ fullName: "", username: "", email: "" });
+  const [user, setUser]                         = useState(null);
+  const [saving, setSaving]                     = useState(false);
+  const [avatarSeed, setAvatarSeed]             = useState("felix");
+  const [avatarPage, setAvatarPage]             = useState(0);
+  const [formData, setFormData]                 = useState({ fullName: "", username: "", email: "" });
 
   const dicebearUrl = (seed) =>
     `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(seed)}`;
@@ -140,10 +333,17 @@ const MobileNav = () => {
     setSaving(true);
     try {
       await new Promise(r => setTimeout(r, 900));
-      const changes = { full_name: formData.fullName, fullName: formData.fullName, username: formData.username, avatar: dicebearUrl(avatarSeed) };
+      const changes = {
+        full_name: formData.fullName,
+        fullName: formData.fullName,
+        username: formData.username,
+        avatar: dicebearUrl(avatarSeed),
+      };
       for (const s of [localStorage, sessionStorage]) {
         const raw = s.getItem("user");
-        if (raw) { try { s.setItem("user", JSON.stringify({ ...JSON.parse(raw), ...changes })); } catch {} }
+        if (raw) {
+          try { s.setItem("user", JSON.stringify({ ...JSON.parse(raw), ...changes })); } catch {}
+        }
       }
       setUser(prev => ({ ...prev, ...changes }));
     } finally {
@@ -190,14 +390,14 @@ const MobileNav = () => {
     .split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
   const collectionItems = [
-    { label: "Books", cat: "books" },
-    { label: "Sourcebooks", cat: "sourcebooks" },
-    { label: "Databases & Reports", cat: "databases & reports" },
-    { label: "Periodicals", cat: "periodicals" },
-    { label: "Thesis / Research Papers", cat: "thesis / research papers" },
-    { label: "Statute / Legal Documents", cat: "statute / law / legal documents" },
-    { label: "Guide / Manuals", cat: "guide / manuals" },
-    { label: "Reference Materials", cat: "reference materials" },
+    { label: "Books",                        cat: "books" },
+    { label: "Sourcebooks",                  cat: "sourcebooks" },
+    { label: "Databases & Reports",          cat: "databases & reports" },
+    { label: "Periodicals",                  cat: "periodicals" },
+    { label: "Thesis / Research Papers",     cat: "thesis / research papers" },
+    { label: "Statute / Legal Documents",    cat: "statute / law / legal documents" },
+    { label: "Guide / Manuals",              cat: "guide / manuals" },
+    { label: "Reference Materials",          cat: "reference materials" },
   ];
 
   const avatarSeeds = ["felix", "leo", "luna", "max", "mia", "nova", "ace", "zoe", "kai", "sam", "ivy", "rex"];
@@ -206,7 +406,7 @@ const MobileNav = () => {
   const ProfileSubPanel = () => (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
 
-      {/* Hero card — avatar picker lives here */}
+      {/* Hero card */}
       <div style={{ margin: "16px 16px 16px", background: "#f4f4f4", borderRadius: "16px", padding: "18px 20px", position: "relative", overflow: "hidden" }}>
 
         {/* Name + email row */}
@@ -220,7 +420,7 @@ const MobileNav = () => {
           </div>
         </div>
 
-        {/* Avatar picker row inside hero — 4 visible + sync */}
+        {/* Avatar picker row */}
         <div>
           <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: "700", color: "#aaa", letterSpacing: "0.8px", textTransform: "uppercase" }}>Choose avatar</p>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -239,7 +439,6 @@ const MobileNav = () => {
                 <img src={dicebearUrl(seed)} alt={seed} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </button>
             ))}
-            {/* Sync / next page button */}
             <button
               onClick={() => setAvatarPage(p => (p + 1) % Math.ceil(avatarSeeds.length / 4))}
               style={{
@@ -265,7 +464,7 @@ const MobileNav = () => {
       <div style={{ display: "flex", gap: "8px", margin: "0 16px 16px", background: "#f4f4f6", borderRadius: "12px", padding: "4px" }}>
         {[
           { id: "profile", label: "Profile", Icon: IconUser },
-          { id: "saved", label: "Saved", Icon: IconBookmark },
+          { id: "saved",   label: "Saved",   Icon: IconBookmark },
         ].map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -285,14 +484,13 @@ const MobileNav = () => {
         ))}
       </div>
 
-      {/* Content */}
+      {/* Tab content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
         {activeProfileTab === "profile" ? (
           <div>
             <p style={{ margin: "0 0 12px", fontSize: "11px", fontWeight: "700", color: "#bbb", letterSpacing: "0.8px", textTransform: "uppercase" }}>Account Info</p>
-
-            {/* Always-editable fields */}
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+
               {/* Full Name */}
               <div style={{ background: "#f4f4f4", borderRadius: "12px", padding: "12px 14px" }}>
                 <p style={{ margin: "0 0 5px", fontSize: "11px", color: "#888", fontWeight: "600", letterSpacing: "0.5px", textTransform: "uppercase" }}>Full Name</p>
@@ -327,70 +525,12 @@ const MobileNav = () => {
             </div>
           </div>
         ) : (
-          <div>
-            {/* Header row */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", marginBottom: "16px" }}>
-            </div>
-
-            {/* Filters row */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px", borderBottom: "1px solid #f0f0f0", paddingBottom: "14px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M4 6h16M7 12h10M10 18h4" stroke="#333" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-                <span style={{ fontSize: "14px", fontWeight: "500", color: "#333" }}>Filters</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <line x1="9" y1="6" x2="20" y2="6" stroke="#333" strokeWidth="2" strokeLinecap="round"/>
-                  <line x1="9" y1="12" x2="20" y2="12" stroke="#333" strokeWidth="2" strokeLinecap="round"/>
-                  <line x1="9" y1="18" x2="20" y2="18" stroke="#333" strokeWidth="2" strokeLinecap="round"/>
-                  <circle cx="4" cy="6" r="1.5" fill="#333"/>
-                  <circle cx="4" cy="12" r="1.5" fill="#333"/>
-                  <circle cx="4" cy="18" r="1.5" fill="#333"/>
-                </svg>
-                <span style={{ fontSize: "14px", fontWeight: "500", color: "#333" }}>All Lists</span>
-              </div>
-            </div>
-
-            {/* Empty state — Scribd-style folder illustration */}
-            <div style={{ textAlign: "center", padding: "0 12px 24px" }}>
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: "22px" }}>
-                <svg width="120" height="98" viewBox="0 0 120 98" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  {/* Folder body */}
-                  <rect x="6" y="32" width="88" height="58" rx="4" fill="none" stroke="#1a1a1a" strokeWidth="2.4"/>
-                  {/* Folder tab */}
-                  <path d="M6 32 Q6 22 15 22 L40 22 Q48 22 50 32" fill="none" stroke="#1a1a1a" strokeWidth="2.4" strokeLinejoin="round"/>
-                  {/* Lines inside */}
-                  <line x1="22" y1="52" x2="70" y2="52" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round"/>
-                  <line x1="22" y1="63" x2="56" y2="63" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round"/>
-                  {/* Dashed arc from top-right of folder */}
-                  <path d="M78 20 Q90 10 100 20" stroke="#1a1a1a" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="3.5 4.5" fill="none"/>
-                  {/* Pin/circle at end of arc */}
-                  <circle cx="100" cy="25" r="5.5" fill="none" stroke="#1a1a1a" strokeWidth="2.2"/>
-                  <circle cx="100" cy="25" r="2" fill="#1a1a1a"/>
-                </svg>
-              </div>
-
-              <p style={{ margin: "0 0 10px", fontSize: "17px", fontWeight: "800", color: "#111", letterSpacing: "-0.3px" }}>
-                Explore all you want to read
-              </p>
-              <p style={{ margin: "0 0 22px", fontSize: "13.5px", color: "#666", lineHeight: 1.55 }}>
-                Save your favorite titles, and access them easily.
-              </p>
-              <Link
-                href="/search"
-                onClick={closeMenu}
-                style={{ fontSize: "14px", fontWeight: "800", color: "#111", textDecoration: "none" }}
-              >
-                Explore Library
-              </Link>
-            </div>
-          </div>
+          /* ── Saved Tab ── */
+          <SavedTab closeMenu={closeMenu} />
         )}
       </div>
 
-      {/* Very bottom actions */}
+      {/* Bottom actions */}
       <div style={{ padding: "24px 16px 28px", display: "flex", flexDirection: "column", gap: "8px" }}>
         {activeProfileTab === "profile" && (
           <button
@@ -421,7 +561,7 @@ const MobileNav = () => {
 
   // ─── Nav Links ────────────────────────────────────────────────────────────
   const navItems = [
-    { label: "Home", href: "/", Icon: IconHome },
+    { label: "Home",   href: "/",       Icon: IconHome },
     { label: "Browse", href: "/search", Icon: IconSearch },
   ];
 
@@ -455,8 +595,7 @@ const MobileNav = () => {
         className="lg:hidden"
         style={{
           position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 50,
-          width: "100%",
-          background: "#fff",
+          width: "100%", background: "#fff",
           transform: isOpen ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.42s cubic-bezier(0.4, 0, 0.2, 1)",
           boxShadow: isOpen ? "-16px 0 60px rgba(0,0,0,0.14)" : "none",
@@ -465,7 +604,6 @@ const MobileNav = () => {
       >
         {/* Drawer Header */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", padding: "16px 20px 14px", borderBottom: "1px solid #f2f2f2" }}>
-          {/* Left — Back (only in account view) */}
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             {isProfileOpen && (
               <button
@@ -477,11 +615,9 @@ const MobileNav = () => {
               </button>
             )}
           </div>
-          {/* Center — title */}
           <span style={{ fontSize: "13px", fontWeight: "700", color: "#888", letterSpacing: "0.8px", textTransform: "uppercase", textAlign: "center" }}>
             {isProfileOpen ? "Account" : "Navigation"}
           </span>
-          {/* Right — plain X */}
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <button onClick={closeMenu} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <IconClose />
@@ -492,11 +628,11 @@ const MobileNav = () => {
         {/* Profile Sub-panel */}
         {user && isProfileOpen && <ProfileSubPanel />}
 
-        {/* Main content (when not in profile sub-panel) */}
+        {/* Main nav content */}
         {showNav && (
           <div style={{ padding: "16px 16px 28px", display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
 
-            {/* ── User Card (logged in) ── */}
+            {/* User card */}
             {user && (
               <button
                 onClick={() => setIsProfileOpen(true)}
@@ -518,7 +654,7 @@ const MobileNav = () => {
               </button>
             )}
 
-            {/* ── Login Card (guest) ── */}
+            {/* Login card (guest) */}
             {!user && (
               <div style={{ background: "#f4f4f4", borderRadius: "16px", padding: "18px", marginBottom: "8px" }}>
                 <p style={{ margin: "0 0 4px", fontSize: "15px", fontWeight: "700", color: "#111" }}>Welcome to the Library</p>
@@ -534,10 +670,10 @@ const MobileNav = () => {
               </div>
             )}
 
-            {/* ── Section Label ── */}
+            {/* Section label */}
             <p style={{ margin: "8px 4px 4px", fontSize: "11px", fontWeight: "700", color: "#bbb", letterSpacing: "0.8px", textTransform: "uppercase" }}>Menu</p>
 
-            {/* ── Nav Items ── */}
+            {/* Nav items */}
             {navItems.map(({ label, href, Icon }) => (
               <Link
                 key={href}
@@ -571,7 +707,6 @@ const MobileNav = () => {
                 <span style={{ flex: 1, fontSize: "14px", fontWeight: "600", color: "#111" }}>Collection</span>
                 <span style={{ color: "#aaa" }}><IconChevronDown open={isCollectionsOpen} /></span>
               </button>
-
               <div style={{ maxHeight: isCollectionsOpen ? "700px" : "0", overflow: "hidden", transition: "max-height 0.45s cubic-bezier(0.4,0,0.2,1)" }}>
                 {collectionItems.map((item, i) => (
                   <Link
@@ -603,7 +738,7 @@ const MobileNav = () => {
               <span style={{ color: "#ccc" }}><IconChevronRight /></span>
             </button>
 
-            {/* Log out — solid dark button at very bottom */}
+            {/* Logout */}
             {user && (
               <div style={{ marginTop: "auto", paddingTop: "16px" }}>
                 <button
@@ -621,7 +756,6 @@ const MobileNav = () => {
                 </button>
               </div>
             )}
-
           </div>
         )}
       </div>

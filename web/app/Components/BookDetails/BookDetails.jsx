@@ -5,19 +5,18 @@ import RelatedBooks from "./RelatedBooks";
 import Nav from "../Nav/Nav";
 import dynamic from "next/dynamic";
 import { BookOpen, Download, ZoomIn, ZoomOut, Sun, Moon, Columns, AlignJustify, Bookmark, BookmarkCheck } from "lucide-react";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
 
-pdfjs.GlobalWorkerOptions.workerSrc =
-  `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-
+const BookPreview = dynamic(
+  () => import("./BookPreview"),
+  { ssr: false }
+); 
 const FullScreenPDFReader = dynamic(
   () => import("../PDFReader/PDFReader"),
   { ssr: false }
 );
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 
 function getToken() {
   if (typeof window === "undefined") return null;
@@ -32,10 +31,6 @@ const ALL_CSS = `
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* ════════════════════════════════════
-     MODERN VIEWER — matches right panel
-  ════════════════════════════════════ */
-
   .bpv-root {
     display: flex; flex-direction: column;
     width: 100%; height: 100%; overflow: hidden;
@@ -43,7 +38,6 @@ const ALL_CSS = `
     border: 1.5px solid #f4f4f4;
   }
 
-  /* Toolbar — clean white bar with pill buttons */
   .bpv-toolbar {
     display: flex; align-items: center; gap: 4px;
     height: 48px; padding: 0 14px; flex-shrink: 0;
@@ -51,7 +45,6 @@ const ALL_CSS = `
     border-bottom: 1px solid #f4f4f4;
   }
 
-  /* Title in toolbar */
   .bpv-tb-title {
     flex: 1; font-size: 12px; font-weight: 500; color: rgb(18,18,18);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 8px;
@@ -59,13 +52,11 @@ const ALL_CSS = `
 
   .bpv-tb-sep { width: 1px; height: 16px; background: #e5e7eb; margin: 0 6px; flex-shrink: 0; }
 
-  /* Pill group wrapper for toggle buttons */
   .bpv-pill-group {
     display: flex; align-items: center;
     background: #f3f4f6; padding: 2px; gap: 1px;
   }
 
-  /* Individual toolbar icon button */
   .bpv-tb-btn {
     width: 28px; height: 28px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -77,13 +68,11 @@ const ALL_CSS = `
   .bpv-tb-btn:disabled { opacity: 0.3; cursor: default; }
   .bpv-tb-btn.active { background: #fff; color: rgb(18,18,18); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 
-  /* Zoom % badge */
   .bpv-zoom-pct {
     font-size: 11px; font-weight: 500; color: #6b7280;
     min-width: 34px; text-align: center; flex-shrink: 0;
   }
 
-  /* Canvas scroll area */
   .bpv-scroll {
     flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
     display: flex; flex-direction: column; align-items: center;
@@ -103,7 +92,6 @@ const ALL_CSS = `
   .bpv-scroll-inner::-webkit-scrollbar-track { background: rgba(0,0,0,0.12); border-radius: 3px; }
   .bpv-scroll-inner::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.35); border-radius: 3px; }
 
-  /* Pages */
   .bpv-spread { display: flex; align-items: flex-start; gap: 0; margin-bottom: 20px; }
   .bpv-spread-page {
     flex-shrink: 0; line-height: 0; background: #fff; position: relative;
@@ -128,7 +116,6 @@ const ALL_CSS = `
   .bpv-single .react-pdf__Page { display: block !important; }
   .bpv-single .react-pdf__Page canvas { display: block; }
 
-  /* CTA fade — softer white gradient */
   .bpv-last-fade {
     position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
     background: linear-gradient(to top, rgba(249,250,251,0.98) 50%, transparent);
@@ -146,7 +133,6 @@ const ALL_CSS = `
   }
   .bpv-cta-btn:hover { background: #333; }
 
-  /* Loading / error states */
   .bpv-state {
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 12px; padding: 80px 0; width: 100%;
@@ -160,7 +146,6 @@ const ALL_CSS = `
     animation: bd-spin 0.8s linear infinite;
   }
 
-  /* Bottom bar */
   .bpv-bottom {
     display: flex; align-items: center; gap: 8px;
     height: 44px; padding: 0 14px; flex-shrink: 0;
@@ -170,14 +155,12 @@ const ALL_CSS = `
   .bpv-pg-label b { font-weight: 600; color: rgb(18,18,18); }
   .bpv-bottom-sep { flex: 1; }
 
-  /* ── Preview wrapper sizing ── */
   .bp-preview-wrapper { width: 100%; min-height: 280px; height: 360px; }
   @media (min-width: 480px)  { .bp-preview-wrapper { height: 420px; } }
   @media (min-width: 640px)  { .bp-preview-wrapper { height: 500px; } }
   @media (min-width: 1024px) { .bp-preview-wrapper { height: 720px; } }
   @media (min-width: 1280px) { .bp-preview-wrapper { height: 800px; } }
 
-  /* ── Responsive layout ── */
   .bd-main-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -191,16 +174,13 @@ const ALL_CSS = `
     }
   }
 
-  /* Mobile page padding */
   .bd-page-wrap { max-width: 1700px; margin: 0 auto; padding: 20px 16px 48px; }
   @media (min-width: 640px)  { .bd-page-wrap { padding: 24px 24px 56px; } }
   @media (min-width: 1024px) { .bd-page-wrap { padding: 28px 32px 64px; } }
 
-  /* Mobile back button spacing */
   .bd-back-wrap { margin-bottom: 20px; }
   @media (min-width: 640px) { .bd-back-wrap { margin-bottom: 28px; } }
 
-  /* Title scales down on mobile */
   .bd-title {
     font-size: clamp(18px, 3vw, 26px);
     font-weight: 700; line-height: 1.15;
@@ -208,17 +188,14 @@ const ALL_CSS = `
     letter-spacing: -0.02em;
   }
 
-  /* Stats row wraps nicely on small screens */
   .bd-stats-row { display: flex; align-items: center; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
 
-  /* Actions stack on very small screens */
   .bd-actions { display: flex; gap: 8px; margin-bottom: 28px; }
   @media (max-width: 360px) {
     .bd-actions { flex-wrap: wrap; }
     .bd-btn-primary, .bd-btn-secondary { min-width: calc(50% - 4px); }
   }
 
-  /* Info rows readable on mobile */
   .bd-info-row {
     display: flex; align-items: baseline;
     justify-content: space-between; gap: 12px;
@@ -229,16 +206,12 @@ const ALL_CSS = `
     .bd-info-value { text-align: left; }
   }
 
-  /* Toolbar wraps on very narrow viewer */
   .bpv-toolbar { flex-wrap: nowrap; overflow: hidden; }
   .bpv-tb-title { min-width: 0; }
   @media (max-width: 480px) {
     .bpv-zoom-pct { display: none; }
   }
 
-  /* ════════════════════════════════════
-     MODERN RIGHT PANEL
-  ════════════════════════════════════ */
   .bd-panel {
     display: flex; flex-direction: column; min-width: 0;
     animation: bd-fade-up 0.3s ease both;
@@ -252,7 +225,6 @@ const ALL_CSS = `
   }
   .bd-back:hover { color: rgb(18,18,18); }
 
-  /* Genre pill */
   .bd-genre-pill {
     display: inline-flex; align-items: center;
     font-size: 11px; font-weight: 500; letter-spacing: 0.03em;
@@ -261,9 +233,6 @@ const ALL_CSS = `
     width: fit-content; align-self: flex-start; margin-bottom: 14px;
   }
 
-  /* Title — handled in responsive block below */
-
-  /* Byline */
   .bd-byline {
     font-size: 14px; color: #6b7280; margin-bottom: 18px;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -272,7 +241,6 @@ const ALL_CSS = `
   .bd-byline-dot { color: #d1d5db; }
   .bd-byline-year { color: #9ca3af; }
 
-  /* Stats, actions, info rows — see responsive block */
   .bd-stat-chip {
     display: inline-flex; align-items: center; gap: 5px;
     font-size: 12px; color: #6b7280;
@@ -288,7 +256,6 @@ const ALL_CSS = `
   .bd-avail.ok .bd-avail-dot  { background: #dc2626; }
   .bd-avail.no .bd-avail-dot  { background: #dc2626; }
 
-  /* Buttons */
   .bd-btn-primary {
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
     padding: 11px 0; background: #1e40af; color: #fff;
@@ -318,11 +285,10 @@ const ALL_CSS = `
     cursor: pointer; transition: all 0.15s;
   }
   .bd-btn-icon.on    { background: #fffbeb; color: #d97706; border-color: #fcd34d; }
+  .bd-btn-icon:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* Divider */
   .bd-divider { height: 1px; background: #f3f4f6; margin: 0 0 22px; }
 
-  /* Info section */
   .bd-info-section { margin-bottom: 24px; }
   .bd-info-heading {
     font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
@@ -334,7 +300,6 @@ const ALL_CSS = `
   .bd-info-value.mono { font-family: 'Courier New', monospace; font-size: 12px; }
   .bd-info-value.muted { color: #d1d5db; font-weight: 400; font-style: italic; }
 
-  /* Notes */
   .bd-notes-card {
     background: #fffbeb; border: 1px solid #f4f4f4;
     padding: 14px 16px;
@@ -353,255 +318,6 @@ function injectCss() {
   s.textContent = ALL_CSS;
   document.head.appendChild(s);
 }
-
-// ─── Theme tokens (viewer only) ───────────────────────────────────────────────
-const THEMES = {
-  dark: {
-    bg: "rgba(30,64,115,1)", toolbar: "rgba(22,50,92,1)", border: "1px solid rgba(15,38,72,1)", sep: "rgba(15,38,72,1)",
-    titleColor: "#fff", btnColor: "rgba(255,255,255,0.85)",
-    btnHoverBg: "rgba(255,255,255,0.2)", btnHoverColor: "#fff",
-    activeBg: "rgba(255,255,255,0.25)", activeColor: "#fff",
-    scrollBg: "rgba(30,64,115,1)", bottomBg: "rgba(22,50,92,1)", bottomBorder: "1px solid rgba(15,38,72,1)",
-    pgLabelColor: "rgba(255,255,255,0.8)", pgLabelBold: "#fff",
-    spinBorder: "rgba(15,38,72,1)", spinTop: "#fff",
-    stateColor: "#fff", scrollThumb: "rgba(255,255,255,0.55)", pctColor: "#fff",
-  },
-  light: {
-    bg: "#f0f4f8", toolbar: "#fff", border: "0.5px solid #d0e4f5", sep: "#d0e4f5",
-    titleColor: "rgb(18,18,18)", btnColor: "#7aaad0",
-    btnHoverBg: "#e8f2fc", btnHoverColor: "#1e6db5",
-    activeBg: "#ddeefa", activeColor: "#1e6db5",
-    scrollBg: "#edf3fa", bottomBg: "#fff", bottomBorder: "0.5px solid #e0eaf5",
-    pgLabelColor: "rgb(18,18,18)", pgLabelBold: "rgb(18,18,18)",
-    spinBorder: "#d0e4f5", spinTop: "#1e6db5",
-    stateColor: "rgb(18,18,18)", scrollThumb: "#b8d4ef", pctColor: "rgb(18,18,18)",
-  },
-};
-
-const PREVIEW_PAGES = 5;
-
-// ─── BookPreview ──────────────────────────────────────────────────────────────
-const BookPreview = ({ uploadId, title, onReadClick }) => {
-  const [blobUrl, setBlobUrl] = useState(null);
-  const [fetchStatus, setFetchStatus] = useState("idle");
-  const [numPages, setNumPages] = useState(null);
-  const [scale, setScale] = useState(0.65);
-  const [pdfError, setPdfError] = useState(false);
-  const [twoUp, setTwoUp] = useState(false);
-
-  const scrollRef = useRef(null);
-  const [areaW, setAreaW] = useState(0);
-
-  useEffect(() => {
-    if (!scrollRef.current) return;
-    const ro = new ResizeObserver(([e]) => setAreaW(e.contentRect.width));
-    ro.observe(scrollRef.current);
-    return () => ro.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!uploadId) {
-      setFetchStatus("error");
-      return;
-    }
-
-    let cancelled = false;
-    setFetchStatus("loading");
-
-    (async () => {
-      try {
-        const token = getToken();
-        const res = await fetch(`${API_BASE_URL}/api/uploads/${uploadId}/preview`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          credentials: "include",
-        });
-
-        if (!res.ok) throw new Error();
-
-        const blob = await res.blob();
-        if (cancelled) return;
-
-        setBlobUrl(URL.createObjectURL(blob));
-        setFetchStatus("done");
-      } catch {
-        if (!cancelled) setFetchStatus("error");
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      setBlobUrl(prev => {
-        if (prev) URL.revokeObjectURL(prev);
-        return null;
-      });
-    };
-  }, [uploadId]);
-
-  const clamp = s => Math.min(Math.max(s, 0.4), 2);
-
-  const baseW = areaW > 0 ? areaW - 40 : 700;
-  const pageW = twoUp ? Math.floor((baseW - 4) / 2) : baseW;
-  const scaledW = Math.round(pageW * clamp(scale));
-
-  const totalPrev = numPages ? Math.min(5, numPages) : 0;
-
-  return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      height: "100%",
-      background: "#e8e8e8",
-    }}>
-
-      {/* ───────── Toolbar ───────── */}
-      <div style={{
-        height: 42,
-        padding: "0 12px",
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        background: "rgba(255,255,255,0.7)",
-        backdropFilter: "blur(8px)",
-        borderBottom: "1px solid #f4f4f4"
-      }}>
-        <span style={{
-          flex: 1,
-          fontSize: 12,
-          color: "#111",
-          opacity: 0.6,
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-          textOverflow: "ellipsis"
-        }}>
-          {title}
-        </span>
-
-        <button onClick={() => setTwoUp(false)}>
-          <AlignJustify size={12} strokeWidth={1.5} />
-        </button>
-
-        <button onClick={() => setTwoUp(true)}>
-          <Columns size={12} strokeWidth={1.5} />
-        </button>
-
-        <button onClick={() => setScale(s => clamp(s - 0.1))}>
-          <ZoomOut size={12} strokeWidth={1.5} />
-        </button>
-
-        <span style={{ fontSize: 11, color: "#9ca3af" }}>
-          {Math.round(scale * 100)}%
-        </span>
-
-        <button onClick={() => setScale(s => clamp(s + 0.1))}>
-          <ZoomIn size={12} strokeWidth={1.5} />
-        </button>
-      </div>
-
-      {/* ───────── Scroll Area ───────── */}
-      <div
-        ref={scrollRef}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          display: "flex",
-          justifyContent: "center",
-          padding: "50px 0 80px",
-        }}
-      >
-        <div style={{
-          width: "100%",
-          maxWidth: 900,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center"
-        }}>
-
-          {(fetchStatus === "loading") && (
-            <div style={{ marginTop: 100, color: "#999" }}>
-              Loading preview...
-            </div>
-          )}
-
-          {(fetchStatus === "error" || pdfError) && (
-            <div style={{ marginTop: 100, color: "#999" }}>
-              Preview unavailable
-            </div>
-          )}
-
-          {blobUrl && (
-            <Document
-              file={blobUrl}
-              onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-              onLoadError={() => setPdfError(true)}
-            >
-              {Array.from({ length: totalPrev }, (_, i) => i + 1).map(n => (
-                <div
-                  key={n}
-                  style={{
-                    marginBottom: 32,
-                    background: "#fff",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-                    transition: "0.2s"
-                  }}
-                >
-                  <Page
-                    pageNumber={n}
-                    width={scaledW}
-                    renderTextLayer={false}
-                    renderAnnotationLayer={false}
-                  />
-
-                  {n === totalPrev && numPages > 5 && (
-                    <div style={{
-                      position: "relative",
-                      height: 120,
-                      marginTop: -120,
-                      background: "linear-gradient(to top, white, transparent)",
-                      display: "flex",
-                      alignItems: "flex-end",
-                      justifyContent: "center",
-                      paddingBottom: 20
-                    }}>
-                      <button
-                        onClick={onReadClick}
-                        style={{
-                          padding: "8px 18px",
-                          borderRadius: 999,
-                          background: "#111",
-                          color: "#fff",
-                          border: "none",
-                          fontSize: 12,
-                          cursor: "pointer"
-                        }}
-                      >
-                        Read Full Book
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </Document>
-          )}
-        </div>
-      </div>
-
-      {/* ───────── Bottom ───────── */}
-      <div style={{
-        height: 40,
-        display: "flex",
-        alignItems: "center",
-        padding: "0 12px",
-        background: "rgba(255,255,255,0.7)",
-        borderTop: "1px solid #f4f4f4"
-      }}>
-        <span style={{ fontSize: 11, color: "#9ca3af" }}>
-          {totalPrev} pages preview
-        </span>
-      </div>
-
-    </div>
-  );
-};
 
 // ─── InfoRow helper ───────────────────────────────────────────────────────────
 function InfoRow({ label, value, mono }) {
@@ -623,10 +339,16 @@ const BookDetails = ({ bookId }) => {
   const [showReader,    setShowReader]    = useState(false);
   const [downloadCount, setDownloadCount] = useState(null);
   const [downloading,   setDownloading]   = useState(false);
-  const [bookmarked,    setBookmarked]    = useState(false);
+
+  // ── Bookmark state ──────────────────────────────────────────────────────────
+  const [bookmarked,        setBookmarked]        = useState(false);
+  const [bookmarkLoading,   setBookmarkLoading]   = useState(false); // checking on mount
+  const [bookmarkToggling,  setBookmarkToggling]  = useState(false); // during add/remove
+  // ───────────────────────────────────────────────────────────────────────────
 
   useEffect(() => { injectCss(); }, []);
 
+  // ── Fetch book details ──────────────────────────────────────────────────────
   useEffect(() => {
     const fetchBook = async () => {
       if (!bookId) return;
@@ -653,6 +375,69 @@ const BookDetails = ({ bookId }) => {
     fetchBook();
   }, [bookId]);
 
+  // ── Check bookmark status on mount (only if logged in) ─────────────────────
+  useEffect(() => {
+    if (!bookId) return;
+    const token = getToken();
+    if (!token) return; // not logged in — leave bookmark button visible but inactive
+
+    const checkBookmark = async () => {
+      setBookmarkLoading(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/bookmarks/${bookId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return; // fail silently — don't break the page
+        const data = await res.json();
+        setBookmarked(data.bookmarked);
+      } catch {
+        // fail silently
+      } finally {
+        setBookmarkLoading(false);
+      }
+    };
+
+    checkBookmark();
+  }, [bookId]);
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // ── Toggle bookmark ─────────────────────────────────────────────────────────
+  const handleBookmark = async () => {
+    const token = getToken();
+    if (!token || bookmarkToggling) return;
+
+    setBookmarkToggling(true);
+    try {
+      if (bookmarked) {
+        // DELETE /api/bookmarks/:book_id
+        const res = await fetch(`${API_BASE_URL}/api/bookmarks/${bookId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error();
+        setBookmarked(false);
+      } else {
+        // POST /api/bookmarks/:book_id
+        const res = await fetch(`${API_BASE_URL}/api/bookmarks/${bookId}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.status === 409) {
+          // Already bookmarked on server — sync state
+          setBookmarked(true);
+          return;
+        }
+        if (!res.ok) throw new Error();
+        setBookmarked(true);
+      }
+    } catch {
+      // fail silently — button reverts to previous state automatically
+    } finally {
+      setBookmarkToggling(false);
+    }
+  };
+  // ───────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     document.body.style.overflow = showReader ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -663,7 +448,7 @@ const BookDetails = ({ bookId }) => {
     setDownloading(true);
     try {
       const token = getToken();
-      const res   = await fetch(`${API_BASE_URL}/api/uploads/${book.upload.id}/download`, {
+      const res = await fetch(`${API_BASE_URL}/api/uploads/${book.upload.id}/download`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -721,6 +506,9 @@ const BookDetails = ({ bookId }) => {
     ? new Date(book.date_of_publication).toLocaleDateString("en-US", { year: "numeric", month: "short" })
     : null;
 
+  const isLoggedIn         = !!getToken();
+  const bookmarkDisabled   = !isLoggedIn || bookmarkLoading || bookmarkToggling;
+
   return (
     <>
       <Nav />
@@ -730,46 +518,36 @@ const BookDetails = ({ bookId }) => {
           {/* Back */}
           <div className="bd-back-wrap">
             <button className="bd-back" onClick={() => window.history.back()}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" strokeWidth="2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               Back to Books
             </button>
           </div>
 
-          {/* Main grid — 1 col mobile, 3fr/2fr on lg+ */}
+          {/* Main grid */}
           <div className="bd-main-grid">
 
             {/* Left: PDF Preview */}
             <div style={{ minWidth: 0, width: "100%" }}>
               {uploadId ? (
                 <div className="bp-preview-wrapper" style={{ overflow: "hidden" }}>
-                  <BookPreview
-                    uploadId={uploadId}
-                    title={book.title}
-                    onReadClick={() => setShowReader(true)}
-                  />
+                  <BookPreview uploadId={uploadId} title={book.title} onReadClick={() => setShowReader(true)} />
                 </div>
               ) : (
-                <div style={{ width: "100%", aspectRatio: "1.35/1", overflow: "hidden",
-                  border: "1px solid #e5e7eb", background: "#f9fafb" }}>
-                  <img src={coverImage} alt={book.title}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <div style={{ width: "100%", aspectRatio: "1.35/1", overflow: "hidden", border: "1px solid #e5e7eb", background: "#f9fafb" }}>
+                  <img src={coverImage} alt={book.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
               )}
             </div>
 
-            {/* Right: Modern panel */}
+            {/* Right: panel */}
             <div className="bd-panel">
 
-              {/* Genre pill */}
               <span className="bd-genre-pill">{book.category || "Books"}</span>
 
-              {/* Title */}
               <h1 className="bd-title">{book.title}</h1>
 
-              {/* Author + year */}
               <div className="bd-byline">
                 <span className="bd-byline-author">{book.author || "Unknown Author"}</span>
                 {pubYear && (
@@ -780,13 +558,11 @@ const BookDetails = ({ bookId }) => {
                 )}
               </div>
 
-              {/* Stats */}
               <div className="bd-stats-row">
                 <span className={`bd-avail ${isAvailable ? "ok" : "no"}`}>
                   <span className="bd-avail-dot" />
                   {isAvailable ? "Available" : "Unavailable"}
                 </span>
-
                 {book.copies != null && (
                   <span className="bd-stat-chip">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -796,14 +572,12 @@ const BookDetails = ({ bookId }) => {
                     {book.copies} {book.copies === 1 ? "copy" : "copies"}
                   </span>
                 )}
-
                 {downloadCount != null && downloadCount > 0 && (
                   <span className="bd-stat-chip">
                     <Download size={12} />
                     {downloadCount.toLocaleString()}
                   </span>
                 )}
-
                 {book.upload?.file_type && (
                   <span className="bd-stat-chip">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -817,27 +591,39 @@ const BookDetails = ({ bookId }) => {
 
               {/* Actions */}
               <div className="bd-actions">
-                <button onClick={() => setShowReader(true)} disabled={!uploadId}
-                  className="bd-btn-primary">
+                <button onClick={() => setShowReader(true)} disabled={!uploadId} className="bd-btn-primary">
                   <BookOpen size={15} /> Read
                 </button>
-                <button onClick={handleDownloadBook} disabled={!uploadId || downloading}
-                  className="bd-btn-secondary">
+                <button onClick={handleDownloadBook} disabled={!uploadId || downloading} className="bd-btn-secondary">
                   {downloading ? (
                     <>
-                      <div style={{ width: 14, height: 14, border: "2px solid #e5e7eb",
-                        borderTopColor: "rgb(18,18,18)", borderRadius: "50%",
-                        animation: "bd-spin 0.9s linear infinite" }} />
+                      <div style={{ width: 14, height: 14, border: "2px solid #e5e7eb", borderTopColor: "rgb(18,18,18)", borderRadius: "50%", animation: "bd-spin 0.9s linear infinite" }} />
                       Saving…
                     </>
                   ) : (
                     <><Download size={15} /> Download</>
                   )}
                 </button>
-                <button onClick={() => setBookmarked(b => !b)}
+
+                {/* ── Bookmark button — now wired to API ── */}
+                <button
+                  onClick={handleBookmark}
+                  disabled={bookmarkDisabled}
                   className={`bd-btn-icon ${bookmarked ? "on" : ""}`}
-                  title={bookmarked ? "Remove bookmark" : "Bookmark"}>
-                  {bookmarked ? <BookmarkCheck size={17} /> : <Bookmark size={17} />}
+                  title={
+                    !isLoggedIn        ? "Log in to bookmark" :
+                    bookmarkLoading    ? "Checking…" :
+                    bookmarkToggling   ? (bookmarked ? "Removing…" : "Saving…") :
+                    bookmarked         ? "Remove bookmark" : "Bookmark"
+                  }
+                >
+                  {bookmarkToggling ? (
+                    <div style={{ width: 14, height: 14, border: "2px solid #e5e7eb", borderTopColor: bookmarked ? "#d97706" : "rgb(18,18,18)", borderRadius: "50%", animation: "bd-spin 0.9s linear infinite" }} />
+                  ) : bookmarked ? (
+                    <BookmarkCheck size={17} />
+                  ) : (
+                    <Bookmark size={17} />
+                  )}
                 </button>
               </div>
 
@@ -872,7 +658,6 @@ const BookDetails = ({ bookId }) => {
                 )}
               </div>
 
-              {/* Notes */}
               {book.notes && (
                 <div className="bd-notes-card">
                   <div className="bd-notes-card-label">Notes</div>
