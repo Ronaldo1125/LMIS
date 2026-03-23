@@ -136,6 +136,7 @@ const SavedTab = ({ closeMenu }) => {
     } catch {}
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchBookmarks(1); }, []);
 
   /* Loading */

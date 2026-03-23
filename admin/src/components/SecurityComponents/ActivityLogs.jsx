@@ -107,7 +107,7 @@ const ActivityLogs = ({ dark }) => {
   }, [debouncedSearch, filterAction, dateFrom, dateTo, pagination.limit])
 
   // Reset to page 1 whenever filters change
-  useEffect(() => { fetchLogs(1) }, [debouncedSearch, filterAction, dateFrom, dateTo])
+  useEffect(() => { fetchLogs(1) }, [debouncedSearch, filterAction, dateFrom, dateTo, fetchLogs])
 
   const clearFilters = () => {
     setSearchTerm('')
@@ -130,7 +130,7 @@ const ActivityLogs = ({ dark }) => {
         const json = await res.json()
         exportRows = (json.data ?? []).map(normaliseLog)
       }
-    } catch {}
+    } catch { /* empty */ }
 
     const csv = [
       ['Timestamp', 'User', 'Action', 'Type', 'IP Address', 'Details'].join(','),
@@ -508,6 +508,7 @@ const TypeOption = ({ label, active, onClick, dark, textPrimary }) => {
   )
 }
 
+// eslint-disable-next-line no-unused-vars
 const ActionButton = ({ onClick, icon: Icon, label, variant, dark, inputBg, border, textSecondary }) => {
   const [hover, setHover] = useState(false)
   const c = variant === 'primary'
