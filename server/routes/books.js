@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/connection');
 const { authMiddleware, roleMiddleware, optionalAuthMiddleware } = require('../middleware/auth');
+const { logActivity } = require('../utils/activityLogger');
 
 // Helper function to format dates
 const formatDateForResponse = (book) => {
@@ -248,7 +249,7 @@ router.patch('/:id/archive', authMiddleware, roleMiddleware('admin', 'librarian'
     const { reason } = req.body;
 
     const [existingBook] = await pool.query(
-      'SELECT id, is_archived, is_accessioned FROM books WHERE id = ?',
+      'SELECT id, title, is_archived, is_accessioned FROM books WHERE id = ?',
       [req.params.id]
     );
 
@@ -276,6 +277,16 @@ router.patch('/:id/archive', authMiddleware, roleMiddleware('admin', 'librarian'
       [req.user.email || req.user.username, reason || null, req.params.id]
     );
 
+    await logActivity(req, {
+      action: 'ARCHIVE_BOOK',
+      entityType: 'book',
+      entityId: req.params.id,
+      entityLabel: existingBook[0].title,
+      description: `"${existingBook[0].title}" was archived by ${req.user.full_name ?? req.user.username}${reason ? ` — reason: ${reason}` : ''}.`,
+      metadata: { reason: reason ?? null },
+      status: 'success',
+    });
+
     res.json({ message: 'Book archived successfully' });
   } catch (error) {
     console.error('Error archiving book:', error);
@@ -287,7 +298,7 @@ router.patch('/:id/archive', authMiddleware, roleMiddleware('admin', 'librarian'
 router.patch('/:id/unarchive', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   try {
     const [existingBook] = await pool.query(
-      'SELECT id, is_archived FROM books WHERE id = ?',
+      'SELECT id, title, is_archived FROM books WHERE id = ?',
       [req.params.id]
     );
 
@@ -309,6 +320,15 @@ router.patch('/:id/unarchive', authMiddleware, roleMiddleware('admin', 'libraria
       [req.params.id]
     );
 
+    await logActivity(req, {
+      action: 'UNARCHIVE_BOOK',
+      entityType: 'book',
+      entityId: req.params.id,
+      entityLabel: existingBook[0].title,
+      description: `"${existingBook[0].title}" was unarchived by ${req.user.full_name ?? req.user.username}.`,
+      status: 'success',
+    });
+
     res.json({ message: 'Book unarchived successfully' });
   } catch (error) {
     console.error('Error unarchiving book:', error);
@@ -329,7 +349,7 @@ router.patch('/:id/access-level', authMiddleware, roleMiddleware('admin', 'libra
     }
 
     const [existingBook] = await pool.query(
-      'SELECT id FROM books WHERE id = ?',
+      'SELECT id, title, access_level FROM books WHERE id = ?',
       [req.params.id]
     );
 
@@ -341,6 +361,16 @@ router.patch('/:id/access-level', authMiddleware, roleMiddleware('admin', 'libra
       'UPDATE books SET access_level = ? WHERE id = ?',
       [access_level, req.params.id]
     );
+
+    await logActivity(req, {
+      action: 'UPDATE_ACCESS_LEVEL',
+      entityType: 'book',
+      entityId: req.params.id,
+      entityLabel: existingBook[0].title,
+      description: `Access level for "${existingBook[0].title}" changed from "${existingBook[0].access_level}" to "${access_level}" by ${req.user.full_name ?? req.user.username}.`,
+      metadata: { before: existingBook[0].access_level, after: access_level },
+      status: 'success',
+    });
 
     res.json({ message: `Book access level updated to '${access_level}'` });
   } catch (error) {
@@ -541,10 +571,35 @@ router.post('/', authMiddleware, roleMiddleware('admin', 'librarian'), async (re
       ]
     );
 
+    await logActivity(req, {
+      action: 'CREATE_BOOK',
+      entityType: 'book',
+      entityId: result.insertId,
+      entityLabel: title.trim(),
+      description: `"${title.trim()}" was created by ${req.user.full_name ?? req.user.username} (category: ${category.trim()}).`,
+      metadata: {
+        category: category.trim(),
+        call_number: call_number || null,
+        author: author || null,
+        isbn: isbn || null,
+        copies: copies || 1,
+        access_level,
+      },
+      status: 'success',
+    });
+
     res.status(201).json({ message: 'Book created successfully', bookId: result.insertId });
   } catch (error) {
     console.error('Error creating book:', error);
     if (error.code === 'ER_DUP_ENTRY') {
+      await logActivity(req, {
+        action: 'CREATE_BOOK',
+        entityType: 'book',
+        entityLabel: req.body.title?.trim() ?? null,
+        description: `Failed to create "${req.body.title?.trim()}" — duplicate ISBN (${req.body.isbn}).`,
+        metadata: { isbn: req.body.isbn },
+        status: 'failure',
+      });
       return res.status(409).json({ message: 'Book with this ISBN already exists' });
     }
     res.status(500).json({ message: 'Error creating book' });
@@ -562,7 +617,7 @@ router.put('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (
     } = req.body;
 
     const [existingBook] = await pool.query(
-      'SELECT id, is_accessioned, access_level FROM books WHERE id = ?',
+      'SELECT id, title, is_accessioned, access_level FROM books WHERE id = ?',
       [req.params.id]
     );
 
@@ -611,18 +666,41 @@ router.put('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (
       ]
     );
 
+    await logActivity(req, {
+      action: 'UPDATE_BOOK',
+      entityType: 'book',
+      entityId: req.params.id,
+      entityLabel: title.trim(),
+      description: `"${existingBook[0].title}" was updated by ${req.user.full_name ?? req.user.username}${existingBook[0].title !== title.trim() ? ` (renamed to "${title.trim()}")` : ''}.`,
+      metadata: {
+        before: {
+          title: existingBook[0].title,
+          access_level: existingBook[0].access_level,
+        },
+        after: {
+          title: title.trim(),
+          category: category.trim(),
+          call_number: call_number || null,
+          author: author || null,
+          isbn: isbn || null,
+          copies: copies || 1,
+          access_level: resolvedAccessLevel,
+        },
+      },
+      status: 'success',
+    });
+
     res.json({ message: 'Book updated successfully' });
   } catch (error) {
     console.error('Error updating book:', error);
     res.status(500).json({ message: 'Error updating book' });
   }
 });
-
 // ─── Delete book ───────────────────────────────────────────────────────────────
 router.delete('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   try {
     const [existingBook] = await pool.query(
-      'SELECT id, is_accessioned FROM books WHERE id = ?',
+      'SELECT id, title, is_accessioned FROM books WHERE id = ?',
       [req.params.id]
     );
 
@@ -641,6 +719,15 @@ router.delete('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), asyn
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Book not found' });
     }
+
+    await logActivity(req, {
+      action: 'DELETE_BOOK',
+      entityType: 'book',
+      entityId: req.params.id,
+      entityLabel: existingBook[0].title,
+      description: `"${existingBook[0].title}" (ID: ${req.params.id}) was permanently deleted by ${req.user.full_name ?? req.user.username}.`,
+      status: 'success',
+    });
 
     res.json({ message: 'Book deleted successfully' });
   } catch (error) {

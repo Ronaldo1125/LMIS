@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const pool = require('../config/connection');
 const { authMiddleware } = require('../middleware/auth');
+const { logActivity } = require('../utils/activityLogger');
 
 const router = express.Router();
 
@@ -110,437 +111,700 @@ router.get(
     }
   }
 );
-/**
- * Create Staff
- * POST /adminpanel-users/staff
- */
-router.post(
-  '/staff',
-  authMiddleware,
-  requireAdmin,
-  async (req, res) => {
-    try {
-      const { username, password, full_name } = req.body;
-
-      if (!username || !password || !full_name) {
-        return res.status(400).json({
-          message: 'Username, password, and full name are required'
-        });
-      }
-
-      const passwordHash = await bcrypt.hash(password, 10);
-
-      const [result] = await pool.query(
-        `
-        INSERT INTO adminpanel_users
-        (username, password_hash, full_name, role, is_active)
-        VALUES (?, ?, ?, 'staff', TRUE)
-        `,
-        [username, passwordHash, full_name]
-      );
-
-      res.status(201).json({
-        message: 'Staff created successfully',
-        staff: {
-          id: result.insertId,
-          username,
-          full_name,
-          role: 'staff'
-        }
-      });
-    } catch (error) {
-      if (error.code === 'ER_DUP_ENTRY') {
-        return res.status(409).json({
-          message: 'Username already exists'
-        });
-      }
-
-      console.error('Create staff error:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  }
-);
-/**
- * Create Librarian
- * POST /adminpanel-users/librarians
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// Create Librarian
+// POST /api/adminpanel-users/librarians
+// ─────────────────────────────────────────────────────────────────────────────
 router.post(
   '/librarians',
   authMiddleware,
   requireAdmin,
   async (req, res) => {
+    const { username, password, full_name } = req.body;
+ 
+    if (!username || !password || !full_name) {
+      await logActivity(req, {
+        action:      'CREATE_LIBRARIAN',
+        entityType:  'adminpanel_user',
+        description: `Failed to create librarian — missing required fields`,
+        metadata:    { provided_fields: Object.keys(req.body) },
+        status:      'failure',
+      });
+      return res.status(400).json({
+        message: 'Username, password, and full name are required',
+      });
+    }
+ 
     try {
-      const { username, password, full_name } = req.body;
-
-      if (!username || !password || !full_name) {
-        return res.status(400).json({
-          message: 'Username, password, and full name are required'
-        });
-      }
-
       const passwordHash = await bcrypt.hash(password, 10);
-
-      // New librarians are created as inactive by default
+ 
       const [result] = await pool.query(
-        `
-        INSERT INTO adminpanel_users
-        (username, password_hash, full_name, role, is_active)
-        VALUES (?, ?, ?, 'librarian', FALSE)
-        `,
+        `INSERT INTO adminpanel_users (username, password_hash, full_name, role, is_active)
+         VALUES (?, ?, ?, 'librarian', FALSE)`,
         [username, passwordHash, full_name]
       );
-
+ 
+      await logActivity(req, {
+        action:      'CREATE_LIBRARIAN',
+        entityType:  'adminpanel_user',
+        entityId:    result.insertId,
+        entityLabel: full_name,
+        description: `Created librarian account "${full_name}" (username: ${username}). Account starts inactive.`,
+        metadata:    {
+          new_user: {
+            id:        result.insertId,
+            username,
+            full_name,
+            role:      'librarian',
+            is_active: false,
+          },
+        },
+      });
+ 
       res.status(201).json({
         message: 'Librarian created successfully',
         librarian: {
           id: result.insertId,
           username,
           full_name,
-          role: 'librarian',
-          is_active: false
-        }
+          role:      'librarian',
+          is_active: false,
+        },
       });
     } catch (error) {
       if (error.code === 'ER_DUP_ENTRY') {
-        return res.status(409).json({
-          message: 'Username already exists'
+        await logActivity(req, {
+          action:      'CREATE_LIBRARIAN',
+          entityType:  'adminpanel_user',
+          description: `Failed to create librarian — username "${username}" already exists`,
+          metadata:    { username, full_name, conflict: 'duplicate_username' },
+          status:      'failure',
         });
+        return res.status(409).json({ message: 'Username already exists' });
       }
-
+ 
+      await logActivity(req, {
+        action:      'CREATE_LIBRARIAN',
+        entityType:  'adminpanel_user',
+        description: `Server error while creating librarian "${username}"`,
+        metadata:    { username, full_name, error: error.message },
+        status:      'failure',
+      });
       console.error('Create librarian error:', error);
       res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
-/**
- * Reset user password
- * PUT /adminpanel-users/:id/reset-password
- */
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Reset user password
+// PUT /api/adminpanel-users/:id/reset-password
+// ─────────────────────────────────────────────────────────────────────────────
 router.put(
   '/:id/reset-password',
   authMiddleware,
   requireAdmin,
   async (req, res) => {
+    const { id } = req.params;
+    const { password } = req.body;
+ 
+    if (!password) {
+      await logActivity(req, {
+        action:      'RESET_PASSWORD',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Failed password reset for user ID ${id} — no password provided`,
+        status:      'failure',
+      });
+      return res.status(400).json({ message: 'Password is required' });
+    }
+ 
     try {
-      const { id } = req.params;
-      const { password } = req.body;
-
-      if (!password) {
-        return res.status(400).json({
-          message: 'Password is required'
-        });
-      }
-
+      // Fetch target user for logging context
+      const [[targetUser]] = await pool.query(
+        'SELECT id, username, full_name, role FROM adminpanel_users WHERE id = ?',
+        [id]
+      );
+ 
       const passwordHash = await bcrypt.hash(password, 10);
-
+ 
       const [result] = await pool.query(
         'UPDATE adminpanel_users SET password_hash = ? WHERE id = ? AND role != "admin"',
         [passwordHash, id]
       );
-
+ 
       if (result.affectedRows === 0) {
+        await logActivity(req, {
+          action:      'RESET_PASSWORD',
+          entityType:  'adminpanel_user',
+          entityId:    id,
+          description: `Password reset failed — user ID ${id} not found or is an admin account`,
+          metadata:    { target_id: id },
+          status:      'failure',
+        });
         return res.status(404).json({
-          message: 'User not found or cannot reset admin password'
+          message: 'User not found or cannot reset admin password',
         });
       }
-
+ 
+      await logActivity(req, {
+        action:      'RESET_PASSWORD',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        entityLabel: targetUser?.full_name ?? `User #${id}`,
+        description: `Admin reset password for "${targetUser?.full_name ?? `User #${id}`}" (username: ${targetUser?.username ?? 'unknown'}, role: ${targetUser?.role ?? 'unknown'})`,
+        metadata:    {
+          target: {
+            id,
+            username:  targetUser?.username,
+            full_name: targetUser?.full_name,
+            role:      targetUser?.role,
+          },
+          reset_by: { id: req.user.id, full_name: req.user.full_name },
+        },
+      });
+ 
       res.json({ message: 'Password reset successfully' });
     } catch (error) {
+      await logActivity(req, {
+        action:      'RESET_PASSWORD',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Server error during password reset for user ID ${id}`,
+        metadata:    { error: error.message },
+        status:      'failure',
+      });
       console.error('Reset password error:', error);
       res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
-/**
- * Deactivate user account
- * PUT /adminpanel-users/:id/deactivate
- */
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Deactivate user account
+// PUT /api/adminpanel-users/:id/deactivate
+// ─────────────────────────────────────────────────────────────────────────────
 router.put(
   '/:id/deactivate',
   authMiddleware,
   requireAdmin,
   async (req, res) => {
+    const { id } = req.params;
+ 
     try {
-      const { id } = req.params;
-
-      const [result] = await pool.query(
-        'UPDATE adminpanel_users SET is_active = FALSE WHERE id = ? AND role = "patron"',
+      const [[targetUser]] = await pool.query(
+        'SELECT id, username, full_name, role, is_active FROM adminpanel_users WHERE id = ?',
         [id]
       );
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          message: 'Patron not found'
+ 
+      if (!targetUser) {
+        await logActivity(req, {
+          action:      'DEACTIVATE_USER',
+          entityType:  'adminpanel_user',
+          entityId:    id,
+          description: `Deactivation failed — user ID ${id} not found`,
+          status:      'failure',
         });
+        return res.status(404).json({ message: 'User not found' });
       }
-
+ 
+      if (targetUser.role !== 'librarian') {
+        await logActivity(req, {
+          action:      'DEACTIVATE_USER',
+          entityType:  'adminpanel_user',
+          entityId:    id,
+          entityLabel: targetUser.full_name,
+          description: `Deactivation rejected — "${targetUser.full_name}" is not a librarian (role: ${targetUser.role})`,
+          metadata:    { target: targetUser },
+          status:      'failure',
+        });
+        return res.status(400).json({ message: 'Only librarian accounts can be deactivated' });
+      }
+ 
+      if (!targetUser.is_active) {
+        return res.status(400).json({ message: 'Account is already inactive' });
+      }
+ 
+      await pool.query(
+        'UPDATE adminpanel_users SET is_active = FALSE WHERE id = ? AND role = "librarian"',
+        [id]
+      );
+ 
+      await logActivity(req, {
+        action:      'DEACTIVATE_USER',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        entityLabel: targetUser.full_name,
+        description: `Deactivated librarian account "${targetUser.full_name}" (username: ${targetUser.username})`,
+        metadata:    {
+          target:    { id, username: targetUser.username, full_name: targetUser.full_name, role: targetUser.role },
+          before:    { is_active: true },
+          after:     { is_active: false },
+          action_by: { id: req.user.id, full_name: req.user.full_name },
+        },
+      });
+ 
       res.json({ message: 'Account deactivated successfully' });
     } catch (error) {
+      await logActivity(req, {
+        action:      'DEACTIVATE_USER',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Server error while deactivating user ID ${id}`,
+        metadata:    { error: error.message },
+        status:      'failure',
+      });
       console.error('Deactivate account error:', error);
       res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
-/**
- * Set active librarian
- * PUT /adminpanel-users/:id/set-active-librarian
- */
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Set active librarian (deactivates all others)
+// PUT /api/adminpanel-users/:id/set-active-librarian
+// ─────────────────────────────────────────────────────────────────────────────
 router.put(
   '/:id/set-active-librarian',
   authMiddleware,
   requireAdmin,
   async (req, res) => {
+    const { id } = req.params;
+ 
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+ 
     try {
-      const { id } = req.params;
-
-      // Start transaction
-      const connection = await pool.getConnection();
-      await connection.beginTransaction();
-
-      try {
-        // First, verify the user is a librarian
-        const [user] = await connection.query(
-          'SELECT id, role FROM adminpanel_users WHERE id = ?',
-          [id]
-        );
-
-        if (user.length === 0 || user[0].role !== 'librarian') {
-          await connection.rollback();
-          connection.release();
-          return res.status(400).json({
-            message: 'User is not a librarian'
-          });
-        }
-
-        // Deactivate all librarians
-        await connection.query(
-          'UPDATE adminpanel_users SET is_active = FALSE WHERE role = "librarian"'
-        );
-
-        // Activate the selected librarian
-        await connection.query(
-          'UPDATE adminpanel_users SET is_active = TRUE WHERE id = ? AND role = "librarian"',
-          [id]
-        );
-
-        await connection.commit();
-        connection.release();
-
-        res.json({ message: 'Active librarian set successfully' });
-      } catch (error) {
+      const [[targetUser]] = await connection.query(
+        'SELECT id, username, full_name, role, is_active FROM adminpanel_users WHERE id = ?',
+        [id]
+      );
+ 
+      if (!targetUser || targetUser.role !== 'librarian') {
         await connection.rollback();
         connection.release();
-        throw error;
+ 
+        await logActivity(req, {
+          action:      'SET_ACTIVE_LIBRARIAN',
+          entityType:  'adminpanel_user',
+          entityId:    id,
+          description: `Failed to set active librarian — user ID ${id} not found or is not a librarian`,
+          metadata:    { target_id: id, found: !!targetUser, role: targetUser?.role },
+          status:      'failure',
+        });
+        return res.status(400).json({ message: 'User is not a librarian' });
       }
+ 
+      // Snapshot who was previously active for the audit log
+      const [previouslyActive] = await connection.query(
+        'SELECT id, username, full_name FROM adminpanel_users WHERE role = "librarian" AND is_active = TRUE'
+      );
+ 
+      await connection.query(
+        'UPDATE adminpanel_users SET is_active = FALSE WHERE role = "librarian"'
+      );
+ 
+      await connection.query(
+        'UPDATE adminpanel_users SET is_active = TRUE WHERE id = ? AND role = "librarian"',
+        [id]
+      );
+ 
+      await connection.commit();
+      connection.release();
+ 
+      await logActivity(req, {
+        action:      'SET_ACTIVE_LIBRARIAN',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        entityLabel: targetUser.full_name,
+        description: `Set "${targetUser.full_name}" (username: ${targetUser.username}) as the active librarian. ${previouslyActive.length} previously active librarian(s) deactivated.`,
+        metadata:    {
+          new_active:          { id, username: targetUser.username, full_name: targetUser.full_name },
+          previously_active:   previouslyActive.map(u => ({ id: u.id, username: u.username, full_name: u.full_name })),
+          deactivated_count:   previouslyActive.length,
+          action_by:           { id: req.user.id, full_name: req.user.full_name },
+        },
+      });
+ 
+      res.json({ message: 'Active librarian set successfully' });
     } catch (error) {
+      await connection.rollback();
+      connection.release();
+ 
+      await logActivity(req, {
+        action:      'SET_ACTIVE_LIBRARIAN',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Server error while setting active librarian for user ID ${id}`,
+        metadata:    { error: error.message },
+        status:      'failure',
+      });
       console.error('Set active librarian error:', error);
       res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Update avatar (self or admin)
+// PUT /api/adminpanel-users/:id/avatar
+// ─────────────────────────────────────────────────────────────────────────────
 router.put(
   '/:id/avatar',
   authMiddleware,
   async (req, res) => {
+    const { id } = req.params;
+    const { avatar } = req.body;
+ 
+    const isSelf  = String(req.user.id) === String(id);
+    const isAdmin = req.user.role === 'admin';
+ 
+    if (!avatar) {
+      return res.status(400).json({ message: 'Avatar URL is required' });
+    }
+ 
+    if (!avatar.startsWith('https://api.dicebear.com/')) {
+      await logActivity(req, {
+        action:      'UPDATE_AVATAR',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Avatar update rejected — invalid URL provided`,
+        metadata:    { provided_url: avatar },
+        status:      'failure',
+      });
+      return res.status(400).json({ message: 'Invalid avatar URL' });
+    }
+ 
+    if (!isSelf && !isAdmin) {
+      await logActivity(req, {
+        action:      'UPDATE_AVATAR',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Unauthorized avatar update attempt on user ID ${id}`,
+        metadata:    { attempted_by: { id: req.user.id, full_name: req.user.full_name } },
+        status:      'failure',
+      });
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+ 
+    if (!isSelf && isAdmin) {
+      return res.status(403).json({ message: 'Cannot modify admin avatar' });
+    }
+ 
     try {
-      const { id } = req.params;
-      const { avatar } = req.body;
-
-      if (!avatar) {
-        return res.status(400).json({ message: 'Avatar URL is required' });
-      }
-
-      // Validate it's a DiceBear URL (basic guard)
-      if (!avatar.startsWith('https://api.dicebear.com/')) {
-        return res.status(400).json({ message: 'Invalid avatar URL' });
-      }
-
-      // Users can only update their own avatar unless they're admin
-      const isSelf = String(req.user.id) === String(id);
-      const isAdmin = req.user.role === 'admin';
-
-      if (!isSelf && !isAdmin) {
-        return res.status(403).json({ message: 'Forbidden' });
-      }
-
-      // Admins cannot have their avatar changed by others
-      if (!isSelf && isAdmin) {
-        return res.status(403).json({ message: 'Cannot modify admin avatar' });
-      }
-
+      const [[currentUser]] = await pool.query(
+        'SELECT id, full_name, avatar FROM adminpanel_users WHERE id = ?',
+        [id]
+      );
+ 
       const [result] = await pool.query(
         'UPDATE adminpanel_users SET avatar = ? WHERE id = ?',
         [avatar, id]
       );
-
+ 
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'User not found' });
       }
-
+ 
+      await logActivity(req, {
+        action:      'UPDATE_AVATAR',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        entityLabel: currentUser?.full_name ?? `User #${id}`,
+        description: `Updated avatar for "${currentUser?.full_name ?? `User #${id}`}"`,
+        metadata:    {
+          before: { avatar: currentUser?.avatar ?? null },
+          after:  { avatar },
+        },
+      });
+ 
       res.json({ message: 'Avatar updated successfully', avatar });
     } catch (error) {
+      await logActivity(req, {
+        action:      'UPDATE_AVATAR',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Server error while updating avatar for user ID ${id}`,
+        metadata:    { error: error.message },
+        status:      'failure',
+      });
       console.error('Update avatar error:', error);
       res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
-/**
- * Update profile fields (full_name) — self only
- * PUT /adminpanel-users/:id/profile
- */
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Update display name (self only)
+// PUT /api/adminpanel-users/:id/profile
+// ─────────────────────────────────────────────────────────────────────────────
 router.put(
   '/:id/profile',
   authMiddleware,
   async (req, res) => {
+    const { id } = req.params;
+    const { full_name } = req.body;
+ 
+    if (String(req.user.id) !== String(id)) {
+      await logActivity(req, {
+        action:      'UPDATE_PROFILE',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Unauthorized profile update attempt on user ID ${id}`,
+        metadata:    { attempted_by: { id: req.user.id, full_name: req.user.full_name } },
+        status:      'failure',
+      });
+      return res.status(403).json({ message: 'You can only update your own profile.' });
+    }
+ 
+    if (!full_name || !full_name.trim()) {
+      return res.status(400).json({ message: 'Display name cannot be empty.' });
+    }
+ 
+    const trimmed = full_name.trim();
+ 
+    if (trimmed.length > 60) {
+      return res.status(400).json({ message: 'Display name must be 60 characters or fewer.' });
+    }
+ 
     try {
-      const { id } = req.params;
-      const { full_name } = req.body;
-
-      // Only the account owner can update their own profile
-      if (String(req.user.id) !== String(id)) {
-        return res.status(403).json({ message: 'You can only update your own profile.' });
-      }
-
-      if (!full_name || !full_name.trim()) {
-        return res.status(400).json({ message: 'Display name cannot be empty.' });
-      }
-
-      const trimmed = full_name.trim();
-
-      if (trimmed.length > 60) {
-        return res.status(400).json({ message: 'Display name must be 60 characters or fewer.' });
-      }
-
+      const [[currentUser]] = await pool.query(
+        'SELECT id, full_name FROM adminpanel_users WHERE id = ?',
+        [id]
+      );
+ 
       const [result] = await pool.query(
         'UPDATE adminpanel_users SET full_name = ? WHERE id = ?',
         [trimmed, id]
       );
-
+ 
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'User not found.' });
       }
-
+ 
+      await logActivity(req, {
+        action:      'UPDATE_PROFILE',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        entityLabel: trimmed,
+        description: `Updated display name from "${currentUser?.full_name}" to "${trimmed}"`,
+        metadata:    {
+          before: { full_name: currentUser?.full_name },
+          after:  { full_name: trimmed },
+        },
+      });
+ 
       res.json({ message: 'Display name updated successfully.', full_name: trimmed });
     } catch (error) {
+      await logActivity(req, {
+        action:      'UPDATE_PROFILE',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Server error while updating profile for user ID ${id}`,
+        metadata:    { error: error.message },
+        status:      'failure',
+      });
       console.error('Update profile error:', error);
       res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
-/**
- * Change username (self only, requires current password)
- * PUT /adminpanel-users/:id/username
- */
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Change username (self only, requires current password)
+// PUT /api/adminpanel-users/:id/username
+// ─────────────────────────────────────────────────────────────────────────────
 router.put(
   '/:id/username',
   authMiddleware,
   async (req, res) => {
+    const { id } = req.params;
+    const { newUsername, currentPassword } = req.body;
+ 
+    if (String(req.user.id) !== String(id)) {
+      await logActivity(req, {
+        action:      'CHANGE_USERNAME',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Unauthorized username change attempt on user ID ${id}`,
+        metadata:    { attempted_by: { id: req.user.id, full_name: req.user.full_name } },
+        status:      'failure',
+      });
+      return res.status(403).json({ message: 'You can only change your own username.' });
+    }
+ 
+    if (!newUsername || !currentPassword) {
+      return res.status(400).json({ message: 'New username and current password are required.' });
+    }
+ 
+    if (newUsername.length < 3) {
+      return res.status(400).json({ message: 'Username must be at least 3 characters.' });
+    }
+ 
+    if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
+      return res.status(400).json({ message: 'Username can only contain letters, numbers, and underscores.' });
+    }
+ 
     try {
-      const { id } = req.params;
-      const { newUsername, currentPassword } = req.body;
-
-      // Users can only change their own username
-      if (String(req.user.id) !== String(id)) {
-        return res.status(403).json({ message: 'You can only change your own username.' });
-      }
-
-      if (!newUsername || !currentPassword) {
-        return res.status(400).json({ message: 'New username and current password are required.' });
-      }
-
-      // Validate username format
-      if (newUsername.length < 3) {
-        return res.status(400).json({ message: 'Username must be at least 3 characters.' });
-      }
-      if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
-        return res.status(400).json({ message: 'Username can only contain letters, numbers, and underscores.' });
-      }
-
-      // Fetch current user to verify password
-      const [rows] = await pool.query(
-        'SELECT id, password_hash, username FROM adminpanel_users WHERE id = ?',
+      const [[user]] = await pool.query(
+        'SELECT id, username, full_name, password_hash FROM adminpanel_users WHERE id = ?',
         [id]
       );
-
-      if (rows.length === 0) {
+ 
+      if (!user) {
         return res.status(404).json({ message: 'User not found.' });
       }
-
-      const user = rows[0];
-
+ 
       if (newUsername === user.username) {
         return res.status(400).json({ message: 'New username must be different from current username.' });
       }
-
-      // Verify current password
+ 
       const passwordMatch = await bcrypt.compare(currentPassword, user.password_hash);
       if (!passwordMatch) {
+        await logActivity(req, {
+          action:      'CHANGE_USERNAME',
+          entityType:  'adminpanel_user',
+          entityId:    id,
+          entityLabel: user.full_name,
+          description: `Username change failed for "${user.full_name}" — incorrect current password`,
+          metadata:    { current_username: user.username, attempted_new_username: newUsername },
+          status:      'failure',
+        });
         return res.status(401).json({ message: 'Current password is incorrect.' });
       }
-
-      // Update username
+ 
       const [result] = await pool.query(
         'UPDATE adminpanel_users SET username = ? WHERE id = ?',
         [newUsername, id]
       );
-
+ 
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'User not found.' });
       }
-
+ 
+      await logActivity(req, {
+        action:      'CHANGE_USERNAME',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        entityLabel: user.full_name,
+        description: `Changed username from "${user.username}" to "${newUsername}" for "${user.full_name}"`,
+        metadata:    {
+          before: { username: user.username },
+          after:  { username: newUsername },
+        },
+      });
+ 
       res.json({ message: 'Username updated successfully.', username: newUsername });
     } catch (error) {
       if (error.code === 'ER_DUP_ENTRY') {
+        await logActivity(req, {
+          action:      'CHANGE_USERNAME',
+          entityType:  'adminpanel_user',
+          entityId:    id,
+          description: `Username change failed — "${newUsername}" is already taken`,
+          metadata:    { attempted_username: newUsername },
+          status:      'failure',
+        });
         return res.status(409).json({ message: 'That username is already taken.' });
       }
+ 
+      await logActivity(req, {
+        action:      'CHANGE_USERNAME',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Server error while changing username for user ID ${id}`,
+        metadata:    { error: error.message },
+        status:      'failure',
+      });
       console.error('Change username error:', error);
       res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
-/**
- * Delete own account (librarians only, self-service)
- * DELETE /adminpanel-users/:id
- */
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Delete own account (librarians only, self-service)
+// DELETE /api/adminpanel-users/:id
+// ─────────────────────────────────────────────────────────────────────────────
 router.delete(
   '/:id',
   authMiddleware,
   async (req, res) => {
+    const { id } = req.params;
+ 
+    if (String(req.user.id) !== String(id)) {
+      await logActivity(req, {
+        action:      'DELETE_ACCOUNT',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Unauthorized account deletion attempt on user ID ${id}`,
+        metadata:    { attempted_by: { id: req.user.id, full_name: req.user.full_name } },
+        status:      'failure',
+      });
+      return res.status(403).json({ message: 'You can only delete your own account.' });
+    }
+ 
+    if (req.user.role !== 'librarian') {
+      await logActivity(req, {
+        action:      'DELETE_ACCOUNT',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Account deletion rejected — only librarians may self-delete (role: ${req.user.role})`,
+        metadata:    { role: req.user.role },
+        status:      'failure',
+      });
+      return res.status(403).json({ message: 'Only librarian accounts can be self-deleted.' });
+    }
+ 
     try {
-      const { id } = req.params;
-
-      // Only the account owner can delete their own account
-      if (String(req.user.id) !== String(id)) {
-        return res.status(403).json({ message: 'You can only delete your own account.' });
-      }
-
-      // Only librarians may self-delete
-      if (req.user.role !== 'librarian') {
-        return res.status(403).json({ message: 'Only librarian accounts can be self-deleted.' });
-      }
-
+      // Fetch full snapshot before deletion for the log
+      const [[targetUser]] = await pool.query(
+        'SELECT id, username, full_name, role, is_active, created_at FROM adminpanel_users WHERE id = ?',
+        [id]
+      );
+ 
       const [result] = await pool.query(
         'DELETE FROM adminpanel_users WHERE id = ? AND role = "librarian"',
         [id]
       );
-
+ 
       if (result.affectedRows === 0) {
         return res.status(404).json({ message: 'Account not found.' });
       }
-
+ 
+      // Log after deletion — user_id will remain in log via ON DELETE SET NULL
+      await logActivity(req, {
+        action:      'DELETE_ACCOUNT',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        entityLabel: targetUser?.full_name ?? `User #${id}`,
+        description: `Librarian "${targetUser?.full_name ?? `User #${id}`}" (username: ${targetUser?.username}) self-deleted their account`,
+        metadata:    {
+          deleted_user: {
+            id:         targetUser?.id,
+            username:   targetUser?.username,
+            full_name:  targetUser?.full_name,
+            role:       targetUser?.role,
+            is_active:  targetUser?.is_active,
+            created_at: targetUser?.created_at,
+          },
+        },
+      });
+ 
       res.json({ message: 'Account deleted successfully.' });
     } catch (error) {
+      await logActivity(req, {
+        action:      'DELETE_ACCOUNT',
+        entityType:  'adminpanel_user',
+        entityId:    id,
+        description: `Server error while deleting account for user ID ${id}`,
+        metadata:    { error: error.message },
+        status:      'failure',
+      });
       console.error('Delete account error:', error);
       res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
+ 
 module.exports = router;

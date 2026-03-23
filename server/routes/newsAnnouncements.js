@@ -6,6 +6,7 @@ const fs = require('fs');
 const pool = require('../config/connection');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 const { getLinkPreview } = require('link-preview-js');
+const { logActivity } = require('../utils/activityLogger');
 
 // ── Role constants ───────────────────────────────────────────────────────────
 // Admin-panel roles (JWT payload has `role`)
@@ -129,9 +130,35 @@ router.post(
         [title, url, category || 'General', thumbnailPath, description || null]
       );
       const [rows] = await pool.query('SELECT * FROM news_links WHERE id = ?', [result.insertId]);
+
+      await logActivity(req, {
+        action: 'CREATE_NEWS',
+        entityType: 'news',
+        entityId: result.insertId,
+        entityLabel: title,
+        description: `News link "${title}" was added by ${req.user.full_name ?? req.user.username}.`,
+        metadata: {
+          url,
+          category: category || 'General',
+          thumbnail: thumbnailPath,
+          has_description: !!description,
+        },
+        status: 'success',
+      });
+
       res.status(201).json(rows[0]);
     } catch (err) {
       if (req.file) fs.unlink(req.file.path, () => {});
+
+      await logActivity(req, {
+        action: 'CREATE_NEWS',
+        entityType: 'news',
+        entityLabel: title,
+        description: `Failed to add news link "${title}" by ${req.user.full_name ?? req.user.username} — ${err.message}.`,
+        metadata: { url, category: category || 'General', error: err.message },
+        status: 'failure',
+      });
+
       res.status(500).json({ message: 'Failed to add news', error: err.message });
     }
   }
@@ -140,25 +167,37 @@ router.post(
 // DELETE news link (admin only)
 router.delete('/news/:id', authMiddleware, roleMiddleware('admin'), async (req, res) => {
   try {
-    const [existing] = await pool.query('SELECT thumbnail FROM news_links WHERE id = ?', [req.params.id]);
+    const [existing] = await pool.query(
+      'SELECT title, url, category, thumbnail FROM news_links WHERE id = ?',
+      [req.params.id]
+    );
     if (!existing.length) return res.status(404).json({ message: 'News not found' });
 
     const [result] = await pool.query('DELETE FROM news_links WHERE id = ?', [req.params.id]);
     if (result.affectedRows === 0) return res.status(404).json({ message: 'News not found' });
 
-    const thumb = existing[0].thumbnail;
+    const { title, url, category, thumbnail: thumb } = existing[0];
+
     if (thumb && thumb.startsWith('/uploads/')) {
       fs.unlink(thumb.replace(/^\//, ''), () => {});
     }
+
+    await logActivity(req, {
+      action: 'DELETE_NEWS',
+      entityType: 'news',
+      entityId: req.params.id,
+      entityLabel: title,
+      description: `News link "${title}" was deleted by ${req.user.full_name ?? req.user.username}.`,
+      metadata: { url, category, thumbnail: thumb ?? null },
+      status: 'success',
+    });
 
     res.json({ message: 'News removed' });
   } catch (err) {
     res.status(500).json({ message: 'Failed to delete news', error: err.message });
   }
 });
-
 // ── ANNOUNCEMENTS ───────────────────────────────────────────────────────────
-
 /**
  * GET /announcements
  *
@@ -212,7 +251,6 @@ router.post(
     const validAudiences = ['all', 'Patron', 'Staff'];
     const safeAudience = validAudiences.includes(audience) ? audience : 'all';
 
-    // Pull identity from the verified JWT — never trust req.body for this
     const createdBy   = req.user.id;
     const creatorRole = req.user.role;
     if (!createdBy) return res.status(400).json({ message: 'Creator ID missing from token' });
@@ -242,12 +280,35 @@ router.post(
 
       await conn.commit();
 
+      await logActivity(req, {
+        action: 'CREATE_ANNOUNCEMENT',
+        entityType: 'announcement',
+        entityId: announcementId,
+        entityLabel: subject,
+        description: `Announcement "${subject}" was created by ${req.user.full_name ?? req.user.username} for audience: ${safeAudience}.`,
+        metadata: {
+          audience: safeAudience,
+          attachments: req.files?.map(f => ({ name: f.originalname, size: f.size, type: f.mimetype })) ?? [],
+        },
+        status: 'success',
+      });
+
       const [rows] = await pool.query('SELECT * FROM announcements WHERE id = ?', [announcementId]);
       await withAttachments(rows);
       res.status(201).json(rows[0]);
     } catch (err) {
       await conn.rollback();
       if (req.files) req.files.forEach(f => fs.unlink(f.path, () => {}));
+
+      await logActivity(req, {
+        action: 'CREATE_ANNOUNCEMENT',
+        entityType: 'announcement',
+        entityLabel: subject,
+        description: `Failed to create announcement "${subject}" by ${req.user.full_name ?? req.user.username} — ${err.message}.`,
+        metadata: { audience: safeAudience, error: err.message },
+        status: 'failure',
+      });
+
       res.status(500).json({ message: 'Failed to send announcement', error: err.message });
     } finally {
       conn.release();
@@ -274,7 +335,6 @@ router.patch(
 
       const ann = existing[0];
 
-      // Ownership check: librarians can only edit their own
       if (req.user.role === 'librarian' && ann.created_by !== req.user.id) {
         return res.status(403).json({ message: 'You can only edit your own announcements' });
       }
@@ -288,6 +348,19 @@ router.patch(
         'UPDATE announcements SET subject = ?, description = ?, audience = ? WHERE id = ?',
         [updatedSubject, updatedDescription, updatedAudience, id]
       );
+
+      await logActivity(req, {
+        action: 'UPDATE_ANNOUNCEMENT',
+        entityType: 'announcement',
+        entityId: id,
+        entityLabel: updatedSubject,
+        description: `Announcement "${ann.subject}" was updated by ${req.user.full_name ?? req.user.username}${ann.subject !== updatedSubject ? ` (renamed to "${updatedSubject}")` : ''}.`,
+        metadata: {
+          before: { subject: ann.subject, description: ann.description, audience: ann.audience },
+          after:  { subject: updatedSubject, description: updatedDescription, audience: updatedAudience },
+        },
+        status: 'success',
+      });
 
       const [rows] = await pool.query('SELECT * FROM announcements WHERE id = ?', [id]);
       await withAttachments(rows);
@@ -320,14 +393,13 @@ router.delete(
         return res.status(404).json({ message: 'Announcement not found' });
       }
 
-      // Ownership check: librarians can only delete their own
       if (req.user.role === 'librarian' && existing[0].created_by !== req.user.id) {
         await conn.rollback();
         return res.status(403).json({ message: 'You can only delete your own announcements' });
       }
 
       const [attachments] = await conn.query(
-        'SELECT file_path FROM announcement_attachments WHERE announcement_id = ?',
+        'SELECT file_path, file_name FROM announcement_attachments WHERE announcement_id = ?',
         [id]
       );
 
@@ -336,9 +408,21 @@ router.delete(
 
       await conn.commit();
 
-      // Delete attachment files from disk after successful commit
       attachments.forEach(({ file_path }) => {
         if (file_path) fs.unlink(file_path, () => {});
+      });
+
+      await logActivity(req, {
+        action: 'DELETE_ANNOUNCEMENT',
+        entityType: 'announcement',
+        entityId: id,
+        entityLabel: existing[0].subject,
+        description: `Announcement "${existing[0].subject}" was deleted by ${req.user.full_name ?? req.user.username} (audience: ${existing[0].audience}).`,
+        metadata: {
+          audience: existing[0].audience,
+          attachments_deleted: attachments.map(f => f.file_name),
+        },
+        status: 'success',
       });
 
       res.json({ message: 'Announcement deleted' });

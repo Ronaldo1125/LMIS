@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Shield, Activity, Monitor, Settings } from 'lucide-react'
 import ActivityLogs from './SecurityComponents/ActivityLogs'
-import SessionManagement from './SecurityComponents/SessionManagement'
-import SecuritySettings from './SecurityComponents/SecuritySettings'
 
 const Security = ({ dark }) => {
   const [activeTab, setActiveTab] = useState('activity-logs')
@@ -14,18 +12,6 @@ const Security = ({ dark }) => {
       icon: Activity,
       component: ActivityLogs
     },
-    {
-      id: 'sessions',
-      name: 'Sessions',
-      icon: Monitor,
-      component: SessionManagement
-    },
-    {
-      id: 'settings',
-      name: 'Security Settings',
-      icon: Settings,
-      component: SecuritySettings
-    }
   ]
 
   const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component

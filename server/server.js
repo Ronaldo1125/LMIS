@@ -81,6 +81,9 @@ app.use('/api', newsAnnouncementsRoutes);
 const bookmarksRouter = require('./routes/bookmarks');
 app.use('/api/bookmarks', bookmarksRouter);
 
+const activityLogsRoutes = require('./routes/activityLogs');
+app.use('/api/activity-logs', activityLogsRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);

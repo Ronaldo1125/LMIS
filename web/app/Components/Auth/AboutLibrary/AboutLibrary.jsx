@@ -6,7 +6,7 @@ import { User, Search, BookOpen, Bookmark, ArrowRight } from "lucide-react";
 export default function AboutLibrary() {
   return (
     <section className="w-full bg-white py-16 lg:py-24">
-      <div className="max-w-[1700px] mx-auto px-6">
+      <div className="max-w-425 mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6">

@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -83,6 +85,7 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
       }, 150);
       return () => clearInterval(iv);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleGoogleCallback = async (response) => {

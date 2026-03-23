@@ -4,6 +4,7 @@ const multer = require('multer');
 const XLSX = require('xlsx');
 const pool = require('../config/connection');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
+const { logActivity } = require('../utils/activityLogger');
 
 // Multer - memory storage (no disk write needed)
 const upload = multer({
@@ -192,7 +193,6 @@ router.post(
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
 
-      // Locate header row
       const headerInfo = findHeaderRow(sheet);
       if (!headerInfo) {
         return res.status(422).json({ message: 'Could not find a header row with recognised column names (Title, Call No, etc.).' });
@@ -201,7 +201,6 @@ router.post(
       const { headerRowIndex, columnCount } = headerInfo;
       const range = XLSX.utils.decode_range(sheet['!ref']);
 
-      // Read headers
       const rawHeaders = [];
       for (let c = range.s.c; c < range.s.c + columnCount; c++) {
         const cell = sheet[XLSX.utils.encode_cell({ r: headerRowIndex, c })];
@@ -209,7 +208,6 @@ router.post(
       }
       const mappedHeaders = mapHeaders(rawHeaders);
 
-      // Parse data rows
       const records = [];
       const skipped = [];
 
@@ -220,7 +218,6 @@ router.post(
           rowValues.push(cell ? cell.v : null);
         }
 
-        // Skip completely empty rows and section-label rows
         const nonEmpty = rowValues.filter(v => v !== null && v !== '');
         if (nonEmpty.length === 0) continue;
 
@@ -234,10 +231,17 @@ router.post(
       }
 
       if (records.length === 0) {
+        await logActivity(req, {
+          action: 'IMPORT_BOOKS',
+          entityType: 'book',
+          entityLabel: req.file.originalname,
+          description: `Import of "${req.file.originalname}" by ${req.user.full_name ?? req.user.username} failed — no valid records found.`,
+          metadata: { filename: req.file.originalname, skipped: skipped.length, skippedDetails: skipped },
+          status: 'failure',
+        });
         return res.status(422).json({ message: 'No valid book records found in the file.', skipped });
       }
 
-      // ── Ensure all categories exist (auto-insert unknown ones, including "Uncategorized") ──
       const uniqueCategories = [...new Set(records.map(r => r.category).filter(Boolean))];
       if (uniqueCategories.length > 0) {
         await pool.query(
@@ -246,7 +250,6 @@ router.post(
         );
       }
 
-      // ── Bulk insert ──────────────────────────────────────────────────────────
       const SQL = `
         INSERT INTO books
           (call_number, title, author, publisher, date_of_publication,
@@ -267,21 +270,32 @@ router.post(
 
       const now = new Date();
       const values = records.map(r => [
-        r.call_number,
-        r.title,
-        r.author,
-        r.publisher,
-        r.date_of_publication,
-        r.isbn,
-        r.issn,
-        r.copies,
-        r.has_digital_copy,
-        r.category,
-        now,
-        now,
+        r.call_number, r.title, r.author, r.publisher, r.date_of_publication,
+        r.isbn, r.issn, r.copies, r.has_digital_copy, r.category, now, now,
       ]);
 
       const [result] = await pool.query(SQL, [values]);
+
+      // affectedRows counts 1 per insert and 2 per update (MySQL behaviour)
+      const inserted = result.affectedRows - result.changedRows;
+      const updated  = result.changedRows;
+
+      await logActivity(req, {
+        action: 'IMPORT_BOOKS',
+        entityType: 'book',
+        entityLabel: req.file.originalname,
+        description: `"${req.file.originalname}" imported by ${req.user.full_name ?? req.user.username} — ${inserted} inserted, ${updated} updated, ${skipped.length} skipped.`,
+        metadata: {
+          filename:       req.file.originalname,
+          total_parsed:   records.length,
+          inserted,
+          updated,
+          skipped:        skipped.length,
+          skippedDetails: skipped,
+          categories_seen: uniqueCategories,
+        },
+        status: 'success',
+      });
 
       return res.status(200).json({
         message:  'Import complete.',
@@ -293,6 +307,16 @@ router.post(
 
     } catch (err) {
       console.error('Import error:', err);
+
+      await logActivity(req, {
+        action: 'IMPORT_BOOKS',
+        entityType: 'book',
+        entityLabel: req.file?.originalname ?? null,
+        description: `Import of "${req.file?.originalname}" by ${req.user.full_name ?? req.user.username} failed — ${err.message}.`,
+        metadata: { filename: req.file?.originalname ?? null, error: err.message },
+        status: 'failure',
+      });
+
       return res.status(500).json({ message: 'Import failed.', error: err.message });
     }
   }

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/connection');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
+const { logActivity } = require('../utils/activityLogger');
 
 // Helper: check if the requesting user can see staff_only records
 const canViewStaffOnly = (user) => {
@@ -222,7 +223,6 @@ router.post('/', authMiddleware, roleMiddleware('admin', 'librarian'), async (re
   try {
     await connection.beginTransaction();
 
-    // Check book exists, is not archived, and not already accessioned
     const [books] = await connection.query(
       `SELECT id, title, is_archived, is_accessioned, access_level FROM books WHERE id = ?`,
       [book_id]
@@ -243,7 +243,6 @@ router.post('/', authMiddleware, roleMiddleware('admin', 'librarian'), async (re
       return res.status(400).json({ message: 'This book has already been accessioned' });
     }
 
-    // Check for duplicate accession_no
     const [existing] = await connection.query(
       `SELECT id FROM accessions WHERE accession_no = ?`,
       [accession_no]
@@ -256,17 +255,14 @@ router.post('/', authMiddleware, roleMiddleware('admin', 'librarian'), async (re
       });
     }
 
-    // Inherit access_level from the source book
     const inheritedAccessLevel = books[0].access_level || 'public';
 
-    // Create the accession record
     const [result] = await connection.query(
       `INSERT INTO accessions (accession_no, date_accessioned, book_id, access_level)
        VALUES (?, ?, ?, ?)`,
       [accession_no, date_accessioned, book_id, inheritedAccessLevel]
     );
 
-    // Mark the book as accessioned
     const performedBy = req.user.email || req.user.username;
     await connection.query(
       `UPDATE books
@@ -278,6 +274,22 @@ router.post('/', authMiddleware, roleMiddleware('admin', 'librarian'), async (re
     );
 
     await connection.commit();
+
+    await logActivity(req, {
+      action: 'CREATE_ACCESSION',
+      entityType: 'accession',
+      entityId: result.insertId,
+      entityLabel: accession_no,
+      description: `"${books[0].title}" was accessioned as "${accession_no}" by ${req.user.full_name ?? req.user.username}.`,
+      metadata: {
+        accession_no,
+        book_id,
+        book_title: books[0].title,
+        date_accessioned,
+        access_level: inheritedAccessLevel,
+      },
+      status: 'success',
+    });
 
     res.status(201).json({
       message: 'Book accessioned successfully',
@@ -313,6 +325,15 @@ router.put('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (
       }
     }
 
+    // Fetch before state for the diff
+    const [[before]] = await pool.query(
+      `SELECT a.accession_no, a.date_accessioned, b.title
+       FROM accessions a
+       LEFT JOIN books b ON b.id = a.book_id
+       WHERE a.id = ?`,
+      [req.params.id]
+    );
+
     const [result] = await pool.query(
       `UPDATE accessions SET
         accession_no = COALESCE(?, accession_no),
@@ -324,6 +345,25 @@ router.put('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Accession not found' });
     }
+
+    await logActivity(req, {
+      action: 'UPDATE_ACCESSION',
+      entityType: 'accession',
+      entityId: req.params.id,
+      entityLabel: accession_no ?? before?.accession_no,
+      description: `Accession "${before?.accession_no}" for "${before?.title}" was updated by ${req.user.full_name ?? req.user.username}${accession_no && accession_no !== before?.accession_no ? ` (re-numbered to "${accession_no}")` : ''}.`,
+      metadata: {
+        before: {
+          accession_no: before?.accession_no,
+          date_accessioned: before?.date_accessioned,
+        },
+        after: {
+          accession_no: accession_no ?? before?.accession_no,
+          date_accessioned: date_accessioned ?? before?.date_accessioned,
+        },
+      },
+      status: 'success',
+    });
 
     res.json({ message: 'Accession updated successfully' });
   } catch (err) {
@@ -350,7 +390,10 @@ router.patch('/:id/access-level', authMiddleware, roleMiddleware('admin', 'libra
     await connection.beginTransaction();
 
     const [rows] = await connection.query(
-      `SELECT a.id, a.book_id FROM accessions a WHERE a.id = ?`,
+      `SELECT a.id, a.accession_no, a.access_level, a.book_id, b.title
+       FROM accessions a
+       LEFT JOIN books b ON b.id = a.book_id
+       WHERE a.id = ?`,
       [req.params.id]
     );
 
@@ -359,21 +402,29 @@ router.patch('/:id/access-level', authMiddleware, roleMiddleware('admin', 'libra
       return res.status(404).json({ message: 'Accession not found' });
     }
 
-    const { book_id } = rows[0];
+    const { book_id, accession_no, access_level: prevLevel, title } = rows[0];
 
-    // Update accession
     await connection.query(
       `UPDATE accessions SET access_level = ? WHERE id = ?`,
       [access_level, req.params.id]
     );
 
-    // Keep the source book in sync
     await connection.query(
       `UPDATE books SET access_level = ? WHERE id = ?`,
       [access_level, book_id]
     );
 
     await connection.commit();
+
+    await logActivity(req, {
+      action: 'UPDATE_ACCESSION_ACCESS_LEVEL',
+      entityType: 'accession',
+      entityId: req.params.id,
+      entityLabel: accession_no,
+      description: `Access level for accession "${accession_no}" ("${title}") changed from "${prevLevel}" to "${access_level}" by ${req.user.full_name ?? req.user.username}.`,
+      metadata: { before: prevLevel, after: access_level, book_id, book_title: title },
+      status: 'success',
+    });
 
     res.json({
       message: `Access level updated to '${access_level}' for accession and its linked book`,
@@ -396,7 +447,10 @@ router.delete('/:id/deaccession', authMiddleware, roleMiddleware('admin', 'libra
     await connection.beginTransaction();
 
     const [rows] = await connection.query(
-      `SELECT a.id, a.book_id FROM accessions a WHERE a.id = ?`,
+      `SELECT a.id, a.accession_no, a.book_id, b.title
+       FROM accessions a
+       LEFT JOIN books b ON b.id = a.book_id
+       WHERE a.id = ?`,
       [req.params.id]
     );
 
@@ -405,12 +459,10 @@ router.delete('/:id/deaccession', authMiddleware, roleMiddleware('admin', 'libra
       return res.status(404).json({ message: 'Accession not found' });
     }
 
-    const { book_id } = rows[0];
+    const { book_id, accession_no, title } = rows[0];
 
-    // Delete the accession record
     await connection.query(`DELETE FROM accessions WHERE id = ?`, [req.params.id]);
 
-    // Revert book back to active catalog status
     await connection.query(
       `UPDATE books
        SET is_accessioned = FALSE,
@@ -421,6 +473,16 @@ router.delete('/:id/deaccession', authMiddleware, roleMiddleware('admin', 'libra
     );
 
     await connection.commit();
+
+    await logActivity(req, {
+      action: 'DEACCESSION',
+      entityType: 'accession',
+      entityId: req.params.id,
+      entityLabel: accession_no,
+      description: `Accession "${accession_no}" ("${title}") was de-accessioned by ${req.user.full_name ?? req.user.username} and restored to catalog.`,
+      metadata: { accession_no, book_id, book_title: title },
+      status: 'success',
+    });
 
     res.json({
       message: 'Book de-accessioned successfully and restored to catalog',
@@ -442,6 +504,15 @@ router.patch('/:id/archive', authMiddleware, roleMiddleware('admin', 'librarian'
   const archivedBy = req.user.email || req.user.username;
 
   try {
+    // Fetch label info before update for the log
+    const [[accession]] = await pool.query(
+      `SELECT a.accession_no, b.title
+       FROM accessions a
+       LEFT JOIN books b ON b.id = a.book_id
+       WHERE a.id = ? AND a.is_archived = 0`,
+      [req.params.id]
+    );
+
     const [result] = await pool.query(
       `UPDATE accessions SET
         is_archived = 1,
@@ -456,6 +527,16 @@ router.patch('/:id/archive', authMiddleware, roleMiddleware('admin', 'librarian'
       return res.status(404).json({ message: 'Accession not found or already archived' });
     }
 
+    await logActivity(req, {
+      action: 'ARCHIVE_ACCESSION',
+      entityType: 'accession',
+      entityId: req.params.id,
+      entityLabel: accession?.accession_no,
+      description: `Accession "${accession?.accession_no}" ("${accession?.title}") was archived by ${req.user.full_name ?? req.user.username}${archive_reason ? ` — reason: ${archive_reason}` : ''}.`,
+      metadata: { archive_reason: archive_reason || null, book_title: accession?.title },
+      status: 'success',
+    });
+
     res.json({ message: 'Accession archived successfully' });
   } catch (err) {
     console.error('Error archiving accession:', err);
@@ -467,6 +548,14 @@ router.patch('/:id/archive', authMiddleware, roleMiddleware('admin', 'librarian'
 // PATCH /api/accessions/:id/restore
 router.patch('/:id/restore', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   try {
+    const [[accession]] = await pool.query(
+      `SELECT a.accession_no, b.title
+       FROM accessions a
+       LEFT JOIN books b ON b.id = a.book_id
+       WHERE a.id = ? AND a.is_archived = 1`,
+      [req.params.id]
+    );
+
     const [result] = await pool.query(
       `UPDATE accessions SET
         is_archived = 0,
@@ -480,6 +569,16 @@ router.patch('/:id/restore', authMiddleware, roleMiddleware('admin', 'librarian'
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Accession not found or not archived' });
     }
+
+    await logActivity(req, {
+      action: 'RESTORE_ACCESSION',
+      entityType: 'accession',
+      entityId: req.params.id,
+      entityLabel: accession?.accession_no,
+      description: `Accession "${accession?.accession_no}" ("${accession?.title}") was restored by ${req.user.full_name ?? req.user.username}.`,
+      metadata: { book_title: accession?.title },
+      status: 'success',
+    });
 
     res.json({ message: 'Accession restored successfully' });
   } catch (err) {
