@@ -8,6 +8,7 @@ const { createReadStream } = require('fs');
 const crypto = require('crypto');
 const pool = require('../config/connection');
 const { authMiddleware, roleMiddleware, optionalAuthMiddleware } = require('../middleware/auth');
+const { logActivity } = require('../utils/activityLogger');
 
 // Ensure upload directory exists - using absolute path from project root
 // This will create: C:\Users\Laptop\Desktop\LMIS\server\uploads
@@ -111,7 +112,6 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), up
     const { bookId } = req.params;
     const { setPrimary } = req.body;
     
-    // Verify book exists
     const [books] = await connection.query('SELECT id, title FROM books WHERE id = ?', [bookId]);
     if (books.length === 0) {
       await connection.rollback();
@@ -129,11 +129,11 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), up
     }
 
     const uploadedFiles = [];
+    const skippedDuplicates = [];
     const userId = req.user.email || req.user.username;
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.get('user-agent');
 
-    // If setPrimary is true, unset any existing primary files
     if (setPrimary === 'true') {
       await connection.query(
         'UPDATE uploads SET is_primary = FALSE WHERE book_id = ?',
@@ -141,15 +141,12 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), up
       );
     }
 
-    // Process each uploaded file
     for (let i = 0; i < req.files.length; i++) {
       const file = req.files[i];
       
       try {
-        // Calculate checksum for file integrity
         const checksum = await calculateChecksum(file.path);
         
-        // Check for duplicate file (same checksum)
         const [existingFile] = await connection.query(
           'SELECT id FROM uploads WHERE book_id = ? AND checksum = ?',
           [bookId, checksum]
@@ -157,6 +154,7 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), up
         
         if (existingFile.length > 0) {
           await fs.unlink(file.path).catch(() => {});
+          skippedDuplicates.push(file.originalname);
           continue;
         }
 
@@ -169,16 +167,8 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), up
             mime_type, file_size, uploaded_by, is_primary, checksum, status
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
           [
-            bookId,
-            file.filename,
-            file.originalname,
-            file.path,
-            fileType,
-            file.mimetype,
-            file.size,
-            userId,
-            isPrimary,
-            checksum
+            bookId, file.filename, file.originalname, file.path,
+            fileType, file.mimetype, file.size, userId, isPrimary, checksum,
           ]
         );
 
@@ -189,9 +179,9 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), up
           id: result.insertId,
           fileName: file.filename,
           originalName: file.originalname,
-          fileType: fileType,
+          fileType,
           fileSize: file.size,
-          isPrimary: isPrimary
+          isPrimary,
         });
       } catch (error) {
         console.error(`Error processing file ${file.originalname}:`, error);
@@ -201,17 +191,48 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), up
 
     if (uploadedFiles.length === 0) {
       await connection.rollback();
+
+      await logActivity(req, {
+        action: 'UPLOAD_BOOK_FILES',
+        entityType: 'book',
+        entityId: bookId,
+        entityLabel: books[0].title,
+        description: `File upload to "${books[0].title}" by ${req.user.full_name ?? req.user.username} failed — all files were duplicates.`,
+        metadata: {
+          skipped_duplicates: skippedDuplicates,
+          attempted: req.files.length,
+        },
+        status: 'failure',
+      });
+
       return res.status(400).json({ message: 'No files were successfully uploaded (possible duplicates)' });
     }
 
-    // ── Sync books.has_digital_copy and books.digital_file_count ──────────────
     await syncBookDigitalFields(connection, bookId);
-
     await connection.commit();
+
+    await logActivity(req, {
+      action: 'UPLOAD_BOOK_FILES',
+      entityType: 'book',
+      entityId: bookId,
+      entityLabel: books[0].title,
+      description: `${uploadedFiles.length} file(s) uploaded to "${books[0].title}" by ${req.user.full_name ?? req.user.username}${skippedDuplicates.length > 0 ? `, ${skippedDuplicates.length} duplicate(s) skipped` : ''}.`,
+      metadata: {
+        uploaded: uploadedFiles.map(f => ({
+          name: f.originalName,
+          type: f.fileType,
+          size_mb: (f.fileSize / 1024 / 1024).toFixed(2),
+          is_primary: f.isPrimary,
+        })),
+        skipped_duplicates: skippedDuplicates,
+        set_primary: setPrimary === 'true',
+      },
+      status: 'success',
+    });
 
     res.status(201).json({
       message: `${uploadedFiles.length} file(s) uploaded successfully`,
-      uploads: uploadedFiles
+      uploads: uploadedFiles,
     });
 
   } catch (error) {
@@ -222,6 +243,20 @@ router.post('/:bookId', authMiddleware, roleMiddleware('admin', 'librarian'), up
         await fs.unlink(file.path).catch(() => {});
       }
     }
+
+    await logActivity(req, {
+      action: 'UPLOAD_BOOK_FILES',
+      entityType: 'book',
+      entityId: bookId,
+      entityLabel: books?.[0]?.title ?? `Book #${bookId}`,
+      description: `File upload to book #${bookId} by ${req.user.full_name ?? req.user.username} failed — ${error.message}.`,
+      metadata: {
+        attempted: req.files?.map(f => f.originalname) ?? [],
+        error: error.message,
+      },
+      status: 'failure',
+    });
+
     res.status(500).json({ message: 'Error uploading files', error: error.message });
   } finally {
     connection.release();
@@ -646,8 +681,14 @@ router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin', 'libraria
 
     const { bookId } = req.params;
 
+    // Fetch book title for the log label
+    const [[book]] = await connection.query(
+      'SELECT title FROM books WHERE id = ?',
+      [bookId]
+    );
+
     const [uploads] = await connection.query(
-      'SELECT id, file_path FROM uploads WHERE book_id = ? AND status = "active"',
+      'SELECT id, file_path, original_name FROM uploads WHERE book_id = ? AND status = "active"',
       [bookId]
     );
 
@@ -666,7 +707,6 @@ router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin', 'libraria
         await logUploadAction(id, 'deleted', userId, ipAddress, userAgent, 'Deleted with book');
       }
 
-      // ── Reset digital fields on the book ──────────────────────────────────
       await connection.query(
         `UPDATE books SET has_digital_copy = 0, digital_file_count = 0 WHERE id = ?`,
         [bookId]
@@ -682,8 +722,31 @@ router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin', 'libraria
 
       const bookDir = path.join(uploadDir, `book_${bookId}`);
       await fs.rmdir(bookDir).catch(() => {});
+
+      await logActivity(req, {
+        action: 'DELETE_ALL_BOOK_UPLOADS',
+        entityType: 'book',
+        entityId: bookId,
+        entityLabel: book?.title ?? `Book #${bookId}`,
+        description: `All ${uploads.length} upload(s) for "${book?.title ?? `Book #${bookId}`}" were deleted by ${req.user.full_name ?? req.user.username}.`,
+        metadata: {
+          deleted_count: uploads.length,
+          files: uploads.map(u => u.original_name),
+        },
+        status: 'success',
+      });
     } else {
       await connection.commit();
+
+      await logActivity(req, {
+        action: 'DELETE_ALL_BOOK_UPLOADS',
+        entityType: 'book',
+        entityId: bookId,
+        entityLabel: book?.title ?? `Book #${bookId}`,
+        description: `Delete all uploads requested for "${book?.title ?? `Book #${bookId}`}" by ${req.user.full_name ?? req.user.username} — no active uploads found.`,
+        metadata: { deleted_count: 0 },
+        status: 'success',
+      });
     }
 
     res.json({ message: `All uploads for book ${bookId} deleted` });
@@ -691,11 +754,22 @@ router.delete('/book/:bookId', authMiddleware, roleMiddleware('admin', 'libraria
   } catch (error) {
     await connection.rollback();
     console.error('Error deleting uploads for book:', error);
+
+    await logActivity(req, {
+      action: 'DELETE_ALL_BOOK_UPLOADS',
+      entityType: 'book',
+      entityId: req.params.bookId,
+      description: `Failed to delete all uploads for book #${req.params.bookId} by ${req.user.full_name ?? req.user.username} — ${error.message}.`,
+      metadata: { error: error.message },
+      status: 'failure',
+    });
+
     res.status(500).json({ message: 'Error deleting uploads for book' });
   } finally {
     connection.release();
   }
 });
+
 // ─── Delete single upload ──────────────────────────────────────────────────────
 router.delete('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), async (req, res) => {
   const connection = await pool.getConnection();
@@ -715,6 +789,12 @@ router.delete('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), asyn
 
     const upload = uploads[0];
 
+    // Fetch book title for the log label
+    const [[book]] = await connection.query(
+      'SELECT title FROM books WHERE id = ?',
+      [upload.book_id]
+    );
+
     await connection.query(
       'UPDATE uploads SET status = "deleted" WHERE id = ?',
       [req.params.id]
@@ -725,7 +805,6 @@ router.delete('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), asyn
     const userAgent = req.get('user-agent');
     await logUploadAction(req.params.id, 'deleted', userId, ipAddress, userAgent);
 
-    // ── Recalculate and sync digital fields on the book ──────────────────────
     await syncBookDigitalFields(connection, upload.book_id);
 
     await connection.commit();
@@ -734,17 +813,42 @@ router.delete('/:id', authMiddleware, roleMiddleware('admin', 'librarian'), asyn
       console.error('Error deleting physical file:', err);
     });
 
+    await logActivity(req, {
+      action: 'DELETE_UPLOAD',
+      entityType: 'upload',
+      entityId: req.params.id,
+      entityLabel: upload.original_name,
+      description: `File "${upload.original_name}" was deleted from "${book?.title ?? `Book #${upload.book_id}`}" by ${req.user.full_name ?? req.user.username}.`,
+      metadata: {
+        book_id:   upload.book_id,
+        book_title: book?.title ?? null,
+        file_type: upload.file_type,
+        file_size_mb: (upload.file_size / 1024 / 1024).toFixed(2),
+        was_primary: !!upload.is_primary,
+      },
+      status: 'success',
+    });
+
     res.json({ message: 'Upload deleted successfully' });
 
   } catch (error) {
     await connection.rollback();
     console.error('Error deleting upload:', error);
+
+    await logActivity(req, {
+      action: 'DELETE_UPLOAD',
+      entityType: 'upload',
+      entityId: req.params.id,
+      description: `Failed to delete upload #${req.params.id} by ${req.user.full_name ?? req.user.username} — ${error.message}.`,
+      metadata: { error: error.message },
+      status: 'failure',
+    });
+
     res.status(500).json({ message: 'Error deleting upload' });
   } finally {
     connection.release();
   }
 });
-
 // ─── Get single upload details ─────────────────────────────────────────────────
 router.get('/:id', authMiddleware, async (req, res) => {
   try {

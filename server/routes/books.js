@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/connection');
 const { authMiddleware, roleMiddleware, optionalAuthMiddleware } = require('../middleware/auth');
+const { logActivity } = require('../utils/activityLogger');
 
 // Helper function to format dates
 const formatDateForResponse = (book) => {
