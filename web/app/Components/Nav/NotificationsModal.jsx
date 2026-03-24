@@ -94,21 +94,24 @@ const NotificationsModal = ({ announcements, loading, error, onClose, onRefresh 
       <div
         onClick={onClose}
         style={{
-          position: "fixed", inset: 0, zIndex: 60,
-          background: "rgba(0,0,0,0.3)",
-          backdropFilter: "blur(2px)",
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.4)",
+          zIndex: 60,
           animation: "ntfFadeIn 0.18s ease",
         }}
       />
 
-      {/* Drawer */}
+      {/* Popup Modal */}
       <div style={{
-        position: "fixed", top: 0, right: 0, bottom: 0, zIndex: 61,
-        width: "min(400px, 100vw)",
+        position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+        zIndex: 61,
+        width: "min(500px, 90vw)",
+        maxHeight: "80vh",
         background: "#fafafa",
         display: "flex", flexDirection: "column",
-        boxShadow: "-6px 0 36px rgba(25,18,101,0.12)",
-        animation: "ntfSlideIn 0.22s cubic-bezier(0.4,0,0.2,1)",
+        borderRadius: "12px",
+        boxShadow: "0 20px 60px rgba(25,18,101,0.15)",
+        animation: "ntfFadeUp 0.22s cubic-bezier(0.4,0,0.2,1)",
       }}>
 
         {/* ── Header ── */}
