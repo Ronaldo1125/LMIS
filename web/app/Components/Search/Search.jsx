@@ -120,17 +120,15 @@ function IconList({ active }) {
 
 
 
-// ─── filter dropdown ──────────────────────────────────────────────────────────
+// ─── mobile filter dropdown ──────────────────────────────────────────────────────
 
 
 
-function FilterDropdown({ label, options = [], value, onChange, disabled }) {
+function MobileFilterDropdown({ categories = [], publications = [], categoryValue, publicationValue, onCategoryChange, onPublicationChange, disabled }) {
 
   const [open, setOpen] = useState(false);
 
   const ref = useRef(null);
-
-
 
   useEffect(() => {
 
@@ -142,7 +140,15 @@ function FilterDropdown({ label, options = [], value, onChange, disabled }) {
 
   }, []);
 
+  const hasCategoryFilter = categoryValue && categoryValue !== "";
 
+  const hasPublicationFilter = publicationValue && publicationValue !== "";
+
+  const displayText = hasCategoryFilter || hasPublicationFilter 
+
+    ? `${hasCategoryFilter ? categoryValue : "Category"} / ${hasPublicationFilter ? publicationValue : "Publication"}`
+
+    : "Category / Publication";
 
   return (
 
@@ -154,94 +160,140 @@ function FilterDropdown({ label, options = [], value, onChange, disabled }) {
 
         disabled={disabled}
 
-        className={`h-10 border px-4 flex items-center gap-2 text-[13px] transition min-w-[130px]
-
-          ${value
-
+        className={`h-8 border px-3 flex items-center gap-2 text-[11px] transition min-w-[120px]
+          ${(hasCategoryFilter || hasPublicationFilter)
             ? "border-white bg-white text-gray-900 font-semibold"
-
             : "border-white/30 bg-white/10 text-white hover:bg-white/20"
-
           } disabled:opacity-40`}
-
       >
 
-        <span className="truncate flex-1 text-left">{value || label}</span>
+        <span className="truncate flex-1 text-left">{displayText}</span>
 
-        {value
-
+        {(hasCategoryFilter || hasPublicationFilter)
           ? (
-
             <span
-
               role="button"
-
-              onClick={(e) => { e.stopPropagation(); onChange(""); }}
-
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                onCategoryChange(""); 
+                onPublicationChange(""); 
+              }}
               className="shrink-0 text-gray-400 hover:text-gray-700 cursor-pointer"
-
             >
-
-              <X size={12} />
-
+              <X size={10} />
             </span>
-
           )
-
           : <ChevronDownIcon />
-
         }
 
       </button>
 
-
-
       {open && (
-
-        <div className="absolute top-12 left-0 z-50 bg-white border border-gray-200 rounded-xl shadow-lg min-w-[200px] py-1 max-h-64 overflow-y-auto">
-
+        <div className="absolute top-10 left-0 z-50 bg-white border border-gray-200 rounded-xl shadow-lg min-w-[200px] py-2 max-h-64 overflow-y-auto">
+          {/* Category Section */}
+          <div className="px-3 py-1 text-[10px] text-gray-500 font-medium uppercase tracking-wide">Category</div>
           <button
-
-            onClick={() => { onChange(""); setOpen(false); }}
-
-            className="w-full text-left px-4 py-2 text-[13px] text-gray-400 hover:bg-gray-50 transition"
-
+            onClick={() => { onCategoryChange(""); setOpen(false); }}
+            className="w-full text-left px-3 py-1 text-[11px] text-gray-400 hover:bg-gray-50 transition"
           >
-
-            All {label}s
-
+            All Categories
           </button>
-
-          {options.map((opt) => (
-
+          {categories.map((opt) => (
             <button
-
-              key={opt}
-
-              onClick={() => { onChange(opt); setOpen(false); }}
-
-              className={`w-full text-left px-4 py-2 text-[13px] transition
-
-                ${value === opt ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-50"}`}
-
+              key={`cat-${opt}`}
+              onClick={() => { onCategoryChange(opt); setOpen(false); }}
+              className={`w-full text-left px-3 py-1 text-[11px] transition
+                ${categoryValue === opt ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-50"}`}
             >
-
               {opt}
-
             </button>
-
           ))}
-
+          
+          {/* Publication Section */}
+          <div className="px-3 py-1 mt-2 text-[10px] text-gray-500 font-medium uppercase tracking-wide">Publication</div>
+          <button
+            onClick={() => { onPublicationChange(""); setOpen(false); }}
+            className="w-full text-left px-3 py-1 text-[11px] text-gray-400 hover:bg-gray-50 transition"
+          >
+            All Publications
+          </button>
+          {publications.map((opt) => (
+            <button
+              key={`pub-${opt}`}
+              onClick={() => { onPublicationChange(opt); setOpen(false); }}
+              className={`w-full text-left px-3 py-1 text-[11px] transition
+                ${publicationValue === opt ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-50"}`}
+            >
+              {opt}
+            </button>
+          ))}
         </div>
-
       )}
-
     </div>
-
   );
-
 }
 
+// ─── filter dropdown ──────────────────────────────────────────────────────────
+
+function FilterDropdown({ label, options = [], value, onChange, disabled }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        disabled={disabled}
+        className={`h-10 border px-4 flex items-center gap-2 text-[13px] transition min-w-[130px]
+          ${value
+            ? "border-white bg-white text-gray-900 font-semibold"
+            : "border-white/30 bg-white/10 text-white hover:bg-white/20"
+          } disabled:opacity-40`}
+      >
+        <span className="truncate flex-1 text-left">{value || label}</span>
+        {value
+          ? (
+            <span
+              role="button"
+              onClick={(e) => { e.stopPropagation(); onChange(""); }}
+              className="shrink-0 text-gray-400 hover:text-gray-700 cursor-pointer"
+            >
+              <X size={12} />
+            </span>
+          )
+          : <ChevronDownIcon />
+        }
+      </button>
+
+      {open && (
+        <div className="absolute top-12 left-0 z-50 bg-white border border-gray-200 rounded-xl shadow-lg min-w-[200px] py-1 max-h-64 overflow-y-auto">
+          <button
+            onClick={() => { onChange(""); setOpen(false); }}
+            className="w-full text-left px-4 py-2 text-[13px] text-gray-400 hover:bg-gray-50 transition"
+          >
+            All {label}s
+          </button>
+          {options.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => { onChange(opt); setOpen(false); }}
+              className={`w-full text-left px-4 py-2 text-[13px] transition
+                ${value === opt ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-50"}`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 
 // ─── sort dropdown ────────────────────────────────────────────────────────────
@@ -1365,37 +1417,44 @@ const Search = () => {
 
 
             {/* Filter dropdowns */}
-
             <div className="mt-5 flex flex-wrap items-center gap-3">
-
-              <FilterDropdown
-
-                label="Category"
-
-                options={filtersLoaded ? filterOptions.categories : []}
-
-                value={filterCategory}
-
-                onChange={(v) => onFilterChange("category", v)}
-
-                disabled={!filtersLoaded}
-
-              />
-
-              <FilterDropdown
-
-                label="Publication"
-
-                options={filtersLoaded ? filterOptions.publications : []}
-
-                value={filterPublication}
-
-                onChange={(v) => onFilterChange("publication", v)}
-
-                disabled={!filtersLoaded}
-
-              />
-
+              {/* Mobile: Separate but smaller Category and Publication buttons */}
+              <div className="flex flex-wrap items-center gap-2 sm:hidden">
+                <FilterDropdown
+                  label="Category"
+                  options={filtersLoaded ? filterOptions.categories : []}
+                  value={filterCategory}
+                  onChange={(v) => onFilterChange("category", v)}
+                  disabled={!filtersLoaded}
+                  mobileCompact
+                />
+                <FilterDropdown
+                  label="Publication"
+                  options={filtersLoaded ? filterOptions.publications : []}
+                  value={filterPublication}
+                  onChange={(v) => onFilterChange("publication", v)}
+                  disabled={!filtersLoaded}
+                  mobileCompact
+                />
+              </div>
+              
+              {/* Desktop: Regular size filters */}
+              <div className="hidden sm:flex flex-wrap items-center gap-3">
+                <FilterDropdown
+                  label="Category"
+                  options={filtersLoaded ? filterOptions.categories : []}
+                  value={filterCategory}
+                  onChange={(v) => onFilterChange("category", v)}
+                  disabled={!filtersLoaded}
+                />
+                <FilterDropdown
+                  label="Publication"
+                  options={filtersLoaded ? filterOptions.publications : []}
+                  value={filterPublication}
+                  onChange={(v) => onFilterChange("publication", v)}
+                  disabled={!filtersLoaded}
+                />
+              </div>
             </div>
 
           </div>
