@@ -49,8 +49,8 @@ const Security = ({ dark }) => {
         </div>
       </div>
 
-      {/* Sticky Tabs */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 40, background: pageBg, transition: 'background 0.45s ease' }}>
+      {/* Tabs (no longer sticky) */}
+      <div style={{ background: pageBg, transition: 'background 0.45s ease' }}>
         <div style={{ padding: '0 1.5rem' }}>
           <div style={{
             background: cardBg,
