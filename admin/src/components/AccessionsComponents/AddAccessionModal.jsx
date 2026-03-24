@@ -280,8 +280,14 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
                   paddingLeft: '2.25rem',
                   borderColor: dark ? '#1a3356' : '#93c5fd',
                 }}
-                onFocus={e => { if (searchQuery) setShowResults(true); e.target.style.borderColor = '#2563eb' }}
-                onBlur={e => e.target.style.borderColor = dark ? '#1a3356' : '#93c5fd'}
+                onFocus={e => {
+  if (searchQuery.trim()) setShowResults(true)
+  e.target.style.borderColor = '#2563eb'
+}}
+                onBlur={e => {
+  e.target.style.borderColor = dark ? '#1a3356' : '#93c5fd'
+  setTimeout(() => setShowResults(false), 150)
+}}
               />
               {autofilled && (
                 <div style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.25rem', color: dark ? '#86efac' : '#16a34a', fontSize: '0.75rem', fontWeight: 500 }}>
