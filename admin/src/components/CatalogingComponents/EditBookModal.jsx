@@ -537,7 +537,7 @@ const EditBookModal = ({
                   rows={2}
                   value={editBook.subjects || ''}
                   onChange={(e) => setEditBook({ ...editBook, subjects: e.target.value })}
-                  placeholder="Comma-separated subjects"
+                  placeholder="-- separated subjects"
                   style={{ ...inputStyle, resize: 'none' }}
                   onFocus={focusStyle} onBlur={blurStyle}
                 />

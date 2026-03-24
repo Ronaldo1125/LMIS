@@ -12,7 +12,6 @@ import { CalendarIcon } from '@heroicons/react/24/outline'
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-// Reads VITE_API_URL from your .env (e.g. http://localhost:5000/api)
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
 
 const authHeaders = () => ({
@@ -20,7 +19,6 @@ const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem('authToken')}`,
 })
 
-// Map backend field names → what the table columns expect
 const normaliseLog = (row) => ({
   ...row,
   timestamp: row.created_at,
@@ -30,7 +28,6 @@ const normaliseLog = (row) => ({
   ipAddress: row.ip_address  ?? row.ipAddress ?? '—',
 })
 
-// Simple debounce hook
 function useDebounce(value, delay = 400) {
   const [debounced, setDebounced] = useState(value)
   useEffect(() => {
@@ -72,7 +69,6 @@ const ActivityLogs = ({ dark }) => {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Fetch action list once on mount
   useEffect(() => {
     fetch(`${API_BASE}/activity-logs/actions`, { headers: authHeaders() })
       .then(r => r.ok ? r.json() : [])
@@ -106,7 +102,6 @@ const ActivityLogs = ({ dark }) => {
     }
   }, [debouncedSearch, filterAction, dateFrom, dateTo, pagination.limit])
 
-  // Reset to page 1 whenever filters change
   useEffect(() => { fetchLogs(1) }, [debouncedSearch, filterAction, dateFrom, dateTo, fetchLogs])
 
   const clearFilters = () => {
@@ -166,6 +161,7 @@ const ActivityLogs = ({ dark }) => {
   }
 
   // ── theme tokens ───────────────────────────────────────────────────────────
+  const pageBg        = dark ? '#0a1628' : '#f8fafc'
   const cardBg        = dark ? '#0f1f38' : '#ffffff'
   const border        = dark ? '#1a3356' : '#e2e8f0'
   const textPrimary   = dark ? '#dde8f5' : '#1e293b'
@@ -239,97 +235,106 @@ const ActivityLogs = ({ dark }) => {
         </div>
       )}
 
-      {/* Filter Card */}
+      {/* Sticky Filter Card */}
       <div style={{
-        background: cardBg, padding: '1.25rem', borderRadius: '0.75rem',
-        border: `1px solid ${border}`,
-        boxShadow: dark ? '0 10px 30px rgba(0,0,0,0.2)' : '0 1px 3px rgba(0,0,0,0.05)',
-        marginBottom: '1.5rem', transition: 'all 0.45s ease',
+        position: 'sticky',
+        top: 0,
+        zIndex: 40,
+        background: pageBg,
+        paddingBottom: '0.75rem',
+        transition: 'background 0.45s ease',
       }}>
-        <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{
+          background: cardBg, padding: '1.25rem', borderRadius: '0.75rem',
+          border: `1px solid ${border}`,
+          boxShadow: dark ? '0 10px 30px rgba(0,0,0,0.2)' : '0 1px 3px rgba(0,0,0,0.05)',
+          transition: 'all 0.45s ease',
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
 
-          {/* Search */}
-          <div style={{ position: 'relative', flex: '1 1 220px' }}>
-            <MagnifyingGlassIcon style={{ width: '1.25rem', height: '1.25rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: textSecondary }} />
-            <input
-              type="text"
-              placeholder="Search by user, action, or details..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              style={inputStyle}
-            />
-            {searchTerm && (
-              <XMarkIcon onClick={() => setSearchTerm('')} style={{ width: '1.125rem', height: '1.125rem', position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: textSecondary }} />
-            )}
-          </div>
-
-          {/* Action Dropdown — populated from /api/activity-logs/actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 180px', position: 'relative' }} ref={dropdownRef}>
-            <FunnelIcon style={{ width: '1.25rem', height: '1.25rem', color: textSecondary, flexShrink: 0 }} />
-            <div style={{ position: 'relative', width: '100%' }}>
-              <button
-                onClick={() => setIsActionOpen(o => !o)}
-                style={{
-                  width: '100%', padding: '0.625rem 1rem',
-                  background: inputBg, border: `1px solid ${inputBorder}`,
-                  borderRadius: '0.5rem', textAlign: 'left', color: textPrimary,
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  cursor: 'pointer', fontSize: '0.875rem',
-                }}
-              >
-                <span>{filterAction === 'all' ? 'All Actions' : filterAction}</span>
-                <span style={{ color: textSecondary }}>▾</span>
-              </button>
-              {isActionOpen && (
-                <div style={{
-                  position: 'absolute', top: '110%', left: 0, width: '100%',
-                  background: dropdownBg, border: `1px solid ${border}`,
-                  borderRadius: '0.5rem', zIndex: 50, overflow: 'hidden',
-                  boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-                }}>
-                  <div style={{ maxHeight: '14rem', overflowY: 'auto', padding: '0.5rem 0' }}>
-                    {ALL_ACTIONS.map(opt => (
-                      <TypeOption
-                        key={opt}
-                        label={opt === 'all' ? 'All Actions' : opt}
-                        active={filterAction === opt}
-                        onClick={() => { setFilterAction(opt); setIsActionOpen(false) }}
-                        dark={dark}
-                        textPrimary={textPrimary}
-                      />
-                    ))}
-                  </div>
-                </div>
+            {/* Search */}
+            <div style={{ position: 'relative', flex: '1 1 220px' }}>
+              <MagnifyingGlassIcon style={{ width: '1.25rem', height: '1.25rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: textSecondary }} />
+              <input
+                type="text"
+                placeholder="Search by user, action, or details..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                style={inputStyle}
+              />
+              {searchTerm && (
+                <XMarkIcon onClick={() => setSearchTerm('')} style={{ width: '1.125rem', height: '1.125rem', position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: textSecondary }} />
               )}
             </div>
-          </div>
 
-          {/* Date From */}
-          <div style={{ position: 'relative', flex: '1 1 155px' }}>
-            <CalendarIcon style={{ width: '1.25rem', height: '1.25rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: textSecondary, pointerEvents: 'none' }} />
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={e => setDateFrom(e.target.value)}
-              style={{ ...inputStyle, colorScheme: dark ? 'dark' : 'light' }}
-            />
-          </div>
+            {/* Action Dropdown */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: '1 1 180px', position: 'relative' }} ref={dropdownRef}>
+              <FunnelIcon style={{ width: '1.25rem', height: '1.25rem', color: textSecondary, flexShrink: 0 }} />
+              <div style={{ position: 'relative', width: '100%' }}>
+                <button
+                  onClick={() => setIsActionOpen(o => !o)}
+                  style={{
+                    width: '100%', padding: '0.625rem 1rem',
+                    background: inputBg, border: `1px solid ${inputBorder}`,
+                    borderRadius: '0.5rem', textAlign: 'left', color: textPrimary,
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    cursor: 'pointer', fontSize: '0.875rem',
+                  }}
+                >
+                  <span>{filterAction === 'all' ? 'All Actions' : filterAction}</span>
+                  <span style={{ color: textSecondary }}>▾</span>
+                </button>
+                {isActionOpen && (
+                  <div style={{
+                    position: 'absolute', top: '110%', left: 0, width: '100%',
+                    background: dropdownBg, border: `1px solid ${border}`,
+                    borderRadius: '0.5rem', zIndex: 50, overflow: 'hidden',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+                  }}>
+                    <div style={{ maxHeight: '14rem', overflowY: 'auto', padding: '0.5rem 0' }}>
+                      {ALL_ACTIONS.map(opt => (
+                        <TypeOption
+                          key={opt}
+                          label={opt === 'all' ? 'All Actions' : opt}
+                          active={filterAction === opt}
+                          onClick={() => { setFilterAction(opt); setIsActionOpen(false) }}
+                          dark={dark}
+                          textPrimary={textPrimary}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
-          {/* Date To */}
-          <div style={{ position: 'relative', flex: '1 1 155px' }}>
-            <CalendarIcon style={{ width: '1.25rem', height: '1.25rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: textSecondary, pointerEvents: 'none' }} />
-            <input
-              type="date"
-              value={dateTo}
-              onChange={e => setDateTo(e.target.value)}
-              style={{ ...inputStyle, colorScheme: dark ? 'dark' : 'light' }}
-            />
-          </div>
+            {/* Date From */}
+            <div style={{ position: 'relative', flex: '1 1 155px' }}>
+              <CalendarIcon style={{ width: '1.25rem', height: '1.25rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: textSecondary, pointerEvents: 'none' }} />
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+                style={{ ...inputStyle, colorScheme: dark ? 'dark' : 'light' }}
+              />
+            </div>
 
-          {/* Buttons */}
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <ActionButton onClick={clearFilters} icon={XCircleIcon} label="Clear" dark={dark} inputBg={inputBg} border={border} textSecondary={textSecondary} />
-            <ActionButton onClick={exportLogs} icon={ArrowDownTrayIcon} label="Export CSV" variant="primary" dark={dark} inputBg={inputBg} border={border} textSecondary={textSecondary} />
+            {/* Date To */}
+            <div style={{ position: 'relative', flex: '1 1 155px' }}>
+              <CalendarIcon style={{ width: '1.25rem', height: '1.25rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: textSecondary, pointerEvents: 'none' }} />
+              <input
+                type="date"
+                value={dateTo}
+                onChange={e => setDateTo(e.target.value)}
+                style={{ ...inputStyle, colorScheme: dark ? 'dark' : 'light' }}
+              />
+            </div>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <ActionButton onClick={clearFilters} icon={XCircleIcon} label="Clear" dark={dark} inputBg={inputBg} border={border} textSecondary={textSecondary} />
+              <ActionButton onClick={exportLogs} icon={ArrowDownTrayIcon} label="Export CSV" variant="primary" dark={dark} inputBg={inputBg} border={border} textSecondary={textSecondary} />
+            </div>
           </div>
         </div>
       </div>

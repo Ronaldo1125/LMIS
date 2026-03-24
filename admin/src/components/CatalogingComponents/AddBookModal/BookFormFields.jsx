@@ -153,15 +153,15 @@ const BookFormFields = ({ formData, onChange, categories, loading, dark = false 
               onFocus={focusStyle} onBlur={blurStyle}
             />
           </FormField>
-
-          <FormField label="Publication" dark={dark}>
-            <input
-        type="date" value={formData.dateOfPublication}
-        onChange={handleChange('dateOfPublication')}
-        disabled={loading} style={{ ...inputStyle, colorScheme: dark ? 'dark' : 'light' }}
-        onFocus={focusStyle} onBlur={blurStyle}
-          />
-          </FormField>
+<FormField label="Publication" dark={dark}>
+  <input
+    type="text" value={formData.publication}
+    onChange={handleChange('publication')}
+    placeholder="Place of publication"
+    disabled={loading} style={inputStyle}
+    onFocus={focusStyle} onBlur={blurStyle}
+  />
+</FormField>
 
           <FormField label="Publisher" dark={dark}>
             <input
@@ -275,7 +275,7 @@ const BookFormFields = ({ formData, onChange, categories, loading, dark = false 
             <textarea
               rows={2} value={formData.subjects}
               onChange={handleChange('subjects')}
-              placeholder="Comma-separated subjects"
+              placeholder="-- separated subjects"
               disabled={loading}
               style={{ ...inputStyle, resize: 'none' }}
               onFocus={focusStyle} onBlur={blurStyle}
