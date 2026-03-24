@@ -128,8 +128,8 @@ const ReportsSection = () => {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.45; }
         }
-        .lmis-book-card { cursor: pointer; transition: all 0.2s ease; }
-        .lmis-book-card:hover { border-color: #1e3a8a !important; }
+        .lmis-book-card { cursor: pointer; overflow: hidden; transition: border-color 0.2s ease; }
+        .lmis-book-card:hover { border-color: #003087 !important; }
         .lmis-scroll::-webkit-scrollbar { display: none; }
         .lmis-scroll { scrollbar-width: none; -ms-overflow-style: none; }
       `}</style>
