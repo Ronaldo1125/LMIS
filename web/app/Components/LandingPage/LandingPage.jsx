@@ -17,7 +17,7 @@ const LandingPage = () => {
   };
 
   return (
-    <section className="relative w-full h-[100vh] min-h-[520px] lg:min-h-[640px] overflow-hidden bg-black">
+    <section className="relative w-full h-screen min-h-130 lg:min-h-160 overflow-hidden bg-black">
       {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -26,7 +26,7 @@ const LandingPage = () => {
 
       {/* Left fade overlay (like screenshot) */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-black/55 via-black/15 to-transparent" />
         {/* subtle overall dim (very light) */}
         <div className="absolute inset-0 bg-black/5" />
       </div>
@@ -44,7 +44,7 @@ const LandingPage = () => {
               pb-10
             "
           >
-            <div className="max-w-[640px] md:max-w-[680px] lg:max-w-[720px]">
+            <div className="max-w-160 md:max-w-170 lg:max-w-180">
               {/* Headline */}
               <h1
                 className="
@@ -55,13 +55,13 @@ const LandingPage = () => {
                   text-[46px] md:text-[56px] lg:text-[76px]
                 "
               >
-                Depdev Digital
+                DEPDev Digital
                 <br />
                 E-Library
               </h1>
 
               {/* Red underline */}
-              <div className="mt-6 h-[4px] w-[64px] bg-[#c23b2a]" />
+              <div className="mt-6 h-1 w-16 bg-[#c23b2a]" />
 
               {/* Subtext */}
               <p
@@ -70,7 +70,7 @@ const LandingPage = () => {
                   text-white/90
                   text-[15px] md:text-[16px] lg:text-[18px]
                   leading-relaxed
-                  max-w-[480px] md:max-w-[520px] lg:max-w-[560px]
+                  max-w-120 md:max-w-130 lg:max-w-140
                 "
               >
                 Your comprehensive digital library for academic resources, 
@@ -78,14 +78,14 @@ const LandingPage = () => {
               </p>
 
               {/* Optional: Search (keep if you want it on hero) */}
-              <form onSubmit={handleSearch} className="mt-10 max-w-[580px] md:max-w-[620px] lg:max-w-[640px]">
+              <form onSubmit={handleSearch} className="mt-10 max-w-145 md:max-w-155 lg:max-w-160">
                 <div className="flex w-full overflow-hidden bg-white/95 backdrop-blur-sm">
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search by title, author, subject, ISBN..."
                     className="
-                      h-[54px] md:h-[58px] lg:h-[62px]
+                      h-13.5 md:h-14.5 lg:h-15.5
                       w-full
                       px-5 md:px-6 lg:px-8
                       text-[15px] md:text-[16px] lg:text-[17px]
@@ -98,7 +98,7 @@ const LandingPage = () => {
                   <button
                     type="submit"
                     className="
-                      h-[54px] md:h-[58px] lg:h-[62px]
+                      h-13.5 md:h-14.5 lg:h-15.5
                       px-6 md:px-7 lg:px-8
                       bg-blue-800
                       text-white

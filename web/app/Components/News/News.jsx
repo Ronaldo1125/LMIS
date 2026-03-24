@@ -340,7 +340,7 @@ const News = () => {
 
             <h2 style={{ fontSize: config.titleSize, fontWeight: 600, color: "#000000ff", margin: 0 }}>
 
-              {windowWidth < 640 ? "News" : "Depdev 5 News"}
+              {windowWidth < 640 ? "News" : "DEPDev 5 News"}
 
             </h2>
 
@@ -514,7 +514,7 @@ const News = () => {
 
             )
 
-            : current.map((item, i) => (
+            : current.map((item) => (
 
               <a
 
