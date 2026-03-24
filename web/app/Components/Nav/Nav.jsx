@@ -144,6 +144,11 @@ const Nav = () => {
     }
   };
 
+  const handleBrowseToSearch = (e) => {
+    e.preventDefault();
+    router.push("/search");
+  };
+
   const displayName = user?.full_name?.split(" ")[0] || user?.username || "";
 
   const Avatar = () => {
@@ -183,7 +188,20 @@ const Nav = () => {
                 <Link href="/" className="hover:text-black/80 transition">Home</Link>
               </li>
               <li>
-                <Link href="/catalog" className="hover:text-black/80 transition">New release</Link>
+                <button 
+                  onClick={handleBrowseToSearch}
+                  className="hover:text-black/80 transition"
+                >
+                  Browse
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={(e) => handleSmoothScroll(e, "#recent-additions")}
+                  className="hover:text-black/80 transition"
+                >
+                  New release
+                </button>
               </li>
 
               {/* COLLECTION — British Museum style */}
