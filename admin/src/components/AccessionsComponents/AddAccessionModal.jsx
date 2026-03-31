@@ -148,17 +148,17 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
   if (!isOpen) return null
 
   // ── Colors ────────────────────────────────────────────────
-  const modalBg      = dark ? '#0f1f38' : '#ffffff'
-  const headerBg     = dark ? '#0d1d35' : '#ffffff'
-  const headerBorder = dark ? '#1a3356' : '#e2e8f0'
-  const border       = dark ? '#1a3356' : '#e2e8f0'
-  const textPrimary  = dark ? '#dde8f5' : '#1e293b'
-  const textSecondary = dark ? '#6b8cae' : '#64748b'
-  const textMuted    = dark ? '#2e4d70' : '#94a3b8'
-  const inputBg      = dark ? '#081422' : '#ffffff'
-  const inputBorder  = dark ? '#1a3356' : '#d1d5db'
-  const readOnlyBg   = dark ? '#060f1c' : '#f8fafc'
-  const readOnlyText = dark ? '#2e4d70' : '#6b7280'
+  const modalBg        = dark ? '#0f1f38' : '#ffffff'
+  const headerBg       = dark ? '#0d1d35' : '#ffffff'
+  const headerBorder   = dark ? '#1a3356' : '#e2e8f0'
+  const border         = dark ? '#1a3356' : '#e2e8f0'
+  const textPrimary    = dark ? '#dde8f5' : '#1e293b'
+  const textSecondary  = dark ? '#6b8cae' : '#64748b'
+  const textMuted      = dark ? '#2e4d70' : '#94a3b8'
+  const inputBg        = dark ? '#081422' : '#ffffff'
+  const inputBorder    = dark ? '#1a3356' : '#d1d5db'
+  const readOnlyBg     = dark ? '#060f1c' : '#f8fafc'
+  const readOnlyText   = dark ? '#2e4d70' : '#6b7280'
   const sectionDivider = dark ? '#1a3356' : '#f1f5f9'
 
   // Search banner
@@ -168,35 +168,45 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
   const bannerText   = dark ? '#6b8cae' : '#3b82f6'
 
   // Dropdown
-  const dropdownBg   = dark ? '#0f1f38' : '#ffffff'
+  const dropdownBg     = dark ? '#0f1f38' : '#ffffff'
   const dropdownBorder = dark ? '#1a3356' : '#e2e8f0'
-  const dropdownHover = dark ? '#0d1d35' : '#eff6ff'
-  const dropdownText = dark ? '#dde8f5' : '#1f2937'
-  const dropdownMuted = dark ? '#6b8cae' : '#6b7280'
+  const dropdownHover  = dark ? '#0d1d35' : '#eff6ff'
+  const dropdownText   = dark ? '#dde8f5' : '#1f2937'
+  const dropdownMuted  = dark ? '#6b8cae' : '#6b7280'
 
   // Warning banner
-  const warnBg      = dark ? 'rgba(217,119,6,0.1)' : '#fffbeb'
-  const warnBorder  = dark ? 'rgba(217,119,6,0.25)' : '#fde68a'
-  const warnTitle   = dark ? '#fde047' : '#92400e'
-  const warnText    = dark ? '#fbbf24' : '#b45309'
+  const warnBg     = dark ? 'rgba(217,119,6,0.1)' : '#fffbeb'
+  const warnBorder = dark ? 'rgba(217,119,6,0.25)' : '#fde68a'
+  const warnTitle  = dark ? '#fde047' : '#92400e'
+  const warnText   = dark ? '#fbbf24' : '#b45309'
 
+  // ── Shared input style (colorScheme fixes native date picker in dark mode) ──
   const inputStyle = {
-    width: '100%', padding: '0.5rem 0.75rem',
+    width: '100%',
+    padding: '0.5rem 0.75rem',
     border: `1px solid ${inputBorder}`,
-    borderRadius: '0.5rem', fontSize: '0.875rem',
-    background: inputBg, color: textPrimary,
+    borderRadius: '0.5rem',
+    fontSize: '0.875rem',
+    background: inputBg,
+    color: textPrimary,
     outline: 'none',
     transition: 'border-color 0.2s ease, background 0.45s ease',
     boxSizing: 'border-box',
+    colorScheme: dark ? 'dark' : 'light',
   }
 
   const readOnlyStyle = {
-    width: '100%', padding: '0.5rem 0.75rem',
+    width: '100%',
+    padding: '0.5rem 0.75rem',
     border: `1px solid ${dark ? '#0f1f38' : '#e2e8f0'}`,
-    borderRadius: '0.5rem', fontSize: '0.875rem',
-    background: readOnlyBg, color: readOnlyText,
-    cursor: 'not-allowed', outline: 'none',
+    borderRadius: '0.5rem',
+    fontSize: '0.875rem',
+    background: readOnlyBg,
+    color: readOnlyText,
+    cursor: 'not-allowed',
+    outline: 'none',
     boxSizing: 'border-box',
+    colorScheme: dark ? 'dark' : 'light',
   }
 
   const sectionLabelStyle = {
@@ -554,6 +564,8 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
 
         </form>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
