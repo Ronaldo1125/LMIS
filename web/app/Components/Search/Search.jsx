@@ -1,163 +1,49 @@
 "use client";
 
-
-
-
-
-
-
 import React, { useEffect, useState, useCallback, useRef } from "react";
-
-
-
 import { useSearchParams, useRouter } from "next/navigation";
-
-
-
 import { ChevronRight, Loader2, BookOpen, X, SlidersHorizontal } from "lucide-react";
-
-
-
 import Nav from "../Nav/Nav";
-
-
-
 import Footer from "../Footer/Footer";
-
-
-
 import PDFThumbnail from "./PDFThumbnail";
-
-
-
-
-
-
-
 // ─── helpers ──────────────────────────────────────────────────────────────────
-
-
-
-
-
-
-
 function getToken() {
 
-
-
   if (typeof window === "undefined") return null;
-
-
-
   return localStorage.getItem("token") || sessionStorage.getItem("token") || null;
-
-
-
 }
-
-
-
-
-
-
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-
-
-
-
-
-
 async function recordBookClick(bookId) {
-
-
 
   try {
 
-
-
     const headers = { "Content-Type": "application/json" };
-
-
-
     const token = getToken();
-
-
 
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
-
-
     await fetch(`${API_BASE}/api/books/${bookId}/click`, { method: "POST", headers });
-
-
 
   } catch { /* fire-and-forget */ }
 
-
-
 }
-
-
-
-
-
-
-
 // ─── icons ────────────────────────────────────────────────────────────────────
-
-
-
-
-
-
 
 function SearchIcon() {
 
-
-
   return (
-
-
 
     <svg width="18" height="18" viewBox="0 0 24 24">
-
-
-
       <path fill="currentColor" d="M10 2a8 8 0 105.293 14.293l4.707 4.707 1.414-1.414-4.707-4.707A8 8 0 0010 2zm0 2a6 6 0 110 12 6 6 0 010-12z" />
-
-
-
     </svg>
-
-
-
   );
-
-
-
 }
 
-
-
-
-
-
-
 function ChevronDownIcon() {
-
-
-
   return (
-
-
-
     <svg width="16" height="16" viewBox="0 0 24 24" className="text-gray-400 shrink-0">
-
-
-
       <path fill="currentColor" d="M7 10l5 5 5-5H7z" />
 
 
@@ -3647,59 +3533,14 @@ const Search = () => {
 
 
           )}
-
-
-
-
-
-
-
           {/* Pagination */}
-
-
-
           {!loading && books.length > 0 && (
-
-
-
             <Pagination page={urlPage} totalPages={totalPages} onPage={onPage} />
-
-
-
           )}
-
-
-
         </main>
-
-
-
-
-
-
-
         <Footer />
-
-
-
       </div>
-
-
-
     </>
-
-
-
   );
-
-
-
 };
-
-
-
-
-
-
-
 export default Search;
