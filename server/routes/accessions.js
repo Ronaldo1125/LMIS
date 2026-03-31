@@ -20,6 +20,7 @@ router.get('/search-books', authMiddleware, async (req, res) => {
 
   try {
     const accessFilter = canViewStaffOnly(req.user) ? '' : "AND b.access_level = 'public'";
+    const term = `%${q.trim()}%`;
 
     const [rows] = await pool.query(
       `SELECT
@@ -32,10 +33,21 @@ router.get('/search-books', authMiddleware, async (req, res) => {
        WHERE b.is_archived = 0
          AND b.is_accessioned = 0
          ${accessFilter}
-         AND MATCH(b.title, b.author, b.call_number, b.isbn) AGAINST (? IN BOOLEAN MODE)
-       ORDER BY b.title ASC
+         AND (
+           b.title       LIKE ?
+           OR b.author   LIKE ?
+           OR b.call_number LIKE ?
+           OR b.isbn     LIKE ?
+         )
+       ORDER BY
+         CASE
+           WHEN b.title LIKE ? THEN 0
+           WHEN b.author LIKE ? THEN 1
+           ELSE 2
+         END,
+         b.title ASC
        LIMIT 20`,
-      [`*${q.trim()}*`]
+      [term, term, term, term, term, term]   // 4 for WHERE + 2 for ORDER BY
     );
 
     res.json(rows);
@@ -44,6 +56,7 @@ router.get('/search-books', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Failed to search books' });
   }
 });
+
 // ─── Get next accession number (auto-suggest) ─────────────────────────────────
 // GET /api/accessions/next-number
 router.get('/next-number', authMiddleware, async (req, res) => {

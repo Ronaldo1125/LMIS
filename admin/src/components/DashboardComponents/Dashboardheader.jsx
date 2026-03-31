@@ -1,17 +1,12 @@
-import { MagnifyingGlassIcon, BellIcon, UserCircleIcon, CalendarIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, UserCircleIcon, CalendarIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect } from 'react'
-import NotificationPanel from './NotificationPanel'
 import AccountMenu from './AccountMenu'
 
 const DashboardHeader = ({ user, setCurrentView, dark }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSticky, setIsSticky] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [showNotifications, setShowNotifications] = useState(false)
   const [showAccountMenu, setShowAccountMenu] = useState(false)
-
-  const [notifications, setNotifications] = useState([])  // eslint-disable-line no-unused-vars
-  const unreadCount = notifications.filter((n) => !n.read).length
 
   useEffect(() => {
     const handleScroll = () => {
@@ -98,11 +93,12 @@ const DashboardHeader = ({ user, setCurrentView, dark }) => {
             src="/LOGO.svg"
             alt="LMIS Logo"
             style={{
-            width: isSticky ? '2.5rem' : '3rem',
-            height: isSticky ? '2.5rem' : '3rem',
-            transition: 'all 0.3s ease',
-            filter: dark ? 'brightness(0) invert(1)' : 'none',        }}
-/>
+              width: isSticky ? '2.5rem' : '3rem',
+              height: isSticky ? '2.5rem' : '3rem',
+              transition: 'all 0.3s ease',
+              filter: dark ? 'brightness(0) invert(1)' : 'none',
+            }}
+          />
           <div>
             <h1 style={{
               fontWeight: 700,
@@ -176,37 +172,10 @@ const DashboardHeader = ({ user, setCurrentView, dark }) => {
             <MagnifyingGlassIcon style={{ width: '1rem', height: '1rem', position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: inputPlaceholder }} />
           </div>
 
-          {/* Notifications */}
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => { setShowNotifications((prev) => !prev); setShowAccountMenu(false) }}
-              style={iconBtnStyle}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--dark-blue-1)'; e.currentTarget.style.borderColor = 'var(--dark-blue-1)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = iconBtnBg; e.currentTarget.style.borderColor = iconBtnBorder }}
-            >
-              <BellIcon style={{ width: '1.25rem', height: '1.25rem', color: iconColor }} />
-              {unreadCount > 0 && (
-                <span style={{
-                  position: 'absolute', top: '0.25rem', right: '0.25rem',
-                  width: '0.5rem', height: '0.5rem',
-                  borderRadius: '50%', background: 'var(--secondary-3-medium)',
-                }} />
-              )}
-            </button>
-
-            <NotificationPanel
-              isOpen={showNotifications}
-              onClose={() => setShowNotifications(false)}
-              notifications={notifications}
-              isSticky={isSticky}
-              dark={dark}
-            />
-          </div>
-
           {/* Account */}
           <div style={{ position: 'relative' }}>
             <button
-              onClick={() => { setShowAccountMenu((prev) => !prev); setShowNotifications(false) }}
+              onClick={() => setShowAccountMenu((prev) => !prev)}
               style={iconBtnStyle}
               onMouseEnter={e => { e.currentTarget.style.background = 'var(--dark-blue-1)'; e.currentTarget.style.borderColor = 'var(--dark-blue-1)' }}
               onMouseLeave={e => { e.currentTarget.style.background = iconBtnBg; e.currentTarget.style.borderColor = iconBtnBorder }}
