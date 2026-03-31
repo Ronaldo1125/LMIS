@@ -312,8 +312,9 @@ router.get("/filters", optionalAuthMiddleware, async (req, res) => {
 
     const [categories, publications, yearRange] = await Promise.all([
       pool.query(
-        `SELECT DISTINCT b.category    FROM books b
+        `SELECT b.category, COUNT(*) as book_count FROM books b
          WHERE ${baseGuard} AND b.category    IS NOT NULL AND b.category    != ''
+         GROUP BY b.category
          ORDER BY b.category    ASC`
       ),
       pool.query(
@@ -330,7 +331,7 @@ router.get("/filters", optionalAuthMiddleware, async (req, res) => {
     ]);
 
     return res.json({
-      categories:   categories[0].map((r) => r.category).filter(Boolean),
+      categories:   categories[0].map((r) => ({ name: r.category, count: r.book_count })),
       publications: publications[0].map((r) => r.publication).filter(Boolean),
       yearMin:      yearRange[0][0]?.yearMin ?? null,
       yearMax:      yearRange[0][0]?.yearMax ?? null,
