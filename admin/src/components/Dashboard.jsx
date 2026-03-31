@@ -10,7 +10,6 @@ import MostDownloadedStats from './DashboardComponents/MostDownloadedStats'
 import LoginNotification from './DashboardComponents/LoginNotification'
 import DuplicateTitlesDetector from './DashboardComponents/DuplicateTitlesDetector'
 import CurrencyOfCollection from './DashboardComponents/CurrencyOfCollection'
-import BookmarkStatistics from './DashboardComponents/BookmarkStatistics'
 
 const API_BASE_URL = 'http://localhost:5000'
 
@@ -215,7 +214,6 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
         <DuplicateTitlesDetector dark={dark} />
         <CurrencyOfCollection dark={dark} />
       </div>=
-<BookmarkStatistics dark={dark} />
     </div>
   )
 }

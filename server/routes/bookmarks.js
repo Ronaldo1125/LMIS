@@ -62,7 +62,38 @@ router.get('/', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Error fetching bookmarks' });
   }
 });
+// GET /api/bookmarks/top?limit=5
+router.get('/top', authMiddleware, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 5;
+    const isStaff = req.user.user_type === 'Staff';
 
+    if (!isStaff) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const [books] = await pool.query(
+      `SELECT
+         b.id,
+         b.title,
+         b.author,
+         b.category,
+         COUNT(bm.id) AS bookmark_count
+       FROM bookmarks bm
+       JOIN books b ON b.id = bm.book_id
+       WHERE b.is_archived = 0
+       GROUP BY b.id
+       ORDER BY bookmark_count DESC
+       LIMIT ?`,
+      [limit]
+    );
+
+    res.json({ books });
+  } catch (error) {
+    console.error('Error fetching top books:', error);
+    res.status(500).json({ message: 'Error fetching top books' });
+  }
+});
 // ─── Check if a specific book is bookmarked ────────────────────────────────────
 router.get('/:book_id', authMiddleware, async (req, res) => {
   try {
