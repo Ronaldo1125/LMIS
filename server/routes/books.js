@@ -106,7 +106,90 @@ router.get('/', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Error fetching books' });
   }
 });
+// ─── Get all Thesis / Research Papers ─────────────────────────────────────────
+router.get('/thesis', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      search = '',
+      showArchived = 'false',
+      showAccessioned = 'all',
+    } = req.query;
 
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    // Base filter: only thesis/research paper categories
+    const thesisCategories = ['Thesis', 'Research Paper', 'Research Papers'];
+    const categoryPlaceholders = thesisCategories.map(() => '?').join(', ');
+
+    let baseCondition = `WHERE category IN (${categoryPlaceholders})`;
+    let query = `SELECT * FROM books ${baseCondition}`;
+    let countQuery = `SELECT COUNT(*) as total FROM books ${baseCondition}`;
+    const params = [...thesisCategories];
+    const countParams = [...thesisCategories];
+
+    // Access level guard
+    if (!canViewStaffOnly(req.user)) {
+      query += " AND access_level = 'public'";
+      countQuery += " AND access_level = 'public'";
+    }
+
+    // Archived filter
+    if (showArchived === 'true') {
+      query += ' AND is_archived = TRUE';
+      countQuery += ' AND is_archived = TRUE';
+    } else if (showArchived === 'all') {
+      // no filter
+    } else {
+      query += ' AND is_archived = FALSE';
+      countQuery += ' AND is_archived = FALSE';
+    }
+
+    // Accessioned filter
+    if (showAccessioned === 'true') {
+      query += ' AND is_accessioned = TRUE';
+      countQuery += ' AND is_accessioned = TRUE';
+    } else if (showAccessioned === 'all') {
+      // no filter
+    } else {
+      query += ' AND is_accessioned = FALSE';
+      countQuery += ' AND is_accessioned = FALSE';
+    }
+
+    // Search
+    if (search) {
+      const searchClause = ' AND (title LIKE ? OR author LIKE ? OR isbn LIKE ? OR subjects LIKE ?)';
+      query += searchClause;
+      countQuery += searchClause;
+      const searchPattern = `%${search}%`;
+      params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+    }
+
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [books] = await pool.query(query, params);
+    const [countResult] = await pool.query(countQuery, countParams);
+    const total = countResult[0].total;
+
+    const formattedBooks = books.map(formatDateForResponse);
+
+    res.json({
+      books: formattedBooks,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching thesis papers:', error);
+    res.status(500).json({ message: 'Error fetching thesis papers' });
+  }
+});
 // ─── Get all categories (hierarchical) ────────────────────────────────────────
 router.get('/meta/categories', authMiddleware, async (req, res) => {
   try {
@@ -390,7 +473,6 @@ router.get("/:id/related", optionalAuthMiddleware, async (req, res) => {
     }
 
     // ── fetch the source book ─────────────────────────────────────────────
-    // FIX: was [[sourceRows]] which destructured the first *row* not the rows array
     const [sourceRows] = await pool.query(
       `SELECT id, category, author, subjects
        FROM books
@@ -404,6 +486,36 @@ router.get("/:id/related", optionalAuthMiddleware, async (req, res) => {
 
     const source = sourceRows[0];
 
+    // ── resolve category family (parent + siblings/children) ──────────────
+    // Look up the source book's category row
+    const [catRows] = await pool.query(
+      `SELECT id, name, parent_id FROM categories WHERE name = ? LIMIT 1`,
+      [source.category]
+    );
+
+    let relatedCategoryNames = []; // names of "close" categories (excluding exact match)
+
+    if (catRows && catRows.length > 0) {
+      const cat = catRows[0];
+
+      if (cat.parent_id !== null) {
+        // Source is a SUBCATEGORY → find siblings (same parent) + the parent itself
+        const [siblingRows] = await pool.query(
+          `SELECT name FROM categories
+           WHERE (parent_id = ? OR id = ?) AND id != ?`,
+          [cat.parent_id, cat.parent_id, cat.id]
+        );
+        relatedCategoryNames = siblingRows.map((r) => r.name);
+      } else {
+        // Source is a PARENT CATEGORY → find its children
+        const [childRows] = await pool.query(
+          `SELECT name FROM categories WHERE parent_id = ?`,
+          [cat.id]
+        );
+        relatedCategoryNames = childRows.map((r) => r.name);
+      }
+    }
+
     // ── extract individual subject keywords ───────────────────────────────
     const subjectKeywords = source.subjects
       ? source.subjects
@@ -415,22 +527,37 @@ router.get("/:id/related", optionalAuthMiddleware, async (req, res) => {
     const cappedKeywords = subjectKeywords.slice(0, 8);
 
     // ── build score expression ────────────────────────────────────────────
-    // FIX: avoid alias in HAVING — inline the full score expression instead
-    const subjectLikes   = cappedKeywords.map(() => `b.subjects LIKE ?`).join(" OR ");
-    const subjectScore   = cappedKeywords.length > 0
+    const subjectLikes  = cappedKeywords.map(() => `b.subjects LIKE ?`).join(" OR ");
+    const subjectScore  = cappedKeywords.length > 0
       ? `CASE WHEN (${subjectLikes}) THEN 2 ELSE 0 END`
       : "0";
-    const subjectParams  = cappedKeywords.map((k) => `%${k}%`);
+    const subjectParams = cappedKeywords.map((k) => `%${k}%`);
 
-    // Full inline score (repeated for HAVING)
+    // Related-category score: +1 if book is in a sibling/child/parent category
+    const catFamilyScore = relatedCategoryNames.length > 0
+      ? `CASE WHEN b.category IN (${relatedCategoryNames.map(() => "?").join(", ")}) THEN 1 ELSE 0 END`
+      : "0";
+
+    // Full inline score:
+    //   +3 exact category match
+    //   +2 subject keyword match
+    //   +1 same author
+    //   +1 related category family (sibling / child / parent)
     const inlineScore = `(
       CASE WHEN b.category = ? THEN 3 ELSE 0 END
       + ${subjectScore}
       + CASE WHEN b.author = ? THEN 1 ELSE 0 END
+      + ${catFamilyScore}
     )`;
 
-    // params: [category, ...subjectParams, author]
-    const scoreParamsOnce = [source.category, ...subjectParams, source.author];
+    // params for ONE evaluation of inlineScore:
+    // [category, ...subjectParams, author, ...relatedCategoryNames]
+    const scoreParamsOnce = [
+      source.category,
+      ...subjectParams,
+      source.author,
+      ...relatedCategoryNames,
+    ];
 
     const sql = `
       SELECT
@@ -478,7 +605,6 @@ router.get("/:id/related", optionalAuthMiddleware, async (req, res) => {
       LIMIT ?
     `;
 
-    // params order: score SELECT, bookId, score HAVING, limitNum
     const queryParams = [
       ...scoreParamsOnce,   // for SELECT score
       bookId,               // for WHERE b.id != ?
