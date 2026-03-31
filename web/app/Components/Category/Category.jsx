@@ -44,7 +44,8 @@ export default function Category() {
 
   const matchCategory = (uiName) => {
     return backendCategories.find((c) =>
-      c.toLowerCase().includes(uiName.toLowerCase().split(" ")[0])
+      c && c.name && typeof c.name === 'string' &&
+      c.name.toLowerCase().includes(uiName.toLowerCase().split(" ")[0])
     );
   };
 
@@ -80,14 +81,11 @@ export default function Category() {
 
 function CategoryCard({ cat, backendValue }) {
   const Icon = cat.icon;
+  const categoryValue = backendValue ? backendValue.name : cat.name;
 
   return (
     <Link
-      href={
-        backendValue
-          ? `/search?category=${encodeURIComponent(backendValue)}`
-          : "#"
-      }
+      href={`/search?category=${encodeURIComponent(categoryValue)}`}
       className="group relative rounded-xl border border-gray-300 p-4 sm:p-5 lg:p-6 bg-white transition-all duration-200 hover:border-blue-900 active:scale-[0.98]"
     >
       <Icon

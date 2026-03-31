@@ -18,6 +18,10 @@ import Register from "../Auth/Register";
 
 import MyProfile from "../MyProfile";
 
+import NotificationsModal from "./NotificationsModal";
+
+import { getReadIds } from "./NotificationsModal";
+
 
 
 const dicebearUrl = (seed) =>
@@ -74,15 +78,81 @@ const Nav = () => {
 
   const [hasNotifications, setHasNotifications]   = useState(false);
 
+  const [showNotifications, setShowNotifications] = useState(false);
 
+  const [announcements, setAnnouncements]         = useState([]);
+
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState(null);
 
   const profileRef = useRef(null);
-
   const collectionBtnRef = useRef(null);
-
   const dropdownRef = useRef(null);
+  const notificationRef = useRef(null);
+  const router = useRouter();
 
-  const router     = useRouter();
+  const getToken = () =>
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+
+  /* ── Fetch notifications ── */
+
+  const fetchNotifications = async () => {
+
+    try {
+
+      setNotificationsLoading(true);
+
+      setNotificationsError(null);
+
+      const token = getToken();
+      if (!token) {
+        setNotificationsError('Authentication required');
+        return;
+      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/announcements`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error('Failed to fetch');
+
+      const data = await res.json();
+
+      setAnnouncements(data || []);
+
+      // Check for unread notifications
+
+      const readIds = getReadIds();
+
+      const unreadCount = data?.filter(a => !readIds.has(String(a.id))).length || 0;
+
+      setHasNotifications(unreadCount > 0);
+
+    } catch (err) {
+
+      console.error('Notifications fetch error:', err);
+
+      setNotificationsError('Failed to load notifications');
+
+    } finally {
+
+      setNotificationsLoading(false);
+
+    }
+
+  };
+
+
+
+  useEffect(() => {
+
+    if (user) {
+
+      fetchNotifications();
+
+    }
+
+  }, [user]);
 
 
 
@@ -107,19 +177,25 @@ const Nav = () => {
 
   const handleNewRelease = (section = "recent") => {
     if (section === "recent") {
-      const element = document.getElementById("recent-additions");
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (window.location.pathname !== "/") {
+        router.push("/#recent-additions");
+      } else {
+        const element = document.getElementById("recent-additions");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       }
-    } else if (section === 'news') {
-      const element = document.getElementById('news');
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (section === "news") {
+      if (window.location.pathname !== "/") {
+        router.push("/#news");
+      } else {
+        const element = document.getElementById("news");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       }
     }
   };
-
-
 
   /* ── Scroll behavior ── */
 
@@ -357,19 +433,19 @@ const Nav = () => {
 
               <li>
 
-                <button onClick={handleHome} className="hover:text-black/80 transition">Home</button>
+                <button onClick={handleHome} className="hover:text-blue-600 transition">Home</button>
 
               </li>
 
               <li>
 
-                <button onClick={handleBrowse} className="hover:text-black/80 transition">Browse</button>
+                <button onClick={handleBrowse} className="hover:text-blue-600 transition">Browse</button>
 
               </li>
 
               <li>
 
-                <button onClick={() => handleNewRelease('recent')} className="hover:text-black/80 transition">New release</button>
+                <button onClick={() => handleNewRelease('recent')} className="hover:text-blue-600 transition">New release</button>
 
               </li>
 
@@ -383,7 +459,7 @@ const Nav = () => {
 
                   onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
 
-                  className="flex items-center gap-1 hover:text-black/70 transition relative h-full"
+                  className="flex items-center gap-1 hover:text-blue-600 transition relative h-full"
 
                   style={{ paddingBottom: "2px" }}
 
@@ -603,7 +679,7 @@ const Nav = () => {
 
               <li>
 
-                <button onClick={() => handleNewRelease('news')} className="hover:text-black/80 transition">News</button>
+                <button onClick={() => handleNewRelease('news')} className="hover:text-blue-600 transition">News</button>
 
               </li>
 
@@ -625,7 +701,11 @@ const Nav = () => {
 
               <div ref={profileRef} className="relative flex items-center gap-3">
 
-                <button className="relative p-2 rounded-full hover:bg-gray-100 transition">
+                <button 
+                  data-bell-button="true"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 rounded-full hover:bg-gray-100 transition"
+                >
 
                   <Bell size={18} className="text-gray-600" />
 
@@ -744,17 +824,17 @@ const Nav = () => {
                 </button>
 
                 <button
-
                   onClick={() => setShowRegister(true)}
-
-                  className="h-16 px-10 flex items-center justify-center text-white font-semibold backdrop-blur-sm hover:bg-[#143961]/80 transition"
-
-                  style={{ backgroundColor: "rgb(25, 18, 101)", width: "200px", marginRight: "-32px" }}
-
+                  className="px-4 py-2 flex items-center justify-center text-white font-semibold backdrop-blur-sm hover:bg-blue-800 transition rounded-md gap-2"
+                  style={{ backgroundColor: "#1e3a8a" }}
                 >
-
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <line x1="19" y1="8" x2="19" y2="14"/>
+                    <line x1="22" y1="11" x2="16" y2="11"/>
+                  </svg>
                   Register
-
                 </button>
 
               </>
@@ -847,9 +927,32 @@ const Nav = () => {
 
       )}
 
+
+
+      {/* Notifications Modal */}
+
+      {showNotifications && (
+
+        <NotificationsModal
+
+          announcements={announcements}
+
+          loading={notificationsLoading}
+
+          error={notificationsError}
+
+          onClose={() => setShowNotifications(false)}
+
+          onRefresh={fetchNotifications}
+
+        />
+
+      )}
+
     </>
 
   );
+
 
 };
 

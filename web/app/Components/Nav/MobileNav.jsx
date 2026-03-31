@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { Bell } from "lucide-react";
+import NotificationsModal from "./NotificationsModal";
+import { getReadIds } from "./NotificationsModal";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000") + "/api";
 
@@ -303,6 +306,11 @@ const MobileNav = () => {
   const [isOpen, setIsOpen]                     = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen]       = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [announcements, setAnnouncements]         = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState(null);
+  const [hasNotifications, setHasNotifications]   = useState(false);
   const [activeProfileTab, setActiveProfileTab] = useState("profile");
   const [user, setUser]                         = useState(null);
   const [saving, setSaving]                     = useState(false);
@@ -375,16 +383,63 @@ const MobileNav = () => {
   const handleSmoothScroll = (e, targetId) => {
     e.preventDefault();
     closeMenu();
+    
+    // Navigate to homepage with hash if not already there
     if (window.location.pathname !== "/") {
       window.location.href = `/${targetId}`;
       return;
     }
+    
+    // Scroll to section if on homepage
     const el = document.querySelector(targetId);
     if (el) {
       const offsetPosition = el.getBoundingClientRect().top + window.pageYOffset - 80;
       window.scrollTo({ top: offsetPosition, behavior: "smooth" });
     }
   };
+
+  const getToken = () =>
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    try {
+      setNotificationsLoading(true);
+      setNotificationsError(null);
+
+      const token = getToken();
+      if (!token) {
+        setNotificationsError('Authentication required');
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/announcements`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error('Failed to fetch');
+
+      const data = await res.json();
+      setAnnouncements(data || []);
+
+      // Check for unread notifications
+      const readIds = getReadIds();
+      const unreadCount = data?.filter(a => !readIds.has(String(a.id))).length || 0;
+      setHasNotifications(unreadCount > 0);
+
+    } catch (err) {
+      console.error('Notifications fetch error:', err);
+      setNotificationsError('Failed to load notifications');
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user]);
 
   const displayName = user?.full_name?.split(" ")[0] || user?.username || "";
   const initials = (user?.full_name || user?.username || "?")
@@ -576,9 +631,41 @@ const MobileNav = () => {
           <Link href="/" onClick={closeMenu}>
             <img src="/assets/other/depdevlogo.png" alt="Logo" style={{ height: "30px", width: "auto" }} />
           </Link>
-          <button onClick={toggleMenu} style={{ background: "none", border: "none", cursor: "pointer", color: "#333", padding: "6px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {isOpen ? <IconClose /> : <IconMenu />}
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {user && (
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                style={{ 
+                  background: "none", 
+                  border: "none", 
+                  cursor: "pointer", 
+                  color: "#333", 
+                  padding: "6px", 
+                  borderRadius: "8px", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center",
+                  position: "relative"
+                }}
+              >
+                <Bell size={20} />
+                {hasNotifications && (
+                  <span style={{
+                    position: "absolute",
+                    top: "4px",
+                    right: "4px",
+                    width: "8px",
+                    height: "8px",
+                    background: "red",
+                    borderRadius: "50%",
+                  }} />
+                )}
+              </button>
+            )}
+            <button onClick={toggleMenu} style={{ background: "none", border: "none", cursor: "pointer", color: "#333", padding: "6px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {isOpen ? <IconClose /> : <IconMenu />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -760,6 +847,17 @@ const MobileNav = () => {
           </div>
         )}
       </div>
+
+      {/* Notifications Modal */}
+      {showNotifications && (
+        <NotificationsModal
+          announcements={announcements}
+          loading={notificationsLoading}
+          error={notificationsError}
+          onClose={() => setShowNotifications(false)}
+          onRefresh={fetchNotifications}
+        />
+      )}
     </>
   );
 };

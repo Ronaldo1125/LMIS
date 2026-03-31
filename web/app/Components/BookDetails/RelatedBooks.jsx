@@ -3,8 +3,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import PDFThumbnail from "../Search/PDFThumbnail";
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
-
 function getToken() {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("token") || sessionStorage.getItem("token") || null;
@@ -15,11 +13,9 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 // ─── skeleton card ────────────────────────────────────────────────────────────
 
 const SkeletonCard = () => (
-  <div style={{
-    overflow: "hidden",
-    background: "#fff",
-  }}>
+  <div style={{ overflow: "hidden", background: "#fff" }}>
     <div style={{
+      width: "100%",
       aspectRatio: "3/4",
       background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
       backgroundSize: "200% 100%",
@@ -35,6 +31,9 @@ const SkeletonCard = () => (
 // ─── BookCard ────────────────────────────────────────────────────────────────
 
 const BookCard = ({ book, onClick }) => {
+  // Resolve upload ID from either flat or nested API shape
+  const uploadId = book.upload_id ?? book.upload?.id ?? null;
+
   return (
     <div
       onClick={() => onClick(book)}
@@ -56,19 +55,33 @@ const BookCard = ({ book, onClick }) => {
         e.currentTarget.style.boxShadow = "none";
         e.currentTarget.style.transform = "translateY(0)";
       }}
-      onFocus={(e) => {
-        e.currentTarget.style.boxShadow = "0 0 0 2px #3b82f6";
-      }}
-      onBlur={(e) => {
-        e.currentTarget.style.boxShadow = "none";
-      }}
     >
-      {/* PDF thumbnail */}
-      <PDFThumbnail uploadId={book.upload_id} title={book.title} />
+      {/*
+        FIX: wrap PDFThumbnail in a container with an explicit height.
+        Without this, wrapper.offsetHeight inside PDFThumbnail is 0,
+        which makes the scale calculation produce NaN and the render silently fails.
+      */}
+      <div style={{
+        width: "100%",
+        aspectRatio: "3/4",
+        position: "relative",
+        overflow: "hidden",
+        background: "#f3f4f6",
+      }}>
+        <PDFThumbnail
+          uploadId={uploadId}
+          title={book.title}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+          }}
+        />
+      </div>
 
       {/* Info */}
       <div style={{ padding: "12px 0px 14px", textAlign: "left" }}>
-        {/* Title */}
         <div style={{
           fontSize: 13,
           fontWeight: 700,
@@ -83,7 +96,6 @@ const BookCard = ({ book, onClick }) => {
           {book.title}
         </div>
 
-        {/* Author + Year */}
         <div style={{
           fontSize: 12,
           color: "#4b5563",
@@ -106,7 +118,6 @@ const BookCard = ({ book, onClick }) => {
           )}
         </div>
 
-        {/* Category badge */}
         {book.category && (
           <div style={{ marginTop: 6 }}>
             <span style={{
@@ -135,44 +146,15 @@ const RelatedBooks = ({ currentBookId }) => {
   const [error, setError] = useState(null);
   const [windowWidth, setWindowWidth] = useState(0);
 
-  // Responsive configuration
   const getResponsiveConfig = useCallback(() => {
-    if (windowWidth < 640) { // Mobile
-      return {
-        headerPadding: "20px 16px 16px",
-        contentPadding: "0 16px 32px",
-        gridColumns: "repeat(2, 1fr)",
-        gap: 28,
-        titleSize: 24,
-        maxWidth: 640,
-      };
-    } else if (windowWidth < 768) { // Tablet
-      return {
-        headerPadding: "32px 24px 16px",
-        contentPadding: "0 24px 40px",
-        gridColumns: "repeat(3, 1fr)",
-        gap: 36,
-        titleSize: 26,
-        maxWidth: 768,
-      };
-    } else if (windowWidth < 1024) { // Small desktop
-      return {
-        headerPadding: "40px 32px 18px",
-        contentPadding: "0 32px 48px",
-        gridColumns: "repeat(4, 1fr)",
-        gap: 40,
-        titleSize: 28,
-        maxWidth: 1024,
-      };
-    } else { // Large desktop
-      return {
-        headerPadding: "44px 48px 18px",
-        contentPadding: "0 48px 56px",
-        gridColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-        gap: 40,
-        titleSize: 28,
-        maxWidth: 1600,
-      };
+    if (windowWidth < 640) {
+      return { headerPadding: "20px 16px 16px", contentPadding: "0 16px 32px", gridColumns: "repeat(2, 1fr)", gap: 28, titleSize: 24, maxWidth: 640 };
+    } else if (windowWidth < 768) {
+      return { headerPadding: "32px 24px 16px", contentPadding: "0 24px 40px", gridColumns: "repeat(3, 1fr)", gap: 36, titleSize: 26, maxWidth: 768 };
+    } else if (windowWidth < 1024) {
+      return { headerPadding: "40px 32px 18px", contentPadding: "0 32px 48px", gridColumns: "repeat(4, 1fr)", gap: 40, titleSize: 28, maxWidth: 1024 };
+    } else {
+      return { headerPadding: "44px 48px 18px", contentPadding: "0 48px 56px", gridColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 40, titleSize: 28, maxWidth: 1600 };
     }
   }, [windowWidth]);
 
@@ -187,13 +169,11 @@ const RelatedBooks = ({ currentBookId }) => {
 
   useEffect(() => {
     if (!currentBookId) return;
-
     let cancelled = false;
 
     const fetchRelated = async () => {
       setLoading(true);
       setError(null);
-
       try {
         const headers = { "Content-Type": "application/json" };
         const token = getToken();
@@ -203,12 +183,10 @@ const RelatedBooks = ({ currentBookId }) => {
           `${API_BASE}/api/books/${currentBookId}/related?limit=6`,
           { headers }
         );
-
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.message || `Error ${res.status}`);
         }
-
         const data = await res.json();
         if (!cancelled) setBooks(data.results ?? []);
       } catch (err) {
@@ -227,12 +205,10 @@ const RelatedBooks = ({ currentBookId }) => {
     window.location.href = `/book/${book.id}`;
   };
 
-  // nothing to show once loaded
   if (!loading && !error && books.length === 0) return null;
 
   return (
     <>
-      {/* shimmer keyframe injected once */}
       <style>{`
         @keyframes shimmer {
           0%   { background-position: 200% 0; }
@@ -241,19 +217,12 @@ const RelatedBooks = ({ currentBookId }) => {
       `}</style>
 
       <div style={{ background: "#fff" }}>
-
-        {/* Section header */}
-        <div style={{
-          maxWidth: config.maxWidth || 1600,
-          margin: "0 auto",
-          padding: config.headerPadding,
-        }}>
+        <div style={{ maxWidth: config.maxWidth || 1600, margin: "0 auto", padding: config.headerPadding }}>
           <h2 style={{ fontSize: config.titleSize, fontWeight: 600, color: "#003087", margin: 0 }}>
             Related Books
           </h2>
         </div>
 
-        {/* Loading skeletons */}
         {loading && (
           <div style={{
             maxWidth: config.maxWidth || 1600,
@@ -267,14 +236,12 @@ const RelatedBooks = ({ currentBookId }) => {
           </div>
         )}
 
-        {/* Error */}
         {error && !loading && (
           <div style={{ maxWidth: config.maxWidth || 1600, margin: "0 auto", padding: config.contentPadding }}>
             <p style={{ fontSize: 13, color: "#ef4444" }}>Could not load related books.</p>
           </div>
         )}
 
-        {/* Book grid */}
         {!loading && !error && books.length > 0 && (
           <div style={{
             maxWidth: config.maxWidth || 1600,

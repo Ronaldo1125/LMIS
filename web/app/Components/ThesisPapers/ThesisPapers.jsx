@@ -58,10 +58,10 @@ const ThesisPapersSection = () => {
         const filterRes = await fetch(`${API_BASE}/api/search/filters`, { headers });
         if (!filterRes.ok) throw new Error("Failed to fetch filters");
         const filterData = await filterRes.json();
-        const thesisCat = filterData.categories.find((c) => c.toLowerCase().includes("thesis"));
+        const thesisCat = filterData.categories.find((c) => c.name.toLowerCase().includes("thesis"));
         if (!thesisCat) throw new Error("Thesis category not found");
-        if (mounted) setThesisCategory(thesisCat);
-        const res = await fetch(`${API_BASE}/api/search?category=${encodeURIComponent(thesisCat)}&page=1&limit=20`);
+        if (mounted) setThesisCategory(thesisCat.name);
+        const res = await fetch(`${API_BASE}/api/search?category=${encodeURIComponent(thesisCat.name)}&page=1&limit=20`);
         if (!res.ok) throw new Error(`Server error ${res.status}`);
         const data = await res.json();
         if (mounted) { setBooks(data.data ?? data.results ?? []); setError(null); }

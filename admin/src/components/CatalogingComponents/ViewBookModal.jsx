@@ -234,7 +234,6 @@ const ViewBookModal = ({ isOpen, onClose, book, dark }) => {
   return (
     <div
       className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-hidden"
-      onClick={onClose}
     >
       <div
         className={`${modalBg} ${borderCol} border rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col animate-in zoom-in-95 duration-200`}

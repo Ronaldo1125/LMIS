@@ -40,7 +40,6 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
   const wrapperRef = useRef(null);
   const [status, setStatus] = useState("idle");
 
-  // Fallback cover: show title text when PDF can't be rendered
   const FallbackCover = () => (
     <div style={{
       width: "100%",
@@ -83,7 +82,6 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
         const token = getToken();
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        // FIX 1: cache: "no-store" prevents ERR_CACHE_WRITE_FAILURE
         const res = await fetch(`${API_BASE}/api/uploads/${uploadId}/preview`, {
           headers,
           cache: "no-store",
@@ -93,7 +91,6 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
         const buffer = await res.arrayBuffer();
         if (cancelled) return;
 
-        // FIX 2: provide cMapUrl + cMapPacked to fix font loading warnings
         const pdf = await pdfjs.getDocument({
           data: buffer,
           cMapUrl: CMAP_URL,
@@ -109,15 +106,18 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
         if (!canvas || !wrapper) return;
 
         const deviceRatio = window.devicePixelRatio || 1;
-        const PADDING     = 12;
-        const containerW  = (wrapper.offsetWidth  || 200) - PADDING;
-        const containerH  = (wrapper.offsetHeight || 267) - PADDING;
+
+        // FIX: use offsetWidth/offsetHeight but fall back to explicit minimums
+        // so scale never computes as 0 or NaN when the wrapper has no CSS height.
+        const PADDING    = 12;
+        const containerW = Math.max(wrapper.offsetWidth  || 0, 120) - PADDING;
+        const containerH = Math.max(wrapper.offsetHeight || 0, 160) - PADDING;
 
         const viewport = page.getViewport({ scale: 1 });
         const scale = Math.min(
           (containerW * deviceRatio) / viewport.width,
           (containerH * deviceRatio) / viewport.height,
-        ) * 0.8;
+        ) * 0.95;
 
         const scaled = page.getViewport({ scale });
 
@@ -161,7 +161,6 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
       className={className}
       aria-label={title}
     >
-      {/* SHIMMER while loading */}
       {status === "loading" && (
         <div style={{
           position: "absolute", inset: 0,
@@ -171,7 +170,6 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
         }} />
       )}
 
-      {/* CANVAS when done */}
       <canvas
         ref={canvasRef}
         style={{
@@ -183,7 +181,6 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
         }}
       />
 
-      {/* FALLBACK: show title instead of blank when error or no uploadId */}
       {(status === "error" || status === "idle" || !uploadId) && (
         <FallbackCover />
       )}

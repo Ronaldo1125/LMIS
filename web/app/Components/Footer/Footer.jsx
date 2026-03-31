@@ -91,7 +91,7 @@ const Footer = () => {
         <div className="mt-16 pt-8 border-t border-gray-700">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className={`${textSize} text-gray-400 text-center md:text-left`}>
-              © {new Date().getFullYear()} LMIS. All rights reserved. Developed by: Jake M., Michael A., Charles Ethan L., Anzel Victor B.
+              © {new Date().getFullYear()} LMIS. All rights reserved. Developed by: <a href="https://www.linkedin.com/in/jake-macua/" target="_blank" rel="noopener noreferrer" className="text-[#D0674B] hover:underline">Jake M.</a>, <a href="https://www.linkedin.com/in/michaelalatraca/" target="_blank" rel="noopener noreferrer" className="text-[#D0674B] hover:underline">Michael A.</a>, <a href="https://www.linkedin.com/in/jake-macua/" target="_blank" rel="noopener noreferrer" className="text-[#D0674B] hover:underline">Loneza, Charles</a>, <a href="https://www.linkedin.com/in/anzelbotin/" target="_blank" rel="noopener noreferrer" className="text-[#D0674B] hover:underline">Anzel Victor B.</a>
             </p>
             <div className={`flex ${socialGap} ${bottomMargin} md:mt-0 mt-4`}>
               {["Privacy Policy", "Terms of Service", "Support"].map((item) => (
