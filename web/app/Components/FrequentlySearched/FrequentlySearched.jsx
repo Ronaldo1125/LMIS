@@ -13,6 +13,19 @@ const FrequentlySearched = () => {
   const [error,   setError]   = useState(null);
   const [windowWidth, setWindowWidth] = useState(0);
 
+  // ── Drag state (all in refs to avoid re-renders during RAF loop) ──
+  const isDragging   = useRef(false);
+  const startX       = useRef(0);
+  const scrollLeft   = useRef(0);
+  const lastX        = useRef(0);
+  const velocity     = useRef(0);
+  const rafId        = useRef(null);
+  const hasDragged   = useRef(false);
+  const scrollRef    = useRef();
+
+  // We still need a React state version of hasDragged for the click guard
+  const [hasDraggedState, setHasDraggedState] = useState(false);
+
   const getResponsiveConfig = () => {
     if (windowWidth < 640) {
       return {
@@ -100,20 +113,129 @@ const FrequentlySearched = () => {
     return () => { isMounted = false; };
   }, []);
 
-  const scrollRef = useRef();
   const scroll = (dir) => {
-    const container = scrollRef.current;
-    if (!container) return;
+    const el = scrollRef.current;
+    if (!el) return;
     const scrollAmount = (config.cardWidth + config.gap) * 3;
-    container.scrollBy({
-      left: dir === "left" ? -scrollAmount : scrollAmount,
-      behavior: "smooth",
-    });
+    el.scrollBy({ left: dir === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
   };
 
+  // ── Momentum helpers ──
+
+  const cancelMomentum = () => {
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+    }
+  };
+
+  const applyMomentum = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    // Decelerate at ~92% per frame (~60 fps → feels natural)
+    velocity.current *= 0.92;
+
+    if (Math.abs(velocity.current) < 0.5) {
+      velocity.current = 0;
+      rafId.current = null;
+      return;
+    }
+
+    el.scrollLeft -= velocity.current;
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Mouse events ──
+
+  const handleMouseDown = (e) => {
+    cancelMomentum();
+    isDragging.current  = true;
+    hasDragged.current  = false;
+    setHasDraggedState(false);
+    startX.current      = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current  = scrollRef.current.scrollLeft;
+    lastX.current       = e.pageX;
+    velocity.current    = 0;
+    scrollRef.current.style.cursor = "grabbing";
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return;
+    e.preventDefault();
+
+    const x    = e.pageX - scrollRef.current.offsetLeft;
+    const walk = x - startX.current;
+
+    // Update velocity for momentum (negative: scroll follows finger direction)
+    velocity.current = e.pageX - lastX.current;
+    lastX.current    = e.pageX;
+
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+
+    if (Math.abs(walk) > 5) {
+      hasDragged.current = true;
+      setHasDraggedState(true);
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+    // Kick off momentum coast
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  const handleMouseLeave = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Touch events ──
+
+  const handleTouchStart = (e) => {
+    cancelMomentum();
+    isDragging.current  = true;
+    hasDragged.current  = false;
+    setHasDraggedState(false);
+    startX.current      = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current  = scrollRef.current.scrollLeft;
+    lastX.current       = e.touches[0].pageX;
+    velocity.current    = 0;
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging.current) return;
+
+    const x    = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    const walk = x - startX.current;
+
+    velocity.current = e.touches[0].pageX - lastX.current;
+    lastX.current    = e.touches[0].pageX;
+
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+
+    if (Math.abs(walk) > 5) {
+      hasDragged.current = true;
+      setHasDraggedState(true);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Click guard ──
   const handleBookClick = (book) => {
+    if (hasDragged.current) return;
     router.push(`/book/${book.id}`);
   };
+
+  // Cleanup RAF on unmount
+  useEffect(() => () => cancelMomentum(), []);
 
   const SkeletonCard = () => (
     <div style={{
@@ -168,6 +290,23 @@ const FrequentlySearched = () => {
         .book-card {
           cursor: pointer;
           overflow: hidden;
+          transition: border-color 0.2s ease;
+          user-select: none;
+        }
+        .book-card:hover {
+          border-color: #003087 !important;
+        }
+        .scroll-container {
+          cursor: grab;
+          overflow-x: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .scroll-container:active {
+          cursor: grabbing;
+        }
+        .scroll-container::-webkit-scrollbar {
+          display: none;
         }
         .rank-badge {
           position: absolute;
@@ -225,7 +364,7 @@ const FrequentlySearched = () => {
                 color: "#000000ff",
                 margin: 0,
               }}>
-                {config.showHeaderText && windowWidth < 640 ? "Trending" : "Most Searched Books"}
+                {config.showHeaderText && windowWidth < 640 ? "Most Searched" : "Most Searched Books"}
               </h2>
 
               {/* Mobile arrows */}
@@ -274,11 +413,18 @@ const FrequentlySearched = () => {
           {/* ── Horizontal Scroll Row ── */}
           <div
             ref={scrollRef}
+            className="scroll-container"
             style={{
               display: "flex",
               gap: config.gap,
-              overflowX: "hidden",
             }}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             {loading && Array.from({ length: 20 }).map((_, i) => (
               <SkeletonCard key={i} />

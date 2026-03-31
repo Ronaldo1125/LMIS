@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   ClipboardDocumentCheckIcon,
   PencilSquareIcon,
@@ -6,7 +6,20 @@ import {
   TrashIcon,
   LockClosedIcon,
   GlobeAltIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  ChevronUpDownIcon,
 } from '@heroicons/react/24/outline'
+
+const SORTABLE_COLUMNS = [
+  { key: 'accession_no',     label: 'Accession No.', sticky: true },
+  { key: 'title',            label: 'Title',         minWidth: '220px' },
+  { key: 'author',           label: 'Author',        minWidth: '160px' },
+  { key: 'publisher',        label: 'Publisher' },
+  { key: 'date_accessioned', label: 'Date Accessioned' },
+  { key: 'isbn',             label: 'ISBN' },
+  { key: 'access_level',    label: 'Access Level' },
+]
 
 const AccessionsTable = ({
   accessions,
@@ -15,10 +28,11 @@ const AccessionsTable = ({
   onEdit,
   onView,
   dark,
-  // Pagination props
   pagination,
   onPageChange,
 }) => {
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null })
+
   const renderValue = (value) => {
     if (value === null || value === undefined || value === '') return '-'
     return value
@@ -31,37 +45,104 @@ const AccessionsTable = ({
     })
   }
 
-  // ── Colors ────────────────────────────────────────────────
-  const tableBg     = dark ? '#0f1f38' : '#ffffff'
-  const border      = dark ? '#1a3356' : '#d1d5db'
-  const theadBg     = dark ? '#0d1d35' : 'var(--dark-blue-1)'
-  const theadText   = '#ffffff'
-  const theadBorder = dark ? '#1a3356' : '#d1d5db'
-  const rowHoverBg  = dark ? '#0d1d35' : '#f1f5f9'
-  const cellBg      = dark ? '#0f1f38' : '#ffffff'
-  const cellText    = dark ? '#dde8f5' : '#374151'
-  const divider     = dark ? '#1a3356' : '#e5e7eb'
-  const badgeBg     = dark ? 'rgba(253,186,116,0.15)' : 'var(--secondary-3-light)'
-  const badgeText   = dark ? '#fdba74' : 'var(--dark-blue-1)'
-  const titleColor  = dark ? '#93c5fd' : 'var(--dark-blue-1)'
-  const hintText    = dark ? '#2e4d70' : '#9ca3af'
-  const emptyIcon   = dark ? '#2e4d70' : '#d1d5db'
-  const emptyText   = dark ? '#6b8cae' : '#6b7280'
-  const emptyMuted  = dark ? '#2e4d70' : '#9ca3af'
-  const pagerBg     = dark ? '#0d1d35' : '#f8fafc'
-  const pagerBorder = dark ? '#1a3356' : '#e2e8f0'
-  const pagerText   = dark ? '#6b8cae' : '#64748b'
+  // ── Sorting ───────────────────────────────────────────────
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key !== key)          return { key, direction: 'asc' }
+      if (prev.direction === 'asc')  return { key, direction: 'desc' }
+      if (prev.direction === 'desc') return { key: null, direction: null }
+      return { key, direction: 'asc' }
+    })
+  }
 
-  const columns = [
-    { label: 'Accession No.',    sticky: true  },
-    { label: 'Title',            minWidth: '220px' },
-    { label: 'Author',           minWidth: '160px' },
-    { label: 'Publisher'                           },
-    { label: 'Date Accessioned'                    },
-    { label: 'ISBN'                                },
-    { label: 'Access Level'                        },
-    { label: 'Actions'                             },
-  ]
+  const sortedAccessions = useMemo(() => {
+    if (!sortConfig.key || !sortConfig.direction) return accessions
+    return [...accessions].sort((a, b) => {
+      let valA = a[sortConfig.key] ?? ''
+      let valB = b[sortConfig.key] ?? ''
+
+      // Date-aware sort
+      if (sortConfig.key === 'date_accessioned') {
+        valA = valA ? new Date(valA).getTime() : 0
+        valB = valB ? new Date(valB).getTime() : 0
+        return sortConfig.direction === 'asc' ? valA - valB : valB - valA
+      }
+
+      valA = valA.toString().toLowerCase()
+      valB = valB.toString().toLowerCase()
+      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1
+      if (valA > valB) return sortConfig.direction === 'asc' ?  1 : -1
+      return 0
+    })
+  }, [accessions, sortConfig])
+
+  // ── Colors ────────────────────────────────────────────────
+  const tableBg    = dark ? '#0f1f38' : '#ffffff'
+  const border     = dark ? '#1a3356' : '#d1d5db'
+  const theadBg    = dark ? '#0d1d35' : 'var(--dark-blue-1)'
+  const theadText  = '#ffffff'
+  const theadBorder = dark ? '#1a3356' : '#d1d5db'
+  const rowHoverBg = dark ? '#0d1d35' : '#f1f5f9'
+  const cellBg     = dark ? '#0f1f38' : '#ffffff'
+  const cellText   = dark ? '#dde8f5' : '#374151'
+  const divider    = dark ? '#1a3356' : '#e5e7eb'
+  const badgeBg    = dark ? 'rgba(253,186,116,0.15)' : 'var(--secondary-3-light)'
+  const badgeText  = dark ? '#fdba74' : 'var(--dark-blue-1)'
+  const titleColor = dark ? '#93c5fd' : 'var(--dark-blue-1)'
+  const hintText   = dark ? '#2e4d70' : '#9ca3af'
+  const emptyIcon  = dark ? '#2e4d70' : '#d1d5db'
+  const emptyText  = dark ? '#6b8cae' : '#6b7280'
+  const emptyMuted = dark ? '#2e4d70' : '#9ca3af'
+  const pagerBg    = dark ? '#0d1d35' : '#f8fafc'
+  const pagerBorder = dark ? '#1a3356' : '#e2e8f0'
+  const pagerText  = dark ? '#6b8cae' : '#64748b'
+  const sortIconActive = '#ffffff'
+  const sortIconIdle   = 'rgba(255,255,255,0.4)'
+
+  // ── Sort Icon ─────────────────────────────────────────────
+  const SortIcon = ({ columnKey }) => {
+    const dir = sortConfig.key === columnKey ? sortConfig.direction : null
+    const style = { width: '0.85rem', height: '0.85rem', flexShrink: 0, transition: 'color 0.15s ease' }
+    if (dir === 'asc')  return <ChevronUpIcon   style={{ ...style, color: sortIconActive }} />
+    if (dir === 'desc') return <ChevronDownIcon  style={{ ...style, color: sortIconActive }} />
+    return <ChevronUpDownIcon style={{ ...style, color: sortIconIdle }} />
+  }
+
+  // ── Sortable Header Cell ──────────────────────────────────
+  const SortableHeader = ({ col }) => {
+    const [hovered, setHovered] = useState(false)
+    const isActive = sortConfig.key === col.key
+    return (
+      <th
+        onClick={() => handleSort(col.key)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          padding: '1rem 1.5rem',
+          textAlign: 'left',
+          fontSize: '0.875rem', fontWeight: 600,
+          color: theadText,
+          borderRight: `1px solid ${theadBorder}`,
+          minWidth: col.minWidth || undefined,
+          whiteSpace: 'nowrap',
+          cursor: 'pointer',
+          userSelect: 'none',
+          background: hovered
+            ? (dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.13)')
+            : isActive
+              ? (dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)')
+              : theadBg,
+          transition: 'background 0.15s ease',
+          ...(col.sticky ? { position: 'sticky', left: 0, zIndex: 20 } : {}),
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+          {col.label}
+          <SortIcon columnKey={col.key} />
+        </div>
+      </th>
+    )
+  }
 
   return (
     <div style={{
@@ -76,30 +157,23 @@ const AccessionsTable = ({
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: theadBg, borderBottom: `1px solid ${theadBorder}` }}>
-              {columns.map(({ label, sticky, minWidth }) => (
-                <th
-                  key={label}
-                  style={{
-                    padding: '1rem 1.5rem',
-                    textAlign: 'left',
-                    fontSize: '0.875rem', fontWeight: 600,
-                    color: theadText,
-                    borderRight: `1px solid ${theadBorder}`,
-                    minWidth: minWidth || undefined,
-                    position: sticky ? 'sticky' : undefined,
-                    left: sticky ? 0 : undefined,
-                    zIndex: sticky ? 20 : undefined,
-                    background: sticky ? theadBg : undefined,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {label}
-                </th>
+              {SORTABLE_COLUMNS.map((col) => (
+                <SortableHeader key={col.key} col={col} />
               ))}
+              {/* Non-sortable Actions column */}
+              <th style={{
+                padding: '1rem 1.5rem',
+                textAlign: 'left',
+                fontSize: '0.875rem', fontWeight: 600,
+                color: theadText,
+                whiteSpace: 'nowrap',
+              }}>
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
-            {accessions.map((item, index) => (
+            {sortedAccessions.map((item, index) => (
               <tr
                 key={item.id}
                 style={{
@@ -189,7 +263,7 @@ const AccessionsTable = ({
                   {renderValue(item.isbn)}
                 </td>
 
-                {/* Access Level — NEW */}
+                {/* Access Level */}
                 <td style={{ padding: '1rem 1.5rem', borderRight: `1px solid ${divider}` }}>
                   <AccessLevelBadge level={item.access_level} dark={dark} />
                 </td>
@@ -228,7 +302,7 @@ const AccessionsTable = ({
           </tbody>
         </table>
 
-        {accessions.length === 0 && (
+        {sortedAccessions.length === 0 && (
           <div style={{ textAlign: 'center', padding: '3rem 1.5rem' }}>
             <ClipboardDocumentCheckIcon style={{ width: '4rem', height: '4rem', margin: '0 auto 1rem', color: emptyIcon }} />
             <p style={{ fontSize: '1.125rem', color: emptyText, margin: '0 0 0.25rem' }}>No accessions found</p>
@@ -237,7 +311,7 @@ const AccessionsTable = ({
         )}
       </div>
 
-      {/* ── Pagination ──────────────────────────────────────────────────────── */}
+      {/* ── Pagination ─────────────────────────────────────── */}
       {pagination && pagination.totalPages > 1 && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -283,7 +357,7 @@ const AccessionsTable = ({
   )
 }
 
-// ── Access Level Badge ─────────────────────────────────────────────────────────
+// ── Access Level Badge ─────────────────────────────────────
 const AccessLevelBadge = ({ level, dark }) => {
   const isStaff = level === 'staff_only'
   const bg    = isStaff
@@ -309,7 +383,7 @@ const AccessLevelBadge = ({ level, dark }) => {
   )
 }
 
-// ── Action Button ──────────────────────────────────────────────────────────────
+// ── Action Button ──────────────────────────────────────────
 const ActionBtn = ({ onClick, title, hoverColor, dark, children }) => {
   const [hovered, setHovered] = useState(false)
   const defaultColor = dark ? '#6b8cae' : '#6b7280'
@@ -334,7 +408,7 @@ const ActionBtn = ({ onClick, title, hoverColor, dark, children }) => {
   )
 }
 
-// ── Pagination Button ──────────────────────────────────────────────────────────
+// ── Pagination Button ──────────────────────────────────────
 const PagerBtn = ({ onClick, disabled, active, dark, children }) => {
   const [hovered, setHovered] = useState(false)
   const bg = active

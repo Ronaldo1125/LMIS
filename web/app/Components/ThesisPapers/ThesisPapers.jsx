@@ -18,6 +18,18 @@ const ThesisPapersSection = () => {
   const [canScrollR, setCanScrollR] = useState(true);
   const [thesisCategory, setThesisCategory] = useState(null);
 
+  // ── Drag state (all in refs to avoid re-renders during RAF loop) ──
+  const isDragging   = useRef(false);
+  const startX       = useRef(0);
+  const scrollLeft   = useRef(0);
+  const lastX        = useRef(0);
+  const velocity     = useRef(0);
+  const rafId        = useRef(null);
+  const hasDragged   = useRef(false);
+
+  // We still need a React state version of hasDragged for the click guard
+  const [hasDraggedState, setHasDraggedState] = useState(false);
+
   const scrollRef = useRef(null);
 
   const getConfig = () => {
@@ -85,11 +97,124 @@ const ThesisPapersSection = () => {
     el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
   };
 
+  // ── Momentum helpers ──
+
+  const cancelMomentum = () => {
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+    }
+  };
+
+  const applyMomentum = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    // Decelerate at ~92% per frame (~60 fps → feels natural)
+    velocity.current *= 0.92;
+
+    if (Math.abs(velocity.current) < 0.5) {
+      velocity.current = 0;
+      rafId.current = null;
+      return;
+    }
+
+    el.scrollLeft -= velocity.current;
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Mouse events ──
+
+  const handleMouseDown = (e) => {
+    cancelMomentum();
+    isDragging.current  = true;
+    hasDragged.current  = false;
+    setHasDraggedState(false);
+    startX.current      = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current  = scrollRef.current.scrollLeft;
+    lastX.current       = e.pageX;
+    velocity.current    = 0;
+    scrollRef.current.style.cursor = "grabbing";
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return;
+    e.preventDefault();
+
+    const x    = e.pageX - scrollRef.current.offsetLeft;
+    const walk = x - startX.current;
+
+    // Update velocity for momentum (negative: scroll follows finger direction)
+    velocity.current = e.pageX - lastX.current;
+    lastX.current    = e.pageX;
+
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+
+    if (Math.abs(walk) > 5) {
+      hasDragged.current = true;
+      setHasDraggedState(true);
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+    // Kick off momentum coast
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  const handleMouseLeave = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Touch events ──
+
+  const handleTouchStart = (e) => {
+    cancelMomentum();
+    isDragging.current  = true;
+    hasDragged.current  = false;
+    setHasDraggedState(false);
+    startX.current      = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current  = scrollRef.current.scrollLeft;
+    lastX.current       = e.touches[0].pageX;
+    velocity.current    = 0;
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging.current) return;
+
+    const x    = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    const walk = x - startX.current;
+
+    velocity.current = e.touches[0].pageX - lastX.current;
+    lastX.current    = e.touches[0].pageX;
+
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+
+    if (Math.abs(walk) > 5) {
+      hasDragged.current = true;
+      setHasDraggedState(true);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Click guard ──
   const handleBookClick = (book) => {
+    if (hasDragged.current) return;
     const id = book.book_id ?? book.id;
     if (!id) return;
     router.push(`/book/${id}`);
   };
+
+  // Cleanup RAF on unmount
+  useEffect(() => () => cancelMomentum(), []);
 
   const NavBtn = ({ dir, disabled, onClick }) => (
     <button
@@ -126,10 +251,20 @@ const ThesisPapersSection = () => {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.45; }
         }
-        .lmis-book-card { cursor: pointer; transition: all 0.2s ease; }
-        .lmis-book-card:hover { border-color: #1e3a8a !important; }
-        .lmis-scroll::-webkit-scrollbar { display: none; }
-        .lmis-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+        .lmis-book-card { cursor: pointer; overflow: hidden; transition: border-color 0.2s ease; user-select: none; }
+        .lmis-book-card:hover { border-color: #003087 !important; }
+        .lmis-scroll {
+          cursor: grab;
+          overflow-x: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .lmis-scroll:active {
+          cursor: grabbing;
+        }
+        .lmis-scroll::-webkit-scrollbar {
+          display: none;
+        }
       `}</style>
 
       <section style={{ background: "#fff", borderTop: "1px solid #f0f2f5" }}>
@@ -142,50 +277,91 @@ const ThesisPapersSection = () => {
             : `44px ${cfg.padX}px 40px`,
         }}>
 
-          {/* ── Header ── */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 20,
-          }}>
-            <h2 style={{
-              margin: 0,
-              fontSize: windowWidth < 640 ? 20 : 26,
-              fontWeight: 700,
-              color: "#0a0f1e",
-              letterSpacing: "-0.4px",
-              lineHeight: 1.2,
+          {/* ── Mobile Header ── */}
+          {windowWidth < 768 && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 20,
             }}>
-              Thesis / Research Papers
-            </h2>
-
-            <div style={{ display: "flex", alignItems: "center", gap: windowWidth < 640 ? 8 : 12 }}>
-              <NavBtn dir="left"  disabled={!canScrollL} onClick={() => scroll("left")}  />
-              <NavBtn dir="right" disabled={!canScrollR} onClick={() => scroll("right")} />
-              {windowWidth >= 768 && (
-                <button
-                  onClick={() => thesisCategory && router.push(`/search?category=${encodeURIComponent(thesisCategory)}`)}
-                  style={{
-                    marginLeft: 4,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#000000",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "6px 0",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  VIEW ALL
-                </button>
-              )}
+              <h2 style={{
+                margin: 0,
+                fontSize: 20,
+                fontWeight: 700,
+                color: "#0a0f1e",
+                letterSpacing: "-0.4px",
+                lineHeight: 1.2,
+              }}>
+                Research Papers
+              </h2>
+              <button
+                onClick={() => thesisCategory && router.push(`/search?category=${encodeURIComponent(thesisCategory)}`)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#000000",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "6px 0",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                View All
+              </button>
             </div>
-          </div>
+          )}
+
+          {/* ── Header ── */}
+          {windowWidth >= 768 && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 20,
+            }}>
+              <h2 style={{
+                margin: 0,
+                fontSize: windowWidth < 640 ? 20 : 26,
+                fontWeight: 700,
+                color: "#0a0f1e",
+                letterSpacing: "-0.4px",
+                lineHeight: 1.2,
+              }}>
+                Thesis / Research Papers
+              </h2>
+
+              <div style={{ display: "flex", alignItems: "center", gap: windowWidth < 640 ? 8 : 12 }}>
+                <NavBtn dir="left"  disabled={!canScrollL} onClick={() => scroll("left")}  />
+                <NavBtn dir="right" disabled={!canScrollR} onClick={() => scroll("right")} />
+                {windowWidth >= 768 && (
+                  <button
+                    onClick={() => thesisCategory && router.push(`/search?category=${encodeURIComponent(thesisCategory)}`)}
+                    style={{
+                      marginLeft: 4,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#000000",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "6px 0",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    VIEW ALL
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* ── Scroll Row ── */}
           <div
@@ -198,6 +374,13 @@ const ThesisPapersSection = () => {
               overflowY: "hidden",
               paddingBottom: 40,
             }}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             {loading && Array.from({ length: 10 }).map((_, i) => (
               <div key={i} style={{ minWidth: cfg.cardWidth, maxWidth: cfg.cardWidth, flexShrink: 0, border: "1px solid #e5e7eb", overflow: "hidden" }}>
@@ -290,23 +473,6 @@ const ThesisPapersSection = () => {
               );
             })}
           </div>
-
-          {/* ── Mobile View All ── */}
-          {windowWidth < 768 && (
-            <div style={{ textAlign: "center", marginTop: -16 }}>
-              <button
-                onClick={() => thesisCategory && router.push(`/search?category=${encodeURIComponent(thesisCategory)}`)}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  fontSize: 13, fontWeight: 600, color: "#000000",
-                  background: "none", border: "1px solid #000000",
-                  borderRadius: 8, padding: "8px 20px", cursor: "pointer",
-                }}
-              >
-                VIEW ALL
-              </button>
-            </div>
-          )}
 
         </div>
       </section>

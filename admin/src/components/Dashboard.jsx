@@ -10,6 +10,7 @@ import MostDownloadedStats from './DashboardComponents/MostDownloadedStats'
 import LoginNotification from './DashboardComponents/LoginNotification'
 import DuplicateTitlesDetector from './DashboardComponents/DuplicateTitlesDetector'
 import CurrencyOfCollection from './DashboardComponents/CurrencyOfCollection'
+import BookmarkStatistics from './DashboardComponents/BookmarkStatistics'
 
 const API_BASE_URL = 'http://localhost:5000'
 
@@ -213,8 +214,8 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
       <div className="dash-section" style={{ marginTop: '2rem', paddingBottom: '2.5rem', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
         <DuplicateTitlesDetector dark={dark} />
         <CurrencyOfCollection dark={dark} />
-      </div>
-
+      </div>=
+<BookmarkStatistics dark={dark} />
     </div>
   )
 }

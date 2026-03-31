@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, ChevronLeft, BookOpen } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import PDFThumbnail from "../Search/PDFThumbnail";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -16,6 +16,18 @@ const ReportsSection = () => {
   const [windowWidth, setWindowWidth] = useState(0);
   const [canScrollL,  setCanScrollL]  = useState(false);
   const [canScrollR,  setCanScrollR]  = useState(true);
+
+  // ── Drag state (all in refs to avoid re-renders during RAF loop) ──
+  const isDragging   = useRef(false);
+  const startX       = useRef(0);
+  const scrollLeft   = useRef(0);
+  const lastX        = useRef(0);
+  const velocity     = useRef(0);
+  const rafId        = useRef(null);
+  const hasDragged   = useRef(false);
+
+  // We still need a React state version of hasDragged for the click guard
+  const [hasDraggedState, setHasDraggedState] = useState(false);
 
   const scrollRef = useRef(null);
 
@@ -77,11 +89,124 @@ const ReportsSection = () => {
     el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
   };
 
+  // ── Momentum helpers ──
+
+  const cancelMomentum = () => {
+    if (rafId.current) {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+    }
+  };
+
+  const applyMomentum = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    // Decelerate at ~92% per frame (~60 fps → feels natural)
+    velocity.current *= 0.92;
+
+    if (Math.abs(velocity.current) < 0.5) {
+      velocity.current = 0;
+      rafId.current = null;
+      return;
+    }
+
+    el.scrollLeft -= velocity.current;
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Mouse events ──
+
+  const handleMouseDown = (e) => {
+    cancelMomentum();
+    isDragging.current  = true;
+    hasDragged.current  = false;
+    setHasDraggedState(false);
+    startX.current      = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current  = scrollRef.current.scrollLeft;
+    lastX.current       = e.pageX;
+    velocity.current    = 0;
+    scrollRef.current.style.cursor = "grabbing";
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return;
+    e.preventDefault();
+
+    const x    = e.pageX - scrollRef.current.offsetLeft;
+    const walk = x - startX.current;
+
+    // Update velocity for momentum (negative: scroll follows finger direction)
+    velocity.current = e.pageX - lastX.current;
+    lastX.current    = e.pageX;
+
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+
+    if (Math.abs(walk) > 5) {
+      hasDragged.current = true;
+      setHasDraggedState(true);
+    }
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+    // Kick off momentum coast
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  const handleMouseLeave = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Touch events ──
+
+  const handleTouchStart = (e) => {
+    cancelMomentum();
+    isDragging.current  = true;
+    hasDragged.current  = false;
+    setHasDraggedState(false);
+    startX.current      = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current  = scrollRef.current.scrollLeft;
+    lastX.current       = e.touches[0].pageX;
+    velocity.current    = 0;
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging.current) return;
+
+    const x    = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    const walk = x - startX.current;
+
+    velocity.current = e.touches[0].pageX - lastX.current;
+    lastX.current    = e.touches[0].pageX;
+
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+
+    if (Math.abs(walk) > 5) {
+      hasDragged.current = true;
+      setHasDraggedState(true);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Click guard ──
   const handleBookClick = (book) => {
+    if (hasDragged.current) return;
     const id = book.book_id ?? book.id;
     if (!id) return;
     router.push(`/book/${id}`);
   };
+
+  // Cleanup RAF on unmount
+  useEffect(() => () => cancelMomentum(), []);
 
   const SkeletonCard = ({ width, height }) => (
     <div style={{ minWidth: width, maxWidth: width, flexShrink: 0, border: "1px solid #e5e7eb", overflow: "hidden" }}>
@@ -93,33 +218,6 @@ const ReportsSection = () => {
     </div>
   );
 
-  const NavBtn = ({ dir, disabled, onClick }) => (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        width: windowWidth < 640 ? 34 : 40,
-        height: windowWidth < 640 ? 34 : 40,
-        borderRadius: 8,
-        border: "1.5px solid",
-        borderColor: disabled ? "#e5e7eb" : "#cbd5e1",
-        background: disabled ? "#fafafa" : "#fff",
-        display: "grid",
-        placeItems: "center",
-        cursor: disabled ? "not-allowed" : "pointer",
-        transition: "all 0.15s",
-        opacity: disabled ? 0.45 : 1,
-        flexShrink: 0,
-      }}
-      onMouseEnter={(e) => { if (!disabled) { e.currentTarget.style.borderColor = "#003087"; e.currentTarget.style.background = "#f0f4ff"; } }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = disabled ? "#e5e7eb" : "#cbd5e1"; e.currentTarget.style.background = disabled ? "#fafafa" : "#fff"; }}
-    >
-      {dir === "left"
-        ? <ChevronLeft  size={windowWidth < 640 ? 15 : 18} color={disabled ? "#d1d5db" : "#374151"} />
-        : <ChevronRight size={windowWidth < 640 ? 15 : 18} color={disabled ? "#d1d5db" : "#374151"} />
-      }
-    </button>
-  );
 
   return (
     <>
@@ -128,10 +226,20 @@ const ReportsSection = () => {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.45; }
         }
-        .lmis-book-card { cursor: pointer; transition: all 0.2s ease; }
-        .lmis-book-card:hover { border-color: #1e3a8a !important; }
-        .lmis-scroll::-webkit-scrollbar { display: none; }
-        .lmis-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+        .lmis-book-card { cursor: pointer; overflow: hidden; transition: border-color 0.2s ease; user-select: none; }
+        .lmis-book-card:hover { border-color: #003087 !important; }
+        .lmis-scroll {
+          cursor: grab;
+          overflow-x: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .lmis-scroll:active {
+          cursor: grabbing;
+        }
+        .lmis-scroll::-webkit-scrollbar {
+          display: none;
+        }
       `}</style>
 
       <section style={{ background: "#fff", borderTop: "1px solid #f0f2f5" }}>
@@ -149,50 +257,89 @@ const ReportsSection = () => {
             : `44px ${cfg.padX}px 40px`,
         }}>
 
-          {/* ── Header ── */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 20,
-          }}>
-            <h2 style={{
-              margin: 0,
-              fontSize: windowWidth < 640 ? 20 : 26,
-              fontWeight: 700,
-              color: "#0a0f1e",
-              letterSpacing: "-0.4px",
-              lineHeight: 1.2,
+          {/* ── Mobile Header ── */}
+          {windowWidth < 768 && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 20,
             }}>
-              Reports
-            </h2>
-
-            <div style={{ display: "flex", alignItems: "center", gap: windowWidth < 640 ? 8 : 12 }}>
-              <NavBtn dir="left"  disabled={!canScrollL} onClick={() => scroll("left")}  />
-              <NavBtn dir="right" disabled={!canScrollR} onClick={() => scroll("right")} />
-              {windowWidth >= 768 && (
-                <button
-                  onClick={() => router.push("/search?category=Reports")}
-                  style={{
-                    marginLeft: 4,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#000000",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: "6px 0",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  VIEW ALL
-                </button>
-              )}
+              <h2 style={{
+                margin: 0,
+                fontSize: 20,
+                fontWeight: 700,
+                color: "#0a0f1e",
+                letterSpacing: "-0.4px",
+                lineHeight: 1.2,
+              }}>
+                Reports
+              </h2>
+              <button
+                onClick={() => router.push("/search?category=Reports")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#000000",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "6px 0",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                View All
+              </button>
             </div>
-          </div>
+          )}
+
+          {/* ── Header ── */}
+          {windowWidth >= 768 && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 20,
+            }}>
+              <h2 style={{
+                margin: 0,
+                fontSize: windowWidth < 640 ? 20 : 26,
+                fontWeight: 700,
+                color: "#0a0f1e",
+                letterSpacing: "-0.4px",
+                lineHeight: 1.2,
+              }}>
+                Reports
+              </h2>
+
+              <div style={{ display: "flex", alignItems: "center", gap: windowWidth < 640 ? 8 : 12 }}>
+                {windowWidth >= 768 && (
+                  <button
+                    onClick={() => router.push("/search?category=Reports")}
+                    style={{
+                      marginLeft: 4,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#000000",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "6px 0",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    VIEW ALL
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* ── Scroll Row ── no horizontal padding here */}
           <div
@@ -205,6 +352,13 @@ const ReportsSection = () => {
               overflowY: "hidden",
               paddingBottom: 40,
             }}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
           >
             {loading && Array.from({ length: 10 }).map((_, i) => (
               <SkeletonCard key={i} width={cfg.cardWidth} height={cfg.cardHeight} />
@@ -302,23 +456,6 @@ const ReportsSection = () => {
               );
             })}
           </div>
-
-          {/* ── Mobile "View all" ── */}
-          {windowWidth < 768 && (
-            <div style={{ textAlign: "center", marginTop: -16 }}>
-              <button
-                onClick={() => router.push("/search?category=Reports")}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  fontSize: 13, fontWeight: 600, color: "#000000",
-                  background: "none", border: "1px solid #000000",
-                  borderRadius: 8, padding: "8px 20px", cursor: "pointer",
-                }}
-              >
-                VIEW ALL
-              </button>
-            </div>
-          )}
 
         </div>
       </section>
