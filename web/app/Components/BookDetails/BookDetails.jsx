@@ -76,12 +76,13 @@ function BibliographicDetails({ book, accessionNo }) {
 // ─── Main BookDetails ─────────────────────────────────────────────────────────
 
 const BookDetails = ({ bookId }) => {
-  const [book,        setBook]        = useState(null);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState(null);
-  const [showReader,  setShowReader]  = useState(false);
-  const [downloading, setDownloading] = useState(false);
-  const [bookmarked,  setBookmarked]  = useState(false);
+  const [book,            setBook]            = useState(null);
+  const [loading,         setLoading]         = useState(true);
+  const [error,           setError]           = useState(null);
+  const [showReader,      setShowReader]      = useState(false);
+  const [downloading,     setDownloading]     = useState(false);
+  const [bookmarked,      setBookmarked]      = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
 
   useEffect(() => {
     if (!bookId) return;
@@ -93,12 +94,30 @@ const BookDetails = ({ bookId }) => {
         const token = getToken();
         const headers = { "Content-Type": "application/json" };
         if (token) headers.Authorization = `Bearer ${token}`;
+
+        // Fetch book details
         const res = await fetch(`${API_BASE_URL}/api/book-details/${bookId}`, { headers });
         if (!res.ok) {
           const msgs = { 403: "Access denied.", 404: "Book not found." };
           throw new Error(msgs[res.status] || "Failed to fetch book details.");
         }
-        setBook(await res.json());
+        const bookData = await res.json();
+        setBook(bookData);
+
+        // Check bookmark status (only if logged in)
+        if (token) {
+          try {
+            const bmRes = await fetch(`${API_BASE_URL}/api/bookmarks/${bookId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (bmRes.ok) {
+              const bmData = await bmRes.json();
+              setBookmarked(bmData.bookmarked);
+            }
+          } catch {
+            // Silently ignore bookmark check failure — not critical
+          }
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -136,6 +155,30 @@ const BookDetails = ({ bookId }) => {
     }
   };
 
+  const handleBookmark = async () => {
+    if (bookmarkLoading) return;
+    const token = getToken();
+    if (!token) return; // Must be logged in to bookmark
+
+    setBookmarkLoading(true);
+    try {
+      const method = bookmarked ? "DELETE" : "POST";
+      const res = await fetch(`${API_BASE_URL}/api/bookmarks/${book.id}`, {
+        method,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setBookmarked((prev) => !prev);
+      } else {
+        console.error("Bookmark request failed:", res.status);
+      }
+    } catch (err) {
+      console.error("Bookmark failed:", err);
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
+
   if (loading) return (
     <>
       <Nav />
@@ -165,6 +208,7 @@ const BookDetails = ({ bookId }) => {
   const uploadId    = book.upload?.id || null;
   const pubYear     = book.date_of_publication ? new Date(book.date_of_publication).getFullYear() : null;
   const accessionNo = book.accession?.accession_no || "—";
+  const isLoggedIn  = !!getToken();
 
   return (
     <>
@@ -215,9 +259,21 @@ const BookDetails = ({ bookId }) => {
                 <button onClick={handleDownload} disabled={!uploadId || downloading} className="bd-btn-secondary">
                   {downloading ? <><Spinner /> Saving…</> : <><Download size={15} /> Download</>}
                 </button>
-                <button onClick={() => setBookmarked((b) => !b)} className={`bd-btn-icon ${bookmarked ? "on" : ""}`} title={bookmarked ? "Remove bookmark" : "Bookmark"}>
-                  {bookmarked ? <BookmarkCheck size={17} /> : <Bookmark size={17} />}
-                </button>
+                {isLoggedIn && (
+                  <button
+                    onClick={handleBookmark}
+                    disabled={bookmarkLoading}
+                    className={`bd-btn-icon ${bookmarked ? "on" : ""}`}
+                    title={bookmarked ? "Remove bookmark" : "Bookmark"}
+                  >
+                    {bookmarkLoading
+                      ? <Spinner />
+                      : bookmarked
+                        ? <BookmarkCheck size={17} />
+                        : <Bookmark size={17} />
+                    }
+                  </button>
+                )}
               </div>
 
               <div className="bd-divider" />
@@ -233,7 +289,6 @@ const BookDetails = ({ bookId }) => {
             </div>
           </div>
 
-          {/* FIX: was currentBook={book}, now passes the id the route expects */}
           <RelatedBooks currentBookId={book.id} />
         </div>
       </div>

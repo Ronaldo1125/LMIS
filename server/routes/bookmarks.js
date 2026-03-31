@@ -13,6 +13,7 @@ router.get('/', authMiddleware, async (req, res) => {
     } = req.query;
 
     const offset = (page - 1) * limit;
+    const isStaff = req.user.user_type === 'Staff';
 
     const [bookmarks] = await pool.query(
       `SELECT
@@ -31,10 +32,10 @@ router.get('/', authMiddleware, async (req, res) => {
        JOIN books b ON b.id = bm.book_id
        WHERE bm.user_id = ?
          AND b.is_archived = 0
-         AND b.access_level = 'public'
+         AND (? OR b.access_level = 'public')
        ORDER BY bm.created_at DESC
        LIMIT ? OFFSET ?`,
-      [req.user.id, parseInt(limit), parseInt(offset)]
+      [req.user.id, isStaff, parseInt(limit), parseInt(offset)]
     );
 
     const [[{ total }]] = await pool.query(
@@ -43,8 +44,8 @@ router.get('/', authMiddleware, async (req, res) => {
        JOIN books b ON b.id = bm.book_id
        WHERE bm.user_id = ?
          AND b.is_archived = 0
-         AND b.access_level = 'public'`,
-      [req.user.id]
+         AND (? OR b.access_level = 'public')`,
+      [req.user.id, isStaff]
     );
 
     res.json({
@@ -90,6 +91,8 @@ router.post('/:book_id', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'Invalid book ID' });
     }
 
+    const isStaff = req.user.user_type === 'Staff';
+
     const [book] = await pool.query(
       `SELECT id, access_level FROM books WHERE id = ? AND is_archived = 0`,
       [bookId]
@@ -99,7 +102,8 @@ router.post('/:book_id', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'Book not found or archived' });
     }
 
-    if (book[0].access_level === 'staff_only') {
+    // Only block staff_only books from Patrons; Staff can bookmark them freely
+    if (book[0].access_level === 'staff_only' && !isStaff) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
