@@ -289,6 +289,7 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
                 style={{
                   ...inputStyle,
                   paddingLeft: '2.25rem',
+                  paddingRight: autofilled ? '6rem' : '0.75rem',
                   borderColor: dark ? '#1a3356' : '#93c5fd',
                 }}
                 onFocus={e => {
