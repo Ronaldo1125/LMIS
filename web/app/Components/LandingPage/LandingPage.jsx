@@ -17,15 +17,18 @@ import "../../globals.css";
 const LandingPage = () => {
 
   const [query, setQuery] = useState("");
+  const [activeField, setActiveField] = useState("all");
   
   const router = useRouter();
+
+  const fieldLabel = { all: "All Fields", title: "Title", author: "Author", subject: "Subject", isbn: "ISBN / ISSN" };
 
 
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/search?query=${encodeURIComponent(query.trim())}`);
+      router.push(`/search?query=${encodeURIComponent(query.trim())}&field=${activeField}`);
     }
   };
 
@@ -116,167 +119,102 @@ const LandingPage = () => {
 
 
               {/* 🔥 FIXED SEARCH BAR */}
-
               <form
-
                 onSubmit={handleSearch}
-
                 className="
-
                   mt-8
-
                   w-full
-
                   max-w-full
-
                   sm:max-w-[600px]
-
                   md:max-w-[680px]
-
                   lg:max-w-[760px]
-
                   xl:max-w-[820px]
-
                 "
-
               >
-
                 <div
-
                   className="
-
-                    flex items-center
-
+                    flex
+                    flex-col
                     w-full
-
-                    border border-white/25
-
                     bg-white
-
+                    shadow-sm
+                    px-4
+                    py-4
+                    gap-3
+                    relative
                     rounded-[3px]
-
-                    overflow-hidden
-
                     transition-all duration-200
-
-                    focus-within:border-blue-600
-
                   "
-
                 >
+                  <div className="flex items-center gap-3">
+                    {/* INPUT */}
+                    <input
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Search for books, sourcebooks, reports..."
+                      className="
+                        flex-1
+                        bg-transparent
+                        outline-none
+                        text-[14px]
+                        sm:text-[14px]
+                        md:text-[15px]
+                        text-gray-800
+                        placeholder:text-gray-400
+                        px-2
+                        tracking-tight
+                      "
+                    />
 
-                  {/* ICON */}
+                    {/* DIVIDER */}
+                    <div className="hidden sm:block h-6 w-px bg-gray-200" />
 
-                  <div className="pl-4 sm:pl-5 md:pl-6 text-blue-700 flex-shrink-0">
-
-                    <svg
-
-                      xmlns="http://www.w3.org/2000/svg"
-
-                      viewBox="0 0 24 24"
-
-                      fill="none"
-
-                      stroke="currentColor"
-
-                      strokeWidth="1.8"
-
-                      className="w-5 h-5"
-
+                    {/* SEARCH BUTTON */}
+                    <button
+                      type="submit"
+                      className="
+                        shrink-0
+                        h-10
+                        w-10
+                        rounded-full
+                        bg-blue-900
+                        flex items-center
+                        justify-center
+                        hover:bg-blue-800
+                        transition
+                        text-white
+                      "
+                      aria-label="Search"
                     >
-
-                      <circle cx="11" cy="11" r="7" />
-
-                      <line x1="16.65" y1="16.65" x2="21" y2="21" />
-
-                    </svg>
-
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        className="w-4 h-4"
+                      >
+                        <circle cx="11" cy="11" r="7" />
+                        <line x1="16.65" y1="16.65" x2="21" y2="21" />
+                      </svg>
+                    </button>
                   </div>
 
-
-
-                  {/* INPUT */}
-
-                  <input
-
-                    value={query}
-
-                    onChange={(e) => setQuery(e.target.value)}
-
-                    placeholder="Search books, reports, research..."
-
-                    className="
-
-                      flex-1
-
-                      min-w-0
-
-                      h-16 sm:h-14 md:h-15 lg:h-16
-
-                      px-3 sm:px-4 md:px-5
-
-                      text-[15px] sm:text-[15px] md:text-[16px]
-
-                      text-black
-
-                      placeholder:text-black/40
-
-                      bg-transparent
-
-                      outline-none
-
-                      tracking-tight
-
-                    "
-
-                  />
-
-
-
-                  {/* BUTTON */}
-
-                  <button
-
-                    type="submit"
-
-                    className="
-
-                      flex-shrink-0
-
-                      h-12 sm:h-10 md:h-11 lg:h-12
-
-                      mr-2
-
-                      px-7 sm:px-7 md:px-8
-
-                      bg-blue-800
-
-                      text-white
-
-                      text-[13px] sm:text-[13px] md:text-[14px]
-
-                      font-medium
-
-                      tracking-tight
-
-                      rounded-[3px]
-
-                      hover:bg-blue-900
-
-                      active:bg-black
-
-                      transition-colors
-
-                    "
-
-                  >
-
-                    Search
-
-                  </button>
-
+                  {/* Field selection buttons inside searchbar */}
+                  <div className="hidden sm:flex items-center gap-2 flex-wrap pt-3 border-t border-gray-200">
+                    {Object.entries(fieldLabel).map(([f, lbl]) => (
+                      <button
+                        key={f}
+                        onClick={() => setActiveField(f)}
+                        className={`rounded-[3px] px-3 py-1 text-[12px] transition ${
+                          activeField === f ? "bg-blue-900 text-white" : "bg-[#f4f4f4] text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {lbl}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-
               </form>
 
               {/* Advanced search button */}
