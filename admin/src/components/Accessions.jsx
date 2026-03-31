@@ -46,7 +46,6 @@ const Accessions = ({ dark }) => {
   const [loading, setLoading]                     = useState(true)
   const [error, setError]                         = useState(null)
 
-  // ── Pagination state ───────────────────────────────────────────────────────
   const [pagination, setPagination] = useState({
     page: 1, limit: PAGE_LIMIT, total: 0, totalPages: 1,
   })
@@ -67,7 +66,6 @@ const Accessions = ({ dark }) => {
     isOpen: false, type: 'archive', item: null, loading: false,
   })
 
-  // ─── Fetch active accessions (server-side pagination + search) ─────────────
   const fetchAccessions = useCallback(async (page = 1, search = '') => {
     try {
       setLoading(true)
@@ -86,7 +84,6 @@ const Accessions = ({ dark }) => {
     }
   }, [])
 
-  // ─── Fetch archived accessions ─────────────────────────────────────────────
   const fetchArchivedAccessions = useCallback(async () => {
     try {
       const { data } = await axios.get(`${API_BASE}/accessions/archived`, {
@@ -98,12 +95,10 @@ const Accessions = ({ dark }) => {
     }
   }, [])
 
-  // Initial load
   useEffect(() => {
     fetchAccessions(1, '')
   }, [fetchAccessions])
 
-  // Re-fetch when search changes (reset to page 1)
   useEffect(() => {
     const timeout = setTimeout(() => {
       fetchAccessions(1, searchTerm)
@@ -114,17 +109,14 @@ const Accessions = ({ dark }) => {
 
   const statuses = ['all', 'Pending Review', 'Cataloged']
 
-  // Client-side status filter only (search is server-side)
   const filteredAccessions = accessions.filter((item) =>
     selectedStatus === 'all' || item.status === selectedStatus
   )
 
-  // ─── Page change ───────────────────────────────────────────────────────────
   const handlePageChange = (newPage) => {
     fetchAccessions(newPage, searchTerm)
   }
 
-  // ─── Add accession ─────────────────────────────────────────────────────────
   const handleAddAccession = async (e) => {
     e.preventDefault()
     try {
@@ -140,24 +132,20 @@ const Accessions = ({ dark }) => {
     }
   }
 
-  // ─── Archive modal ─────────────────────────────────────────────────────────
   const handleArchiveClick = (item) => {
     setModalState({ isOpen: true, type: 'archive', item, loading: false })
   }
 
-  // ─── Delete modal ──────────────────────────────────────────────────────────
   const handleDeleteClick = (item) => {
     setModalState({ isOpen: true, type: 'delete', item, loading: false })
   }
 
-  // ─── Close confirmation modal ──────────────────────────────────────────────
   const handleModalClose = () => {
     if (!modalState.loading) {
       setModalState({ isOpen: false, type: 'archive', item: null, loading: false })
     }
   }
 
-  // ─── Confirm archive ───────────────────────────────────────────────────────
   const handleConfirmArchive = async () => {
     if (!modalState.item) return
     setModalState(prev => ({ ...prev, loading: true }))
@@ -175,7 +163,6 @@ const Accessions = ({ dark }) => {
     }
   }
 
-  // ─── Confirm delete (de-accession) ────────────────────────────────────────
   const handleConfirmDelete = async () => {
     if (!modalState.item) return
     setModalState(prev => ({ ...prev, loading: true }))
@@ -192,7 +179,6 @@ const Accessions = ({ dark }) => {
     }
   }
 
-  // ─── Restore archived accession ────────────────────────────────────────────
   const handleRestoreAccession = async (id) => {
     try {
       await axios.patch(
@@ -207,7 +193,6 @@ const Accessions = ({ dark }) => {
     }
   }
 
-  // ─── Edit accession ────────────────────────────────────────────────────────
   const handleEditAccession = (item) => {
     setEditAccession({
       id: item.id,
@@ -234,7 +219,6 @@ const Accessions = ({ dark }) => {
     setIsEditModalOpen(true)
   }
 
-  // ─── Update accession (PUT) ────────────────────────────────────────────────
   const handleUpdateAccession = async () => {
     try {
       await axios.put(
@@ -250,27 +234,24 @@ const Accessions = ({ dark }) => {
     }
   }
 
-  // ─── Access level changed inside EditModal → sync list in place ───────────
   const handleAccessLevelChange = (id, newLevel) => {
     setAccessions(prev =>
       prev.map(a => a.id === id ? { ...a, access_level: newLevel } : a)
     )
   }
 
-  // ─── View accession ────────────────────────────────────────────────────────
   const handleViewAccession = (item) => {
     setSelectedAccession(item)
     setIsViewModalOpen(true)
   }
 
-  // ─── Open archives modal ───────────────────────────────────────────────────
   const handleOpenArchives = () => {
     fetchArchivedAccessions()
     setIsArchivesOpen(true)
   }
 
-  // ─── Theme tokens ──────────────────────────────────────────────────────────
-  const pageBg        = dark ? '#0a1628' : '#f1f5f9'
+  // ── Theme ──────────────────────────────────────────────────
+  const pageBg        = dark ? '#07111f' : '#f1f5f9'
   const headerBg      = dark ? '#0d1d35' : '#ffffff'
   const headerBorder  = dark ? '#1a3356' : '#e2e8f0'
   const cardBg        = dark ? '#0f1f38' : '#ffffff'
@@ -312,8 +293,8 @@ const Accessions = ({ dark }) => {
       <div style={{ padding: '0 1.5rem' }}>
         <StatsOverview accessions={accessions} pagination={pagination} dark={dark} />
 
-        {/* Sticky Search and Filter */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 20, background: pageBg, paddingBottom: '1rem', transition: 'background 0.45s ease' }}>
+        {/* Sticky Search and Filter — zIndex 30 so it sits above sticky table column (zIndex 20) */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 30, paddingTop: '1rem', paddingBottom: '1rem', transition: 'background 0.45s ease' }}>
           <SearchAndFilter
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
@@ -328,13 +309,9 @@ const Accessions = ({ dark }) => {
 
         {error && (
           <div style={{
-            marginBottom: '1rem',
-            padding: '1rem',
-            background: errorBg,
-            border: `1px solid ${errorBorder}`,
-            color: errorText,
-            borderRadius: '0.5rem',
-            fontSize: '0.875rem',
+            marginBottom: '1rem', padding: '1rem',
+            background: errorBg, border: `1px solid ${errorBorder}`,
+            color: errorText, borderRadius: '0.5rem', fontSize: '0.875rem',
           }}>
             {error}
           </div>
@@ -342,21 +319,15 @@ const Accessions = ({ dark }) => {
 
         {loading ? (
           <div style={{
-            background: cardBg,
-            border: `1px solid ${border}`,
-            borderRadius: '0.75rem',
-            padding: '2rem',
-            textAlign: 'center',
-            transition: 'background 0.45s ease',
+            background: cardBg, border: `1px solid ${border}`,
+            borderRadius: '0.75rem', padding: '2rem',
+            textAlign: 'center', transition: 'background 0.45s ease',
           }}>
             <div style={{
-              display: 'inline-block',
-              width: '2rem', height: '2rem',
-              borderRadius: '50%',
-              border: `2px solid transparent`,
+              display: 'inline-block', width: '2rem', height: '2rem',
+              borderRadius: '50%', border: '2px solid transparent',
               borderBottomColor: iconColor,
-              animation: 'spin 0.8s linear infinite',
-              marginBottom: '1rem',
+              animation: 'spin 0.8s linear infinite', marginBottom: '1rem',
             }} />
             <p style={{ color: textSecondary, margin: 0 }}>Loading accessions...</p>
           </div>
@@ -376,10 +347,7 @@ const Accessions = ({ dark }) => {
 
       <AddAccessionModal
         isOpen={isAddModalOpen}
-        onClose={() => {
-          setIsAddModalOpen(false)
-          setNewAccession(emptyAccessionForm)
-        }}
+        onClose={() => { setIsAddModalOpen(false); setNewAccession(emptyAccessionForm) }}
         onSubmit={handleAddAccession}
         newAccession={newAccession}
         setNewAccession={setNewAccession}
@@ -388,20 +356,14 @@ const Accessions = ({ dark }) => {
 
       <ViewAccessionModal
         isOpen={isViewModalOpen}
-        onClose={() => {
-          setIsViewModalOpen(false)
-          setSelectedAccession(null)
-        }}
+        onClose={() => { setIsViewModalOpen(false); setSelectedAccession(null) }}
         accession={selectedAccession}
         dark={dark}
       />
 
       <EditAccessionModal
         isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false)
-          setEditAccession({ id: null, ...emptyAccessionForm })
-        }}
+        onClose={() => { setIsEditModalOpen(false); setEditAccession({ id: null, ...emptyAccessionForm }) }}
         onSubmit={handleUpdateAccession}
         editAccession={editAccession}
         setEditAccession={setEditAccession}
