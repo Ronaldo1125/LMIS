@@ -13,10 +13,10 @@ const FormField = ({ label, required, children, colSpan, dark }) => (
 )
 
 const BookFormFields = ({ formData, onChange, categories, loading, dark = false }) => {
-  const inputBg     = dark ? '#081422' : '#ffffff'
-  const inputBorder = dark ? '#1a3356' : '#d1d5db'
-  const textPrimary = dark ? '#dde8f5' : '#1e293b'
-  const textMuted   = dark ? '#2e4d70' : '#94a3b8'
+  const inputBg      = dark ? '#081422' : '#ffffff'
+  const inputBorder  = dark ? '#1a3356' : '#d1d5db'
+  const textPrimary  = dark ? '#dde8f5' : '#1e293b'
+  const textMuted    = dark ? '#2e4d70' : '#94a3b8'
   const sectionDivider = dark ? '#1a3356' : '#f1f5f9'
 
   const inputStyle = {
@@ -29,6 +29,7 @@ const BookFormFields = ({ formData, onChange, categories, loading, dark = false 
     boxSizing: 'border-box', fontFamily: 'inherit',
     opacity: loading ? 0.6 : 1,
     cursor: loading ? 'not-allowed' : 'auto',
+    colorScheme: dark ? 'dark' : 'light',
   }
 
   const sectionLabelStyle = {
@@ -153,15 +154,16 @@ const BookFormFields = ({ formData, onChange, categories, loading, dark = false 
               onFocus={focusStyle} onBlur={blurStyle}
             />
           </FormField>
-<FormField label="Publication" dark={dark}>
-  <input
-    type="text" value={formData.publication}
-    onChange={handleChange('publication')}
-    placeholder="Place of publication"
-    disabled={loading} style={inputStyle}
-    onFocus={focusStyle} onBlur={blurStyle}
-  />
-</FormField>
+
+          <FormField label="Publication" dark={dark}>
+            <input
+              type="text" value={formData.publication}
+              onChange={handleChange('publication')}
+              placeholder="Place of publication"
+              disabled={loading} style={inputStyle}
+              onFocus={focusStyle} onBlur={blurStyle}
+            />
+          </FormField>
 
           <FormField label="Publisher" dark={dark}>
             <input

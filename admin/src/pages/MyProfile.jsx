@@ -6,17 +6,56 @@ import {
   CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 const dicebearUrl = (seed) =>
   `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(seed)}`
-
 const randomSeed = () => Math.random().toString(36).slice(2, 10)
-
 const extractSeed = (url, fallback) => {
   try {
     const m = url?.match(/[?&]seed=([^&]+)/)
     return m ? decodeURIComponent(m[1]) : fallback
   } catch { return fallback }
+}
+
+// ─── Inject global input styles into <head> ───────────────────────────────────
+// This is the ONLY reliable way to beat browser default + autofill overrides.
+// Inline styles and even !important on the element lose to UA stylesheet + autofill.
+function useInputStyles(dark) {
+  useEffect(() => {
+    const id = 'myprofile-input-styles'
+    let el = document.getElementById(id)
+    if (!el) {
+      el = document.createElement('style')
+      el.id = id
+      document.head.appendChild(el)
+    }
+    const bg    = dark ? '#071020' : '#ffffff'
+    const color = dark ? '#dde8f5' : '#1e293b'
+    const ph    = dark ? '#2e4d70' : '#94a3b8'
+    el.textContent = `
+      .mp-input {
+        background-color: ${bg} !important;
+        color: ${color} !important;
+        -webkit-text-fill-color: ${color} !important;
+        caret-color: ${color} !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+      }
+      .mp-input::placeholder {
+        color: ${ph} !important;
+        -webkit-text-fill-color: ${ph} !important;
+        opacity: 1 !important;
+      }
+      .mp-input:-webkit-autofill,
+      .mp-input:-webkit-autofill:hover,
+      .mp-input:-webkit-autofill:focus,
+      .mp-input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 1000px ${bg} inset !important;
+        box-shadow: 0 0 0 1000px ${bg} inset !important;
+        -webkit-text-fill-color: ${color} !important;
+        caret-color: ${color} !important;
+      }
+    `
+  }, [dark])
 }
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
@@ -82,15 +121,17 @@ const InlineField = ({ label, value, onSave, validate, C, dark, disabled }) => {
           <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
             <input
               ref={inputRef}
+              className="mp-input"
               value={draft}
               onChange={e => { setDraft(e.target.value); setErr('') }}
               onKeyDown={handleKeyDown}
               disabled={loading}
               style={{
-                flex: 1, background: C.inputBg, border: '1.5px solid #2563eb',
-                color: C.textPrimary, borderRadius: '0.5rem',
-                padding: '0.4rem 0.75rem', fontSize: '0.875rem', outline: 'none',
+                flex: 1, border: '1.5px solid #2563eb',
+                borderRadius: '0.5rem', padding: '0.4rem 0.75rem',
+                fontSize: '0.875rem', outline: 'none',
                 boxShadow: '0 0 0 3px rgba(37,99,235,0.15)',
+                boxSizing: 'border-box',
               }}
             />
             <button onClick={handleSave} disabled={loading} style={{
@@ -162,7 +203,6 @@ const AvatarPicker = ({ currentAvatar, username, dark, onSave, onClose, C }) => 
           <h3 style={{ margin: 0, fontWeight: 700, color: C.textPrimary, fontSize: '1rem' }}>Choose Avatar</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.textSecondary, fontSize: '1.25rem' }}>✕</button>
         </div>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
           <div style={{
             width: '4.5rem', height: '4.5rem', flexShrink: 0, borderRadius: '0.875rem',
@@ -184,7 +224,6 @@ const AvatarPicker = ({ currentAvatar, username, dark, onSave, onClose, C }) => 
             </button>
           </div>
         </div>
-
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.45rem', marginBottom: '1.25rem' }}>
           {seeds.map((seed, i) => {
             const url = dicebearUrl(seed)
@@ -218,9 +257,7 @@ const AvatarPicker = ({ currentAvatar, username, dark, onSave, onClose, C }) => 
             )
           })}
         </div>
-
         {err && <p style={{ fontSize: '0.8rem', margin: '0 0 1rem', borderRadius: '0.5rem', padding: '0.5rem 0.875rem', color: dark ? '#fca5a5' : '#dc2626', background: dark ? 'rgba(239,68,68,0.1)' : '#fef2f2', border: `1px solid ${dark ? 'rgba(239,68,68,0.2)' : '#fecaca'}` }}>{err}</p>}
-
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button onClick={onClose} style={{ flex: 1, padding: '0.65rem', borderRadius: '0.5rem', border: `1px solid ${C.border}`, background: C.insetBg, color: C.textSecondary, fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '0.65rem', borderRadius: '0.5rem', border: `1px solid ${dark ? '#2563eb' : '#1d4ed8'}`, background: dark ? '#1e3a6e' : '#2563eb', color: '#fff', fontWeight: 600, fontSize: '0.875rem', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.65 : 1 }}>
@@ -269,8 +306,10 @@ const DeleteConfirmModal = ({ dark, C, username, onConfirm, onClose }) => {
           <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: C.textSecondary, marginBottom: '0.35rem' }}>
             Type <strong style={{ color: C.textPrimary }}>{username}</strong> to confirm
           </label>
-          <input type="text" value={confirmText} onChange={e => setConfirmText(e.target.value)}
-            style={{ background: dark ? '#081422' : '#fff', border: `1px solid ${dark ? 'rgba(239,68,68,0.3)' : '#fecaca'}`, color: C.textPrimary, borderRadius: '0.5rem', padding: '0.625rem 1rem', width: '100%', fontSize: '0.875rem', outline: 'none', boxSizing: 'border-box' }}
+          <input
+            className="mp-input"
+            type="text" value={confirmText} onChange={e => setConfirmText(e.target.value)}
+            style={{ border: `1px solid ${dark ? 'rgba(239,68,68,0.3)' : '#fecaca'}`, borderRadius: '0.5rem', padding: '0.625rem 1rem', width: '100%', fontSize: '0.875rem', outline: 'none', boxSizing: 'border-box' }}
             placeholder={username} autoComplete="off"
           />
         </div>
@@ -286,7 +325,7 @@ const DeleteConfirmModal = ({ dark, C, username, onConfirm, onClose }) => {
   )
 }
 
-// ─── PasswordField with show/hide ─────────────────────────────────────────────
+// ─── PasswordField ────────────────────────────────────────────────────────────
 const PasswordField = ({ label, value, onChange, placeholder, C }) => {
   const [show, setShow] = useState(false)
   return (
@@ -294,13 +333,29 @@ const PasswordField = ({ label, value, onChange, placeholder, C }) => {
       <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: C.textPrimary, marginBottom: '0.35rem' }}>{label}</label>
       <div style={{ position: 'relative' }}>
         <input
-          type={show ? 'text' : 'password'} value={value} onChange={onChange}
-          style={{ background: C.inputBg, border: `1px solid ${C.border}`, color: C.textPrimary, borderRadius: '0.5rem', padding: '0.625rem 2.75rem 0.625rem 1rem', width: '100%', fontSize: '0.875rem', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s, box-shadow 0.2s' }}
-          placeholder={placeholder} required
+          className="mp-input"
+          type={show ? 'text' : 'password'}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required
+          style={{
+            border: `1px solid ${C.border}`,
+            borderRadius: '0.5rem',
+            padding: '0.625rem 2.75rem 0.625rem 1rem',
+            width: '100%',
+            fontSize: '0.875rem',
+            outline: 'none',
+            boxSizing: 'border-box',
+          }}
           onFocus={e => { e.target.style.borderColor = '#2563eb'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.15)' }}
           onBlur={e => { e.target.style.borderColor = C.border; e.target.style.boxShadow = 'none' }}
         />
-        <button type="button" onClick={() => setShow(s => !s)} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: C.textMuted, display: 'flex', alignItems: 'center' }}>
+        <button
+          type="button"
+          onClick={() => setShow(s => !s)}
+          style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: C.textMuted, display: 'flex', alignItems: 'center' }}
+        >
           {show ? <EyeSlashIcon style={{ width: '1rem', height: '1rem' }} /> : <EyeIcon style={{ width: '1rem', height: '1rem' }} />}
         </button>
       </div>
@@ -323,10 +378,10 @@ const SectionHeader = ({ icon: Icon, title, subtitle, iconBg, iconColor, textPri
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
+  useInputStyles(dark)   // ← Injects/updates .mp-input CSS in <head> on every dark toggle
+
   const [localUser, setLocalUser] = useState(user || {})
-  const [avatarUrl, setAvatarUrl] = useState(
-    user?.avatar || dicebearUrl(user?.username || 'default')
-  )
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || dicebearUrl(user?.username || 'default'))
 
   useEffect(() => {
     if (user) {
@@ -392,24 +447,25 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
   }
 
   const saveAvatar = async (url) => {
-  const previousUrl = avatarUrl
-  setAvatarUrl(url)             // ← optimistic update, instant reflection
-  updateUser({ avatar: url })
-  try {
-    const res = await fetch(`http://localhost:5000/api/adminpanel-users/${localUser.id}/avatar`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
-      body: JSON.stringify({ avatar: url }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.message || 'Failed to save avatar.')
-    toast('Avatar updated!')
-  } catch (e) {
-    setAvatarUrl(previousUrl)   // ← revert on failure
-    updateUser({ avatar: previousUrl })
-    throw e
+    const previousUrl = avatarUrl
+    setAvatarUrl(url)
+    updateUser({ avatar: url })
+    try {
+      const res = await fetch(`http://localhost:5000/api/adminpanel-users/${localUser.id}/avatar`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        body: JSON.stringify({ avatar: url }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Failed to save avatar.')
+      toast('Avatar updated!')
+    } catch (e) {
+      setAvatarUrl(previousUrl)
+      updateUser({ avatar: previousUrl })
+      throw e
+    }
   }
-}
+
   const handlePasswordChange = async (e) => {
     e.preventDefault()
     setPwError('')
@@ -506,23 +562,16 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
       <Toast toasts={toasts} />
 
       {showPicker && (
-        <AvatarPicker
-          currentAvatar={avatarUrl} username={username} dark={dark}
-          C={C} onSave={saveAvatar} onClose={() => setShowPicker(false)}
-        />
+        <AvatarPicker currentAvatar={avatarUrl} username={username} dark={dark} C={C} onSave={saveAvatar} onClose={() => setShowPicker(false)} />
       )}
-
       {showDeleteModal && (
-        <DeleteConfirmModal
-          dark={dark} C={C} username={username}
-          onConfirm={handleDeleteAccount} onClose={() => setShowDeleteModal(false)}
-        />
+        <DeleteConfirmModal dark={dark} C={C} username={username} onConfirm={handleDeleteAccount} onClose={() => setShowDeleteModal(false)} />
       )}
 
-      <div style={{ minHeight: '100vh', background: C.pageBg, padding: '1.5rem 1.25rem', transition: 'background 0.4s ease' }}>
+      <div style={{ minHeight: '100vh', background: C.pageBg, padding: '1.5rem 1.25rem' }}>
         <div style={{ maxWidth: '64rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-          {/* ── TOP ROW: Profile card + Theme toggle ─────────────────────── */}
+          {/* ── TOP ROW ───────────────────────────────────────────────────── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', alignItems: 'start' }}>
 
             {/* Profile Card */}
@@ -534,13 +583,8 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
                   : 'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #1e40af 100%)',
                 position: 'relative', overflow: 'hidden',
               }}>
-                <div style={{
-                  position: 'absolute', inset: 0, opacity: 0.06,
-                  backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)',
-                  backgroundSize: '32px 32px',
-                }} />
+                <div style={{ position: 'absolute', inset: 0, opacity: 0.06, backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
               </div>
-
               <div style={{ padding: '0 1.5rem 1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '-2.5rem', marginBottom: '1rem' }}>
                   <div
@@ -549,46 +593,21 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
                     onMouseEnter={() => setAvatarHover(true)}
                     onMouseLeave={() => setAvatarHover(false)}
                   >
-                    <div style={{
-                      width: '5rem', height: '5rem', borderRadius: '50%',
-                      border: `3px solid ${C.cardBg}`,
-                      boxShadow: dark ? '0 4px 20px rgba(0,0,0,0.6)' : '0 4px 16px rgba(0,0,0,0.12)',
-                      overflow: 'hidden', background: dark ? '#081422' : '#f0f7ff',
-                    }}>
+                    <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', border: `3px solid ${C.cardBg}`, boxShadow: dark ? '0 4px 20px rgba(0,0,0,0.6)' : '0 4px 16px rgba(0,0,0,0.12)', overflow: 'hidden', background: dark ? '#081422' : '#f0f7ff' }}>
                       <img src={avatarUrl} alt={fullName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     </div>
-                    <div style={{
-                      position: 'absolute', inset: 0, borderRadius: '50%',
-                      background: 'rgba(0,0,0,0.52)',
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.2rem',
-                      opacity: avatarHover ? 1 : 0,
-                      transition: 'opacity 0.2s ease',
-                      pointerEvents: 'none',
-                    }}>
+                    <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.52)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.2rem', opacity: avatarHover ? 1 : 0, transition: 'opacity 0.2s ease', pointerEvents: 'none' }}>
                       <CameraIcon style={{ width: '1.25rem', height: '1.25rem', color: '#fff' }} />
                       <span style={{ fontSize: '0.52rem', color: '#fff', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Edit</span>
                     </div>
                   </div>
-                  <span style={{
-                    background: badge.bg, color: badge.color,
-                    borderRadius: '999px', padding: '0.2rem 0.75rem',
-                    fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.02em',
-                    marginBottom: '0.5rem',
-                  }}>
+                  <span style={{ background: badge.bg, color: badge.color, borderRadius: '999px', padding: '0.2rem 0.75rem', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.02em', marginBottom: '0.5rem' }}>
                     {roleLabels[role] || role}
                   </span>
                 </div>
-
-                {/* Horizontal: name + role cell + username cell */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', alignItems: 'start' }}>
                   <div>
-                    <InlineField
-                      label="Display Name"
-                      value={fullName}
-                      onSave={saveFullName}
-                      validate={v => !v ? 'Name cannot be empty.' : v.length > 60 ? 'Too long (max 60 chars).' : null}
-                      C={C} dark={dark}
-                    />
+                    <InlineField label="Display Name" value={fullName} onSave={saveFullName} validate={v => !v ? 'Name cannot be empty.' : v.length > 60 ? 'Too long (max 60 chars).' : null} C={C} dark={dark} />
                     <p style={{ fontSize: '0.78rem', color: C.textSecondary, margin: '0.25rem 0 0' }}>@{username}</p>
                   </div>
                   <div style={insetCell}>
@@ -603,13 +622,9 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
               </div>
             </div>
 
-            {/* Theme Toggle — compact vertical pill */}
+            {/* Theme Toggle */}
             <div style={{ ...card, padding: '1.25rem', minWidth: '10rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.875rem', overflow: 'visible' }}>
-              <div style={{
-                width: '2.75rem', height: '2.75rem', borderRadius: '0.875rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: dark ? 'rgba(168,85,247,0.12)' : 'rgba(245,158,11,0.12)',
-              }}>
+              <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: dark ? 'rgba(168,85,247,0.12)' : 'rgba(245,158,11,0.12)' }}>
                 <div style={{ position: 'relative', width: '1.25rem', height: '1.25rem' }}>
                   <SunIcon style={{ position: 'absolute', inset: 0, width: '1.25rem', height: '1.25rem', color: '#f59e0b', opacity: dark ? 0 : 1, transform: dark ? 'scale(0.3) rotate(90deg)' : 'scale(1) rotate(0deg)', transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)' }} />
                   <MoonIcon style={{ position: 'absolute', inset: 0, width: '1.25rem', height: '1.25rem', color: '#e2d9f3', filter: dark ? 'drop-shadow(0 0 6px #c084fc)' : 'none', opacity: dark ? 1 : 0, transform: dark ? 'scale(1) rotate(0deg)' : 'scale(0.3) rotate(-90deg)', transition: 'all 0.45s cubic-bezier(0.34,1.56,0.64,1)' }} />
@@ -619,48 +634,42 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
                 <p style={{ fontSize: '0.8rem', fontWeight: 700, color: C.textPrimary, margin: '0 0 0.1rem' }}>{dark ? 'Dark Mode' : 'Light Mode'}</p>
                 <p style={{ fontSize: '0.68rem', color: C.textSecondary, margin: 0 }}>{dark ? 'Switch to light' : 'Switch to dark'}</p>
               </div>
-              <button onClick={() => setDark(p => !p)} aria-label="Toggle theme" style={{
-                position: 'relative', display: 'flex', alignItems: 'center',
-                width: '3.25rem', height: '1.75rem', borderRadius: '999px', padding: '0.2rem',
-                border: 'none', cursor: 'pointer',
-                background: dark ? '#6d28d9' : '#f59e0b',
-                boxShadow: dark ? '0 0 16px rgba(109,40,217,0.5)' : '0 0 16px rgba(245,158,11,0.45)',
-                outline: 'none',
-              }}>
-                <span style={{
-                  width: '1.35rem', height: '1.35rem', borderRadius: '50%',
-                  background: dark ? '#0d1b2e' : '#fff',
-                  boxShadow: dark ? '0 1px 4px rgba(0,0,0,0.6)' : '0 1px 5px rgba(0,0,0,0.2)',
-                  transform: dark ? 'translateX(1.5rem)' : 'translateX(0)',
-                  transition: 'transform 0.4s cubic-bezier(0.34,1.3,0.64,1)',
-                  display: 'block',
-                }} />
+              <button onClick={() => setDark(p => !p)} aria-label="Toggle theme" style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '3.25rem', height: '1.75rem', borderRadius: '999px', padding: '0.2rem', border: 'none', cursor: 'pointer', background: dark ? '#6d28d9' : '#f59e0b', boxShadow: dark ? '0 0 16px rgba(109,40,217,0.5)' : '0 0 16px rgba(245,158,11,0.45)', outline: 'none' }}>
+                <span style={{ width: '1.35rem', height: '1.35rem', borderRadius: '50%', background: dark ? '#0d1b2e' : '#fff', boxShadow: dark ? '0 1px 4px rgba(0,0,0,0.6)' : '0 1px 5px rgba(0,0,0,0.2)', transform: dark ? 'translateX(1.5rem)' : 'translateX(0)', transition: 'transform 0.4s cubic-bezier(0.34,1.3,0.64,1)', display: 'block' }} />
               </button>
             </div>
           </div>
 
-          {/* ── MIDDLE ROW: Username + Password side by side ──────────────── */}
+          {/* ── MIDDLE ROW ────────────────────────────────────────────────── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'stretch' }}>
 
             {/* Change Username */}
             <div style={{ ...card, padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
               <SectionHeader
-                icon={PencilIcon}
-                title="Change Username"
-                subtitle="Update your login handle"
+                icon={PencilIcon} title="Change Username" subtitle="Update your login handle"
                 iconBg={dark ? 'rgba(37,99,235,0.12)' : 'rgba(37,99,235,0.08)'}
                 iconColor={dark ? '#93c5fd' : '#2563eb'}
-                textPrimary={C.textPrimary}
-                textSecondary={C.textSecondary}
+                textPrimary={C.textPrimary} textSecondary={C.textSecondary}
               />
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: C.textSecondary, marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>New Username</label>
                   <input
-                    type="text" value={unForm.newUsername}
+                    className="mp-input"
+                    type="text"
+                    value={unForm.newUsername}
                     onChange={e => { setUnForm(p => ({ ...p, newUsername: e.target.value })); setUnError('') }}
-                    style={{ background: C.inputBg, border: `1px solid ${C.border}`, color: C.textPrimary, borderRadius: '0.5rem', padding: '0.575rem 0.875rem', width: '100%', fontSize: '0.85rem', outline: 'none', boxSizing: 'border-box' }}
-                    placeholder={`Current: @${username}`} autoComplete="off"
+                    placeholder={`Current: @${username}`}
+                    autoComplete="off"
+                    style={{
+                      border: `1px solid ${C.border}`,
+                      borderRadius: '0.5rem',
+                      padding: '0.575rem 0.875rem',
+                      width: '100%',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
                     onFocus={e => { e.target.style.borderColor = '#2563eb'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.15)' }}
                     onBlur={e => { e.target.style.borderColor = C.border; e.target.style.boxShadow = 'none' }}
                   />
@@ -694,13 +703,10 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
             {/* Change Password */}
             <div style={{ ...card, padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
               <SectionHeader
-                icon={KeyIcon}
-                title="Change Password"
-                subtitle="Keep your account secure"
+                icon={KeyIcon} title="Change Password" subtitle="Keep your account secure"
                 iconBg={dark ? 'rgba(37,99,235,0.12)' : 'rgba(37,99,235,0.08)'}
                 iconColor={dark ? '#93c5fd' : '#2563eb'}
-                textPrimary={C.textPrimary}
-                textSecondary={C.textSecondary}
+                textPrimary={C.textPrimary} textSecondary={C.textSecondary}
               />
               <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
                 <PasswordField label="New Password" value={pwForm.new} onChange={e => setPwForm(p => ({ ...p, new: e.target.value }))} placeholder="Enter new password" C={C} />
@@ -736,13 +742,9 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
             </div>
           </div>
 
-          {/* ── Danger Zone (librarians only) ───────────────────────────────── */}
+          {/* ── Danger Zone ───────────────────────────────────────────────── */}
           {role === 'librarian' && (
-            <div style={{
-              ...card,
-              padding: '1.25rem 1.5rem',
-              border: `1px solid ${dark ? 'rgba(239,68,68,0.2)' : '#fecaca'}`,
-            }}>
+            <div style={{ ...card, padding: '1.25rem 1.5rem', border: `1px solid ${dark ? 'rgba(239,68,68,0.2)' : '#fecaca'}` }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem', background: dark ? 'rgba(239,68,68,0.12)' : '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -757,14 +759,7 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
                 </div>
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  style={{
-                    flexShrink: 0, padding: '0.5rem 1.125rem', borderRadius: '0.5rem',
-                    border: `1px solid ${dark ? 'rgba(239,68,68,0.4)' : '#dc2626'}`,
-                    background: 'transparent', color: dark ? '#f87171' : '#dc2626',
-                    fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap',
-                    transition: 'background 0.2s',
-                  }}
+                  style={{ flexShrink: 0, padding: '0.5rem 1.125rem', borderRadius: '0.5rem', border: `1px solid ${dark ? 'rgba(239,68,68,0.4)' : '#dc2626'}`, background: 'transparent', color: dark ? '#f87171' : '#dc2626', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap', transition: 'background 0.2s' }}
                   onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.1)' : '#fef2f2'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
