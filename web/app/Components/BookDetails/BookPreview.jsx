@@ -85,7 +85,7 @@ const BookPreview = ({ uploadId, title, onReadClick }) => {
       {/* Scroll area */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", justifyContent: "center", padding: "50px 0 80px" }}>
         <div style={{ width: "100%", maxWidth: 900, display: "flex", flexDirection: "column", alignItems: "center" }}>
-          {fetchStatus === "loading" && <div style={{ marginTop: 100, color: "#999" }}>Loading preview...</div>}
+          {fetchStatus === "loading" && null}
           {(fetchStatus === "error" || pdfError) && <div style={{ marginTop: 100, color: "#999" }}>Preview unavailable</div>}
 
           {blobUrl && (

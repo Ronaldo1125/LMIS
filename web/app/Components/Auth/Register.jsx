@@ -15,49 +15,30 @@ const decodeJwt = (token) => {
 };
 
 const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
-  /* step: "choose" | "complete" */
   const [step, setStep] = useState("choose");
 
-  /* google data carried into step 2 */
   const [googleCredential, setGoogleCredential] = useState(null);
   const [googleProfile, setGoogleProfile]       = useState({ name: "", email: "", picture: "" });
 
-  /* form fields */
   const [fullName, setFullName]   = useState("");
   const [email, setEmail]         = useState("");
   const [username, setUsername]   = useState("");
 
-  /* ui state */
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [success, setSuccess] = useState("");
 
   const googleBtnRef = useRef(null);
 
-  /* ── Load Google Identity Services ── */
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID || step !== "choose") {
-      if (!GOOGLE_CLIENT_ID) {
-        console.log("Google Client ID not found");
-      }
-      return;
-    }
-
-    console.log("Initializing Google Sign-In with Client ID:", GOOGLE_CLIENT_ID);
+    if (!GOOGLE_CLIENT_ID || step !== "choose") return;
 
     const init = () => {
-      console.log("Google script loaded, initializing...");
-      if (!window.google || !googleBtnRef.current) {
-        console.log("Google not available or ref not ready");
-        return;
-      }
-      
+      if (!window.google || !googleBtnRef.current) return;
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleGoogleCallback,
       });
-      
-      console.log("Rendering Google button");
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         type: "standard",
         theme: "outline",
@@ -69,39 +50,25 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
 
     const scriptId = "google-gsi-script";
     const existingScript = document.getElementById(scriptId);
-    
+
     if (!existingScript) {
-      console.log("Loading Google script...");
       const script = document.createElement("script");
       script.id = scriptId;
       script.src = "https://accounts.google.com/gsi/client";
       script.async = true;
       script.defer = true;
-      script.onload = () => {
-        console.log("Google script loaded successfully");
-        init();
-      };
-      script.onerror = () => {
-        console.error("Failed to load Google script");
-      };
+      script.onload = init;
       document.head.appendChild(script);
     } else if (window.google && window.google.accounts) {
-      console.log("Google script already loaded");
       init();
     } else {
-      console.log("Waiting for Google to load...");
-      const iv = setInterval(() => { 
-        if (window.google && window.google.accounts) { 
-          console.log("Google now available");
-          init(); 
-          clearInterval(iv); 
-        } 
+      const iv = setInterval(() => {
+        if (window.google && window.google.accounts) { init(); clearInterval(iv); }
       }, 150);
       return () => clearInterval(iv);
     }
   }, [step]);
 
-  /* ── Step 1 → Step 2 via Google ── */
   const handleGoogleCallback = (response) => {
     setError("");
     const profile = decodeJwt(response.credential);
@@ -119,14 +86,11 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
     setGoogleCredential(null);
   };
 
-  /* ── Final submit ── */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); setSuccess("");
-
     if (!fullName.trim())  { setError("Please enter your full name."); return; }
     if (!username.trim())  { setError("Please choose a username."); return; }
-
     setLoading(true);
     try {
       const res  = await fetch(`${API_BASE}/auth/google/register`, {
@@ -139,15 +103,16 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Registration failed.");
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      setSuccess("Account created successfully!");
-      setTimeout(() => {
-        onSuccess?.(data);
-        onClose?.();          // ← close the modal after success
-      }, 900);
+      if (res.status === 409) {
+        setError(data.message || "Account already exists. Please try logging in instead.");
+      } else if (!res.ok) {
+        throw new Error(data.message || "Registration failed.");
+      } else {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setSuccess("Account created successfully!");
+        setTimeout(() => { onSuccess?.(data); onClose?.(); }, 900);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -155,107 +120,14 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
     }
   };
 
-  /* ── Styles ── */
-  const S = {
-    overlay: {
-      position: "fixed", inset: 0,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      backgroundColor: "rgba(0,0,0,0.45)", zIndex: 1000,
-      backdropFilter: "blur(4px)",
-    },
-    card: {
-      backgroundColor: "#fff",
-      padding: "40px 36px",
-      borderRadius: "16px",
-      boxShadow: "0 24px 64px rgba(0,48,135,0.18)",
-      width: "100%", maxWidth: "430px",
-      textAlign: "center", position: "relative",
-      fontFamily: "'Segoe UI', system-ui, sans-serif",
-      maxHeight: "92vh", overflowY: "auto",
-    },
-    closeBtn: {
-      position: "absolute", top: "14px", right: "16px",
-      background: "none", border: "none", fontSize: "22px",
-      cursor: "pointer", color: "#9ca3af",
-      padding: "4px 8px", borderRadius: "6px",
-    },
-    backBtn: {
-      position: "absolute", top: "16px", left: "16px",
-      background: "none", border: "none",
-      cursor: "pointer", color: "#6b7280",
-      padding: "4px 8px", borderRadius: "6px",
-      display: "flex", alignItems: "center", gap: "4px",
-      fontSize: "13px", fontWeight: "500",
-    },
-    logo: { width: "85px", height: "auto", display: "block", margin: "0 auto 16px" },
-    avatar: {
-      width: "60px", height: "60px", borderRadius: "50%",
-      border: "2px solid #e6ecf7", display: "block", margin: "0 auto 10px",
-    },
-    googleBadge: {
-      display: "inline-flex", alignItems: "center", gap: "6px",
-      backgroundColor: "#f0f4ff", border: "1px solid #dbe4ff",
-      borderRadius: "20px", padding: "4px 12px",
-      fontSize: "12.5px", color: "#3b5bdb", marginBottom: "14px",
-    },
-    heading: { fontSize: "24px", fontWeight: "700", color: "#003087", marginBottom: "4px" },
-    subtext: { fontSize: "13px", color: "#6b7280", marginBottom: "22px" },
-    field: { marginBottom: "14px", position: "relative", textAlign: "left" },
-    label: {
-      display: "block", fontSize: "12px", fontWeight: "600",
-      color: "#374151", marginBottom: "5px",
-    },
-    input: {
-      width: "100%", padding: "11px 14px",
-      border: "1.5px solid #e6ecf7", borderRadius: "8px",
-      fontSize: "15px", boxSizing: "border-box",
-      color: "#111827", backgroundColor: "#fafbff",
-      outline: "none", transition: "border-color 0.2s",
-    },
-    inputLocked: {
-      backgroundColor: "#f3f4f6", color: "#6b7280",
-      cursor: "not-allowed", border: "1.5px solid #e5e7eb",
-    },
-    primaryBtn: {
-      width: "100%", padding: "13px",
-      backgroundColor: "#003087", color: "#fff",
-      border: "none", borderRadius: "8px",
-      fontSize: "16px", fontWeight: "600",
-      cursor: "pointer", marginTop: "6px",
-      transition: "background-color 0.2s, transform 0.1s",
-    },
-    googleWrapper: {
-      width: "100%", display: "flex",
-      justifyContent: "center", minHeight: "44px", alignItems: "center",
-      flexDirection: "column",
-    },
-    errorBox: {
-      backgroundColor: "#fef2f2", border: "1px solid #fecaca",
-      borderRadius: "8px", padding: "10px 14px",
-      marginBottom: "14px", color: "#dc2626",
-      fontSize: "13.5px", textAlign: "left",
-    },
-    successBox: {
-      backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0",
-      borderRadius: "8px", padding: "10px 14px",
-      marginBottom: "14px", color: "#16a34a",
-      fontSize: "13.5px", textAlign: "left",
-    },
-    footer: { marginTop: "20px", fontSize: "14px", color: "#6b7280" },
-    linkBtn: {
-      color: "#003087", background: "none", border: "none",
-      cursor: "pointer", fontWeight: "600", fontSize: "14px", padding: 0,
-    },
-    spinner: {
-      display: "inline-block", width: "16px", height: "16px",
-      border: "2px solid rgba(255,255,255,0.4)", borderTop: "2px solid #fff",
-      borderRadius: "50%", animation: "spin 0.7s linear infinite",
-      marginRight: "8px", verticalAlign: "middle",
-    },
-  };
-
+  /* ── Back Arrow Icon ── */
+  const BackArrowIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+      <path fill="#666" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+    </svg>
+  );
   const GoogleIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24">
+    <svg width="20" height="20" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
@@ -266,48 +138,272 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
   return (
     <>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
         @keyframes spin    { to { transform: rotate(360deg); } }
-        @keyframes slideUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
-        .reg-card  { animation: slideUp 0.28s ease; }
-        .reg-input:focus { border-color:#003087!important; box-shadow:0 0 0 3px rgba(0,48,135,0.1); }
-        .reg-primary:hover:not(:disabled) { background-color:#002366!important; }
-        .reg-primary:active:not(:disabled){ transform:scale(0.98); }
-        .reg-primary:disabled { opacity:0.65; cursor:not-allowed; }
-        .reg-close:hover,.reg-back:hover { color:#374151!important; background:#f3f4f6; }
+        @keyframes fadeUp  {
+          from { opacity: 0; transform: translateY(20px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        }
+
+        .reg-modal-card {
+          animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .reg-close-btn:hover { background: rgba(0,0,0,0.08) !important; color: #1e3a8a !important; }
+        .reg-back-btn:hover  { color: #1e3a8a !important; }
+
+        .reg-google-custom:hover:not(:disabled) {
+          background: #e8eaed !important;
+          transform: translateY(-1px);
+          box-shadow: none !important;
+        }
+        .reg-google-custom:active:not(:disabled) {
+          transform: translateY(0);
+        }
+        .reg-google-custom:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .reg-input {
+          width: 100%;
+          padding: 13px 16px;
+          border: 1px solid #dadce0;
+          border-radius: 8px;
+          font-size: 15px;
+          box-sizing: border-box;
+          color: "#3c4043";
+          background: #f4f4f4;
+          outline: none;
+          transition: all 0.25s ease;
+          font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .reg-input::placeholder { color: #9aa0a6; }
+        .reg-input:focus {
+          outline: none;
+          background: #f4f4f4;
+        }
+        .reg-input-locked {
+          opacity: 0.6;
+          cursor: not-allowed;
+          background: #f4f4f4 !important;
+        }
+
+        .reg-submit-btn:hover:not(:disabled) {
+          background: #1e3a8a !important;
+          transform: none;
+          box-shadow: none !important;
+        }
+        .reg-submit-btn:active:not(:disabled) { transform: translateY(0); }
+        .reg-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .reg-link-btn:hover { color: #1e3a8a !important; }
+
+        .reg-overlay-bg {
+          position: fixed; inset: 0;
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(0,0,0,0.3);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          z-index: 1000;
+        }
       `}</style>
 
-      <div style={S.overlay} onClick={(e) => e.target === e.currentTarget && onClose?.()}>
-        <div style={S.card} className="reg-card">
+      <div className="reg-overlay-bg" onClick={(e) => e.target === e.currentTarget && onClose?.()}>
+        <div
+          className="reg-modal-card"
+          style={{
+            position: "relative",
+            width: "100%",
+            maxWidth: "420px",
+            background: "#ffffff",
+            border: "1px solid rgba(0,0,0,0.08)",
+            borderRadius: "20px",
+            padding: "36px 32px 32px",
+            textAlign: "center",
+            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05) inset",
+            backdropFilter: "blur(24px)",
+            maxHeight: "92vh",
+            overflowY: "auto",
+          }}
+        >
+          {/* Close button */}
+          <button
+            className="reg-close-btn"
+            onClick={onClose}
+            style={{
+              position: "absolute", top: "16px", right: "16px",
+              background: "#f4f4f4",
+              border: "none",
+              color: "#666",
+              fontSize: "20px",
+              cursor: "pointer",
+              width: "32px", height: "32px",
+              borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.2s ease",
+              lineHeight: 1,
+              padding: "0",
+            }}
+          >
+            ×
+          </button>
 
-          <button className="reg-close" onClick={onClose} style={S.closeBtn}>×</button>
-
+          {/* Back button (step 2) */}
           {step === "complete" && (
-            <button className="reg-back" onClick={goBack} style={S.backBtn}>← Back</button>
+            <button
+              className="reg-back-btn"
+              onClick={goBack}
+              style={{
+                position: "absolute", top: "18px", left: "18px",
+                background: "none", border: "none",
+                color: "#666",
+                cursor: "pointer",
+                fontSize: "12px", fontWeight: "500",
+                display: "flex", alignItems: "center", gap: "5px",
+                transition: "color 0.2s ease",
+                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                padding: "4px 8px",
+              }}
+            >
+              <BackArrowIcon />
+            </button>
           )}
 
-          <img src="/assets/other/depdevlogo.png" alt="Logo" style={S.logo} />
+          {/* ── Logo ── */}
+          <img
+            src="/assets/other/depdevlogo.png"
+            alt="DEPDev Logo"
+            style={{ width: "120px", height: "auto", display: "block", margin: "0 auto 28px" }}
+          />
 
           {/* ══════ STEP 1: CHOOSE ══════ */}
           {step === "choose" && (
             <>
-              <h2 style={S.heading}>Create Account</h2>
-              <p style={S.subtext}>Sign up with your Google account to get started</p>
+              <h2 style={{
+                fontSize: "22px",
+                fontWeight: "600",
+                color: "#000000",
+                margin: "0 0 4px",
+                letterSpacing: "-0.3px",
+              }}>
+                Welcome to DEPDev V Library
+              </h2>
 
-              {error && <div style={S.errorBox}>⚠ {error}</div>}
+              <p style={{
+                fontSize: "13px",
+                color: "#5f6368",
+                margin: "0 0 20px",
+                lineHeight: "1.5",
+              }}>
+                Register with your Google account
+              </p>
 
-              {GOOGLE_CLIENT_ID ? (
-                <div style={S.googleWrapper}>
-                  <div ref={googleBtnRef} style={{ width: "100%", minHeight: "44px" }} />
-                </div>
-              ) : (
-                <div style={{ color: "#dc2626", fontSize: "13px", padding: "12px 0" }}>
-                  Google Sign-In is not configured. Please contact administrator.
+              {error && (
+                <div style={{
+                  background: "rgba(234,67,53,0.08)",
+                  border: "1px solid rgba(234,67,53,0.2)",
+                  borderRadius: "10px",
+                  padding: "12px 16px",
+                  marginBottom: "4px",
+                  color: "#d93025",
+                  fontSize: "12px",
+                  textAlign: "left",
+                }}>
+                  ⚠ {error}
                 </div>
               )}
 
-              <p style={S.footer}>
+              {/* Custom Google button (matches Kosmos style) */}
+              {GOOGLE_CLIENT_ID ? (
+                <div style={{ position: "relative", marginBottom: "8px" }}>
+                  {/* Invisible real Google button on top */}
+                  <div
+                    ref={googleBtnRef}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      opacity: 0,
+                      zIndex: 2,
+                      cursor: "pointer",
+                      overflow: "hidden",
+                      borderRadius: "50px",
+                    }}
+                  />
+                  {/* Visual button underneath */}
+                  <button
+                    className="reg-google-custom"
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      background: "#f4f4f4",
+                      border: "none",
+                      borderRadius: "8px",
+                      color: "#3c4043",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "12px",
+                      transition: "all 0.25s ease",
+                      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                      letterSpacing: "0.1px",
+                      boxShadow: "none",
+                    }}
+                  >
+                    <GoogleIcon />
+                    Continue with Google
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Fallback: let the real Google button render */}
+                  <div style={{ marginBottom: "8px" }}>
+                    <div
+                      ref={googleBtnRef}
+                      style={{ width: "100%", minHeight: "50px", display: "flex", justifyContent: "center" }}
+                    />
+                  </div>
+                </>
+              )}
+
+              <p style={{
+                fontSize: "12px",
+                color: "#5f6368",
+                margin: "16px 0 0",
+                lineHeight: "1.6",
+              }}>
+                By continuing, you agree to our{" "}
+                <span style={{ color: "#1e3a8a", cursor: "pointer", textDecoration: "underline" }}>
+                  Terms
+                </span>
+                {" "}and{" "}
+                <span style={{ color: "#1e3a8a", cursor: "pointer", textDecoration: "underline" }}>
+                  Privacy Policy
+                </span>
+                .
+              </p>
+
+              <p style={{ marginTop: "20px", fontSize: "13px", color: "#5f6368" }}>
                 Already have an account?{" "}
-                <button onClick={onSwitchToLogin} style={S.linkBtn}>Login</button>
+                <button
+                  className="reg-link-btn"
+                  onClick={onSwitchToLogin}
+                  style={{
+                    color: "#1e3a8a",
+                    background: "none", border: "none",
+                    cursor: "pointer", fontWeight: "600",
+                    fontSize: "12px", padding: 0,
+                    transition: "color 0.2s ease",
+                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  }}
+                >
+                  Login
+                </button>
               </p>
             </>
           )}
@@ -315,25 +411,61 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
           {/* ══════ STEP 2: COMPLETE PROFILE ══════ */}
           {step === "complete" && (
             <>
-              {googleProfile.picture && (
-                <img src={googleProfile.picture} alt="avatar" style={S.avatar} referrerPolicy="no-referrer" />
-              )}
+              <h2 style={{
+                fontSize: "22px", fontWeight: "600", color: "#1e3a8a",
+                margin: "0 0 4px", letterSpacing: "-0.3px",
+              }}>
+                Complete Your Profile
+              </h2>
 
-              <div style={S.googleBadge}>
+              <p style={{
+                fontSize: "12px", color: "#5f6368",
+                margin: "0 0 20px", lineHeight: "1.5",
+              }}>
+                Review and fill in the remaining details below
+              </p>
+
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: "7px",
+                background: "#f8f9fa",
+                border: "1px solid #e8eaed",
+                borderRadius: "24px", padding: "5px 14px",
+                fontSize: "12px", color: "#5f6368",
+                marginBottom: "18px", fontWeight: "500",
+              }}>
                 <GoogleIcon /> Connected with Google
               </div>
 
-              <h2 style={S.heading}>Complete Your Profile</h2>
-              <p style={S.subtext}>Review and fill in the remaining details below</p>
-
-              {error   && <div style={S.errorBox}>⚠ {error}</div>}
-              {success && <div style={S.successBox}>✓ {success}</div>}
+              {error && (
+                <div style={{
+                  background: "rgba(234,67,53,0.08)", border: "1px solid rgba(234,67,53,0.2)",
+                  borderRadius: "10px", padding: "12px 16px", marginBottom: "18px",
+                  color: "#d93025", fontSize: "13px", textAlign: "left",
+                }}>
+                  ⚠ {error}
+                </div>
+              )}
+              {success && (
+                <div style={{
+                  background: "rgba(52,168,83,0.08)", border: "1px solid rgba(52,168,83,0.2)",
+                  borderRadius: "10px", padding: "12px 16px", marginBottom: "18px",
+                  color: "#0d652d", fontSize: "13px", textAlign: "left",
+                }}>
+                  ✓ {success}
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} autoComplete="off">
-
                 {/* Full Name */}
-                <div style={S.field}>
-                  <label style={S.label}>Full Name</label>
+                <div style={{ marginBottom: "12px", textAlign: "left" }}>
+                  <label style={{
+                    display: "block", fontSize: "11px", fontWeight: "600",
+                    color: "#000000", marginBottom: "7px",
+                    letterSpacing: "0.4px",
+                    fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  }}>
+                    Full name
+                  </label>
                   <input
                     className="reg-input"
                     type="text"
@@ -341,31 +473,36 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
-                    style={S.input}
                   />
                 </div>
 
-                {/* Email — always locked, sourced from Google */}
-                <div style={S.field}>
-                  <label style={S.label}>
-                    Email Address
-                    <span style={{ marginLeft: "6px", fontWeight: "400", color: "#9ca3af", fontSize: "11px" }}>
-                      (from Google — cannot be changed)
-                    </span>
+                {/* Email — locked */}
+                <div style={{ marginBottom: "12px", textAlign: "left" }}>
+                  <label style={{
+                    display: "block", fontSize: "11px", fontWeight: "600",
+                    color: "#000000", marginBottom: "7px",
+                    fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  }}>
+                    Email
                   </label>
                   <input
-                    className="reg-input"
+                    className="reg-input reg-input-locked"
                     type="email"
                     value={email}
                     readOnly
                     required
-                    style={{ ...S.input, ...S.inputLocked }}
                   />
                 </div>
 
                 {/* Username */}
-                <div style={S.field}>
-                  <label style={S.label}>Username</label>
+                <div style={{ marginBottom: "16px", textAlign: "left" }}>
+                  <label style={{
+                    display: "block", fontSize: "11px", fontWeight: "600",
+                    color: "#000000", marginBottom: "7px",
+                    fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  }}>
+                    Username
+                  </label>
                   <input
                     className="reg-input"
                     type="text"
@@ -373,30 +510,63 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
                     required
-                    style={S.input}
                   />
                 </div>
 
-                <div style={{ marginBottom: "8px" }} />
-
                 <button
                   type="submit"
-                  className="reg-primary"
+                  className="reg-submit-btn"
                   disabled={loading}
-                  style={S.primaryBtn}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    background: "#1e3a8a",
+                    border: "none",
+                    borderRadius: "8px",
+                    color: "#ffffff",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.25s ease",
+                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    boxShadow: "none",
+                  }}
                 >
-                  {loading && <span style={S.spinner} />}
+                  {loading && (
+                    <span style={{
+                      display: "inline-block", width: "15px", height: "15px",
+                      border: "2px solid rgba(26,115,232,0.3)",
+                      borderTop: "2px solid #fff",
+                      borderRadius: "50%",
+                      animation: "spin 0.7s linear infinite",
+                    }} />
+                  )}
                   {loading ? "Creating Account…" : "Create Account"}
                 </button>
               </form>
 
-              <p style={S.footer}>
+              <p style={{ marginTop: "20px", fontSize: "13px", color: "#5f6368" }}>
                 Already have an account?{" "}
-                <button onClick={onSwitchToLogin} style={S.linkBtn}>Login</button>
+                <button
+                  className="reg-link-btn"
+                  onClick={onSwitchToLogin}
+                  style={{
+                    color: "#1e3a8a",
+                    background: "none", border: "none",
+                    cursor: "pointer", fontWeight: "600",
+                    fontSize: "12px", padding: 0,
+                    transition: "color 0.2s ease",
+                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  }}
+                >
+                  Login
+                </button>
               </p>
             </>
           )}
-
         </div>
       </div>
     </>

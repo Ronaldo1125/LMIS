@@ -5,10 +5,7 @@ import dynamic from "next/dynamic";
 
 const BookDetails = dynamic(
   () => import("../../Components/BookDetails/BookDetails"),
-  {
-    ssr: false,
-    loading: () => <p>Loading...</p>,
-  }
+  { ssr: false }
 );
 
 const BookPage = () => {

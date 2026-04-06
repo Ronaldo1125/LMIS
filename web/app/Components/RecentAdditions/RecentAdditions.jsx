@@ -32,8 +32,8 @@ const RecentAdditions = () => {
         sectionPadding: "20px 16px 32px",
         titleSize:      24,
         showHeaderText: true,
-        cardWidth:      140,
-        cardHeight:     187,
+        cardWidth:      120,
+        cardHeight:     160,
         gap:            12,
       };
     } else if (windowWidth < 768) {
@@ -41,11 +41,20 @@ const RecentAdditions = () => {
         sectionPadding: "32px 24px 40px",
         titleSize:      26,
         showHeaderText: true,
-        cardWidth:      160,
-        cardHeight:     213,
+        cardWidth:      140,
+        cardHeight:     187,
         gap:            16,
       };
     } else if (windowWidth < 1024) {
+      return {
+        sectionPadding: "40px 32px 48px",
+        titleSize:      28,
+        showHeaderText: false,
+        cardWidth:      160,
+        cardHeight:     213,
+        gap:            20,
+      };
+    } else if (windowWidth < 1280) {
       return {
         sectionPadding: "40px 32px 48px",
         titleSize:      28,
@@ -54,22 +63,13 @@ const RecentAdditions = () => {
         cardHeight:     240,
         gap:            20,
       };
-    } else if (windowWidth < 1280) {
-      return {
-        sectionPadding: "40px 32px 48px",
-        titleSize:      28,
-        showHeaderText: false,
-        cardWidth:      200,
-        cardHeight:     267,
-        gap:            20,
-      };
     } else if (windowWidth <= 1440) {
       return {
         sectionPadding: "40px 32px 48px",
         titleSize:      28,
         showHeaderText: false,
-        cardWidth:      210,
-        cardHeight:     280,
+        cardWidth:      190,
+        cardHeight:     253,
         gap:            20,
       };
     } else {
@@ -77,8 +77,8 @@ const RecentAdditions = () => {
         sectionPadding: "44px 48px 56px",
         titleSize:      28,
         showHeaderText: false,
-        cardWidth:      220,
-        cardHeight:     293,
+        cardWidth:      200,
+        cardHeight:     267,
         gap:            24,
       };
     }
@@ -308,7 +308,7 @@ const RecentAdditions = () => {
         }
         .nav-btn {
           border-radius: 12px;
-          border: 1px solid #d1d8e8;
+          border: 1px solid #e5e7eb;
           background: #fff;
           display: grid;
           place-items: center;
@@ -323,7 +323,7 @@ const RecentAdditions = () => {
 
       <div style={{ background: "#fff" }}>
         <div style={{
-          maxWidth: 1600,
+          maxWidth: 1700,
           margin: "0 auto",
           padding: config.sectionPadding,
           overflow: "hidden",
@@ -398,13 +398,13 @@ const RecentAdditions = () => {
                   minWidth: config.cardWidth,
                   maxWidth: config.cardWidth,
                   flexShrink: 0,
-                  border: "1px solid #d1d5db",
-                  borderRadius: 0,
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 2,
                 }}
               >
                 {/* Cover */}
                 <div style={{
-                  width: "100%",
+                  width: config.cardWidth,
                   height: config.cardHeight,
                   background: "#f0f4ff",
                   position: "relative",

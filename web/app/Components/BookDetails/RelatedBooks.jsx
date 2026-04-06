@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronRight, ChevronLeft, BookOpen } from "lucide-react";
 import PDFThumbnail from "../Search/PDFThumbnail";
 
 function getToken() {
@@ -10,161 +12,198 @@ function getToken() {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-// ─── skeleton card ────────────────────────────────────────────────────────────
+// ── Breakpoints matching Tailwind sm/md/lg/xl/2xl ──
+// base: <640  sm: 640  md: 768  lg: 1024  xl: 1280  2xl: 1536
 
-const SkeletonCard = () => (
-  <div style={{ overflow: "hidden", background: "#fff" }}>
+const getResponsiveConfig = (w) => {
+  if (w < 640) {
+    return { sectionPadding: "20px 16px 32px", titleSize: 22, cardWidth: 120, cardHeight: 160, gap: 12 };
+  } else if (w < 768) {
+    // sm
+    return { sectionPadding: "28px 24px 40px", titleSize: 24, cardWidth: 140, cardHeight: 187, gap: 14 };
+  } else if (w < 1024) {
+    // md
+    return { sectionPadding: "36px 32px 48px", titleSize: 26, cardWidth: 155, cardHeight: 207, gap: 16 };
+  } else if (w < 1280) {
+    // lg
+    return { sectionPadding: "40px 40px 52px", titleSize: 28, cardWidth: 170, cardHeight: 227, gap: 20 };
+  } else if (w < 1536) {
+    // xl
+    return { sectionPadding: "44px 48px 56px", titleSize: 28, cardWidth: 190, cardHeight: 253, gap: 22 };
+  } else {
+    // 2xl
+    return { sectionPadding: "48px 64px 64px", titleSize: 28, cardWidth: 200, cardHeight: 267, gap: 24 };
+  }
+};
+
+const RelatedBooks = ({ currentBookId }) => {
+  const router = useRouter();
+  const [books,   setBooks]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(null);
+  const [windowWidth, setWindowWidth] = useState(0);
+
+  // ── Drag refs ──
+  const isDragging  = useRef(false);
+  const startX      = useRef(0);
+  const scrollLeft  = useRef(0);
+  const lastX       = useRef(0);
+  const velocity    = useRef(0);
+  const rafId       = useRef(null);
+  const hasDragged  = useRef(false);
+  const scrollRef   = useRef();
+
+  const config = getResponsiveConfig(windowWidth);
+
+  // ── Sub-components (inside so config is in scope) ──
+
+  const SkeletonCard = () => (
     <div style={{
-      width: "100%",
-      aspectRatio: "3/4",
-      background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-      backgroundSize: "200% 100%",
-      animation: "shimmer 1.4s infinite",
-    }} />
-    <div style={{ padding: "12px 0px 14px" }}>
-      <div style={{ height: 12, background: "#f0f0f0", borderRadius: 0, marginBottom: 8, width: "80%" }} />
-      <div style={{ height: 12, background: "#f0f0f0", borderRadius: 0, width: "55%" }} />
-    </div>
-  </div>
-);
-
-// ─── BookCard ────────────────────────────────────────────────────────────────
-
-const BookCard = ({ book, onClick }) => {
-  // Resolve upload ID from either flat or nested API shape
-  const uploadId = book.upload_id ?? book.upload?.id ?? null;
-
-  return (
-    <div
-      onClick={() => onClick(book)}
-      style={{
-        cursor: "pointer",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        background: "#fff",
-        transition: "box-shadow 0.15s, transform 0.15s",
-        outline: "none",
-        textAlign: "left",
-      }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.10)";
-        e.currentTarget.style.transform = "translateY(-2px)";
-      }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.boxShadow = "none";
-        e.currentTarget.style.transform = "translateY(0)";
-      }}
-    >
-      {/*
-        FIX: wrap PDFThumbnail in a container with an explicit height.
-        Without this, wrapper.offsetHeight inside PDFThumbnail is 0,
-        which makes the scale calculation produce NaN and the render silently fails.
-      */}
-      <div style={{
-        width: "100%",
-        aspectRatio: "3/4",
-        position: "relative",
-        overflow: "hidden",
-        background: "#f3f4f6",
-      }}>
-        <PDFThumbnail
-          uploadId={uploadId}
-          title={book.title}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-          }}
-        />
-      </div>
-
-      {/* Info */}
-      <div style={{ padding: "12px 0px 14px", textAlign: "left" }}>
-        <div style={{
-          fontSize: 13,
-          fontWeight: 700,
-          color: "#111827",
-          lineHeight: 1.3,
-          marginBottom: 6,
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        }}>
-          {book.title}
-        </div>
-
-        <div style={{
-          fontSize: 12,
-          color: "#4b5563",
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 8,
-        }}>
-          <span style={{
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            flex: 1,
-          }} title={book.author}>
-            {book.author || "Unknown author"}
-          </span>
-          {book.year && (
-            <span style={{ color: "#9ca3af", fontWeight: 600, flexShrink: 0 }}>
-              {book.year}
-            </span>
-          )}
-        </div>
-
-        {book.category && (
-          <div style={{ marginTop: 6 }}>
-            <span style={{
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "0.03em",
-              color: "#1e40af",
-              background: "#dbeafe",
-              borderRadius: 4,
-              padding: "2px 6px",
-            }}>
-              {book.category}
-            </span>
-          </div>
-        )}
+      minWidth: config.cardWidth, maxWidth: config.cardWidth, flexShrink: 0,
+      border: "1px solid #e5e7eb", overflow: "hidden",
+      animation: "rb-pulse 1.5s ease-in-out infinite",
+    }}>
+      <div style={{ width: "100%", height: config.cardHeight, background: "#eef2fb" }} />
+      <div style={{ padding: "12px 12px 14px" }}>
+        <div style={{ height: 13, background: "#eef2fb", marginBottom: 8, borderRadius: 3 }} />
+        <div style={{ height: 11, background: "#eef2fb", width: "60%", borderRadius: 3 }} />
       </div>
     </div>
   );
-};
 
-// ─── component ────────────────────────────────────────────────────────────────
+  const EmptyState = () => (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      justifyContent: "center", padding: "60px 0", color: "#9ca3af", gap: 12, width: "100%",
+    }}>
+      <BookOpen size={40} strokeWidth={1.2} />
+      <p style={{ margin: 0, fontSize: 14 }}>No related books available</p>
+    </div>
+  );
 
-const RelatedBooks = ({ currentBookId }) => {
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [windowWidth, setWindowWidth] = useState(0);
+  const ErrorState = () => (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      justifyContent: "center", padding: "60px 0", color: "#ef4444", gap: 12, width: "100%",
+    }}>
+      <p style={{ margin: 0, fontSize: 14 }}>{error}</p>
+      <button
+        onClick={() => window.location.reload()}
+        style={{
+          fontSize: 13, color: "#003087", background: "none",
+          border: "1px solid #003087", borderRadius: 8,
+          padding: "6px 16px", cursor: "pointer",
+        }}
+      >
+        Retry
+      </button>
+    </div>
+  );
 
-  const getResponsiveConfig = useCallback(() => {
-    if (windowWidth < 640) {
-      return { headerPadding: "20px 16px 16px", contentPadding: "0 16px 32px", gridColumns: "repeat(2, 1fr)", gap: 28, titleSize: 24, maxWidth: 640 };
-    } else if (windowWidth < 768) {
-      return { headerPadding: "32px 24px 16px", contentPadding: "0 24px 40px", gridColumns: "repeat(3, 1fr)", gap: 36, titleSize: 26, maxWidth: 768 };
-    } else if (windowWidth < 1024) {
-      return { headerPadding: "40px 32px 18px", contentPadding: "0 32px 48px", gridColumns: "repeat(4, 1fr)", gap: 40, titleSize: 28, maxWidth: 1024 };
-    } else {
-      return { headerPadding: "44px 48px 18px", contentPadding: "0 48px 56px", gridColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 40, titleSize: 28, maxWidth: 1600 };
-    }
-  }, [windowWidth]);
+  // ── Scroll button ──
+  const scroll = (dir) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({
+      left: dir === "left"
+        ? -((config.cardWidth + config.gap) * 3)
+        :  ((config.cardWidth + config.gap) * 3),
+      behavior: "smooth",
+    });
+  };
 
-  const config = getResponsiveConfig();
+  // ── Momentum ──
+  const cancelMomentum = () => {
+    if (rafId.current) { cancelAnimationFrame(rafId.current); rafId.current = null; }
+  };
+
+  const applyMomentum = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    velocity.current *= 0.92;
+    if (Math.abs(velocity.current) < 0.5) { velocity.current = 0; rafId.current = null; return; }
+    el.scrollLeft -= velocity.current;
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Mouse events ──
+  const handleMouseDown = (e) => {
+    cancelMomentum();
+    isDragging.current = true;
+    hasDragged.current = false;
+    startX.current     = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current = scrollRef.current.scrollLeft;
+    lastX.current      = e.pageX;
+    velocity.current   = 0;
+    scrollRef.current.style.cursor = "grabbing";
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return;
+    e.preventDefault();
+    const x    = e.pageX - scrollRef.current.offsetLeft;
+    const walk = x - startX.current;
+    velocity.current = e.pageX - lastX.current;
+    lastX.current    = e.pageX;
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+    if (Math.abs(walk) > 5) hasDragged.current = true;
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  const handleMouseLeave = () => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Touch events ──
+  const handleTouchStart = (e) => {
+    cancelMomentum();
+    isDragging.current = true;
+    hasDragged.current = false;
+    startX.current     = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current = scrollRef.current.scrollLeft;
+    lastX.current      = e.touches[0].pageX;
+    velocity.current   = 0;
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging.current) return;
+    const x    = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    const walk = x - startX.current;
+    velocity.current = e.touches[0].pageX - lastX.current;
+    lastX.current    = e.touches[0].pageX;
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
+    if (Math.abs(walk) > 5) hasDragged.current = true;
+  };
+
+  const handleTouchEnd = () => {
+    isDragging.current = false;
+    rafId.current = requestAnimationFrame(applyMomentum);
+  };
+
+  // ── Click guard ──
+  const handleBookClick = (book) => {
+    if (hasDragged.current) return;
+    const id = book.book_id ?? book.id;
+    if (!id) return;
+    router.push(`/book/${id}`);
+  };
+
+  // ── Effects ──
+  useEffect(() => () => cancelMomentum(), []);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -180,7 +219,7 @@ const RelatedBooks = ({ currentBookId }) => {
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
         const res = await fetch(
-          `${API_BASE}/api/books/${currentBookId}/related?limit=6`,
+          `${API_BASE}/api/books/${currentBookId}/related?limit=20`,
           { headers }
         );
         if (!res.ok) {
@@ -201,61 +240,208 @@ const RelatedBooks = ({ currentBookId }) => {
     return () => { cancelled = true; };
   }, [currentBookId]);
 
-  const handleBookClick = (book) => {
-    window.location.href = `/book/${book.id}`;
-  };
-
   if (!loading && !error && books.length === 0) return null;
+
+  const isMobile = windowWidth > 0 && windowWidth < 640;
 
   return (
     <>
       <style>{`
-        @keyframes shimmer {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
+        @keyframes rb-pulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.5; }
+        }
+        .rb-book-card {
+          cursor: pointer;
+          overflow: hidden;
+          transition: border-color 0.2s ease;
+          user-select: none;
+        }
+        .rb-book-card:hover {
+          border-color: rgb(25, 18, 101) !important;
+        }
+        .rb-scroll {
+          cursor: grab;
+          overflow-x: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .rb-scroll:active { cursor: grabbing; }
+        .rb-scroll::-webkit-scrollbar { display: none; }
+        .rb-nav-btn {
+          border-radius: 12px;
+          border: 1px solid #d1d8e8;
+          background: #fff;
+          display: grid;
+          place-items: center;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s;
+          flex-shrink: 0;
+        }
+        .rb-nav-btn:hover {
+          background: #f0f4ff;
+          border-color: rgb(25, 18, 101);
         }
       `}</style>
 
-      <div style={{ background: "#fff" }}>
-        <div style={{ maxWidth: config.maxWidth || 1600, margin: "0 auto", padding: config.headerPadding }}>
-          <h2 style={{ fontSize: config.titleSize, fontWeight: 600, color: "#003087", margin: 0 }}>
-            Related Books
-          </h2>
-        </div>
+      {/*
+        ── FIXED: Removed the 100vw / -50vw full-bleed escape that was causing
+        a horizontal overflow leak line. RelatedBooks now sits naturally inside
+        .bd-page-wrap (max-width: 1600px) — same boundary as the rest of the page.
+        The sectionPadding from getResponsiveConfig handles internal spacing.
+      ──*/}
+      <div style={{
+        background: "#fff",
+        borderTop: "1px solid #f0f0f0",
+        paddingTop: windowWidth < 640 ? "20px" : windowWidth < 768 ? "28px" : windowWidth < 1024 ? "36px" : windowWidth < 1280 ? "40px" : windowWidth < 1536 ? "44px" : "48px",
+        paddingBottom: windowWidth < 640 ? "32px" : windowWidth < 768 ? "40px" : windowWidth < 1024 ? "48px" : windowWidth < 1280 ? "52px" : windowWidth < 1536 ? "56px" : "64px",
+        boxSizing: "border-box",
+        // Negative margin cancels out bd-page-wrap's side padding so the
+        // white background + top border stretch edge-to-edge within the wrap,
+        // while the inner content stays aligned to the same grid.
+        marginLeft: `calc(-1 * ${
+          windowWidth < 640 ? "16px" :
+          windowWidth < 1024 ? "24px" :
+          "32px"
+        })`,
+        marginRight: `calc(-1 * ${
+          windowWidth < 640 ? "16px" :
+          windowWidth < 1024 ? "24px" :
+          "32px"
+        })`,
+        paddingLeft: windowWidth < 640 ? "16px" : windowWidth < 1024 ? "24px" : "32px",
+        paddingRight: windowWidth < 640 ? "16px" : windowWidth < 1024 ? "24px" : "32px",
+      }}>
 
-        {loading && (
+        {/* ── Header ── */}
+        <div style={{
+          maxWidth: 1600,
+          margin: "0 auto",
+        }}>
           <div style={{
-            maxWidth: config.maxWidth || 1600,
-            margin: "0 auto",
-            padding: config.contentPadding,
-            display: "grid",
-            gridTemplateColumns: config.gridColumns,
-            gap: config.gap,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 24,
+            gap: 16,
           }}>
-            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
-          </div>
-        )}
+            <h2 style={{
+              fontSize: config.titleSize,
+              fontWeight: 600,
+              color: "#000",
+              margin: 0,
+              lineHeight: 1.2,
+            }}>
+              Related Books
+            </h2>
 
-        {error && !loading && (
-          <div style={{ maxWidth: config.maxWidth || 1600, margin: "0 auto", padding: config.contentPadding }}>
-            <p style={{ fontSize: 13, color: "#ef4444" }}>Could not load related books.</p>
+            <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 10, flexShrink: 0 }}>
+              <button
+                className="rb-nav-btn"
+                onClick={() => scroll("left")}
+                style={{ width: isMobile ? 34 : 40, height: isMobile ? 30 : 36 }}
+              >
+                <ChevronLeft size={isMobile ? 15 : 18} />
+              </button>
+              <button
+                className="rb-nav-btn"
+                onClick={() => scroll("right")}
+                style={{ width: isMobile ? 34 : 40, height: isMobile ? 30 : 36 }}
+              >
+                <ChevronRight size={isMobile ? 15 : 18} />
+              </button>
+            </div>
           </div>
-        )}
 
-        {!loading && !error && books.length > 0 && (
-          <div style={{
-            maxWidth: config.maxWidth || 1600,
-            margin: "0 auto",
-            padding: config.contentPadding,
-            display: "grid",
-            gridTemplateColumns: config.gridColumns,
-            gap: config.gap,
-          }}>
-            {books.map((book) => (
-              <BookCard key={book.id} book={book} onClick={handleBookClick} />
+          {/* ── Scroll Row ── */}
+          <div
+            ref={scrollRef}
+            className="rb-scroll"
+            style={{ display: "flex", gap: config.gap }}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {loading && Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)}
+            {!loading && error && <ErrorState />}
+            {!loading && !error && books.length === 0 && <EmptyState />}
+
+            {!loading && !error && books.map((book) => (
+              <div
+                key={book.book_id ?? book.id}
+                className="rb-book-card"
+                onClick={() => handleBookClick(book)}
+                style={{
+                  minWidth: config.cardWidth,
+                  maxWidth: config.cardWidth,
+                  flexShrink: 0,
+                  border: "1px solid #d1d5db",
+                  borderRadius: 0,
+                }}
+              >
+                {/* Cover */}
+                <div style={{
+                  width: "100%",
+                  height: config.cardHeight,
+                  background: "#f0f4ff",
+                  position: "relative",
+                }}>
+                  {book.upload_id ? (
+                    <PDFThumbnail uploadId={book.upload_id} title={book.title} />
+                  ) : (
+                    <div style={{
+                      width: "100%", height: "100%", background: "#fff",
+                      display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "center",
+                      padding: "16px 10px", boxSizing: "border-box",
+                    }}>
+                      <BookOpen size={28} color="#000" strokeWidth={1.2} style={{ marginBottom: 10 }} />
+                      <span style={{
+                        color: "#000", fontSize: 11, fontWeight: 600,
+                        textAlign: "center", lineHeight: 1.3,
+                        display: "-webkit-box", WebkitLineClamp: 4,
+                        WebkitBoxOrient: "vertical", overflow: "hidden",
+                      }}>
+                        {book.title}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div style={{ padding: "12px 12px 14px" }}>
+                  <div style={{
+                    fontSize: 13, fontWeight: 700, color: "#111827",
+                    lineHeight: 1.25, marginBottom: 6,
+                    display: "-webkit-box", WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical", overflow: "hidden",
+                  }}>
+                    {book.title}
+                  </div>
+                  <div style={{
+                    fontSize: 12, color: "#4b5563",
+                    display: "flex", justifyContent: "space-between", gap: 8,
+                  }}>
+                    <span style={{
+                      overflow: "hidden", textOverflow: "ellipsis",
+                      whiteSpace: "nowrap", flex: 1,
+                    }} title={book.author}>
+                      {book.author || "Unknown Author"}
+                    </span>
+                    <span style={{ color: "#6b7280", fontWeight: 600, flexShrink: 0 }}>
+                      {book.year ?? "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
-        )}
+        </div>
+
       </div>
     </>
   );

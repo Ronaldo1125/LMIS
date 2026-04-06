@@ -33,12 +33,12 @@ const ThesisPapersSection = () => {
   const scrollRef = useRef(null);
 
   const getConfig = () => {
-    if (windowWidth < 640)   return { cardWidth: 140, cardHeight: 187, gap: 16, padX: 16, cols: 2 };
-    if (windowWidth < 768)   return { cardWidth: 160, cardHeight: 213, gap: 20, padX: 24, cols: 3 };
-    if (windowWidth < 1024)  return { cardWidth: 180, cardHeight: 240, gap: 24, padX: 32, cols: 4 };
-    if (windowWidth < 1280)  return { cardWidth: 200, cardHeight: 267, gap: 28, padX: 32, cols: 5 };
-    if (windowWidth <= 1440) return { cardWidth: 210, cardHeight: 280, gap: 32, padX: 32, cols: 5 };
-    return                          { cardWidth: 220, cardHeight: 293, gap: 32, padX: 48, cols: 6 };
+    if (windowWidth < 640)   return { cardWidth: 120, cardHeight: 160, gap: 16, padX: 16, cols: 2 };
+    if (windowWidth < 768)   return { cardWidth: 140, cardHeight: 187, gap: 20, padX: 24, cols: 3 };
+    if (windowWidth < 1024)  return { cardWidth: 160, cardHeight: 213, gap: 24, padX: 32, cols: 4 };
+    if (windowWidth < 1280)  return { cardWidth: 180, cardHeight: 240, gap: 28, padX: 32, cols: 5 };
+    if (windowWidth <= 1440) return { cardWidth: 190, cardHeight: 253, gap: 32, padX: 32, cols: 5 };
+    return                          { cardWidth: 200, cardHeight: 267, gap: 32, padX: 48, cols: 6 };
   };
 
   const cfg = getConfig();
@@ -269,7 +269,7 @@ const ThesisPapersSection = () => {
 
       <section style={{ background: "#fff", borderTop: "1px solid #f0f2f5" }}>
         <div style={{
-          maxWidth: 1600,
+          maxWidth: 1700,
           margin: "0 auto",
           overflow: "hidden",
           padding: windowWidth < 640

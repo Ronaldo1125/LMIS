@@ -1,54 +1,672 @@
 "use client";
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useEffect, useState, useCallback, useRef } from "react";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { useSearchParams, useRouter } from "next/navigation";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { ChevronRight, Loader2, BookOpen, X, SlidersHorizontal } from "lucide-react";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import Nav from "../Nav/Nav";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import Footer from "../Footer/Footer";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import PDFThumbnail from "./PDFThumbnail";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ─── helpers ──────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function getToken() {
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   if (typeof window === "undefined") return null;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return localStorage.getItem("token") || sessionStorage.getItem("token") || null;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 async function recordBookClick(bookId) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   try {
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const headers = { "Content-Type": "application/json" };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const token = getToken();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     await fetch(`${API_BASE}/api/books/${bookId}/click`, { method: "POST", headers });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   } catch { /* fire-and-forget */ }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ─── icons ────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function SearchIcon() {
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     <svg width="18" height="18" viewBox="0 0 24 24">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       <path fill="currentColor" d="M10 2a8 8 0 105.293 14.293l4.707 4.707 1.414-1.414-4.707-4.707A8 8 0 0010 2zm0 2a6 6 0 110 12 6 6 0 010-12z" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     </svg>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function ChevronDownIcon() {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     <svg width="16" height="16" viewBox="0 0 24 24" className="text-gray-400 shrink-0">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       <path fill="currentColor" d="M7 10l5 5 5-5H7z" />
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     </svg>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -56,7 +674,43 @@ function ChevronDownIcon() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -68,7 +722,31 @@ function IconGrid({ active }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -76,7 +754,31 @@ function IconGrid({ active }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       <path fill="currentColor" d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z" />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -84,11 +786,59 @@ function IconGrid({ active }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   );
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -100,7 +850,31 @@ function IconList({ active }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -108,7 +882,31 @@ function IconList({ active }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       <path fill="currentColor" d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -116,11 +914,59 @@ function IconList({ active }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   );
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -136,7 +982,43 @@ function IconList({ active }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function MobileFilterDropdown({ categories = [], publications = [], categoryValue, publicationValue, onCategoryChange, onPublicationChange, disabled }) {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -144,7 +1026,31 @@ function MobileFilterDropdown({ categories = [], publications = [], categoryValu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const ref = useRef(null);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -152,7 +1058,31 @@ function MobileFilterDropdown({ categories = [], publications = [], categoryValu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -160,11 +1090,47 @@ function MobileFilterDropdown({ categories = [], publications = [], categoryValu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     return () => document.removeEventListener("mousedown", handler);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   }, []);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -172,7 +1138,31 @@ function MobileFilterDropdown({ categories = [], publications = [], categoryValu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const hasPublicationFilter = publicationValue && publicationValue !== "";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -180,7 +1170,31 @@ function MobileFilterDropdown({ categories = [], publications = [], categoryValu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     ? `${hasCategoryFilter ? categoryValue : "Category"} / ${hasPublicationFilter ? publicationValue : "Publication"}`
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -188,7 +1202,31 @@ function MobileFilterDropdown({ categories = [], publications = [], categoryValu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -196,7 +1234,31 @@ function MobileFilterDropdown({ categories = [], publications = [], categoryValu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       <button
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -204,21 +1266,87 @@ function MobileFilterDropdown({ categories = [], publications = [], categoryValu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         disabled={disabled}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
         className={`h-8 border px-3 flex items-center gap-2 text-[11px] transition min-w-[120px]
 
+
+
+
+
+
+
           ${(hasCategoryFilter || hasPublicationFilter)
+
+
+
+
+
+
 
             ? "border-white bg-white text-gray-900 font-semibold"
 
+
+
+
+
+
+
             : "border-white/30 bg-white/10 text-white hover:bg-white/20"
+
+
+
+
+
+
 
           } disabled:opacity-40`}
 
+
+
+
+
+
+
       >
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -226,37 +1354,151 @@ function MobileFilterDropdown({ categories = [], publications = [], categoryValu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         {(hasCategoryFilter || hasPublicationFilter)
+
+
+
+
+
+
 
           ? (
 
+
+
+
+
+
+
             <span
+
+
+
+
+
+
 
               role="button"
 
+
+
+
+
+
+
               onClick={(e) => { 
+
+
+
+
+
+
 
                 e.stopPropagation(); 
 
+
+
+
+
+
+
                 onCategoryChange(""); 
+
+
+
+
+
+
 
                 onPublicationChange(""); 
 
+
+
+
+
+
+
               }}
+
+
+
+
+
+
 
               className="shrink-0 text-gray-400 hover:text-gray-700 cursor-pointer"
 
+
+
+
+
+
+
             >
+
+
+
+
+
+
 
               <X size={10} />
 
+
+
+
+
+
+
             </span>
+
+
+
+
+
+
 
           )
 
+
+
+
+
+
+
           : <ChevronDownIcon />
 
+
+
+
+
+
+
         }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -264,93 +1506,375 @@ function MobileFilterDropdown({ categories = [], publications = [], categoryValu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       {open && (
+
+
+
+
+
+
 
         <div className="absolute top-10 left-0 z-50 bg-white border border-gray-200 rounded-xl shadow-lg min-w-[200px] py-2 max-h-64 overflow-y-auto">
 
+
+
+
+
+
+
           {/* Category Section */}
+
+
+
+
+
+
 
           <div className="px-3 py-1 text-[10px] text-gray-500 font-medium uppercase tracking-wide">Category</div>
 
+
+
+
+
+
+
           <button
+
+
+
+
+
+
 
             onClick={() => { onCategoryChange(""); setOpen(false); }}
 
+
+
+
+
+
+
             className="w-full text-left px-3 py-1 text-[11px] text-gray-400 hover:bg-gray-50 transition"
 
+
+
+
+
+
+
           >
+
+
+
+
+
+
 
             All Categories
 
+
+
+
+
+
+
           </button>
+
+
+
+
+
+
 
           {categories.map((opt) => (
 
+
+
+
+
+
+
             <button
+
+
+
+
+
+
 
               key={`cat-${opt}`}
 
+
+
+
+
+
+
               onClick={() => { onCategoryChange(opt); setOpen(false); }}
 
+
+
+
+
+
+
               className={`w-full text-left px-3 py-1 text-[11px] transition
+
+
+
+
+
+
 
                 ${categoryValue === opt ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-50"}`}
 
+
+
+
+
+
+
             >
+
+
+
+
+
+
 
               {opt}
 
+
+
+
+
+
+
             </button>
 
+
+
+
+
+
+
           ))}
+
+
+
+
+
+
 
           
 
+
+
+
+
+
+
           {/* Publication Section */}
+
+
+
+
+
+
 
           <div className="px-3 py-1 mt-2 text-[10px] text-gray-500 font-medium uppercase tracking-wide">Publication</div>
 
+
+
+
+
+
+
           <button
+
+
+
+
+
+
 
             onClick={() => { onPublicationChange(""); setOpen(false); }}
 
+
+
+
+
+
+
             className="w-full text-left px-3 py-1 text-[11px] text-gray-400 hover:bg-gray-50 transition"
+
+
+
+
+
+
 
           >
 
+
+
+
+
+
+
             All Publications
+
+
+
+
+
+
 
           </button>
 
+
+
+
+
+
+
           {publications.map((opt) => (
+
+
+
+
+
+
 
             <button
 
+
+
+
+
+
+
               key={`pub-${opt}`}
+
+
+
+
+
+
 
               onClick={() => { onPublicationChange(opt); setOpen(false); }}
 
+
+
+
+
+
+
               className={`w-full text-left px-3 py-1 text-[11px] transition
+
+
+
+
+
+
 
                 ${publicationValue === opt ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-50"}`}
 
+
+
+
+
+
+
             >
+
+
+
+
+
+
 
               {opt}
 
+
+
+
+
+
+
             </button>
+
+
+
+
+
+
 
           ))}
 
+
+
+
+
+
+
         </div>
+
+
+
+
+
+
 
       )}
 
+
+
+
+
+
+
     </div>
+
+
+
+
+
+
 
   );
 
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -358,123 +1882,501 @@ function MobileFilterDropdown({ categories = [], publications = [], categoryValu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 function FilterDropdown({ label, options = [], value, onChange, disabled }) {
 
+
+
+
+
+
+
   const [open, setOpen] = useState(false);
+
+
+
+
+
+
 
   const ref = useRef(null);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   useEffect(() => {
+
+
+
+
+
+
 
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
 
+
+
+
+
+
+
     document.addEventListener("mousedown", handler);
 
+
+
+
+
+
+
     return () => document.removeEventListener("mousedown", handler);
+
+
+
+
+
+
 
   }, []);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
 
     <div className="relative" ref={ref}>
 
+
+
+
+
+
+
       <button
+
+
+
+
+
+
 
         onClick={() => setOpen((o) => !o)}
 
+
+
+
+
+
+
         disabled={disabled}
+
+
+
+
+
+
 
         className={`h-10 border px-4 flex items-center gap-2 text-[13px] transition min-w-[130px]
 
+
+
+
+
+
+
           ${value
+
+
+
+
+
+
 
             ? "border-white bg-white text-gray-900 font-semibold"
 
+
+
+
+
+
+
             : "border-white/30 bg-white/10 text-white hover:bg-white/20"
+
+
+
+
+
+
 
           } disabled:opacity-40`}
 
+
+
+
+
+
+
       >
+
+
+
+
+
+
 
         <span className="truncate flex-1 text-left">{value || label}</span>
 
+
+
+
+
+
+
         {value
+
+
+
+
+
+
 
           ? (
 
+
+
+
+
+
+
             <span
+
+
+
+
+
+
 
               role="button"
 
+
+
+
+
+
+
               onClick={(e) => { e.stopPropagation(); onChange(""); }}
+
+
+
+
+
+
 
               className="shrink-0 text-gray-400 hover:text-gray-700 cursor-pointer"
 
+
+
+
+
+
+
             >
+
+
+
+
+
+
 
               <X size={12} />
 
+
+
+
+
+
+
             </span>
+
+
+
+
+
+
 
           )
 
+
+
+
+
+
+
           : <ChevronDownIcon />
 
+
+
+
+
+
+
         }
+
+
+
+
+
+
 
       </button>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       {open && (
+
+
+
+
+
+
 
         <div className="absolute top-12 left-0 z-50 bg-white border border-gray-200 rounded-xl shadow-lg min-w-[200px] py-1 max-h-64 overflow-y-auto">
 
+
+
+
+
+
+
           <button
+
+
+
+
+
+
 
             onClick={() => { onChange(""); setOpen(false); }}
 
+
+
+
+
+
+
             className="w-full text-left px-4 py-2 text-[13px] text-gray-400 hover:bg-gray-50 transition"
+
+
+
+
+
+
 
           >
 
+
+
+
+
+
+
             All {label}s
+
+
+
+
+
+
 
           </button>
 
+
+
+
+
+
+
           {options.map((opt) => (
+
+
+
+
+
+
 
             <button
 
+
+
+
+
+
+
               key={opt}
+
+
+
+
+
+
 
               onClick={() => { onChange(opt); setOpen(false); }}
 
+
+
+
+
+
+
               className={`w-full text-left px-4 py-2 text-[13px] transition
+
+
+
+
+
+
 
                 ${value === opt ? "bg-gray-900 text-white" : "text-gray-700 hover:bg-gray-50"}`}
 
+
+
+
+
+
+
             >
+
+
+
+
+
+
 
               {opt}
 
+
+
+
+
+
+
             </button>
+
+
+
+
+
+
 
           ))}
 
+
+
+
+
+
+
         </div>
+
+
+
+
+
+
 
       )}
 
+
+
+
+
+
+
     </div>
+
+
+
+
+
+
 
   );
 
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -488,7 +2390,43 @@ function FilterDropdown({ label, options = [], value, onChange, disabled }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const SORT_OPTIONS = [
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -496,7 +2434,31 @@ const SORT_OPTIONS = [
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   { value: "title_desc", label: "Title Z–A" },
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -504,7 +2466,31 @@ const SORT_OPTIONS = [
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   { value: "year_asc",   label: "Oldest First" },
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -512,7 +2498,31 @@ const SORT_OPTIONS = [
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   { value: "relevance",  label: "Relevance" },
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -524,7 +2534,43 @@ const SORT_OPTIONS = [
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function SortDropdown({ value, onChange }) {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -532,7 +2578,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const ref = useRef(null);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -544,7 +2614,43 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   useEffect(() => {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -552,11 +2658,47 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     document.addEventListener("mousedown", handler);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     return () => document.removeEventListener("mousedown", handler);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -568,7 +2710,43 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -576,7 +2754,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       <button
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -584,7 +2786,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         className="h-9 border border-gray-200 rounded-full px-4 flex items-center gap-2 text-[13px] text-gray-700 hover:bg-gray-50 transition"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -592,7 +2818,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         Sort: <span className="font-medium">{current.label}</span>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -600,7 +2850,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       </button>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -608,7 +2882,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         <div className="absolute top-11 right-0 z-50 bg-white border border-gray-200 rounded-xl shadow-lg min-w-[160px] py-1">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -616,7 +2914,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             <button
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -624,7 +2946,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               onClick={() => { onChange(opt.value); setOpen(false); }}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -632,7 +2978,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 ${value === opt.value ? "bg-gray-900 text-white font-medium" : "text-gray-700 hover:bg-gray-50"}`}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -640,7 +3010,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               {opt.label}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -648,7 +3042,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           ))}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -656,7 +3074,31 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       )}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -664,11 +3106,59 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   );
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -684,7 +3174,43 @@ function SortDropdown({ value, onChange }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function SkeletonGrid({ count = 12 }) {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -692,7 +3218,31 @@ function SkeletonGrid({ count = 12 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     <>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -700,7 +3250,31 @@ function SkeletonGrid({ count = 12 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         <div key={i} className="rounded border border-gray-100 overflow-hidden animate-pulse">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -708,7 +3282,31 @@ function SkeletonGrid({ count = 12 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           <div className="p-3 space-y-2">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -716,7 +3314,31 @@ function SkeletonGrid({ count = 12 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             <div className="h-3 bg-gray-100 rounded w-3/5" />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -724,7 +3346,31 @@ function SkeletonGrid({ count = 12 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -732,7 +3378,31 @@ function SkeletonGrid({ count = 12 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     </>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -740,7 +3410,43 @@ function SkeletonGrid({ count = 12 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -752,7 +3458,31 @@ function SkeletonList({ count = 8 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -760,7 +3490,31 @@ function SkeletonList({ count = 8 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       {Array.from({ length: count }).map((_, i) => (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -768,7 +3522,31 @@ function SkeletonList({ count = 8 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           <div className="w-11 h-14 rounded bg-gray-100 shrink-0" />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -776,7 +3554,31 @@ function SkeletonList({ count = 8 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             <div className="h-3 bg-gray-100 rounded w-2/3" />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -784,7 +3586,31 @@ function SkeletonList({ count = 8 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -792,7 +3618,31 @@ function SkeletonList({ count = 8 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       ))}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -800,11 +3650,59 @@ function SkeletonList({ count = 8 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   );
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -820,7 +3718,43 @@ function SkeletonList({ count = 8 }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function Pagination({ page, totalPages, onPage }) {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -828,7 +3762,31 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const pages = [];
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -836,7 +3794,31 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const right = Math.min(totalPages - 1, page + 2);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -844,7 +3826,31 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   if (left > 2) pages.push("…");
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -852,7 +3858,31 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   if (right < totalPages - 1) pages.push("…");
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -864,7 +3894,43 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -872,7 +3938,31 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       <button disabled={page === 1} onClick={() => onPage(page - 1)}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -880,7 +3970,31 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       {pages.map((p, i) =>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -888,7 +4002,31 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           ? <span key={`e-${i}`} className="h-9 w-9 flex items-center justify-center text-gray-400 text-sm">…</span>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -896,7 +4034,31 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               className={`h-9 w-9 rounded-full flex items-center justify-center text-sm transition font-medium
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -904,7 +4066,31 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               {p}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -912,7 +4098,31 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       )}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -920,7 +4130,31 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         className="h-9 w-9 rounded-full flex items-center justify-center border border-gray-200 text-sm disabled:opacity-30 hover:bg-gray-50 transition">›</button>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -928,11 +4162,59 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   );
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -948,7 +4230,43 @@ function Pagination({ page, totalPages, onPage }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function FilterChip({ label, onRemove }) {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -956,7 +4274,31 @@ function FilterChip({ label, onRemove }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-800 border border-blue-200 rounded-full px-3 py-1 text-[12px] font-medium">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -964,7 +4306,31 @@ function FilterChip({ label, onRemove }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       <button onClick={onRemove} className="hover:text-blue-600 transition"><X size={11} /></button>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -972,11 +4338,59 @@ function FilterChip({ label, onRemove }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   );
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -992,7 +4406,43 @@ function FilterChip({ label, onRemove }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function Suggestions({ suggestions, onSelect, visible }) {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1000,7 +4450,31 @@ function Suggestions({ suggestions, onSelect, visible }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   return (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1008,7 +4482,31 @@ function Suggestions({ suggestions, onSelect, visible }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       {suggestions.map((s, i) => (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1016,7 +4514,31 @@ function Suggestions({ suggestions, onSelect, visible }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           key={i}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1024,7 +4546,31 @@ function Suggestions({ suggestions, onSelect, visible }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           className="w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition text-[13px]"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1032,7 +4578,31 @@ function Suggestions({ suggestions, onSelect, visible }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1040,7 +4610,31 @@ function Suggestions({ suggestions, onSelect, visible }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             {s.type}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1048,7 +4642,31 @@ function Suggestions({ suggestions, onSelect, visible }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           <span className="text-gray-800 truncate">{s.value}</span>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1056,7 +4674,31 @@ function Suggestions({ suggestions, onSelect, visible }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       ))}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1064,11 +4706,59 @@ function Suggestions({ suggestions, onSelect, visible }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   );
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1084,11 +4774,59 @@ function Suggestions({ suggestions, onSelect, visible }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const searchParams = useSearchParams();
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1100,7 +4838,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // ── URL-driven state ──────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1108,7 +4882,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const urlField       = searchParams.get("field")       || "all";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1116,7 +4914,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const urlPublication = searchParams.get("publication") || "";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1124,7 +4946,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const urlYearTo      = searchParams.get("yearTo")      || "";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1132,9 +4978,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const urlPage        = parseInt(searchParams.get("page") || "1", 10);
 
-  const urlAdvanced   = searchParams.get("advanced") === "true";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1146,7 +5026,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const [searchInput,    setSearchInput]    = useState(urlQuery);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1154,15 +5058,63 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const [isGridView,     setIsGridView]     = useState(true);
 
 
 
-  const [showAdvanced,   setShowAdvanced]   = useState(urlAdvanced);
+
+
+
+
+
+
+
+
+
+
+
+
+  const [showAdvanced,   setShowAdvanced]   = useState(false);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
   const [filterCategory,    setFilterCategory]    = useState(urlCategory);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1174,7 +5126,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // advanced form
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1182,7 +5170,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const [advAuthor,    setAdvAuthor]    = useState("");
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1190,7 +5202,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const [advPublisher, setAdvPublisher] = useState("");
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1198,7 +5234,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const [advYearTo,    setAdvYearTo]    = useState("");
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1210,7 +5270,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // suggestions
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1218,7 +5314,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1230,11 +5350,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // dynamic filter options
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const [filterOptions, setFilterOptions] = useState({ categories: [], publications: [], yearMin: null, yearMax: null });
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1246,7 +5414,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // results
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1254,7 +5458,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const [total,      setTotal]      = useState(0);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1262,7 +5490,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const [loading,    setLoading]    = useState(false);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1270,7 +5522,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const [windowWidth, setWindowWidth] = useState(0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1286,7 +5574,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // ── window resize listener ────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1294,7 +5618,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     const handleResize = () => setWindowWidth(window.innerWidth);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1302,11 +5650,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     window.addEventListener('resize', handleResize);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     return () => window.removeEventListener('resize', handleResize);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1318,7 +5702,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // ── responsive grid columns ────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1326,7 +5746,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   // Mobile (<640px): 2 columns, fixed halves
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1334,7 +5778,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   // md (768–1023px): 4 columns
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1342,7 +5810,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   // xl (1280–1439px): 5 columns
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1350,7 +5842,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const getGridColumns = () => {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1358,7 +5874,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (windowWidth < 640)  return "repeat(2, 1fr)";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1366,7 +5906,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (windowWidth < 1024) return "repeat(4, 1fr)";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1374,7 +5938,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (windowWidth < 1440) return "repeat(5, 1fr)";
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1382,7 +5970,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1394,7 +6018,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   // Cards must be fully fluid on mobile (no fixed 200px width) so they fill
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1402,11 +6050,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const getCardStyles = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     const isSmallMobile = windowWidth > 0 && windowWidth < 480;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1418,7 +6102,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (isMobile) {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1426,7 +6146,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       return {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1434,7 +6178,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         cover: { width: "100%", aspectRatio: "3/4", background: "#f0f4ff", position: "relative" },
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1442,7 +6210,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1454,7 +6246,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // ≥640px: keep original fixed 200px behaviour inside the auto-fill grid
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1462,7 +6290,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       card: { width: "100%", maxWidth: 200, border: "1px solid #d1d5db", overflow: "hidden" },
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1470,7 +6322,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       coverFixed: true,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1478,7 +6354,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1494,7 +6406,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // ── load dynamic filter options ───────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1502,7 +6450,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     (async () => {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1510,7 +6482,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         const headers = { "Content-Type": "application/json" };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1518,7 +6514,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         if (token) headers["Authorization"] = `Bearer ${token}`;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1526,7 +6546,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         if (res.ok) setFilterOptions(await res.json());
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1534,7 +6578,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       finally { setFiltersLoaded(true); }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1542,7 +6610,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   }, []);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1554,7 +6658,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const pushParams = useCallback((overrides = {}) => {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1562,7 +6690,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       query:       searchInput.trim(),
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1570,7 +6722,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       category:    filterCategory,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1578,7 +6754,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       sort:        urlSort,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1586,7 +6786,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       ...overrides,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1594,7 +6818,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     const p = new URLSearchParams();
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1602,7 +6850,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       if (v && v !== "all") p.set(k, String(v));
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1610,11 +6882,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (next.page && next.page !== "1") p.set("page", next.page);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     router.push(`/search?${p.toString()}`);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1626,7 +6934,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // ── fetch books ───────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1634,7 +6978,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     (async () => {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1642,7 +7010,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       setError(null);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1650,7 +7042,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         const p = new URLSearchParams();
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1658,7 +7074,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         if (urlField && urlField !== "all") p.set("field", urlField);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1666,7 +7106,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         if (urlPublication) p.set("publication", urlPublication);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1674,7 +7138,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         if (urlYearTo)      p.set("yearTo",      urlYearTo);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1682,7 +7170,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         p.set("page",  String(urlPage));
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1694,11 +7206,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         const headers = { "Content-Type": "application/json" };
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         const token = getToken();
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1710,7 +7270,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         const res = await fetch(`${API_BASE}/api/search?${p.toString()}`, { headers });
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1718,7 +7314,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           const body = await res.json().catch(() => ({}));
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1726,7 +7346,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1734,7 +7378,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         setBooks(Array.isArray(data.results) ? data.results : (data.data ?? []));
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1742,7 +7410,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         setTotalPages(data.totalPages ?? 1);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1750,7 +7442,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         setError(err.message || "Something went wrong");
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1758,7 +7474,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       } finally {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1766,11 +7506,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       }
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     })();
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1782,7 +7558,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // ── sync local state ──────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1790,11 +7602,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   useEffect(() => { setActiveField(urlField || "all");      }, [urlField]);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   useEffect(() => { setFilterCategory(urlCategory);         }, [urlCategory]);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1806,7 +7654,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // ── suggestions ───────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1814,7 +7698,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (!val || val.length < 2) { setSuggestions([]); return; }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1822,7 +7730,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       const headers = { "Content-Type": "application/json" };
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1830,7 +7762,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       if (token) headers["Authorization"] = `Bearer ${token}`;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1838,11 +7794,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       if (res.ok) setSuggestions((await res.json()).suggestions || []);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     } catch { setSuggestions([]); }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1854,7 +7846,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const onSearchInputChange = (val) => {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1862,7 +7890,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     clearTimeout(suggestTimer.current);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1870,11 +7922,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     setShowSuggestions(true);
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1886,7 +7986,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     setSearchInput(s.value);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1894,11 +8018,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     pushParams({ query: s.value, field: s.type === "title" ? "title" : "author" });
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1910,7 +8082,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const onSubmitSearch = () => {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1918,11 +8114,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     pushParams({ query: searchInput.trim(), field: activeField, page: "1" });
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1934,7 +8178,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     const parts = [];
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1942,7 +8210,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (advAuthor)    parts.push(`author:"${advAuthor}"`);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1950,7 +8242,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (advPublisher) parts.push(`publisher:"${advPublisher}"`);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1958,7 +8274,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (advYearTo)    parts.push(`year_to:${advYearTo}`);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1966,7 +8306,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     pushParams({ query: parts.join(" "), field: "all", page: "1" });
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1974,7 +8338,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1986,7 +8386,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     setAdvTitle(""); setAdvAuthor(""); setAdvSubject("");
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1994,7 +8418,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2006,7 +8466,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     if (key === "category")    setFilterCategory(value);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2014,7 +8498,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     pushParams({
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2022,7 +8530,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
       publication: key === "publication" ? value : filterPublication,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2030,11 +8562,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     });
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2046,11 +8626,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     setFilterCategory(""); setFilterPublication("");
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     pushParams({ category: "", publication: "", yearFrom: "", yearTo: "", page: "1" });
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2062,11 +8678,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const onPage      = (p) => pushParams({ page: String(p) });
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   const onSortChange = (v) => pushParams({ sort: v, page: "1" });
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2078,7 +8742,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // ── derived ───────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2086,7 +8786,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     ? urlCategory.charAt(0).toUpperCase() + urlCategory.slice(1)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2098,7 +8822,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const activeFilters = [
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2106,7 +8866,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     urlPublication && { key: "publication", label: `Publication: ${urlPublication}` },
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2114,11 +8898,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     urlYearTo      && { key: "yearTo",      label: `To: ${urlYearTo}` },
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   ].filter(Boolean);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2134,7 +8966,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // ─────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2142,7 +9010,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     <>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2150,7 +9042,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         @keyframes pulse {
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2158,11 +9074,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           50%       { opacity: 0.5; }
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2170,7 +9122,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           cursor: pointer;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2178,11 +9154,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           transition: border-color 0.2s ease;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2190,11 +9202,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           border-color: #003087 !important;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2206,7 +9254,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       <div className="min-h-screen bg-white">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2218,7 +9302,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         {/* HERO */}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2226,7 +9346,31 @@ const Search = () => {
 
 
 
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-12 2xl:px-12">
+
+
+
+
+
+
+
+
+
+
+
+
+          <div className="max-w-[1700px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-12 2xl:px-12">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2238,7 +9382,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             {/* Search bar */}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2246,7 +9426,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               <input
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2254,7 +9458,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 onChange={(e) => onSearchInputChange(e.target.value)}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2262,7 +9490,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2270,7 +9522,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 placeholder="Search for books, sourcebooks, reports..."
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2278,7 +9554,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2286,7 +9586,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               <div className="hidden sm:flex items-center gap-2 flex-wrap">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2294,7 +9618,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   <button
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2302,7 +9650,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     onClick={() => setActiveField(f)}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2310,7 +9682,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       activeField === f ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2318,7 +9714,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   >
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2326,7 +9746,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   </button>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2334,7 +9778,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2342,7 +9810,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 onClick={onSubmitSearch}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2350,7 +9842,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 aria-label="Search"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2358,7 +9874,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 <SearchIcon />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2366,11 +9906,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               <Suggestions suggestions={suggestions} onSelect={onSuggestionSelect} visible={showSuggestions} />
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2382,7 +9970,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             <div className="mt-3">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2390,7 +10002,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 onClick={() => setShowAdvanced(!showAdvanced)}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2398,7 +10034,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               >
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2406,7 +10066,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 {showAdvanced ? "Hide Advanced Search" : "Advanced Search"}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2414,7 +10098,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2426,7 +10146,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             {showAdvanced && (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2434,7 +10178,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Advanced Search</h3>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2442,7 +10210,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   {[
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2450,7 +10242,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     { label: "Author",             value: advAuthor,    setter: setAdvAuthor,    placeholder: "Enter author name" },
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2458,7 +10274,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     { label: "Publisher",          value: advPublisher, setter: setAdvPublisher, placeholder: "Enter publisher name" },
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2466,7 +10306,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     <div key={label}>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2474,7 +10338,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       <input
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2482,7 +10370,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         value={value}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2490,7 +10402,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         onKeyDown={(e) => e.key === "Enter" && onAdvancedSearch()}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2498,7 +10434,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         placeholder={placeholder}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2506,7 +10466,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2518,7 +10502,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                   <div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2526,11 +10546,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     <input
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       type="number"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2538,7 +10594,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       onChange={(e) => setAdvYearFrom(e.target.value)}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2546,7 +10626,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       className="w-full px-0 py-2 border-0 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-0 transition-colors"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2554,7 +10658,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       min={filterOptions.yearMin || 1900}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2562,11 +10690,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     />
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2574,7 +10738,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     <label className="block text-sm font-medium text-gray-700 mb-2">Publication Year To</label>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2582,7 +10770,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       type="number"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2590,7 +10802,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       onChange={(e) => setAdvYearTo(e.target.value)}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2598,7 +10834,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       className="w-full px-0 py-2 border-0 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-0 transition-colors"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2606,7 +10866,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       min={filterOptions.yearMin || 1900}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2614,11 +10898,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     />
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2630,7 +10962,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     <label className="block text-sm font-medium text-gray-700 mb-2">ISBN / ISSN</label>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2638,7 +10994,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       type="text"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2646,7 +11026,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       onChange={(e) => setAdvISBN(e.target.value)}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2654,7 +11058,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       className="w-full px-0 py-2 border-0 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-0 transition-colors"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2662,7 +11090,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2670,7 +11122,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2682,7 +11170,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   <button onClick={onAdvancedSearch} className="px-6 py-2 bg-blue-900 text-white hover:bg-blue-700 transition font-medium">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2690,7 +11202,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   </button>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2698,7 +11234,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     Clear
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2706,11 +11266,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 </div>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2722,89 +11318,371 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             {/* Filter dropdowns */}
+
+
+
+
+
+
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
 
+
+
+
+
+
+
               {/* Mobile: Separate but smaller Category and Publication buttons */}
+
+
+
+
+
+
 
               <div className="flex flex-wrap items-center gap-2 sm:hidden">
 
+
+
+
+
+
+
                 <FilterDropdown
+
+
+
+
+
+
 
                   label="Category"
 
+
+
+
+
+
+
                   options={filtersLoaded ? filterOptions.categories : []}
+
+
+
+
+
+
 
                   value={filterCategory}
 
+
+
+
+
+
+
                   onChange={(v) => onFilterChange("category", v)}
+
+
+
+
+
+
 
                   disabled={!filtersLoaded}
 
+
+
+
+
+
+
                   mobileCompact
 
+
+
+
+
+
+
                 />
+
+
+
+
+
+
 
                 <FilterDropdown
 
+
+
+
+
+
+
                   label="Publication"
+
+
+
+
+
+
 
                   options={filtersLoaded ? filterOptions.publications : []}
 
+
+
+
+
+
+
                   value={filterPublication}
+
+
+
+
+
+
 
                   onChange={(v) => onFilterChange("publication", v)}
 
+
+
+
+
+
+
                   disabled={!filtersLoaded}
+
+
+
+
+
+
 
                   mobileCompact
 
+
+
+
+
+
+
                 />
 
+
+
+
+
+
+
               </div>
+
+
+
+
+
+
 
               
 
+
+
+
+
+
+
               {/* Desktop: Regular size filters */}
+
+
+
+
+
+
 
               <div className="hidden sm:flex flex-wrap items-center gap-3">
 
+
+
+
+
+
+
                 <FilterDropdown
+
+
+
+
+
+
 
                   label="Category"
 
+
+
+
+
+
+
                   options={filtersLoaded ? filterOptions.categories : []}
+
+
+
+
+
+
 
                   value={filterCategory}
 
+
+
+
+
+
+
                   onChange={(v) => onFilterChange("category", v)}
+
+
+
+
+
+
 
                   disabled={!filtersLoaded}
 
+
+
+
+
+
+
                 />
+
+
+
+
+
+
 
                 <FilterDropdown
 
+
+
+
+
+
+
                   label="Publication"
+
+
+
+
+
+
 
                   options={filtersLoaded ? filterOptions.publications : []}
 
+
+
+
+
+
+
                   value={filterPublication}
+
+
+
+
+
+
 
                   onChange={(v) => onFilterChange("publication", v)}
 
+
+
+
+
+
+
                   disabled={!filtersLoaded}
+
+
+
+
+
+
 
                 />
 
+
+
+
+
+
+
               </div>
+
+
+
+
+
+
 
             </div>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2816,7 +11694,55 @@ const Search = () => {
 
 
 
-        <main className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 md:px-8 lg:px-12 xl:px-12 2xl:px-12 pt-10 pb-24">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <main className="mx-auto w-full max-w-[1700px] px-4 sm:px-6 md:px-8 lg:px-12 xl:px-12 2xl:px-12 pt-10 pb-24">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2828,7 +11754,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           {activeFilters.length > 0 && (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2836,7 +11786,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">Filters:</span>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2844,7 +11818,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 <FilterChip key={f.key} label={f.label} onRemove={() => onFilterChange(f.key, "")} />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2852,7 +11850,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               <button onClick={onClearFilters} className="text-xs text-gray-400 hover:text-gray-700 transition underline ml-1">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2860,7 +11882,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               </button>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2868,7 +11914,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2880,7 +11962,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           <div className="flex justify-between items-center mb-6">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2888,7 +11994,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               {loading
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2896,7 +12026,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 : `${total.toLocaleString()} book${total !== 1 ? "s" : ""}`
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2904,7 +12058,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             </span>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2912,7 +12090,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               <SortDropdown value={urlSort} onChange={onSortChange} />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2920,7 +12122,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               <button onClick={() => setIsGridView(true)}  aria-label="Grid view" className="p-1"><IconGrid active={isGridView}  /></button>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2928,7 +12154,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2940,7 +12190,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           {/* Error */}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2948,7 +12234,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             <div className="rounded-2xl border border-red-100 bg-red-50 px-6 py-5 text-red-600 text-sm mb-6">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2956,11 +12266,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             </div>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2972,7 +12330,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           {isGridView && (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2980,7 +12362,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               display: "grid",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2988,7 +12394,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               gap: windowWidth < 640 ? 12 : 24,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2996,7 +12426,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             }}>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3004,7 +12458,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 ? <SkeletonGrid count={LIMIT} />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3012,7 +12490,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 <div
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3020,7 +12522,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   className="book-card"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3028,7 +12554,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   style={cardStyles.card}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3036,7 +12586,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   {/* Cover */}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3044,7 +12618,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     {book.upload_id ? (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3052,7 +12650,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     ) : (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3060,7 +12682,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         width: "100%",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3068,7 +12714,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         background: "#ffffff",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3076,7 +12746,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         flexDirection: "column",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3084,7 +12778,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         justifyContent: "center",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3092,7 +12810,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         boxSizing: "border-box",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3100,7 +12842,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         <BookOpen size={28} color="#000000" strokeWidth={1.2} style={{ marginBottom: 10 }} />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3108,7 +12874,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                           color: "#000000",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3116,7 +12906,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                           fontWeight: 600,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3124,7 +12938,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                           lineHeight: 1.3,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3132,7 +12970,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                           WebkitLineClamp: 4,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3140,7 +13002,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                           overflow: "hidden",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3148,7 +13034,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                           {book.title}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3156,7 +13066,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3164,7 +13098,43 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3176,11 +13146,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   <div style={{ padding: windowWidth < 640 ? "8px 8px 10px" : "12px 12px 14px" }}>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     <div style={{
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3188,7 +13194,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       fontWeight: 700,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3196,7 +13226,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       lineHeight: 1.25,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3204,7 +13258,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       display: "-webkit-box",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3212,7 +13290,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       WebkitBoxOrient: "vertical",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3220,7 +13322,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     }}>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3228,7 +13354,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3236,7 +13386,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       fontSize: windowWidth < 640 ? 10 : 12,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3244,7 +13418,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       display: "flex",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3252,7 +13450,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       gap: 4,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3260,7 +13482,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       <span style={{
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3268,7 +13514,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         textOverflow: "ellipsis",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3276,7 +13546,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         flex: 1,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3284,11 +13578,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         {book.author || "Unknown Author"}
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       </span>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3296,7 +13626,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                         {book.year ?? "—"}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3304,7 +13658,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3312,7 +13690,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3320,11 +13722,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             </div>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3336,7 +13786,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           {!isGridView && (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3344,7 +13818,31 @@ const Search = () => {
 
 
 
-              maxWidth: 1600,
+
+
+
+
+
+
+
+
+
+
+
+
+              maxWidth: 1700,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3352,7 +13850,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               paddingBottom: 48,
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3360,7 +13882,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               overflow: "hidden",
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3368,7 +13914,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             }}>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3376,7 +13946,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 <div
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3384,7 +13978,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderBottom: idx < books.length - 1 ? "1px solid #eef2ff" : "none", cursor: "pointer" }}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3392,7 +14010,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 >
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3400,11 +14042,47 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     <PDFThumbnail uploadId={book.upload_id} title={book.title} style={{ aspectRatio: "unset", width: "100%", height: "100%" }} />
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3412,7 +14090,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", lineHeight: 1.25, marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={book.title}>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3420,7 +14122,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                     </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3428,7 +14154,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }} title={book.author}>{book.author}</span>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3436,7 +14186,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       <span style={{ fontWeight: 700, color: "#9ca3af", flexShrink: 0 }}>{book.year}</span>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3444,7 +14218,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       {book.upload_size && (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3452,7 +14250,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                       )}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3460,7 +14282,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3468,7 +14314,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3476,11 +14346,59 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
             </div>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3492,7 +14410,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           {!loading && !error && books.length === 0 && (
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3500,7 +14442,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               <BookOpen size={48} strokeWidth={1} />
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3508,7 +14474,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                 <p className="text-lg font-medium text-gray-600">No results found</p>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3516,7 +14506,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
                   {urlQuery ? `Try different keywords for "${urlQuery}"` : "Try adjusting your filters"}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3524,7 +14538,31 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
               </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3532,15 +14570,240 @@ const Search = () => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
           )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           {/* Pagination */}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           {!loading && books.length > 0 && (
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             <Pagination page={urlPage} totalPages={totalPages} onPage={onPage} />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         </main>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         <Footer />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     </>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export default Search;

@@ -51,7 +51,7 @@ export default function Category() {
 
   return (
     <section className="w-full bg-white py-10 sm:py-12 lg:py-16">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
+      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12">
 
         <div className="mb-6 sm:mb-8">
           <h2 className="text-2xl sm:text-[28px] lg:text-[32px] font-semibold text-black leading-tight">

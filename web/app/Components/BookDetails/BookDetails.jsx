@@ -24,6 +24,10 @@ function getToken() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+function Spinner() {
+  return <div className="bpv-spinner" />;
+}
+
 function InfoRow({ label, value, mono }) {
   return (
     <div className="bd-info-row">
@@ -32,12 +36,6 @@ function InfoRow({ label, value, mono }) {
         {value || "—"}
       </span>
     </div>
-  );
-}
-
-function Spinner() {
-  return (
-    <div style={{ width: 14, height: 14, border: "2px solid #e5e7eb", borderTopColor: "rgb(18,18,18)", borderRadius: "50%", animation: "bd-spin 0.9s linear infinite" }} />
   );
 }
 
@@ -83,6 +81,7 @@ const BookDetails = ({ bookId }) => {
   const [downloading,     setDownloading]     = useState(false);
   const [bookmarked,      setBookmarked]      = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const [showBookmarkNotif, setShowBookmarkNotif] = useState(false);
 
   useEffect(() => {
     if (!bookId) return;
@@ -95,7 +94,6 @@ const BookDetails = ({ bookId }) => {
         const headers = { "Content-Type": "application/json" };
         if (token) headers.Authorization = `Bearer ${token}`;
 
-        // Fetch book details
         const res = await fetch(`${API_BASE_URL}/api/book-details/${bookId}`, { headers });
         if (!res.ok) {
           const msgs = { 403: "Access denied.", 404: "Book not found." };
@@ -104,7 +102,6 @@ const BookDetails = ({ bookId }) => {
         const bookData = await res.json();
         setBook(bookData);
 
-        // Check bookmark status (only if logged in)
         if (token) {
           try {
             const bmRes = await fetch(`${API_BASE_URL}/api/bookmarks/${bookId}`, {
@@ -135,9 +132,16 @@ const BookDetails = ({ bookId }) => {
 
   const handleDownload = async () => {
     if (!book?.upload?.id || downloading) return;
+    const token = getToken();
+    if (!token) {
+      // Dispatch custom event to show login modal with download message
+      window.dispatchEvent(new CustomEvent('showLoginWithMessage', {
+        detail: 'Log in or create an account to download books.'
+      }));
+      return;
+    }
     setDownloading(true);
     try {
-      const token = getToken();
       const res = await fetch(`${API_BASE_URL}/api/uploads/${book.upload.id}/download`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -158,7 +162,13 @@ const BookDetails = ({ bookId }) => {
   const handleBookmark = async () => {
     if (bookmarkLoading) return;
     const token = getToken();
-    if (!token) return; // Must be logged in to bookmark
+    if (!token) {
+      // Dispatch custom event to show login modal with bookmark message
+      window.dispatchEvent(new CustomEvent('showLoginWithMessage', {
+        detail: 'Log in or create an account to have access to bookmarks.'
+      }));
+      return;
+    }
 
     setBookmarkLoading(true);
     try {
@@ -169,6 +179,33 @@ const BookDetails = ({ bookId }) => {
       });
       if (res.ok) {
         setBookmarked((prev) => !prev);
+        // Show notification only when adding bookmark (not removing)
+        if (!bookmarked) {
+          setShowBookmarkNotif(true);
+          setTimeout(() => {
+            const notif = document.querySelector('[data-bookmark-notif]');
+            if (notif) {
+              notif.style.animation = 'slideUp 0.3s ease forwards';
+              setTimeout(() => setShowBookmarkNotif(false), 300);
+            } else {
+              setShowBookmarkNotif(false);
+            }
+          }, 3000);
+        }
+      } else if (res.status === 409) {
+        // Handle case where bookmark already exists
+        setBookmarked(true);
+        // Show notification for existing bookmark
+        setShowBookmarkNotif(true);
+        setTimeout(() => {
+          const notif = document.querySelector('[data-bookmark-notif]');
+          if (notif) {
+            notif.style.animation = 'slideUp 0.3s ease forwards';
+            setTimeout(() => setShowBookmarkNotif(false), 300);
+          } else {
+            setShowBookmarkNotif(false);
+          }
+        }, 3000);
       } else {
         console.error("Bookmark request failed:", res.status);
       }
@@ -183,10 +220,7 @@ const BookDetails = ({ bookId }) => {
     <>
       <Nav />
       <div className="flex justify-center items-center h-96">
-        <div className="flex flex-col items-center gap-3">
-          <Spinner />
-          <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#9ca3af" }}>Loading</span>
-        </div>
+        <Spinner />
       </div>
     </>
   );
@@ -213,6 +247,65 @@ const BookDetails = ({ bookId }) => {
   return (
     <>
       <Nav />
+      
+      {/* Bookmark Notification */}
+      {showBookmarkNotif && (
+        <div 
+          data-bookmark-notif
+          style={{
+            position: "fixed",
+            top: 20,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            background: "#1e3a8a",
+            color: "#fff",
+            padding: "12px 20px",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+            animation: "slideDown 0.3s ease",
+            minWidth: "300px",
+          }}
+        >
+          <div style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            background: "#1e3a8a",
+            border: "2px solid #fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <span style={{ fontSize: "14px", fontWeight: 600 }}>Added to Bookmark!</span>
+          <button
+            style={{
+              background: "none",
+              border: "none",
+              color: "#fff",
+              fontSize: "12px",
+              cursor: "pointer",
+              textDecoration: "underline",
+              padding: "4px 8px",
+              marginLeft: "auto",
+            }}
+            onClick={() => {
+  // Dispatch custom event to open profile modal and navigate to bookmarked tab
+  window.dispatchEvent(new CustomEvent('openProfileBookmarked'));
+}}
+          >
+            View
+          </button>
+        </div>
+      )}
+      
       <div className="bg-white">
         <div className="bd-page-wrap">
 
@@ -268,10 +361,17 @@ const BookDetails = ({ bookId }) => {
                   >
                     {bookmarkLoading
                       ? <Spinner />
-                      : bookmarked
-                        ? <BookmarkCheck size={17} />
-                        : <Bookmark size={17} />
+                      : <Bookmark size={17} />
                     }
+                  </button>
+                )}
+                {!isLoggedIn && (
+                  <button
+                    onClick={handleBookmark}
+                    className="bd-btn-icon"
+                    title="Log in to bookmark"
+                  >
+                    <Bookmark size={17} />
                   </button>
                 )}
               </div>
@@ -296,6 +396,29 @@ const BookDetails = ({ bookId }) => {
       {showReader && (
         <FullScreenPDFReader uploadId={uploadId} title={book.title} author={book.author} onClose={() => setShowReader(false)} />
       )}
+      
+      <style>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
+        @keyframes slideUp {
+          from {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+          to {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+          }
+        }
+      `}</style>
     </>
   );
 };

@@ -65,6 +65,7 @@ const Nav = () => {
   const [showRegister, setShowRegister]           = useState(false);
 
   const [showMyProfile, setShowMyProfile]         = useState(false);
+  const [profileInitialTab, setProfileInitialTab] = useState("profile");
 
   const [user, setUser]                           = useState(null);
 
@@ -262,6 +263,35 @@ const Nav = () => {
     document.addEventListener("mousedown", handler);
 
     return () => document.removeEventListener("mousedown", handler);
+
+  }, []);
+
+  /* ── Handle custom event to open profile bookmarked tab ── */
+
+  useEffect(() => {
+    const handleOpenProfileBookmarked = () => {
+      setProfileInitialTab("bookmarked");
+      setShowMyProfile(true);
+    };
+
+    window.addEventListener('openProfileBookmarked', handleOpenProfileBookmarked);
+
+    return () => window.removeEventListener('openProfileBookmarked', handleOpenProfileBookmarked);
+
+  }, []);
+
+  /* ── Handle custom event to show login with message ── */
+
+  useEffect(() => {
+    const handleShowLoginWithMessage = (event) => {
+      setShowLogin(true);
+      // Store the message for the Login component to display
+      window.loginMessage = event.detail;
+    };
+
+    window.addEventListener('showLoginWithMessage', handleShowLoginWithMessage);
+
+    return () => window.removeEventListener('showLoginWithMessage', handleShowLoginWithMessage);
 
   }, []);
 
@@ -825,15 +855,9 @@ const Nav = () => {
 
                 <button
                   onClick={() => setShowRegister(true)}
-                  className="px-4 py-2 flex items-center justify-center text-white font-semibold backdrop-blur-sm hover:bg-blue-800 transition rounded-md gap-2"
+                  className="px-8 py-2 text-white font-semibold backdrop-blur-sm hover:bg-blue-800 transition rounded-[3px]"
                   style={{ backgroundColor: "#1e3a8a" }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <line x1="19" y1="8" x2="19" y2="14"/>
-                    <line x1="22" y1="11" x2="16" y2="11"/>
-                  </svg>
                   Register
                 </button>
 
@@ -916,13 +940,13 @@ const Nav = () => {
       {showMyProfile && (
 
         <MyProfile
-
-          onClose={() => setShowMyProfile(false)}
-
+          onClose={() => {
+            setShowMyProfile(false);
+            setProfileInitialTab("profile"); // Reset to default
+          }}
           user={user}
-
           onUserUpdate={handleUserUpdate}
-
+          initialTab={profileInitialTab}
         />
 
       )}

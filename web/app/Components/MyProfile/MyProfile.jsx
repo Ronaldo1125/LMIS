@@ -15,9 +15,10 @@ import { extractSeed, clearAuthAndRedirect } from "./utils/profileUtils";
  * @param {Function} props.onClose      - Called when the modal should close
  * @param {object}   props.user         - Current user from auth state
  * @param {Function} props.onUserUpdate - Called with the updated user object
+ * @param {string}   props.initialTab   - Initial tab to display (default: "profile")
  */
-export default function MyProfile({ onClose, user, onUserUpdate }) {
-  const [activeTab, setActiveTab] = useState("profile");
+export default function MyProfile({ onClose, user, onUserUpdate, initialTab = "profile" }) {
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   // Keep sidebar avatar in sync with the latest user object (updated by ProfileTab)
   const [localUser, setLocalUser] = useState(user);

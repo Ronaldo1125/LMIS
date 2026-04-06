@@ -27,9 +27,11 @@ router.get('/', authMiddleware, async (req, res) => {
          b.copies,
          b.has_digital_copy,
          b.access_level,
-         bm.created_at AS bookmarked_at
+         bm.created_at AS bookmarked_at,
+         u.id AS upload_id
        FROM bookmarks bm
        JOIN books b ON b.id = bm.book_id
+       LEFT JOIN uploads u ON u.book_id = b.id AND u.status = 'active'
        WHERE bm.user_id = ?
          AND b.is_archived = 0
          AND (? OR b.access_level = 'public')

@@ -107,17 +107,15 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
 
         const deviceRatio = window.devicePixelRatio || 1;
 
-        // FIX: use offsetWidth/offsetHeight but fall back to explicit minimums
-        // so scale never computes as 0 or NaN when the wrapper has no CSS height.
-        const PADDING    = 12;
-        const containerW = Math.max(wrapper.offsetWidth  || 0, 120) - PADDING;
-        const containerH = Math.max(wrapper.offsetHeight || 0, 160) - PADDING;
+        const PADDING     = 12;
+        const containerW  = (wrapper.offsetWidth  || 200) - PADDING;
+        const containerH  = (wrapper.offsetHeight || 267) - PADDING;
 
         const viewport = page.getViewport({ scale: 1 });
         const scale = Math.min(
           (containerW * deviceRatio) / viewport.width,
           (containerH * deviceRatio) / viewport.height,
-        ) * 0.95;
+        ) * 0.8;
 
         const scaled = page.getViewport({ scale });
 

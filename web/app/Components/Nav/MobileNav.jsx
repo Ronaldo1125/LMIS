@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell } from "lucide-react";
 import NotificationsModal from "./NotificationsModal";
 import { getReadIds } from "./NotificationsModal";
+import BookmarkedTab from "../MyProfile/BookmarkedTab";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000") + "/api";
 
@@ -94,211 +95,6 @@ const IconNewspaper = () => (
     <line x1="7" y1="17" x2="11" y2="17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
   </svg>
 );
-
-// ── Saved Tab Component ─────────────────────────────────────────────────────
-
-const SavedTab = ({ closeMenu }) => {
-  const [bookmarks, setBookmarks]     = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState(null);
-  const [page, setPage]               = useState(1);
-  const [totalPages, setTotalPages]   = useState(1);
-  const [total, setTotal]             = useState(0);
-
-  const getToken = () =>
-    localStorage.getItem("token") || sessionStorage.getItem("token");
-
-  const fetchBookmarks = async (p = 1) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${API_BASE}/bookmarks?page=${p}&limit=6`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setBookmarks(data.bookmarks);
-      setTotal(data.pagination.total);
-      setTotalPages(data.pagination.totalPages);
-      setPage(data.pagination.page);
-    } catch {
-      setError("Could not load bookmarks.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const removeBookmark = async (bookId) => {
-    try {
-      await fetch(`${API_BASE}/bookmarks/${bookId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      setBookmarks((prev) => prev.filter((b) => b.id !== bookId));
-      setTotal((prev) => prev - 1);
-    } catch {}
-  };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchBookmarks(1); }, []);
-
-  /* Loading */
-  if (loading) return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <style>{`@keyframes mnavPulse { 0%,100%{opacity:0.5} 50%{opacity:1} }`}</style>
-      {[...Array(4)].map((_, i) => (
-        <div key={i} style={{
-          height: "60px", borderRadius: "12px", background: "#f0f0f0",
-          opacity: 1 - i * 0.2, animation: "mnavPulse 1.4s ease-in-out infinite",
-        }} />
-      ))}
-    </div>
-  );
-
-  /* Error */
-  if (error) return (
-    <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "12px 14px", color: "#dc2626", fontSize: "13px" }}>
-      {error}
-    </div>
-  );
-
-  /* Empty state */
-  if (bookmarks.length === 0) return (
-    <div style={{ textAlign: "center", padding: "0 12px 24px" }}>
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "22px" }}>
-        <svg width="120" height="98" viewBox="0 0 120 98" fill="none">
-          <rect x="6" y="32" width="88" height="58" rx="4" fill="none" stroke="#1a1a1a" strokeWidth="2.4"/>
-          <path d="M6 32 Q6 22 15 22 L40 22 Q48 22 50 32" fill="none" stroke="#1a1a1a" strokeWidth="2.4" strokeLinejoin="round"/>
-          <line x1="22" y1="52" x2="70" y2="52" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round"/>
-          <line x1="22" y1="63" x2="56" y2="63" stroke="#1a1a1a" strokeWidth="2.2" strokeLinecap="round"/>
-          <path d="M78 20 Q90 10 100 20" stroke="#1a1a1a" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="3.5 4.5" fill="none"/>
-          <circle cx="100" cy="25" r="5.5" fill="none" stroke="#1a1a1a" strokeWidth="2.2"/>
-          <circle cx="100" cy="25" r="2" fill="#1a1a1a"/>
-        </svg>
-      </div>
-      <p style={{ margin: "0 0 10px", fontSize: "17px", fontWeight: "800", color: "#111", letterSpacing: "-0.3px" }}>
-        Explore all you want to read
-      </p>
-      <p style={{ margin: "0 0 22px", fontSize: "13.5px", color: "#666", lineHeight: 1.55 }}>
-        Save your favorite titles, and access them easily.
-      </p>
-      <Link
-        href="/search"
-        onClick={closeMenu}
-        style={{ fontSize: "14px", fontWeight: "800", color: "#111", textDecoration: "none" }}
-      >
-        Explore Library
-      </Link>
-    </div>
-  );
-
-  /* Bookmark list */
-  return (
-    <div>
-      {/* Count badge */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
-        <span style={{ fontSize: "11px", color: "#888", background: "#f4f4f4", border: "1px solid #e8e8e8", padding: "3px 10px", borderRadius: "20px" }}>
-          {total} saved
-        </span>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-        {bookmarks.map((book) => (
-          <div
-            key={book.id}
-            style={{
-              display: "flex", alignItems: "flex-start", gap: "10px",
-              padding: "11px 13px", background: "#f7f7f7", borderRadius: "12px",
-              border: "1px solid #eeeeee",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Link
-                href={`/book/${book.id}`}
-                onClick={closeMenu}
-                style={{ textDecoration: "none" }}
-                onMouseEnter={e => e.currentTarget.querySelector("p").style.textDecoration = "underline"}
-                onMouseLeave={e => e.currentTarget.querySelector("p").style.textDecoration = "none"}
-              >
-                <p style={{
-                  margin: "0 0 4px", fontSize: "13px", fontWeight: "600", color: "#111",
-                  lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                }}>
-                  {book.title}
-                </p>
-              </Link>
-              <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap" }}>
-                <span style={{ fontSize: "11px", color: "#888" }}>{book.author}</span>
-                {book.category && (
-                  <span style={{
-                    fontSize: "10px", padding: "2px 7px", borderRadius: "20px",
-                    background: "#ececec", color: "#555", fontWeight: "600",
-                  }}>
-                    {book.category}
-                  </span>
-                )}
-                {book.has_digital_copy === 1 && (
-                  <span style={{
-                    fontSize: "10px", padding: "2px 7px", borderRadius: "20px",
-                    background: "#f0fdf4", color: "#16a34a",
-                    border: "1px solid #bbf7d0", fontWeight: "600",
-                  }}>
-                    Digital
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Remove button */}
-            <button
-              onClick={() => removeBookmark(book.id)}
-              title="Remove bookmark"
-              style={{
-                flexShrink: 0, marginTop: "1px", background: "none",
-                border: "none", cursor: "pointer", padding: "3px",
-                borderRadius: "6px", color: "#ccc",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.background = "#fef2f2"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = "#ccc"; e.currentTarget.style.background = "none"; }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
-                <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
-              </svg>
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginTop: "14px" }}>
-          <button
-            onClick={() => fetchBookmarks(page - 1)}
-            disabled={page <= 1}
-            style={{
-              width: "30px", height: "30px", borderRadius: "8px",
-              border: "1px solid #e0e0e0", background: "#fff",
-              cursor: page <= 1 ? "not-allowed" : "pointer",
-              opacity: page <= 1 ? 0.35 : 1, fontSize: "14px", color: "#555",
-            }}
-          >←</button>
-          <span style={{ fontSize: "11px", color: "#999" }}>{page} / {totalPages}</span>
-          <button
-            onClick={() => fetchBookmarks(page + 1)}
-            disabled={page >= totalPages}
-            style={{
-              width: "30px", height: "30px", borderRadius: "8px",
-              border: "1px solid #e0e0e0", background: "#fff",
-              cursor: page >= totalPages ? "not-allowed" : "pointer",
-              opacity: page >= totalPages ? 0.35 : 1, fontSize: "14px", color: "#555",
-            }}
-          >→</button>
-        </div>
-      )}
-    </div>
-  );
-};
 
 // ── Main Component ──────────────────────────────────────────────────────────
 
@@ -582,7 +378,7 @@ const MobileNav = () => {
           </div>
         ) : (
           /* ── Saved Tab ── */
-          <SavedTab closeMenu={closeMenu} />
+          <BookmarkedTab onClose={closeMenu} isMobile={true} />
         )}
       </div>
 
