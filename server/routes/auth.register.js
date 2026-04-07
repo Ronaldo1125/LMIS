@@ -112,10 +112,11 @@ router.post('/google/register', async (req, res) => {
         return res.status(403).json({ message: 'Your account has been deactivated. Please contact support.' });
 
       return res.status(200).json({
-        message: 'Welcome back! You already have an account.',
-        token: signToken(existing),
-        user: safeUser(existing),
-      });
+  message: 'Welcome back! You already have an account.',
+  already_exists: true,          // ← add this
+  token: signToken(existing),
+  user: safeUser(existing),
+});
     }
 
     // Check username availability
