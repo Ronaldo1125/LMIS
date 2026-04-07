@@ -5,7 +5,6 @@ import React, { useState, useEffect, useRef } from "react";
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000") + "/api";
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
-/* ── tiny jwt decoder (no library needed) ── */
 const decodeJwt = (token) => {
   try {
     return JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
@@ -120,14 +119,13 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
     }
   };
 
-  /* ── Back Arrow Icon ── */
   const BackArrowIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+    <svg width="20" height="20" viewBox="0 0 24 24" className="flex-shrink-0">
       <path fill="#666" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
     </svg>
   );
   const GoogleIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+    <svg width="20" height="20" viewBox="0 0 24 24" className="flex-shrink-0">
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
@@ -137,223 +135,58 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
-        @keyframes spin    { to { transform: rotate(360deg); } }
-        @keyframes fadeUp  {
-          from { opacity: 0; transform: translateY(20px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0)   scale(1);    }
-        }
-
-        .reg-modal-card {
-          animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-
-        .reg-close-btn:hover { background: rgba(0,0,0,0.08) !important; color: #1e3a8a !important; }
-        .reg-back-btn:hover  { color: #1e3a8a !important; }
-
-        .reg-google-custom:hover:not(:disabled) {
-          background: #e8eaed !important;
-          transform: translateY(-1px);
-          box-shadow: none !important;
-        }
-        .reg-google-custom:active:not(:disabled) {
-          transform: translateY(0);
-        }
-        .reg-google-custom:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .reg-input {
-          width: 100%;
-          padding: 13px 16px;
-          border: 1px solid #dadce0;
-          border-radius: 8px;
-          font-size: 15px;
-          box-sizing: border-box;
-          color: "#3c4043";
-          background: #f4f4f4;
-          outline: none;
-          transition: all 0.25s ease;
-          font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        .reg-input::placeholder { color: #9aa0a6; }
-        .reg-input:focus {
-          outline: none;
-          background: #f4f4f4;
-        }
-        .reg-input-locked {
-          opacity: 0.6;
-          cursor: not-allowed;
-          background: #f4f4f4 !important;
-        }
-
-        .reg-submit-btn:hover:not(:disabled) {
-          background: #1e3a8a !important;
-          transform: none;
-          box-shadow: none !important;
-        }
-        .reg-submit-btn:active:not(:disabled) { transform: translateY(0); }
-        .reg-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .reg-link-btn:hover { color: #1e3a8a !important; }
-
-        .reg-overlay-bg {
-          position: fixed; inset: 0;
-          display: flex; align-items: center; justify-content: center;
-          background: rgba(0,0,0,0.3);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          z-index: 1000;
-        }
-      `}</style>
-
-      <div className="reg-overlay-bg" onClick={(e) => e.target === e.currentTarget && onClose?.()}>
-        <div
-          className="reg-modal-card"
-          style={{
-            position: "relative",
-            width: "100%",
-            maxWidth: "420px",
-            background: "#ffffff",
-            border: "1px solid rgba(0,0,0,0.08)",
-            borderRadius: "20px",
-            padding: "36px 32px 32px",
-            textAlign: "center",
-            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05) inset",
-            backdropFilter: "blur(24px)",
-            maxHeight: "92vh",
-            overflowY: "auto",
-          }}
-        >
-          {/* Close button */}
+      <div 
+        className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-md z-[1000]"
+        onClick={(e) => e.target === e.currentTarget && onClose?.()}
+      >
+        <div className="relative w-full max-w-[420px] bg-white border border-black/8 rounded-[20px] p-8 pb-8 text-center font-inter shadow-[0_20px_60px_rgba(0,0,0,0.15),inset_0_0_0_1px_rgba(0,0,0,0.05)] backdrop-blur-[24px] max-h-[92vh] overflow-y-auto animate-fade-up">
+          
           <button
-            className="reg-close-btn"
             onClick={onClose}
-            style={{
-              position: "absolute", top: "16px", right: "16px",
-              background: "#f4f4f4",
-              border: "none",
-              color: "#666",
-              fontSize: "20px",
-              cursor: "pointer",
-              width: "32px", height: "32px",
-              borderRadius: "50%",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all 0.2s ease",
-              lineHeight: 1,
-              padding: "0",
-            }}
+            className="absolute top-4 right-4 bg-gray-100 border-none text-gray-600 text-xl cursor-pointer w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ease leading-none p-0 hover:bg-black/8 hover:text-blue-800"
           >
             ×
           </button>
 
-          {/* Back button (step 2) */}
           {step === "complete" && (
             <button
-              className="reg-back-btn"
               onClick={goBack}
-              style={{
-                position: "absolute", top: "18px", left: "18px",
-                background: "none", border: "none",
-                color: "#666",
-                cursor: "pointer",
-                fontSize: "12px", fontWeight: "500",
-                display: "flex", alignItems: "center", gap: "5px",
-                transition: "color 0.2s ease",
-                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                padding: "4px 8px",
-              }}
+              className="absolute top-[18px] left-[18px] bg-none border-none text-gray-600 cursor-pointer text-xs font-medium flex items-center gap-[5px] transition-colors duration-200 ease font-inter px-2 py-1 hover:text-blue-800"
             >
               <BackArrowIcon />
             </button>
           )}
 
-          {/* ── Logo ── */}
           <img
             src="/assets/other/depdevlogo.png"
             alt="DEPDev Logo"
-            style={{ width: "120px", height: "auto", display: "block", margin: "0 auto 28px" }}
+            className="w-[120px] h-auto block mx-auto mb-7"
           />
 
-          {/* ══════ STEP 1: CHOOSE ══════ */}
           {step === "choose" && (
             <>
-              <h2 style={{
-                fontSize: "22px",
-                fontWeight: "600",
-                color: "#000000",
-                margin: "0 0 4px",
-                letterSpacing: "-0.3px",
-              }}>
+              <h2 className="text-[22px] font-semibold text-black mb-1 tracking-[-0.3px]">
                 Welcome to DEPDev V Library
               </h2>
 
-              <p style={{
-                fontSize: "13px",
-                color: "#5f6368",
-                margin: "0 0 20px",
-                lineHeight: "1.5",
-              }}>
+              <p className="text-[13px] text-gray-600 mb-5 leading-relaxed">
                 Register with your Google account
               </p>
 
               {error && (
-                <div style={{
-                  background: "rgba(234,67,53,0.08)",
-                  border: "1px solid rgba(234,67,53,0.2)",
-                  borderRadius: "10px",
-                  padding: "12px 16px",
-                  marginBottom: "4px",
-                  color: "#d93025",
-                  fontSize: "12px",
-                  textAlign: "left",
-                }}>
+                <div className="bg-red-50/8 border border-red-500/20 rounded-[10px] p-3 mb-1 text-red-600 text-[12px] text-left">
                   ⚠ {error}
                 </div>
               )}
 
-              {/* Custom Google button (matches Kosmos style) */}
               {GOOGLE_CLIENT_ID ? (
-                <div style={{ position: "relative", marginBottom: "8px" }}>
-                  {/* Invisible real Google button on top */}
+                <div className="relative mb-2">
                   <div
                     ref={googleBtnRef}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      opacity: 0,
-                      zIndex: 2,
-                      cursor: "pointer",
-                      overflow: "hidden",
-                      borderRadius: "50px",
-                    }}
+                    className="absolute inset-0 opacity-0 z-[2] cursor-pointer overflow-hidden rounded-[50px]"
                   />
-                  {/* Visual button underneath */}
                   <button
-                    className="reg-google-custom"
-                    style={{
-                      width: "100%",
-                      padding: "12px 16px",
-                      background: "#f4f4f4",
-                      border: "none",
-                      borderRadius: "8px",
-                      color: "#3c4043",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "12px",
-                      transition: "all 0.25s ease",
-                      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                      letterSpacing: "0.1px",
-                      boxShadow: "none",
-                    }}
+                    className="reg-google-custom w-full py-3 px-4 bg-gray-100 border-none rounded-lg text-gray-700 text-[14px] font-medium cursor-pointer flex items-center justify-center gap-3 transition-all duration-250 ease font-inter tracking-[0.1px] shadow-none hover:bg-gray-200 hover:-translate-y-px active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <GoogleIcon />
                     Continue with Google
@@ -361,46 +194,32 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
                 </div>
               ) : (
                 <>
-                  {/* Fallback: let the real Google button render */}
-                  <div style={{ marginBottom: "8px" }}>
+                  <div className="mb-2">
                     <div
                       ref={googleBtnRef}
-                      style={{ width: "100%", minHeight: "50px", display: "flex", justifyContent: "center" }}
+                      className="w-full min-h-[50px] flex justify-center"
                     />
                   </div>
                 </>
               )}
 
-              <p style={{
-                fontSize: "12px",
-                color: "#5f6368",
-                margin: "16px 0 0",
-                lineHeight: "1.6",
-              }}>
+              <p className="text-[12px] text-gray-600 mt-4 leading-relaxed">
                 By continuing, you agree to our{" "}
-                <span style={{ color: "#1e3a8a", cursor: "pointer", textDecoration: "underline" }}>
+                <span className="text-blue-800 cursor-pointer underline">
                   Terms
                 </span>
                 {" "}and{" "}
-                <span style={{ color: "#1e3a8a", cursor: "pointer", textDecoration: "underline" }}>
+                <span className="text-blue-800 cursor-pointer underline">
                   Privacy Policy
                 </span>
                 .
               </p>
 
-              <p style={{ marginTop: "20px", fontSize: "13px", color: "#5f6368" }}>
+              <p className="mt-5 text-[13px] text-gray-600">
                 Already have an account?{" "}
                 <button
-                  className="reg-link-btn"
                   onClick={onSwitchToLogin}
-                  style={{
-                    color: "#1e3a8a",
-                    background: "none", border: "none",
-                    cursor: "pointer", fontWeight: "600",
-                    fontSize: "12px", padding: 0,
-                    transition: "color 0.2s ease",
-                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                  }}
+                  className="text-blue-800 bg-none border-none cursor-pointer font-semibold text-[12px] p-0 transition-colors duration-200 ease font-inter hover:text-blue-800"
                 >
                   Login
                 </button>
@@ -408,159 +227,95 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
             </>
           )}
 
-          {/* ══════ STEP 2: COMPLETE PROFILE ══════ */}
           {step === "complete" && (
             <>
-              <h2 style={{
-                fontSize: "22px", fontWeight: "600", color: "#1e3a8a",
-                margin: "0 0 4px", letterSpacing: "-0.3px",
-              }}>
+              <h2 className="text-[22px] font-semibold text-blue-800 mb-1 tracking-[-0.3px]">
                 Complete Your Profile
               </h2>
 
-              <p style={{
-                fontSize: "12px", color: "#5f6368",
-                margin: "0 0 20px", lineHeight: "1.5",
-              }}>
+              <p className="text-[12px] text-gray-600 mb-5 leading-relaxed">
                 Review and fill in the remaining details below
               </p>
 
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: "7px",
-                background: "#f8f9fa",
-                border: "1px solid #e8eaed",
-                borderRadius: "24px", padding: "5px 14px",
-                fontSize: "12px", color: "#5f6368",
-                marginBottom: "18px", fontWeight: "500",
-              }}>
+              <div className="inline-flex items-center gap-[7px] bg-gray-50 border border-gray-200 rounded-[24px] py-1 px-[14px] text-[12px] text-gray-600 mb-[18px] font-medium">
                 <GoogleIcon /> Connected with Google
               </div>
 
-              {error && (
-                <div style={{
-                  background: "rgba(234,67,53,0.08)", border: "1px solid rgba(234,67,53,0.2)",
-                  borderRadius: "10px", padding: "12px 16px", marginBottom: "18px",
-                  color: "#d93025", fontSize: "13px", textAlign: "left",
-                }}>
-                  ⚠ {error}
+            {error && (
+              <div className="bg-red-50/8 border border-red-500/20 rounded-[10px] p-3 mb-[18px] text-red-600 text-[13px] text-left">
+                ⚠ {error}
+              </div>
+            )}
+            {success && (
+              <div className="bg-green-50/8 rounded-[10px] p-3 mb-[18px] text-green-700 text-[13px] text-center flex items-center justify-center gap-2">
+                <div className="w-5 h-5 bg-[#f4f4f4] rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M20 6L9 17l-5-5" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
-              )}
-              {success && (
-                <div style={{
-                  background: "rgba(52,168,83,0.08)", border: "1px solid rgba(52,168,83,0.2)",
-                  borderRadius: "10px", padding: "12px 16px", marginBottom: "18px",
-                  color: "#0d652d", fontSize: "13px", textAlign: "left",
-                }}>
-                  ✓ {success}
-                </div>
-              )}
+                {success}
+              </div>
+            )}
 
-              <form onSubmit={handleSubmit} autoComplete="off">
-                {/* Full Name */}
-                <div style={{ marginBottom: "12px", textAlign: "left" }}>
-                  <label style={{
-                    display: "block", fontSize: "11px", fontWeight: "600",
-                    color: "#000000", marginBottom: "7px",
-                    letterSpacing: "0.4px",
-                    fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                  }}>
-                    Full name
-                  </label>
-                  <input
-                    className="reg-input"
-                    type="text"
-                    placeholder="Your full name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
-                </div>
+            <form onSubmit={handleSubmit} autoComplete="off">
+              <div className="mb-3 text-left">
+                <label className="block text-[11px] font-semibold text-black mb-[7px] tracking-[0.4px] font-inter">
+                  Full name
+                </label>
+                <input
+                  className="reg-input w-full py-[13px] px-4 border border-gray-300 rounded-lg text-[15px] box-border text-gray-700 bg-gray-100 outline-none transition-all duration-250 ease font-inter placeholder-gray-500 focus:bg-gray-100"
+                  type="text"
+                  placeholder="Your full name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
 
-                {/* Email — locked */}
-                <div style={{ marginBottom: "12px", textAlign: "left" }}>
-                  <label style={{
-                    display: "block", fontSize: "11px", fontWeight: "600",
-                    color: "#000000", marginBottom: "7px",
-                    fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                  }}>
-                    Email
-                  </label>
-                  <input
-                    className="reg-input reg-input-locked"
-                    type="email"
-                    value={email}
-                    readOnly
-                    required
-                  />
-                </div>
+              <div className="mb-3 text-left">
+                <label className="block text-[11px] font-semibold text-black mb-[7px] font-inter">
+                  Email
+                </label>
+                <input
+                  className="reg-input w-full py-[13px] px-4 border border-gray-300 rounded-lg text-[15px] box-border text-gray-700 bg-gray-100 outline-none transition-all duration-250 ease font-inter placeholder-gray-500 focus:bg-gray-100 opacity-60 cursor-not-allowed"
+                  type="email"
+                  value={email}
+                  readOnly
+                  required
+                />
+              </div>
 
-                {/* Username */}
-                <div style={{ marginBottom: "16px", textAlign: "left" }}>
-                  <label style={{
-                    display: "block", fontSize: "11px", fontWeight: "600",
-                    color: "#000000", marginBottom: "7px",
-                    fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                  }}>
-                    Username
-                  </label>
-                  <input
-                    className="reg-input"
-                    type="text"
-                    placeholder="Choose a username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
-                    required
-                  />
-                </div>
+              <div className="mb-4 text-left">
+                <label className="block text-[11px] font-semibold text-black mb-[7px] font-inter">
+                  Username
+                </label>
+                <input
+                  className="reg-input w-full py-[13px] px-4 border border-gray-300 rounded-lg text-[15px] box-border text-gray-700 bg-gray-100 outline-none transition-all duration-250 ease font-inter placeholder-gray-500 focus:bg-gray-100"
+                  type="text"
+                  placeholder="Choose a username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
+                  required
+                />
+              </div>
 
-                <button
-                  type="submit"
-                  className="reg-submit-btn"
-                  disabled={loading}
-                  style={{
-                    width: "100%",
-                    padding: "12px",
-                    background: "#1e3a8a",
-                    border: "none",
-                    borderRadius: "8px",
-                    color: "#ffffff",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "all 0.25s ease",
-                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                    boxShadow: "none",
-                  }}
-                >
-                  {loading && (
-                    <span style={{
-                      display: "inline-block", width: "15px", height: "15px",
-                      border: "2px solid rgba(26,115,232,0.3)",
-                      borderTop: "2px solid #fff",
-                      borderRadius: "50%",
-                      animation: "spin 0.7s linear infinite",
-                    }} />
-                  )}
-                  {loading ? "Creating Account…" : "Create Account"}
-                </button>
-              </form>
+              <button
+                type="submit"
+                disabled={loading}
+                className="reg-submit-btn w-full py-3 bg-blue-800 border-none rounded-lg text-white text-[14px] font-medium cursor-pointer flex items-center justify-center transition-all duration-250 ease font-inter shadow-none hover:bg-blue-800 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading && (
+                  <span className="inline-block w-[15px] h-[15px] border-[2px] border-blue-400/30 border-t-white rounded-full animate-spin" />
+                )}
+                {loading ? "Creating Account…" : "Create Account"}
+              </button>
+            </form>
 
-              <p style={{ marginTop: "20px", fontSize: "13px", color: "#5f6368" }}>
+              <p className="mt-5 text-[13px] text-gray-600">
                 Already have an account?{" "}
                 <button
-                  className="reg-link-btn"
                   onClick={onSwitchToLogin}
-                  style={{
-                    color: "#1e3a8a",
-                    background: "none", border: "none",
-                    cursor: "pointer", fontWeight: "600",
-                    fontSize: "12px", padding: 0,
-                    transition: "color 0.2s ease",
-                    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                  }}
+                  className="text-blue-800 bg-none border-none cursor-pointer font-semibold text-[12px] p-0 transition-colors duration-200 ease font-inter hover:text-blue-800"
                 >
                   Login
                 </button>
@@ -569,6 +324,46 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
           )}
         </div>
       </div>
+
+      <style jsx>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        .font-inter {
+          font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        }
+        
+        .animate-fade-up {
+          animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        
+        .backdrop-blur-md {
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+        }
+        
+        .backdrop-blur-[24px] {
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+        }
+        
+        .reg-input:focus {
+          outline: none;
+          background: #f4f4f4;
+        }
+        
+        .animate-spin {
+          animation: spin 0.7s linear infinite;
+        }
+      `}</style>
     </>
   );
 };

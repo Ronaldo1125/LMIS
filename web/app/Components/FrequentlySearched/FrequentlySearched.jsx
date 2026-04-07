@@ -12,8 +12,9 @@ const FrequentlySearched = () => {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
   const [windowWidth, setWindowWidth] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // ── Drag state (all in refs to avoid re-renders during RAF loop) ──
   const isDragging   = useRef(false);
   const startX       = useRef(0);
   const scrollLeft   = useRef(0);
@@ -23,7 +24,6 @@ const FrequentlySearched = () => {
   const hasDragged   = useRef(false);
   const scrollRef    = useRef();
 
-  // We still need a React state version of hasDragged for the click guard
   const [hasDraggedState, setHasDraggedState] = useState(false);
 
   const getResponsiveConfig = () => {
@@ -113,14 +113,44 @@ const FrequentlySearched = () => {
     return () => { isMounted = false; };
   }, []);
 
+  const updateScrollButtons = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    
+    const hasBooks = books.length > 0;
+    const isAtStart = el.scrollLeft <= 4;
+    const isAtEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 4;
+    
+    setCanScrollLeft(hasBooks && !isAtStart);
+    setCanScrollRight(hasBooks && !isAtEnd);
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    
+    const handleScroll = () => updateScrollButtons();
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollButtons();
+    });
+    resizeObserver.observe(el);
+    
+    setTimeout(updateScrollButtons, 100);
+    
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [books]);
+
   const scroll = (dir) => {
     const el = scrollRef.current;
     if (!el) return;
     const scrollAmount = (config.cardWidth + config.gap) * 3;
     el.scrollBy({ left: dir === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
   };
-
-  // ── Momentum helpers ──
 
   const cancelMomentum = () => {
     if (rafId.current) {
@@ -133,7 +163,6 @@ const FrequentlySearched = () => {
     const el = scrollRef.current;
     if (!el) return;
 
-    // Decelerate at ~92% per frame (~60 fps → feels natural)
     velocity.current *= 0.92;
 
     if (Math.abs(velocity.current) < 0.5) {
@@ -145,8 +174,6 @@ const FrequentlySearched = () => {
     el.scrollLeft -= velocity.current;
     rafId.current = requestAnimationFrame(applyMomentum);
   };
-
-  // ── Mouse events ──
 
   const handleMouseDown = (e) => {
     cancelMomentum();
@@ -167,7 +194,6 @@ const FrequentlySearched = () => {
     const x    = e.pageX - scrollRef.current.offsetLeft;
     const walk = x - startX.current;
 
-    // Update velocity for momentum (negative: scroll follows finger direction)
     velocity.current = e.pageX - lastX.current;
     lastX.current    = e.pageX;
 
@@ -182,7 +208,6 @@ const FrequentlySearched = () => {
   const handleMouseUp = () => {
     isDragging.current = false;
     if (scrollRef.current) scrollRef.current.style.cursor = "grab";
-    // Kick off momentum coast
     rafId.current = requestAnimationFrame(applyMomentum);
   };
 
@@ -192,8 +217,6 @@ const FrequentlySearched = () => {
     if (scrollRef.current) scrollRef.current.style.cursor = "grab";
     rafId.current = requestAnimationFrame(applyMomentum);
   };
-
-  // ── Touch events ──
 
   const handleTouchStart = (e) => {
     cancelMomentum();
@@ -228,25 +251,23 @@ const FrequentlySearched = () => {
     rafId.current = requestAnimationFrame(applyMomentum);
   };
 
-  // ── Click guard ──
   const handleBookClick = (book) => {
     if (hasDragged.current) return;
     router.push(`/book/${book.id}`);
   };
 
-  // Cleanup RAF on unmount
   useEffect(() => () => cancelMomentum(), []);
 
   const SkeletonCard = () => (
     <div style={{
       minWidth: config.cardWidth, maxWidth: config.cardWidth, flexShrink: 0,
-      overflow: "hidden",
+      border: "1px solid #e5e7eb", overflow: "hidden",
       animation: "pulse 1.5s ease-in-out infinite",
     }}>
-      <div style={{ aspectRatio: "3/4", background: "#eef2fb" }} />
+      <div style={{ width: "100%", height: config.cardHeight, background: "#eef2fb" }} />
       <div style={{ padding: "12px 12px 14px" }}>
-        <div style={{ height: 13, background: "#eef2fb", marginBottom: 8 }} />
-        <div style={{ height: 11, background: "#eef2fb", width: "60%" }} />
+        <div style={{ height: 13, background: "#eef2fb", marginBottom: 8, borderRadius: 3 }} />
+        <div style={{ height: 11, background: "#eef2fb", width: "60%", borderRadius: 3 }} />
       </div>
     </div>
   );
@@ -348,7 +369,6 @@ const FrequentlySearched = () => {
           overflow: "hidden",
         }}>
 
-          {/* ── Section Header ── */}
           <div style={{
             display: "flex",
             alignItems: windowWidth < 640 ? "flex-start" : "center",
@@ -367,12 +387,12 @@ const FrequentlySearched = () => {
                 {config.showHeaderText && windowWidth < 640 ? "Most Searched" : "Most Searched Books"}
               </h2>
 
-              {/* Mobile arrows */}
               {windowWidth < 640 && (
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <button
                     className="nav-btn"
                     onClick={() => scroll("left")}
+                    disabled={!canScrollLeft}
                     style={{ width: 36, height: 32 }}
                   >
                     <ChevronLeft size={16} />
@@ -380,6 +400,7 @@ const FrequentlySearched = () => {
                   <button
                     className="nav-btn"
                     onClick={() => scroll("right")}
+                    disabled={!canScrollRight}
                     style={{ width: 36, height: 32 }}
                   >
                     <ChevronRight size={16} />
@@ -388,13 +409,13 @@ const FrequentlySearched = () => {
               )}
             </div>
 
-            {/* Desktop arrows */}
             {windowWidth >= 640 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                 <div style={{ width: 12 }} />
                 <button
                   className="nav-btn"
                   onClick={() => scroll("left")}
+                  disabled={!canScrollLeft}
                   style={{ width: 40, height: 36 }}
                 >
                   <ChevronLeft size={18} />
@@ -402,6 +423,7 @@ const FrequentlySearched = () => {
                 <button
                   className="nav-btn"
                   onClick={() => scroll("right")}
+                  disabled={!canScrollRight}
                   style={{ width: 40, height: 36 }}
                 >
                   <ChevronRight size={18} />
@@ -410,7 +432,6 @@ const FrequentlySearched = () => {
             )}
           </div>
 
-          {/* ── Horizontal Scroll Row ── */}
           <div
             ref={scrollRef}
             className="scroll-container"
@@ -445,12 +466,11 @@ const FrequentlySearched = () => {
                     maxWidth: config.cardWidth,
                     width: config.cardWidth,
                     flexShrink: 0,
-                    border: "1px solid #d1d5db",
-                    borderRadius: 0,
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 2,
                     overflow: "hidden",
                   }}
                 >
-                  {/* Cover */}
                   <div style={{
                     width: config.cardWidth,
                     height: config.cardHeight,
@@ -478,10 +498,8 @@ const FrequentlySearched = () => {
                       </div>
                     )}
 
-                    {/* Rank badge */}
                     <span className="rank-badge">#{globalRank}</span>
 
-                    {/* Search count pill */}
                     {book.search_count > 0 && (
                       <span style={{
                         position: "absolute", bottom: 8, right: 8,
@@ -496,7 +514,6 @@ const FrequentlySearched = () => {
                     )}
                   </div>
 
-                  {/* Info */}
                   <div style={{ padding: "12px 12px 14px" }}>
                     <div style={{
                       fontSize: 13, fontWeight: 700, color: "#111827",

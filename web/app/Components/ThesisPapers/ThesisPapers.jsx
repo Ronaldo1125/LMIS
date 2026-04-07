@@ -14,9 +14,9 @@ const ThesisPapersSection = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [windowWidth, setWindowWidth] = useState(0);
-  const [canScrollL, setCanScrollL] = useState(false);
-  const [canScrollR, setCanScrollR] = useState(true);
   const [thesisCategory, setThesisCategory] = useState(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   // ── Drag state (all in refs to avoid re-renders during RAF loop) ──
   const isDragging   = useRef(false);
@@ -75,26 +75,47 @@ const ThesisPapersSection = () => {
     return () => { mounted = false; };
   }, []);
 
-  const updateScrollBtns = () => {
+  const updateScrollButtons = () => {
     const el = scrollRef.current;
     if (!el) return;
-    setCanScrollL(el.scrollLeft > 4);
-    setCanScrollR(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+    
+    // Simple logic: if there are books, assume scrolling is possible
+    // Let the scroll behavior handle the actual limits
+    const hasBooks = books.length > 0;
+    const isAtStart = el.scrollLeft <= 4;
+    const isAtEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 4;
+    
+    setCanScrollLeft(hasBooks && !isAtStart);
+    setCanScrollRight(hasBooks && !isAtEnd);
   };
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.addEventListener("scroll", updateScrollBtns);
-    updateScrollBtns();
-    return () => el.removeEventListener("scroll", updateScrollBtns);
+    
+    const handleScroll = () => updateScrollButtons();
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Initial check and resize observer
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollButtons();
+    });
+    resizeObserver.observe(el);
+    
+    // Initial check after content loads
+    setTimeout(updateScrollButtons, 100);
+    
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
   }, [books]);
 
   const scroll = (dir) => {
     const el = scrollRef.current;
     if (!el) return;
-    const amount = (cfg.cardWidth + cfg.gap) * cfg.cols;
-    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+    const scrollAmount = (cfg.cardWidth + cfg.gap) * 3;
+    el.scrollBy({ left: dir === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
   };
 
   // ── Momentum helpers ──
@@ -251,8 +272,23 @@ const ThesisPapersSection = () => {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.45; }
         }
-        .lmis-book-card { cursor: pointer; overflow: hidden; transition: border-color 0.2s ease; user-select: none; }
-        .lmis-book-card:hover { border-color: #003087 !important; }
+        .nav-btn {
+          border-radius: 12px;
+          border: 1px solid #e5e7eb;
+          background: #fff;
+          display: grid;
+          place-items: center;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s;
+        }
+        .nav-btn:hover:not(:disabled) {
+          background: #f0f4ff;
+          border-color: #003087;
+        }
+        .nav-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
         .lmis-scroll {
           cursor: grab;
           overflow-x: auto;
@@ -264,6 +300,15 @@ const ThesisPapersSection = () => {
         }
         .lmis-scroll::-webkit-scrollbar {
           display: none;
+        }
+        .lmis-book-card {
+          cursor: pointer;
+          overflow: hidden;
+          transition: border-color 0.2s ease;
+          user-select: none;
+        }
+        .lmis-book-card:hover {
+          border-color: #003087 !important;
         }
       `}</style>
 
@@ -295,24 +340,24 @@ const ThesisPapersSection = () => {
               }}>
                 Research Papers
               </h2>
-              <button
-                onClick={() => thesisCategory && router.push(`/search?category=${encodeURIComponent(thesisCategory)}`)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#000000",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: "6px 0",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                View All
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button 
+                  className="nav-btn" 
+                  onClick={() => scroll("left")} 
+                  disabled={!canScrollLeft}
+                  style={{ width: 36, height: 32 }}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button 
+                  className="nav-btn" 
+                  onClick={() => scroll("right")} 
+                  disabled={!canScrollRight}
+                  style={{ width: 36, height: 32 }}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
           )}
 
@@ -335,30 +380,23 @@ const ThesisPapersSection = () => {
                 Thesis / Research Papers
               </h2>
 
-              <div style={{ display: "flex", alignItems: "center", gap: windowWidth < 640 ? 8 : 12 }}>
-                <NavBtn dir="left"  disabled={!canScrollL} onClick={() => scroll("left")}  />
-                <NavBtn dir="right" disabled={!canScrollR} onClick={() => scroll("right")} />
-                {windowWidth >= 768 && (
-                  <button
-                    onClick={() => thesisCategory && router.push(`/search?category=${encodeURIComponent(thesisCategory)}`)}
-                    style={{
-                      marginLeft: 4,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 5,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#000000",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "6px 0",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    VIEW ALL
-                  </button>
-                )}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                <button 
+                  className="nav-btn" 
+                  onClick={() => scroll("left")} 
+                  disabled={!canScrollLeft}
+                  style={{ width: 40, height: 36 }}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button 
+                  className="nav-btn" 
+                  onClick={() => scroll("right")} 
+                  disabled={!canScrollRight}
+                  style={{ width: 40, height: 36 }}
+                >
+                  <ChevronRight size={18} />
+                </button>
               </div>
             </div>
           )}
@@ -423,8 +461,8 @@ const ThesisPapersSection = () => {
                     minWidth: cfg.cardWidth,
                     maxWidth: cfg.cardWidth,
                     flexShrink: 0,
-                    border: "1px solid #d1d5db",
-                    borderRadius: 0,
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 2,
                     overflow: "hidden",
                     background: "#fff",
                   }}

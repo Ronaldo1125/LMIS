@@ -22,7 +22,6 @@ function getToken() {
   return localStorage.getItem("token") || sessionStorage.getItem("token") || null;
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Spinner() {
   return <div className="bpv-spinner" />;
@@ -71,7 +70,7 @@ function BibliographicDetails({ book, accessionNo }) {
   );
 }
 
-// ─── Main BookDetails ─────────────────────────────────────────────────────────
+
 
 const BookDetails = ({ bookId }) => {
   const [book,            setBook]            = useState(null);
@@ -112,7 +111,7 @@ const BookDetails = ({ bookId }) => {
               setBookmarked(bmData.bookmarked);
             }
           } catch {
-            // Silently ignore bookmark check failure — not critical
+            
           }
         }
       } catch (err) {
@@ -134,7 +133,7 @@ const BookDetails = ({ bookId }) => {
     if (!book?.upload?.id || downloading) return;
     const token = getToken();
     if (!token) {
-      // Dispatch custom event to show login modal with download message
+      
       window.dispatchEvent(new CustomEvent('showLoginWithMessage', {
         detail: 'Log in or create an account to download books.'
       }));
@@ -163,7 +162,7 @@ const BookDetails = ({ bookId }) => {
     if (bookmarkLoading) return;
     const token = getToken();
     if (!token) {
-      // Dispatch custom event to show login modal with bookmark message
+      
       window.dispatchEvent(new CustomEvent('showLoginWithMessage', {
         detail: 'Log in or create an account to have access to bookmarks.'
       }));
@@ -179,7 +178,7 @@ const BookDetails = ({ bookId }) => {
       });
       if (res.ok) {
         setBookmarked((prev) => !prev);
-        // Show notification only when adding bookmark (not removing)
+       
         if (!bookmarked) {
           setShowBookmarkNotif(true);
           setTimeout(() => {
@@ -193,9 +192,9 @@ const BookDetails = ({ bookId }) => {
           }, 3000);
         }
       } else if (res.status === 409) {
-        // Handle case where bookmark already exists
+        
         setBookmarked(true);
-        // Show notification for existing bookmark
+       
         setShowBookmarkNotif(true);
         setTimeout(() => {
           const notif = document.querySelector('[data-bookmark-notif]');
@@ -248,7 +247,7 @@ const BookDetails = ({ bookId }) => {
     <>
       <Nav />
       
-      {/* Bookmark Notification */}
+    
       {showBookmarkNotif && (
         <div 
           data-bookmark-notif
@@ -297,7 +296,7 @@ const BookDetails = ({ bookId }) => {
               marginLeft: "auto",
             }}
             onClick={() => {
-  // Dispatch custom event to open profile modal and navigate to bookmarked tab
+  
   window.dispatchEvent(new CustomEvent('openProfileBookmarked'));
 }}
           >
@@ -309,7 +308,7 @@ const BookDetails = ({ bookId }) => {
       <div className="bg-white">
         <div className="bd-page-wrap">
 
-          {/* Back */}
+        
           <div className="bd-back-wrap">
             <button className="bd-back" onClick={() => window.history.back()}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -321,7 +320,7 @@ const BookDetails = ({ bookId }) => {
 
           <div className="bd-main-grid">
 
-            {/* Left: PDF Preview */}
+          
             <div style={{ minWidth: 0, width: "100%" }}>
               {uploadId ? (
                 <div className="bp-preview-wrapper" style={{ overflow: "hidden" }}>
@@ -332,7 +331,7 @@ const BookDetails = ({ bookId }) => {
               )}
             </div>
 
-            {/* Right: Panel */}
+          
             <div className="bd-panel">
               <span className="bd-genre-pill">{book.category || "Books"}</span>
 

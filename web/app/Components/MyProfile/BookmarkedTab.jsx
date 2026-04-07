@@ -439,7 +439,7 @@ export default function BookmarkedTab({ onClose, isMobile = false }) {
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-base font-semibold text-zinc-800">Bookmarked</h2>
         {pagination.total > 0 && (
-          <span className="text-xs text-zinc-500 bg-zinc-100 border border-zinc-200 px-3 py-1 rounded-full">
+          <span className="text-xs text-zinc-500 px-3 py-1">
             {pagination.total} saved
           </span>
         )}
@@ -574,24 +574,7 @@ export default function BookmarkedTab({ onClose, isMobile = false }) {
                       </p>
                     )}
 
-                    {/* Pages to go + progress bar — always shown, Scribd style */}
-                    <div className="mb-2.5 mt-0.5">
-                      {/* Progress bar */}
-                      <div className="w-full h-[3px] bg-zinc-200 rounded-full overflow-hidden mb-1.5">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${isFinished ? 100 : (progress ?? 0)}%`,
-                            background: isFinished ? "#d97706" : "#3f3f46",
-                          }}
-                        />
-                      </div>
-                      {/* Pages label */}
-                      <p className="text-[10px] text-zinc-400 leading-none">
-                        {pagesInfo ?? `${progress ?? 0}% read`}
-                      </p>
-                    </div>
-
+                    
                     {/* Badges */}
                     <div className="flex items-center gap-2 flex-wrap">
                       {isFinished && (
@@ -600,23 +583,12 @@ export default function BookmarkedTab({ onClose, isMobile = false }) {
                           Finished
                         </span>
                       )}
-                      {!isFinished && progress !== null && progress > 0 && (
-                        <span className="text-[10px] text-zinc-400">{progress}% read</span>
-                      )}
-                      {book.category && (
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${getCategoryClass(book.category)}`}>
+                                            {book.category && (
+                        <span className={`text-[10px] px-2 py-0.5 rounded-[2px] ${getCategoryClass(book.category)}`}>
                           {book.category}
                         </span>
                       )}
-                      {book.has_digital_copy && (
-                        <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          Digital
-                        </span>
-                      )}
-                      {book.call_number && (
-                        <span className="text-[10px] text-zinc-400 font-mono">{book.call_number}</span>
-                      )}
-                    </div>
+                                          </div>
                   </div>
 
                   {/* Three-dot menu */}

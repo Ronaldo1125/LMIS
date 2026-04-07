@@ -432,16 +432,18 @@ const MobileNav = () => {
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
                 style={{ 
-                  background: "none", 
-                  border: "none", 
+                  background: showNotifications ? "white" : "none", 
+                  border: showNotifications ? "1px solid rgba(0,0,0,0.1)" : "none", 
                   cursor: "pointer", 
-                  color: "#333", 
+                  color: showNotifications ? "#2563eb" : "#333", 
                   padding: "6px", 
-                  borderRadius: "8px", 
+                  borderRadius: "50%", 
                   display: "flex", 
                   alignItems: "center", 
                   justifyContent: "center",
-                  position: "relative"
+                  position: "relative",
+                  boxShadow: showNotifications ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
+                  transition: "all 0.15s"
                 }}
               >
                 <Bell size={20} />

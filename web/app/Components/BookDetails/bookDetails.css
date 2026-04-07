@@ -93,7 +93,7 @@
 .bd-avail-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: #dc2626; }
 
 .bd-btn-primary { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 0; background: #1e40af; color: #fff; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.1s; font-family: inherit; }
-.bd-btn-primary:hover:not(:disabled) { background: #333; }
+.bd-btn-primary:hover:not(:disabled) { background: #3b82f6; color: #fff; }
 .bd-btn-primary:active:not(:disabled) { transform: scale(0.98); }
 .bd-btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
 

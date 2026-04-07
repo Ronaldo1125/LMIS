@@ -98,11 +98,11 @@ const News = () => {
 
         gap: 16,
 
-        titleSize: 24,
+        titleSize: 20,
 
         itemsPerSlide: 1,
 
-        cardTitleSize: 16,
+        cardTitleSize: 14,
 
         minCardHeight: 280
 
@@ -120,11 +120,11 @@ const News = () => {
 
         gap: 24,
 
-        titleSize: 26,
+        titleSize: 22,
 
         itemsPerSlide: 2,
 
-        cardTitleSize: 18,
+        cardTitleSize: 16,
 
         minCardHeight: 300
 
@@ -142,11 +142,11 @@ const News = () => {
 
         gap: 28,
 
-        titleSize: 28,
+        titleSize: 24,
 
         itemsPerSlide: 3,
 
-        cardTitleSize: 20,
+        cardTitleSize: 18,
 
         minCardHeight: 320
 
@@ -164,11 +164,11 @@ const News = () => {
 
         gap: 32,
 
-        titleSize: 29,
+        titleSize: 25,
 
         itemsPerSlide: 3,
 
-        cardTitleSize: 20,
+        cardTitleSize: 18,
 
         minCardHeight: 320
 
@@ -466,7 +466,7 @@ const News = () => {
 
         {error && (
 
-          <div style={{ maxWidth: 1700, margin: "0 auto", padding: `0 ${config.contentPadding} 40px`, color: "#dc2626", fontSize: 14 }}>
+          <div style={{ maxWidth: 1700, margin: "0 auto", padding: `0 ${config.contentPadding} 40px`, color: "#dc2626", fontSize: 12 }}>
 
             Failed to load news: {error}
 
@@ -506,7 +506,7 @@ const News = () => {
 
             ? (
 
-              <div style={{ gridColumn: "1/-1", textAlign: "center", color: "#9ca3af", padding: "60px 0", fontSize: 15 }}>
+              <div style={{ gridColumn: "1/-1", textAlign: "center", color: "#9ca3af", padding: "60px 0", fontSize: 13 }}>
 
                 No news available at the moment.
 
@@ -588,7 +588,7 @@ const News = () => {
 
                 <div style={{
 
-                  fontSize: 12, fontWeight: 700, color: "#0057b8",
+                  fontSize: 11, fontWeight: 700, color: "#0057b8",
 
                   textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8,
 
@@ -624,7 +624,7 @@ const News = () => {
 
                 {/* Date */}
 
-                <div style={{ fontSize: 12, color: "#9ca3af" }}>{item.formattedDate}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af" }}>{item.formattedDate}</div>
 
               </a>
 

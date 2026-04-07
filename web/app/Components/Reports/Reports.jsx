@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen } from "lucide-react";
+import { ChevronRight, ChevronLeft, BookOpen } from "lucide-react";
 import PDFThumbnail from "../Search/PDFThumbnail";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -14,8 +14,8 @@ const ReportsSection = () => {
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
   const [windowWidth, setWindowWidth] = useState(0);
-  const [canScrollL,  setCanScrollL]  = useState(false);
-  const [canScrollR,  setCanScrollR]  = useState(true);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   // ── Drag state (all in refs to avoid re-renders during RAF loop) ──
   const isDragging   = useRef(false);
@@ -67,26 +67,47 @@ const ReportsSection = () => {
     return () => { mounted = false; };
   }, []);
 
-  const updateScrollBtns = () => {
+  const updateScrollButtons = () => {
     const el = scrollRef.current;
     if (!el) return;
-    setCanScrollL(el.scrollLeft > 4);
-    setCanScrollR(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+    
+    // Simple logic: if there are books, assume scrolling is possible
+    // Let the scroll behavior handle the actual limits
+    const hasBooks = books.length > 0;
+    const isAtStart = el.scrollLeft <= 4;
+    const isAtEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 4;
+    
+    setCanScrollLeft(hasBooks && !isAtStart);
+    setCanScrollRight(hasBooks && !isAtEnd);
   };
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.addEventListener("scroll", updateScrollBtns, { passive: true });
-    updateScrollBtns();
-    return () => el.removeEventListener("scroll", updateScrollBtns);
+    
+    const handleScroll = () => updateScrollButtons();
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Initial check and resize observer
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollButtons();
+    });
+    resizeObserver.observe(el);
+    
+    // Initial check after content loads
+    setTimeout(updateScrollButtons, 100);
+    
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
   }, [books]);
 
   const scroll = (dir) => {
     const el = scrollRef.current;
     if (!el) return;
-    const amount = (cfg.cardWidth + cfg.gap) * cfg.cols;
-    el.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+    const scrollAmount = (cfg.cardWidth + cfg.gap) * 3;
+    el.scrollBy({ left: dir === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
   };
 
   // ── Momentum helpers ──
@@ -208,6 +229,34 @@ const ReportsSection = () => {
   // Cleanup RAF on unmount
   useEffect(() => () => cancelMomentum(), []);
 
+  const NavBtn = ({ dir, disabled, onClick }) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: windowWidth < 640 ? 34 : 40,
+        height: windowWidth < 640 ? 34 : 40,
+        borderRadius: 8,
+        border: "1.5px solid",
+        borderColor: disabled ? "#e5e7eb" : "#cbd5e1",
+        background: disabled ? "#fafafa" : "#fff",
+        display: "grid",
+        placeItems: "center",
+        cursor: disabled ? "not-allowed" : "pointer",
+        transition: "all 0.15s",
+        opacity: disabled ? 0.45 : 1,
+        flexShrink: 0,
+      }}
+      onMouseEnter={(e) => { if (!disabled) { e.currentTarget.style.borderColor = "#003087"; e.currentTarget.style.background = "#f0f4ff"; } }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = disabled ? "#e5e7eb" : "#cbd5e1"; e.currentTarget.style.background = disabled ? "#fafafa" : "#fff"; }}
+    >
+      {dir === "left"
+        ? <ChevronLeft  size={windowWidth < 640 ? 15 : 18} color={disabled ? "#d1d5db" : "#374151"} />
+        : <ChevronRight size={windowWidth < 640 ? 15 : 18} color={disabled ? "#d1d5db" : "#374151"} />
+      }
+    </button>
+  );
+
   const SkeletonCard = ({ width, height }) => (
     <div style={{ minWidth: width, maxWidth: width, flexShrink: 0, border: "1px solid #e5e7eb", overflow: "hidden" }}>
       <div style={{ width, height, background: "#f3f4f6", animation: "lmis-pulse 1.5s ease-in-out infinite" }} />
@@ -226,8 +275,23 @@ const ReportsSection = () => {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.45; }
         }
-        .lmis-book-card { cursor: pointer; overflow: hidden; transition: border-color 0.2s ease; user-select: none; }
-        .lmis-book-card:hover { border-color: #003087 !important; }
+        .nav-btn {
+          border-radius: 12px;
+          border: 1px solid #e5e7eb;
+          background: #fff;
+          display: grid;
+          place-items: center;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s;
+        }
+        .nav-btn:hover:not(:disabled) {
+          background: #f0f4ff;
+          border-color: #003087;
+        }
+        .nav-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
         .lmis-scroll {
           cursor: grab;
           overflow-x: auto;
@@ -239,6 +303,15 @@ const ReportsSection = () => {
         }
         .lmis-scroll::-webkit-scrollbar {
           display: none;
+        }
+        .lmis-book-card {
+          cursor: pointer;
+          overflow: hidden;
+          transition: border-color 0.2s ease;
+          user-select: none;
+        }
+        .lmis-book-card:hover {
+          border-color: #003087 !important;
         }
       `}</style>
 
@@ -275,24 +348,24 @@ const ReportsSection = () => {
               }}>
                 Reports
               </h2>
-              <button
-                onClick={() => router.push("/search?category=Reports")}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#000000",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: "6px 0",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                View All
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button 
+                  className="nav-btn" 
+                  onClick={() => scroll("left")} 
+                  disabled={!canScrollLeft}
+                  style={{ width: 36, height: 32 }}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button 
+                  className="nav-btn" 
+                  onClick={() => scroll("right")} 
+                  disabled={!canScrollRight}
+                  style={{ width: 36, height: 32 }}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
           )}
 
@@ -315,28 +388,23 @@ const ReportsSection = () => {
                 Reports
               </h2>
 
-              <div style={{ display: "flex", alignItems: "center", gap: windowWidth < 640 ? 8 : 12 }}>
-                {windowWidth >= 768 && (
-                  <button
-                    onClick={() => router.push("/search?category=Reports")}
-                    style={{
-                      marginLeft: 4,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 5,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#000000",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "6px 0",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    VIEW ALL
-                  </button>
-                )}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                <button 
+                  className="nav-btn" 
+                  onClick={() => scroll("left")} 
+                  disabled={!canScrollLeft}
+                  style={{ width: 40, height: 36 }}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button 
+                  className="nav-btn" 
+                  onClick={() => scroll("right")} 
+                  disabled={!canScrollRight}
+                  style={{ width: 40, height: 36 }}
+                >
+                  <ChevronRight size={18} />
+                </button>
               </div>
             </div>
           )}
@@ -403,8 +471,8 @@ const ReportsSection = () => {
                     minWidth: cfg.cardWidth,
                     maxWidth: cfg.cardWidth,
                     flexShrink: 0,
-                    border: "1px solid #d1d5db",
-                    borderRadius: 0,
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 2,
                     overflow: "hidden",
                     background: "#fff",
                   }}

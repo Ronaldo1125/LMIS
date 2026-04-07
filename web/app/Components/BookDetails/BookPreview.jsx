@@ -70,19 +70,17 @@ const BookPreview = ({ uploadId, title, onReadClick }) => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#e8e8e8" }}>
-      {/* Toolbar */}
+    
       <div style={{ height: 42, padding: "0 12px", display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.7)", backdropFilter: "blur(8px)", borderBottom: "1px solid #f4f4f4" }}>
         <span style={{ flex: 1, fontSize: 12, color: "#111", opacity: 0.6, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
           {title}
         </span>
-        <TbBtn onClick={() => setTwoUp(false)}><AlignJustify size={12} strokeWidth={1.5} /></TbBtn>
-        <TbBtn onClick={() => setTwoUp(true)}><Columns size={12} strokeWidth={1.5} /></TbBtn>
         <TbBtn onClick={() => setScale((s) => clamp(s - 0.1))}><ZoomOut size={12} strokeWidth={1.5} /></TbBtn>
         <span style={{ fontSize: 11, color: "#9ca3af" }}>{Math.round(scale * 100)}%</span>
         <TbBtn onClick={() => setScale((s) => clamp(s + 0.1))}><ZoomIn size={12} strokeWidth={1.5} /></TbBtn>
       </div>
 
-      {/* Scroll area */}
+     
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", display: "flex", justifyContent: "center", padding: "50px 0 80px" }}>
         <div style={{ width: "100%", maxWidth: 900, display: "flex", flexDirection: "column", alignItems: "center" }}>
           {fetchStatus === "loading" && null}
@@ -111,7 +109,7 @@ const BookPreview = ({ uploadId, title, onReadClick }) => {
         </div>
       </div>
 
-      {/* Bottom */}
+      
       <div style={{ height: 40, display: "flex", alignItems: "center", padding: "0 12px", background: "rgba(255,255,255,0.7)", borderTop: "1px solid #f4f4f4" }}>
         <span style={{ fontSize: 11, color: "#9ca3af" }}>{totalPrev} pages preview</span>
       </div>

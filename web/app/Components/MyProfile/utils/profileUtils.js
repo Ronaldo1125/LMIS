@@ -44,7 +44,7 @@ export const categoryClass = {
   Science:    "bg-emerald-50 text-emerald-600 border border-emerald-200",
   History:    "bg-amber-50 text-amber-600 border border-amber-200",
   Technology: "bg-violet-50 text-violet-600 border border-violet-200",
-  default:    "bg-zinc-100 text-zinc-500 border border-zinc-200",
+  default:    "bg-[#f4f4f4] text-zinc-500 border border-zinc-200",
 };
 
 export const roleColorClass = {

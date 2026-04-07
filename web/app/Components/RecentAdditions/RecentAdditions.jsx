@@ -12,6 +12,8 @@ const RecentAdditions = () => {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
   const [windowWidth, setWindowWidth] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   // ── Drag state (all in refs to avoid re-renders during RAF loop) ──
   const isDragging   = useRef(false);
@@ -111,6 +113,42 @@ const RecentAdditions = () => {
     fetchBooks();
     return () => { isMounted = false; };
   }, []);
+
+  const updateScrollButtons = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    
+    // Simple logic: if there are books, assume scrolling is possible
+    // Let the scroll behavior handle the actual limits
+    const hasBooks = books.length > 0;
+    const isAtStart = el.scrollLeft <= 4;
+    const isAtEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 4;
+    
+    setCanScrollLeft(hasBooks && !isAtStart);
+    setCanScrollRight(hasBooks && !isAtEnd);
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    
+    const handleScroll = () => updateScrollButtons();
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Initial check and resize observer
+    const resizeObserver = new ResizeObserver(() => {
+      updateScrollButtons();
+    });
+    resizeObserver.observe(el);
+    
+    // Initial check after content loads
+    setTimeout(updateScrollButtons, 100);
+    
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      resizeObserver.disconnect();
+    };
+  }, [books]);
 
   const scroll = (dir) => {
     const el = scrollRef.current;
@@ -315,9 +353,13 @@ const RecentAdditions = () => {
           cursor: pointer;
           transition: background 0.15s, border-color 0.15s;
         }
-        .nav-btn:hover {
+        .nav-btn:hover:not(:disabled) {
           background: #f0f4ff;
           border-color: #003087;
+        }
+        .nav-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
         }
       `}</style>
 
@@ -340,16 +382,26 @@ const RecentAdditions = () => {
           }}>
             <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <h2 style={{ fontSize: config.titleSize, fontWeight: 600, color: "#000", margin: 0 }}>
-                {config.showHeaderText && windowWidth < 640 ? "New Release" : "Recent Additions"}
+                {config.showHeaderText && windowWidth < 640 ? "New Release" : "New Release"}
               </h2>
 
               {/* Mobile arrows */}
               {windowWidth < 640 && (
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <button className="nav-btn" onClick={() => scroll("left")} style={{ width: 36, height: 32 }}>
+                  <button 
+                    className="nav-btn" 
+                    onClick={() => scroll("left")} 
+                    disabled={!canScrollLeft}
+                    style={{ width: 36, height: 32 }}
+                  >
                     <ChevronLeft size={16} />
                   </button>
-                  <button className="nav-btn" onClick={() => scroll("right")} style={{ width: 36, height: 32 }}>
+                  <button 
+                    className="nav-btn" 
+                    onClick={() => scroll("right")} 
+                    disabled={!canScrollRight}
+                    style={{ width: 36, height: 32 }}
+                  >
                     <ChevronRight size={16} />
                   </button>
                 </div>
@@ -359,10 +411,20 @@ const RecentAdditions = () => {
             {/* Desktop arrows */}
             {windowWidth >= 640 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                <button className="nav-btn" onClick={() => scroll("left")} style={{ width: 40, height: 36 }}>
+                <button 
+                  className="nav-btn" 
+                  onClick={() => scroll("left")} 
+                  disabled={!canScrollLeft}
+                  style={{ width: 40, height: 36 }}
+                >
                   <ChevronLeft size={18} />
                 </button>
-                <button className="nav-btn" onClick={() => scroll("right")} style={{ width: 40, height: 36 }}>
+                <button 
+                  className="nav-btn" 
+                  onClick={() => scroll("right")} 
+                  disabled={!canScrollRight}
+                  style={{ width: 40, height: 36 }}
+                >
                   <ChevronRight size={18} />
                 </button>
               </div>

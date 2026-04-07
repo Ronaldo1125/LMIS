@@ -1,5 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -19,10 +17,10 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [success, setSuccess] = useState("");
+  const [showSuccessCircle, setShowSuccessCircle] = useState(false);
 
   const googleBtnRef = useRef(null);
 
-  /* ── Load Google Identity Services ── */
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) {
       console.log("Google Client ID not found");
@@ -85,7 +83,6 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
       }, 150);
       return () => clearInterval(iv);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleGoogleCallback = async (response) => {
@@ -103,10 +100,7 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       setSuccess("Login successful!");
-      setTimeout(() => {
-        onSuccess?.(data);
-        onClose?.();
-      }, 700);
+      setTimeout(() => { onSuccess?.(data); onClose?.(); }, 700);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -114,69 +108,8 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
     }
   };
 
-  /* ── Styles ── */
-  const S = {
-    overlay: {
-      position: "fixed", inset: 0,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      backgroundColor: "rgba(0,0,0,0.3)", zIndex: 1000,
-      backdropFilter: "blur(8px)",
-      webkitBackdropFilter: "blur(8px)",
-    },
-    card: {
-      backgroundColor: "#ffffff",
-      padding: "36px 32px 32px",
-      borderRadius: "20px",
-      border: "1px solid rgba(0,0,0,0.08)",
-      boxShadow: "0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05) inset",
-      width: "100%", maxWidth: "420px",
-      textAlign: "center", position: "relative",
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      backdropFilter: "blur(24px)",
-      maxHeight: "92vh",
-      overflowY: "auto",
-    },
-    closeBtn: {
-      position: "absolute", top: "16px", right: "16px",
-      background: "#f4f4f4", border: "none", fontSize: "20px",
-      cursor: "pointer", color: "#666",
-      padding: "0", borderRadius: "50%",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      transition: "all 0.2s ease", lineHeight: 1,
-      width: "32px", height: "32px",
-    },
-    logo: { width: "120px", height: "auto", display: "block", margin: "0 auto 28px" },
-    heading: { fontSize: "22px", fontWeight: "600", color: "#000000", marginBottom: "4px", letterSpacing: "-0.3px", lineHeight: "1.2" },
-    subtext: { fontSize: "13px", color: "#5f6368", marginBottom: "20px", lineHeight: "1.5" },
-    googleWrapper: {
-      width: "100%", display: "flex",
-      justifyContent: "center", minHeight: "50px", alignItems: "center",
-      flexDirection: "column", position: "relative", marginBottom: "8px",
-    },
-    errorBox: {
-      backgroundColor: "rgba(234,67,53,0.08)", border: "1px solid rgba(234,67,53,0.2)",
-      borderRadius: "10px", padding: "12px 16px",
-      marginBottom: "4px", color: "#d93025",
-      fontSize: "12px", textAlign: "left",
-    },
-    successBox: {
-      backgroundColor: "rgba(52,168,83,0.08)", border: "1px solid rgba(52,168,83,0.2)",
-      borderRadius: "10px", padding: "12px 16px",
-      marginBottom: "18px", color: "#0d652d",
-      fontSize: "13px", textAlign: "left",
-    },
-    footer: { marginTop: "20px", fontSize: "13px", color: "#5f6368" },
-    linkBtn: {
-      color: "#1e3a8a", background: "none", border: "none",
-      cursor: "pointer", fontWeight: "600", fontSize: "12px", padding: 0,
-      transition: "color 0.2s ease",
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    },
-  };
-
-  /* ── Google Icon ── */
   const GoogleIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+    <svg width="20" height="20" viewBox="0 0 24 24" className="flex-shrink-0">
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
@@ -186,134 +119,127 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+      <div 
+        className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-md z-[1000]"
+        onClick={(e) => e.target === e.currentTarget && onClose?.()}
+      >
+        <div className="bg-white p-8 pb-8 rounded-[20px] border border-black/8 shadow-[0_20px_60px_rgba(0,0,0,0.15),inset_0_0_0_1px_rgba(0,0,0,0.05)] w-full max-w-[420px] text-center relative font-inter backdrop-blur-[24px] max-h-[92vh] overflow-y-auto animate-fade-up">
+          
+          <button 
+            onClick={onClose} 
+            className="absolute top-4 right-4 bg-gray-100 border-none text-xl cursor-pointer text-gray-600 p-0 rounded-full flex items-center justify-center transition-all duration-200 ease leading-none w-8 h-8 hover:bg-black/8 hover:text-blue-800"
+          >
+            ×
+          </button>
 
-        @keyframes fadeUp  {
-          from { opacity: 0; transform: translateY(20px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0)   scale(1);    }
-        }
+          <img src="/assets/other/depdevlogo.png" alt="Logo" className="w-[120px] h-auto block mx-auto mb-7" />
 
-        .login-modal-card {
-          animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
+          <h2 className="text-[22px] font-semibold text-black mb-1 tracking-[-0.3px] leading-tight">
+            Login to DEPDev V Library
+          </h2>
+          <p className="text-[13px] text-gray-600 mb-5 leading-relaxed">
+            Sign in with your Google account
+          </p>
 
-        .login-close-btn:hover { background: rgba(0,0,0,0.08) !important; color: #1e3a8a !important; }
-
-        .login-google-custom:hover:not(:disabled) {
-          background: #e8eaed !important;
-          transform: translateY(-1px);
-          box-shadow: none !important;
-        }
-        .login-google-custom:active:not(:disabled) {
-          transform: translateY(0);
-        }
-        .login-google-custom:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .login-link-btn:hover { color: #1e3a8a !important; }
-
-        .login-overlay-bg {
-          position: fixed; inset: 0;
-          display: flex; align-items: center; justify-content: center;
-          background: rgba(0,0,0,0.3);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          z-index: 1000;
-        }
-      `}</style>
-
-      <div className="login-overlay-bg" onClick={(e) => e.target === e.currentTarget && onClose?.()}>
-        <div style={S.card} className="login-modal-card">
-
-          <button className="login-close-btn" onClick={onClose} style={S.closeBtn}>×</button>
-
-          <img src="/assets/other/depdevlogo.png" alt="Logo" style={S.logo} />
-
-          <h2 style={S.heading}>Login to DEPDev V Library</h2>
-          <p style={S.subtext}>Sign in with your Google account</p>
-
-          {error   && <div style={S.errorBox}>⚠ {error}</div>}
-          {success && <div style={S.successBox}>✓ {success}</div>}
+          {error && (
+            <div className="bg-red-50/8 border border-red-500/20 rounded-[10px] p-3 mb-1 text-red-600 text-[12px] text-left">
+              ⚠ {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-50/8 rounded-[10px] p-3 mb-[18px] text-green-700 text-[13px] text-center flex items-center justify-center gap-2">
+              <div className="w-5 h-5 bg-[#f4f4f4] rounded-full flex items-center justify-center flex-shrink-0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6L9 17l-5-5" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              {success}
+            </div>
+          )}
 
           {loading ? (
-            <div style={{ color: "#5f6368", fontSize: "14px", padding: "12px 0" }}>
+            <div className="text-gray-600 text-[14px] py-3">
               Signing you in…
             </div>
           ) : GOOGLE_CLIENT_ID ? (
-            <div style={S.googleWrapper}>
-              {/* Invisible real Google button on top */}
+            <div className="w-full flex justify-center min-h-[50px] items-center flex-col relative mb-2">
               <div
                 ref={googleBtnRef}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  opacity: 0,
-                  zIndex: 2,
-                  cursor: "pointer",
-                  overflow: "hidden",
-                  borderRadius: "50px",
-                }}
+                className="absolute inset-0 opacity-0 z-[2] cursor-pointer overflow-hidden rounded-[50px]"
               />
-              {/* Visual button underneath */}
               <button
-                className="login-google-custom"
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  background: "#f4f4f4",
-                  border: "none",
-                  borderRadius: "8px",
-                  color: "#3c4043",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "12px",
-                  transition: "all 0.25s ease",
-                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                  letterSpacing: "0.1px",
-                  boxShadow: "none",
-                }}
+                className="login-google-custom w-full py-3 px-4 bg-gray-100 border-none rounded-lg text-gray-700 text-[14px] font-medium cursor-pointer flex items-center justify-center gap-3 transition-all duration-250 ease font-inter tracking-[0.1px] shadow-none hover:bg-gray-200 hover:-translate-y-px active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <GoogleIcon />
                 Continue with Google
               </button>
             </div>
           ) : (
-            <div style={{ color: "#d93025", fontSize: "13px", padding: "12px 0" }}>
+            <div className="text-red-600 text-[13px] py-3">
               Google Sign-In is not configured. Please contact administrator.
             </div>
           )}
 
-          <p style={{
-            fontSize: "12px",
-            color: "#5f6368",
-            margin: "16px 0 0",
-            lineHeight: "1.6",
-          }}>
+          <p className="text-[12px] text-gray-600 my-4 leading-relaxed">
             By continuing, you agree to our{" "}
-            <span style={{ color: "#1e3a8a", cursor: "pointer", textDecoration: "underline" }}>
+            <span className="text-blue-800 cursor-pointer underline">
               Terms
             </span>
             {" "}and{" "}
-            <span style={{ color: "#1e3a8a", cursor: "pointer", textDecoration: "underline" }}>
+            <span className="text-blue-800 cursor-pointer underline">
               Privacy Policy
             </span>
             .
           </p>
 
-          <p style={S.footer}>
+          <p className="mt-5 text-[13px] text-gray-600">
             Don't have an account?{" "}
-            <button onClick={onSwitchToRegister} className="login-link-btn" style={S.linkBtn}>Register</button>
+            <button 
+              onClick={onSwitchToRegister} 
+              className="text-blue-800 bg-none border-none cursor-pointer font-semibold text-[12px] p-0 transition-colors duration-200 ease font-inter hover:text-blue-800"
+            >
+              Register
+            </button>
           </p>
 
         </div>
       </div>
+
+      <style jsx>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        .font-inter {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        }
+        
+        @keyframes checkmark {
+          0% { stroke-dasharray: 0 100; }
+          100% { stroke-dasharray: 100 100; }
+        }
+        
+        .animate-checkmark {
+          animation: checkmark 0.4s ease-out 0.2s both;
+        }
+        
+        .animate-fade-up {
+          animation: fadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        
+        .backdrop-blur-md {
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+        }
+        
+        .backdrop-blur-[24px] {
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+        }
+      `}</style>
     </>
   );
 };

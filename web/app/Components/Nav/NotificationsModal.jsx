@@ -16,6 +16,20 @@ const timeAgo = (iso) => {
   return `${Math.floor(diff / 86400)}d ago`;
 };
 
+const formatDate = (iso) => {
+  const date = new Date(iso);
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  const dayName = days[date.getDay()];
+  const monthName = months[date.getMonth()];
+  const day = date.getDate();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  
+  return `${dayName} ${monthName} ${day} - ${hours}:${minutes}`;
+};
+
 const STORAGE_KEY = "lmis_read_announcements";
 
 const getReadIds = () => {
@@ -50,11 +64,78 @@ const markAllRead = (announcements) => {
 const resolveType = (ann) => {
   const text = `${ann.subject || ""} ${ann.description || ""}`.toLowerCase();
 
+  if (/blender|3d|animation|modeling/.test(text))
+    return {
+      type: "blender",
+      color: "#2563eb",
+      bg: "#eff6ff",
+      tagColor: "#2563eb",
+      tagBg: "#dbeafe",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/>
+          <line x1="2" y1="20" x2="2.01" y2="20"/>
+        </svg>
+      ),
+    };
+
+  if (/python|coding|programming|code/.test(text))
+    return {
+      type: "python",
+      color: "#059669",
+      bg: "#ecfdf5",
+      tagColor: "#059669",
+      tagBg: "#d1fae5",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+        </svg>
+      ),
+    };
+
+  if (/photoshop|design|graphic|editing/.test(text))
+    return {
+      type: "photoshop",
+      color: "#7c3aed",
+      bg: "#f5f3ff",
+      tagColor: "#7c3aed",
+      tagBg: "#ede9fe",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+      ),
+    };
+
+  if (/support|help|assist|question/.test(text))
+    return {
+      type: "support",
+      color: "#ea580c",
+      bg: "#fff7ed",
+      tagColor: "#ea580c",
+      tagBg: "#fed7aa",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      ),
+    };
+
   if (/new book|added|acquisition|arrival/.test(text))
     return {
       type: "book",
       color: "#2563eb",
       bg: "#eff6ff",
+      tagColor: "#2563eb",
+      tagBg: "#dbeafe",
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -69,6 +150,8 @@ const resolveType = (ann) => {
       type: "event",
       color: "#7c3aed",
       bg: "#f5f3ff",
+      tagColor: "#7c3aed",
+      tagBg: "#ede9fe",
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -85,6 +168,8 @@ const resolveType = (ann) => {
       type: "deadline",
       color: "#dc2626",
       bg: "#fef2f2",
+      tagColor: "#dc2626",
+      tagBg: "#fecaca",
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -99,6 +184,8 @@ const resolveType = (ann) => {
       type: "system",
       color: "#d97706",
       bg: "#fffbeb",
+      tagColor: "#d97706",
+      tagBg: "#fed7aa",
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -113,6 +200,8 @@ const resolveType = (ann) => {
       type: "alert",
       color: "#ea580c",
       bg: "#fff7ed",
+      tagColor: "#ea580c",
+      tagBg: "#fed7aa",
       icon: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -128,6 +217,8 @@ const resolveType = (ann) => {
     type: "announcement",
     color: "#2563eb",
     bg: "#eff6ff",
+    tagColor: "#2563eb",
+    tagBg: "#dbeafe",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -152,8 +243,8 @@ const NotifRow = ({ ann, isUnread, onRead }) => {
       style={{
         display: "flex",
         alignItems: "flex-start",
-        gap: "10px",
-        padding: "11px 14px",
+        gap: "12px",
+        padding: "14px 16px",
         cursor: "pointer",
         background: isUnread ? "#f8faff" : "transparent",
         borderBottom: "1px solid #f1f1f5",
@@ -165,33 +256,50 @@ const NotifRow = ({ ann, isUnread, onRead }) => {
         (e.currentTarget.style.background = isUnread ? "#f8faff" : "transparent")
       }
     >
-      {/* RIGHT: Content */}
+      {/* Avatar/Icon */}
+      <div style={{
+        width: 40,
+        height: 40,
+        borderRadius: "50%",
+        background: notifType.color,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        color: "#fff",
+        fontSize: "14px",
+        fontWeight: 700,
+      }}>
+        {notifType.type === 'blender' ? 'T' :
+         notifType.type === 'python' ? 'T' :
+         notifType.type === 'photoshop' ? 'T' :
+         notifType.type === 'support' ? 'T' :
+         notifType.type === 'book' ? 'N' :
+         notifType.type === 'event' ? 'T' :
+         notifType.type === 'deadline' ? 'T' :
+         notifType.type === 'system' ? 'S' :
+         notifType.type === 'alert' ? 'T' :
+         'D'}
+      </div>
+
+      {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "6px", alignItems: "flex-start" }}>
           <p style={{
             margin: 0,
-            fontSize: "13px",
+            fontSize: "14px",
             fontWeight: isUnread ? 700 : 600,
-            color: "#111",
+            color: isUnread ? "#9ca3af" : "#111",
             flex: 1,
             lineHeight: 1.35,
           }}>
             {ann.subject}
           </p>
-          <span style={{
-            fontSize: "10.5px",
-            color: "#b0b8c9",
-            whiteSpace: "nowrap",
-            marginTop: "1px",
-            fontWeight: 500,
-          }}>
-            {timeAgo(date)}
-          </span>
         </div>
 
         {ann.description && (
           <p style={{
-            margin: "3px 0 0",
+            margin: "4px 0 0",
             fontSize: "12px",
             color: "#6b7280",
             lineHeight: 1.45,
@@ -203,18 +311,60 @@ const NotifRow = ({ ann, isUnread, onRead }) => {
             {ann.description}
           </p>
         )}
+
+        {/* Category Tag */}
+        <div style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "4px",
+          marginTop: "6px",
+          padding: "2px 8px",
+          background: "#fff",
+          color: "#000",
+          borderRadius: "12px",
+          fontSize: "10px",
+          fontWeight: 600,
+          textTransform: "capitalize",
+          border: "1px solid #e2e8f0",
+        }}>
+          <div style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: notifType.tagColor,
+          }} />
+          {notifType.type === 'blender' ? 'Blender Course' :
+           notifType.type === 'python' ? 'Python Course' :
+           notifType.type === 'photoshop' ? 'Photoshop Course' :
+           notifType.type === 'support' ? 'Support' :
+           notifType.type === 'book' ? 'New Book' :
+           notifType.type === 'event' ? 'Event' :
+           notifType.type === 'deadline' ? 'Deadline' :
+           notifType.type === 'system' ? 'System' :
+           notifType.type === 'alert' ? 'Alert' :
+           'Announcement'}
+        </div>
       </div>
 
       {/* Unread dot */}
-      {isUnread && (
+      {isUnread ? (
         <div style={{
-          width: 7,
-          height: 7,
+          width: 8,
+          height: 8,
           borderRadius: "50%",
           background: "#2563eb",
           flexShrink: 0,
           marginTop: 6,
           boxShadow: "0 0 0 2px #dbeafe",
+        }} />
+      ) : (
+        <div style={{
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: "#9ca3af",
+          flexShrink: 0,
+          marginTop: 6,
         }} />
       )}
     </div>
@@ -341,19 +491,6 @@ const NotificationsModal = ({
           background: "#fff",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-            {/* Bell icon */}
-            <div style={{
-              width: 28, height: 28, borderRadius: "50%",
-              background: "#eff6ff",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              borderRadius: "50%"
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="#2563eb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-              </svg>
-            </div>
             <span style={{ fontWeight: 700, fontSize: "14px", color: "#0f172a", letterSpacing: "-0.01em" }}>
               Notifications
             </span>
@@ -483,16 +620,69 @@ const NotificationsModal = ({
         {/* FOOTER */}
         {!loading && !error && announcements.length > 0 && (
           <div style={{
-            padding: "8px 14px",
+            padding: "12px 16px",
             borderTop: "1px solid #f1f5f9",
+            background: "#fff",
             display: "flex",
+            gap: "12px",
             alignItems: "center",
-            justifyContent: "center",
-            background: "#fafcff",
           }}>
-            <p style={{ margin: 0, fontSize: "10.5px", color: "#c7d2e0", fontWeight: 500 }}>
-              Showing announcements addressed to you
-            </p>
+            {/* Mark all as read */}
+            <button
+              onClick={() => {
+                markAllRead(announcements);
+                setReadIds(getReadIds());
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 12px",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "12px",
+                color: "#6b7280",
+                fontWeight: 500,
+                justifyContent: "flex-start",
+                borderRadius: "6px",
+                transition: "background 0.15s",
+                flex: 1,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Mark all as read
+            </button>
+
+            {/* View all notifications button */}
+            <button
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                background: announcements.length > 0 ? resolveType(announcements[0]).color : "#2563eb",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "12px",
+                color: "#fff",
+                fontWeight: 600,
+                borderRadius: "8px",
+                transition: "background 0.15s",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = announcements.length > 0 ? resolveType(announcements[0]).color : "#2563eb")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = announcements.length > 0 ? resolveType(announcements[0]).color : "#2563eb")}
+            >
+              View all notifications
+            </button>
           </div>
         )}
       </div>

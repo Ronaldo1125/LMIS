@@ -12,26 +12,18 @@ function getToken() {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-// ── Breakpoints matching Tailwind sm/md/lg/xl/2xl ──
-// base: <640  sm: 640  md: 768  lg: 1024  xl: 1280  2xl: 1536
-
 const getResponsiveConfig = (w) => {
   if (w < 640) {
     return { sectionPadding: "20px 16px 32px", titleSize: 22, cardWidth: 120, cardHeight: 160, gap: 12 };
   } else if (w < 768) {
-    // sm
     return { sectionPadding: "28px 24px 40px", titleSize: 24, cardWidth: 140, cardHeight: 187, gap: 14 };
   } else if (w < 1024) {
-    // md
     return { sectionPadding: "36px 32px 48px", titleSize: 26, cardWidth: 155, cardHeight: 207, gap: 16 };
   } else if (w < 1280) {
-    // lg
     return { sectionPadding: "40px 40px 52px", titleSize: 28, cardWidth: 170, cardHeight: 227, gap: 20 };
   } else if (w < 1536) {
-    // xl
     return { sectionPadding: "44px 48px 56px", titleSize: 28, cardWidth: 190, cardHeight: 253, gap: 22 };
   } else {
-    // 2xl
     return { sectionPadding: "48px 64px 64px", titleSize: 28, cardWidth: 200, cardHeight: 267, gap: 24 };
   }
 };
@@ -43,7 +35,6 @@ const RelatedBooks = ({ currentBookId }) => {
   const [error,   setError]   = useState(null);
   const [windowWidth, setWindowWidth] = useState(0);
 
-  // ── Drag refs ──
   const isDragging  = useRef(false);
   const startX      = useRef(0);
   const scrollLeft  = useRef(0);
@@ -54,8 +45,6 @@ const RelatedBooks = ({ currentBookId }) => {
   const scrollRef   = useRef();
 
   const config = getResponsiveConfig(windowWidth);
-
-  // ── Sub-components (inside so config is in scope) ──
 
   const SkeletonCard = () => (
     <div style={{
@@ -100,19 +89,17 @@ const RelatedBooks = ({ currentBookId }) => {
     </div>
   );
 
-  // ── Scroll button ──
   const scroll = (dir) => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollBy({
       left: dir === "left"
         ? -((config.cardWidth + config.gap) * 3)
-        :  ((config.cardWidth + config.gap) * 3),
+        : ((config.cardWidth + config.gap) * 3),
       behavior: "smooth",
     });
   };
 
-  // ── Momentum ──
   const cancelMomentum = () => {
     if (rafId.current) { cancelAnimationFrame(rafId.current); rafId.current = null; }
   };
@@ -126,7 +113,6 @@ const RelatedBooks = ({ currentBookId }) => {
     rafId.current = requestAnimationFrame(applyMomentum);
   };
 
-  // ── Mouse events ──
   const handleMouseDown = (e) => {
     cancelMomentum();
     isDragging.current = true;
@@ -162,7 +148,6 @@ const RelatedBooks = ({ currentBookId }) => {
     rafId.current = requestAnimationFrame(applyMomentum);
   };
 
-  // ── Touch events ──
   const handleTouchStart = (e) => {
     cancelMomentum();
     isDragging.current = true;
@@ -188,7 +173,6 @@ const RelatedBooks = ({ currentBookId }) => {
     rafId.current = requestAnimationFrame(applyMomentum);
   };
 
-  // ── Click guard ──
   const handleBookClick = (book) => {
     if (hasDragged.current) return;
     const id = book.book_id ?? book.id;
@@ -196,7 +180,6 @@ const RelatedBooks = ({ currentBookId }) => {
     router.push(`/book/${id}`);
   };
 
-  // ── Effects ──
   useEffect(() => () => cancelMomentum(), []);
 
   useEffect(() => {
@@ -284,21 +267,12 @@ const RelatedBooks = ({ currentBookId }) => {
         }
       `}</style>
 
-      {/*
-        ── FIXED: Removed the 100vw / -50vw full-bleed escape that was causing
-        a horizontal overflow leak line. RelatedBooks now sits naturally inside
-        .bd-page-wrap (max-width: 1600px) — same boundary as the rest of the page.
-        The sectionPadding from getResponsiveConfig handles internal spacing.
-      ──*/}
       <div style={{
         background: "#fff",
         borderTop: "1px solid #f0f0f0",
         paddingTop: windowWidth < 640 ? "20px" : windowWidth < 768 ? "28px" : windowWidth < 1024 ? "36px" : windowWidth < 1280 ? "40px" : windowWidth < 1536 ? "44px" : "48px",
         paddingBottom: windowWidth < 640 ? "32px" : windowWidth < 768 ? "40px" : windowWidth < 1024 ? "48px" : windowWidth < 1280 ? "52px" : windowWidth < 1536 ? "56px" : "64px",
         boxSizing: "border-box",
-        // Negative margin cancels out bd-page-wrap's side padding so the
-        // white background + top border stretch edge-to-edge within the wrap,
-        // while the inner content stays aligned to the same grid.
         marginLeft: `calc(-1 * ${
           windowWidth < 640 ? "16px" :
           windowWidth < 1024 ? "24px" :
@@ -312,8 +286,6 @@ const RelatedBooks = ({ currentBookId }) => {
         paddingLeft: windowWidth < 640 ? "16px" : windowWidth < 1024 ? "24px" : "32px",
         paddingRight: windowWidth < 640 ? "16px" : windowWidth < 1024 ? "24px" : "32px",
       }}>
-
-        {/* ── Header ── */}
         <div style={{
           maxWidth: 1600,
           margin: "0 auto",
@@ -353,7 +325,6 @@ const RelatedBooks = ({ currentBookId }) => {
             </div>
           </div>
 
-          {/* ── Scroll Row ── */}
           <div
             ref={scrollRef}
             className="rb-scroll"
@@ -379,11 +350,10 @@ const RelatedBooks = ({ currentBookId }) => {
                   minWidth: config.cardWidth,
                   maxWidth: config.cardWidth,
                   flexShrink: 0,
-                  border: "1px solid #d1d5db",
-                  borderRadius: 0,
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 2,
                 }}
               >
-                {/* Cover */}
                 <div style={{
                   width: "100%",
                   height: config.cardHeight,
@@ -412,7 +382,6 @@ const RelatedBooks = ({ currentBookId }) => {
                   )}
                 </div>
 
-                {/* Info */}
                 <div style={{ padding: "12px 12px 14px" }}>
                   <div style={{
                     fontSize: 13, fontWeight: 700, color: "#111827",
