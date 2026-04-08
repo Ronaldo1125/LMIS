@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, BookOpen } from "lucide-react";
@@ -9,7 +10,7 @@ import PDFThumbnail from "../Components/Search/PDFThumbnail";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-const CollectionsPage = () => {
+const CollectionsInner = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const category = searchParams.get('category') || 'all';
@@ -237,4 +238,14 @@ const CollectionsPage = () => {
   );
 };
 
-export default CollectionsPage;
+export default function CollectionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-gray-400 text-sm">Loading collection…</div>
+      </div>
+    }>
+      <CollectionsInner />
+    </Suspense>
+  );
+}
