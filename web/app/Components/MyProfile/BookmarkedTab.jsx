@@ -70,7 +70,7 @@ function AddToListPopover({ book, lists, onAddToList, onCreateList, onClose }) {
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-8 z-30 bg-white border border-zinc-200 rounded-xl shadow-xl py-2 w-52"
+      className="absolute right-0 top-8 z-30 bg-white border border-zinc-200 rounded-xl shadow-xl py-2 w-60"
       onClick={(e) => e.stopPropagation()}
     >
       <p className="px-3 pb-1.5 text-[10px] text-zinc-400 font-semibold uppercase tracking-wider">
@@ -100,7 +100,7 @@ function AddToListPopover({ book, lists, onAddToList, onCreateList, onClose }) {
 
       <div className="border-t border-zinc-100 mt-1 pt-1">
         {creating ? (
-          <div className="px-3 py-2 flex gap-1.5">
+          <div className="px-2 py-2 flex gap-1.5">
             <input
               autoFocus
               value={newListName}
@@ -114,7 +114,7 @@ function AddToListPopover({ book, lists, onAddToList, onCreateList, onClose }) {
             />
             <button
               onClick={handleCreate}
-              className="text-xs bg-zinc-800 text-white rounded-md px-2 py-1 hover:bg-zinc-700 transition-colors"
+              className="text-xs bg-zinc-800 text-white rounded-md px-1.5 py-1 hover:bg-zinc-700 transition-colors"
             >
               Add
             </button>
