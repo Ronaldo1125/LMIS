@@ -6,6 +6,8 @@ import {
   XMarkIcon, ChevronDownIcon, ChevronUpIcon
 } from '@heroicons/react/24/outline'
 
+const API_URL = import.meta.env.VITE_API_URL
+
 const FONT_HEADING = "'Sora', -apple-system, sans-serif"
 const FONT_BODY    = "'DM Sans', -apple-system, 'Segoe UI', sans-serif"
 
@@ -39,8 +41,8 @@ const CollectionByCategory = ({ dark }) => {
       setLoading(true); setError(null)
       const headers = { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
       const [catRes, bookRes] = await Promise.all([
-        fetch('http://localhost:5000/api/books/meta/categories', { headers }),
-        fetch('http://localhost:5000/api/books?limit=999999&showArchived=false', { headers }),
+        fetch(`${API_URL}/books/meta/categories`, { headers }),
+        fetch(`${API_URL}/books?limit=999999&showArchived=false`, { headers }),
       ])
       if (!catRes.ok || !bookRes.ok) throw new Error('Failed to fetch data')
       const categoriesData = await catRes.json()

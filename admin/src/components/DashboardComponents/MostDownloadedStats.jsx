@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Download, FileText, TrendingUp, Book, Sparkles, X } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 
 function getToken() {
   if (typeof window === 'undefined') return null;

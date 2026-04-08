@@ -7,8 +7,8 @@ import AddLibrarianModal from './UserManagementComponents/AddLibrarianModal'
 import ResetPasswordModal from './UserManagementComponents/ResetPasswordModal'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:5000/api/adminpanel-users'
-const USERTYPE_API_URL = 'http://localhost:5000/api/usertype'
+const API_URL = `${import.meta.env.VITE_API_URL}/adminpanel-users`
+const USERTYPE_API_URL = `${import.meta.env.VITE_API_URL}/usertype`
 
 function UserManagement({ dark }) {
   const [users, setUsers] = useState([])
