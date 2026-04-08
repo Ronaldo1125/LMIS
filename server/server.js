@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
+  process.env.ADMIN_URL,
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
@@ -26,8 +27,12 @@ app.use(cors({
     }
     callback(new Error(`CORS policy: origin ${origin} not allowed`));
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.options('*', cors());
 
 app.use(express.json());
 
