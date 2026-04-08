@@ -246,14 +246,14 @@ const NotifRow = ({ ann, isUnread, onRead }) => {
         gap: "12px",
         padding: "14px 16px",
         cursor: "pointer",
-        background: isUnread ? "#f8faff" : "transparent",
+        background: isUnread ? "#f4f4f4" : "#fff",
         borderBottom: "1px solid #f1f1f5",
         transition: "background 0.15s",
         position: "relative",
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = "#eef3ff")}
+      onMouseEnter={(e) => (e.currentTarget.style.background = isUnread ? "#e8e8e8" : "#f8f8f8")}
       onMouseLeave={(e) =>
-        (e.currentTarget.style.background = isUnread ? "#f8faff" : "transparent")
+        (e.currentTarget.style.background = isUnread ? "#f4f4f4" : "#fff")
       }
     >
       {/* Avatar/Icon */}
@@ -289,7 +289,7 @@ const NotifRow = ({ ann, isUnread, onRead }) => {
             margin: 0,
             fontSize: "14px",
             fontWeight: isUnread ? 700 : 600,
-            color: isUnread ? "#9ca3af" : "#111",
+            color: isUnread ? "#111" : "#9ca3af",
             flex: 1,
             lineHeight: 1.35,
           }}>

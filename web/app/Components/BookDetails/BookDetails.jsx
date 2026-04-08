@@ -22,7 +22,6 @@ function getToken() {
   return localStorage.getItem("token") || sessionStorage.getItem("token") || null;
 }
 
-
 function Spinner() {
   return <div className="bpv-spinner" />;
 }
@@ -70,7 +69,107 @@ function BibliographicDetails({ book, accessionNo }) {
   );
 }
 
+// ─────────────────────────────────────────────
+// Animated Check — payment-success style
+// ─────────────────────────────────────────────
+function AnimatedCheckCircle({ visible }) {
+  return (
+    <div style={{
+      width: 34,
+      height: 34,
+      borderRadius: "50%",
+      background: "transparent",
+      border: "2px solid rgba(255,255,255,0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+      transform: visible ? "scale(1)" : "scale(0.6)",
+      transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+    }}>
+      <svg width="16" height="13" viewBox="0 0 16 13" fill="none">
+        <polyline
+          points="1.5,6.5 5.5,10.5 14.5,1.5"
+          stroke="#fbbf24"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+          style={{
+            strokeDasharray: 22,
+            strokeDashoffset: visible ? 0 : 22,
+            transition: visible
+              ? "stroke-dashoffset 0.45s cubic-bezier(0.4,0,0.2,1) 0.15s"
+              : "none",
+          }}
+        />
+      </svg>
+    </div>
+  );
+}
 
+// ─────────────────────────────────────────────
+// Bookmark Toast
+// ─────────────────────────────────────────────
+function BookmarkToast({ visible, onView }) {
+  const [checkVisible, setCheckVisible] = useState(false);
+
+  // Trigger the check animation shortly after the toast slides in
+  useEffect(() => {
+    if (visible) {
+      const t = setTimeout(() => setCheckVisible(true), 80);
+      return () => clearTimeout(t);
+    } else {
+      setCheckVisible(false);
+    }
+  }, [visible]);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      data-bookmark-notif
+      style={{
+        position: "fixed",
+        top: 20,
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 9999,
+        background: "#1e3a8a",
+        color: "#fff",
+        padding: "10px 16px 10px 12px",
+        borderRadius: "10px",
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+        animation: "slideDown 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+        minWidth: "300px",
+      }}
+    >
+      <AnimatedCheckCircle visible={checkVisible} />
+
+      <span style={{ fontSize: "14px", fontWeight: 600, flex: 1 }}>
+        Added to Bookmark!
+      </span>
+
+      <button
+        style={{
+          background: "none",
+          color: "#fff",
+          fontSize: "12px",
+          fontWeight: 500,
+          cursor: "pointer",
+          padding: "5px 12px",
+          whiteSpace: "nowrap",
+        }}
+        onClick={onView}
+      >
+        View
+      </button>
+    </div>
+  );
+}
 
 const BookDetails = ({ bookId }) => {
   const [book,            setBook]            = useState(null);
@@ -110,9 +209,7 @@ const BookDetails = ({ bookId }) => {
               const bmData = await bmRes.json();
               setBookmarked(bmData.bookmarked);
             }
-          } catch {
-            
-          }
+          } catch {}
         }
       } catch (err) {
         setError(err.message);
@@ -129,11 +226,21 @@ const BookDetails = ({ bookId }) => {
     return () => { document.body.style.overflow = ""; };
   }, [showReader]);
 
+  const handleRead = () => {
+    const token = getToken();
+    if (!token) {
+      window.dispatchEvent(new CustomEvent('showLoginWithMessage', {
+        detail: 'Log in or create an account to read books.'
+      }));
+      return;
+    }
+    setShowReader(true);
+  };
+
   const handleDownload = async () => {
     if (!book?.upload?.id || downloading) return;
     const token = getToken();
     if (!token) {
-      
       window.dispatchEvent(new CustomEvent('showLoginWithMessage', {
         detail: 'Log in or create an account to download books.'
       }));
@@ -158,11 +265,20 @@ const BookDetails = ({ bookId }) => {
     }
   };
 
+  const dismissToast = () => {
+    const notif = document.querySelector('[data-bookmark-notif]');
+    if (notif) {
+      notif.style.animation = 'slideUp 0.3s ease forwards';
+      setTimeout(() => setShowBookmarkNotif(false), 300);
+    } else {
+      setShowBookmarkNotif(false);
+    }
+  };
+
   const handleBookmark = async () => {
     if (bookmarkLoading) return;
     const token = getToken();
     if (!token) {
-      
       window.dispatchEvent(new CustomEvent('showLoginWithMessage', {
         detail: 'Log in or create an account to have access to bookmarks.'
       }));
@@ -178,33 +294,14 @@ const BookDetails = ({ bookId }) => {
       });
       if (res.ok) {
         setBookmarked((prev) => !prev);
-       
         if (!bookmarked) {
           setShowBookmarkNotif(true);
-          setTimeout(() => {
-            const notif = document.querySelector('[data-bookmark-notif]');
-            if (notif) {
-              notif.style.animation = 'slideUp 0.3s ease forwards';
-              setTimeout(() => setShowBookmarkNotif(false), 300);
-            } else {
-              setShowBookmarkNotif(false);
-            }
-          }, 3000);
+          setTimeout(dismissToast, 3200);
         }
       } else if (res.status === 409) {
-        
         setBookmarked(true);
-       
         setShowBookmarkNotif(true);
-        setTimeout(() => {
-          const notif = document.querySelector('[data-bookmark-notif]');
-          if (notif) {
-            notif.style.animation = 'slideUp 0.3s ease forwards';
-            setTimeout(() => setShowBookmarkNotif(false), 300);
-          } else {
-            setShowBookmarkNotif(false);
-          }
-        }, 3000);
+        setTimeout(dismissToast, 3200);
       } else {
         console.error("Bookmark request failed:", res.status);
       }
@@ -246,69 +343,18 @@ const BookDetails = ({ bookId }) => {
   return (
     <>
       <Nav />
-      
-    
-      {showBookmarkNotif && (
-        <div 
-          data-bookmark-notif
-          style={{
-            position: "fixed",
-            top: 20,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 9999,
-            background: "#1e3a8a",
-            color: "#fff",
-            padding: "12px 20px",
-            borderRadius: "8px",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-            animation: "slideDown 0.3s ease",
-            minWidth: "300px",
-          }}
-        >
-          <div style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            background: "#1e3a8a",
-            border: "2px solid #fff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
-          <span style={{ fontSize: "14px", fontWeight: 600 }}>Added to Bookmark!</span>
-          <button
-            style={{
-              background: "none",
-              border: "none",
-              color: "#fff",
-              fontSize: "12px",
-              cursor: "pointer",
-              textDecoration: "underline",
-              padding: "4px 8px",
-              marginLeft: "auto",
-            }}
-            onClick={() => {
-  
-  window.dispatchEvent(new CustomEvent('openProfileBookmarked'));
-}}
-          >
-            View
-          </button>
-        </div>
-      )}
-      
+
+      <BookmarkToast
+        visible={showBookmarkNotif}
+        onView={() => {
+          dismissToast();
+          window.dispatchEvent(new CustomEvent('openProfileBookmarked'));
+        }}
+      />
+
       <div className="bg-white">
         <div className="bd-page-wrap">
 
-        
           <div className="bd-back-wrap">
             <button className="bd-back" onClick={() => window.history.back()}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -320,18 +366,16 @@ const BookDetails = ({ bookId }) => {
 
           <div className="bd-main-grid">
 
-          
             <div style={{ minWidth: 0, width: "100%" }}>
               {uploadId ? (
                 <div className="bp-preview-wrapper" style={{ overflow: "hidden" }}>
-                  <BookPreview uploadId={uploadId} title={book.title} onReadClick={() => setShowReader(true)} />
+                  <BookPreview uploadId={uploadId} title={book.title} onReadClick={handleRead} />
                 </div>
               ) : (
                 <div style={{ width: "100%", aspectRatio: "1.35/1", overflow: "hidden", border: "1px solid #e5e7eb", background: "#f4f4f4" }} />
               )}
             </div>
 
-          
             <div className="bd-panel">
               <span className="bd-genre-pill">{book.category || "Books"}</span>
 
@@ -345,7 +389,7 @@ const BookDetails = ({ bookId }) => {
               <div className="bd-stats-row" />
 
               <div className="bd-actions bd-actions-tight">
-                <button onClick={() => setShowReader(true)} disabled={!uploadId} className="bd-btn-primary">
+                <button onClick={handleRead} disabled={!uploadId} className="bd-btn-primary">
                   <BookOpen size={15} /> Read
                 </button>
                 <button onClick={handleDownload} disabled={!uploadId || downloading} className="bd-btn-secondary">
@@ -358,10 +402,7 @@ const BookDetails = ({ bookId }) => {
                     className={`bd-btn-icon ${bookmarked ? "on" : ""}`}
                     title={bookmarked ? "Remove bookmark" : "Bookmark"}
                   >
-                    {bookmarkLoading
-                      ? <Spinner />
-                      : <Bookmark size={17} />
-                    }
+                    {bookmarkLoading ? <Spinner /> : <Bookmark size={17} />}
                   </button>
                 )}
                 {!isLoggedIn && (
@@ -395,27 +436,15 @@ const BookDetails = ({ bookId }) => {
       {showReader && (
         <FullScreenPDFReader uploadId={uploadId} title={book.title} author={book.author} onClose={() => setShowReader(false)} />
       )}
-      
+
       <style>{`
         @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateX(-50%) translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-          }
+          from { opacity: 0; transform: translateX(-50%) translateY(-16px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
         @keyframes slideUp {
-          from {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-          }
-          to {
-            opacity: 0;
-            transform: translateX(-50%) translateY(-20px);
-          }
+          from { opacity: 1; transform: translateX(-50%) translateY(0); }
+          to   { opacity: 0; transform: translateX(-50%) translateY(-16px); }
         }
       `}</style>
     </>

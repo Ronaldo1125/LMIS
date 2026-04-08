@@ -446,7 +446,7 @@ const MobileNav = () => {
                   transition: "all 0.15s"
                 }}
               >
-                <Bell size={20} />
+                <Bell size={16} />
                 {hasNotifications && (
                   <span style={{
                     position: "absolute",

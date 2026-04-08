@@ -344,9 +344,9 @@ const Nav = () => {
                     >
                       <div>
                         {[
-                          { label: "Books", category: "books" },
-                          { label: "Sourcebooks", category: "sourcebooks" },
-                          { label: "Periodicals", category: "periodicals" },
+                          { label: "Books", category: "Books" },
+                          { label: "Sourcebooks", category: "Sourcebooks" },
+                          { label: "Periodicals", category: "Periodicals" },
                         ].map((item, i) => (
                           <button
                             key={item.category}
@@ -374,9 +374,9 @@ const Nav = () => {
                       </div>
                       <div>
                         {[
-                          { label: "Thesis / Research Papers", category: "thesis" },
-                          { label: "Statute / Legal Documents", category: "statute" },
-                          { label: "Guide Manuals", category: "guides" },
+                          { label: "Thesis", category: "Thesis" },
+                          { label: "Statute / Legal documents", category: "Statute / Legal documents" },
+                          { label: "Guides", category: "Guides" },
                         ].map((item, i) => (
                           <button
                             key={item.category}
@@ -404,8 +404,8 @@ const Nav = () => {
                       </div>
                       <div>
                         {[
-                          { label: "Reports", category: "reports" },
-                          { label: "Reference Materials", category: "reference" },
+                          { label: "Reports", category: "Reports" },
+                          { label: "Reference", category: "Reference" },
                         ].map((item, i) => (
                           <button
                             key={item.category}
