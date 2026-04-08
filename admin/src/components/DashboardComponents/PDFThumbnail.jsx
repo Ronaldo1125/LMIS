@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BookOpen } from "lucide-react";
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "import.meta.env.VITE_API_URL";
 
 function getToken() {
   if (typeof window === "undefined") return null;
@@ -50,7 +50,7 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
         const pdfjs = await loadPdfJs();
         if (cancelled) return;
 
-        const pdfUrl = `${API_BASE}/api/uploads/${uploadId}/preview`;
+        const pdfUrl = `${API_BASE}/uploads/${uploadId}/preview`;
 
         const token = getToken();
         const headers = token ? { Authorization: `Bearer ${token}` } : {};

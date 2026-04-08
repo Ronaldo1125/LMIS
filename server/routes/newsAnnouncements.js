@@ -209,19 +209,30 @@ router.get('/announcements', authMiddleware, async (req, res) => {
     let announcements;
 
     if (isAdminPanelUser(req.user)) {
-      // Admin / Librarian: full history
+      // Admin / Librarian: full history with creator info
       [announcements] = await pool.query(
-        'SELECT * FROM announcements ORDER BY sent_at DESC'
+        `SELECT 
+          a.*,
+          u.full_name as creator_name,
+          u.avatar as creator_avatar
+         FROM announcements a
+         LEFT JOIN adminpanel_users u ON a.created_by = u.id
+         ORDER BY a.sent_at DESC`
       );
     } else {
-      // Web client: Patron or Staff — filter by their user_type
+      // Web client: Patron or Staff — filter by their user_type with creator info
       const userType = req.user.user_type; // 'Patron' | 'Staff'
       if (!userType) return res.status(403).json({ message: 'Access denied' });
 
       [announcements] = await pool.query(
-        `SELECT * FROM announcements
-         WHERE audience = 'all' OR audience = ?
-         ORDER BY sent_at DESC`,
+        `SELECT 
+          a.*,
+          u.full_name as creator_name,
+          u.avatar as creator_avatar
+         FROM announcements a
+         LEFT JOIN adminpanel_users u ON a.created_by = u.id
+         WHERE a.audience = 'all' OR a.audience = ?
+         ORDER BY a.sent_at DESC`,
         [userType]
       );
     }
@@ -293,7 +304,16 @@ router.post(
         status: 'success',
       });
 
-      const [rows] = await pool.query('SELECT * FROM announcements WHERE id = ?', [announcementId]);
+      const [rows] = await pool.query(
+        `SELECT 
+          a.*,
+          u.full_name as creator_name,
+          u.avatar as creator_avatar
+         FROM announcements a
+         LEFT JOIN adminpanel_users u ON a.created_by = u.id
+         WHERE a.id = ?`,
+        [announcementId]
+      );
       await withAttachments(rows);
       res.status(201).json(rows[0]);
     } catch (err) {
@@ -362,7 +382,16 @@ router.patch(
         status: 'success',
       });
 
-      const [rows] = await pool.query('SELECT * FROM announcements WHERE id = ?', [id]);
+      const [rows] = await pool.query(
+        `SELECT 
+          a.*,
+          u.full_name as creator_name,
+          u.avatar as creator_avatar
+         FROM announcements a
+         LEFT JOIN adminpanel_users u ON a.created_by = u.id
+         WHERE a.id = ?`,
+        [id]
+      );
       await withAttachments(rows);
       res.json(rows[0]);
     } catch (err) {

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Copy, AlertTriangle, BookOpen, X, ChevronRight } from 'lucide-react'
 
-const API_BASE_URL = 'http://localhost:5000'
+const API_BASE_URL = import.meta.env.VITE_API_URL
+
 function getToken() {
   if (typeof window === 'undefined') return null
   return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || null
@@ -39,7 +40,7 @@ export default function DuplicateTitlesDetector({ dark = false }) {
       try {
         const token = getToken()
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
-        const res = await fetch(`${API_BASE_URL}/api/books?limit=999999&showArchived=false`, { headers })
+        const res = await fetch(`${API_BASE_URL}/books?limit=999999&showArchived=false`, { headers })
         if (!res.ok) throw new Error()
         const data = await res.json()
         const books = data.books || []

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { XMarkIcon, BookOpenIcon } from '@heroicons/react/24/outline'
 import PDFThumbnail from './PDFThumbnail'
 
+
 const RecentAcquisitions = ({ dark }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -31,12 +32,14 @@ const RecentAcquisitions = ({ dark }) => {
   }
 
   useEffect(() => { fetchAcquisitions() }, [])
+  
+  const API_URL = import.meta.env.VITE_API_URL
 
   const fetchAcquisitions = async () => {
     try {
       setLoading(true); setError(null)
-      const res = await fetch('http://localhost:5000/api/acquisitions', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+      const res = await fetch(`${API_URL}/acquisitions`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
       })
       if (!res.ok) throw new Error('Failed to fetch acquisitions')
       const data = await res.json()

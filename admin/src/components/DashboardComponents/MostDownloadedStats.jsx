@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Download, FileText, TrendingUp, Book, Sparkles, X } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 
 function getToken() {
   if (typeof window === 'undefined') return null;
@@ -30,7 +31,7 @@ const MostDownloadedStats = ({ dark }) => {
         const token = getToken();
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        const res = await fetch(`${API_BASE_URL}/api/uploads/meta/statistics`, { headers });
+        const res = await fetch(`${API_BASE_URL}/uploads/meta/statistics`, { headers });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
