@@ -11,7 +11,8 @@ import LoginNotification from './DashboardComponents/LoginNotification'
 import DuplicateTitlesDetector from './DashboardComponents/DuplicateTitlesDetector'
 import CurrencyOfCollection from './DashboardComponents/CurrencyOfCollection'
 
-const API_BASE_URL = 'http://localhost:5000'
+const API_BASE_URL = import.meta.env.VITE_API_URL
+
 
 function getToken() {
   if (typeof window === 'undefined') return null
@@ -52,7 +53,7 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
       try {
         const token = getToken()
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
-        const res = await fetch(`${API_BASE_URL}/api/uploads/meta/statistics`, { headers })
+        const res = await fetch(`${API_BASE_URL}/uploads/meta/statistics`, { headers })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         const total = data.summary?.totalDownloads ?? 0
@@ -70,7 +71,7 @@ const Dashboard = ({ user, setCurrentView, dark }) => {
       try {
         const token = getToken()
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
-        const res = await fetch(`${API_BASE_URL}/api/usertype/patrons/count`, { headers })
+        const res = await fetch(`${API_BASE_URL}/usertype/patrons/count`, { headers })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         setPatronCount((data.count ?? 0).toLocaleString())
