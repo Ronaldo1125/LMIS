@@ -233,13 +233,18 @@ const resolveType = (ann) => {
 /* ROW */
 /* ───────────────────────────────────────────── */
 
-const NotifRow = ({ ann, isUnread, onRead }) => {
+const NotifRow = ({ ann, isUnread, onRead, onSelect }) => {
   const date = ann.sent_at || ann.created_at;
   const notifType = resolveType(ann);
 
+  const handleClick = () => {
+    onRead(ann.id);
+    onSelect(ann);
+  };
+
   return (
     <div
-      onClick={() => onRead(ann.id)}
+      onClick={handleClick}
       style={{
         display: "flex",
         alignItems: "flex-start",
@@ -372,6 +377,406 @@ const NotifRow = ({ ann, isUnread, onRead }) => {
 };
 
 /* ───────────────────────────────────────────── */
+/* DETAIL VIEW */
+/* ───────────────────────────────────────────── */
+
+const NotificationDetail = ({ ann, onClose }) => {
+  const notifType = resolveType(ann);
+  const date = ann.sent_at || ann.created_at;
+  const formattedDate = formatDate(date);
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "Unknown";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  return (
+    <>
+      {/* BACKDROP */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.5)",
+          zIndex: 10000,
+          animation: "ntfFadeIn 0.2s ease",
+        }}
+      />
+
+      {/* DETAIL MODAL */}
+      <div
+        style={{
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          zIndex: 10001,
+          width: "90%",
+          maxWidth: "500px",
+          maxHeight: "80vh",
+          background: "#fff",
+          borderRadius: "16px",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          animation: "ntfPopIn 0.3s cubic-bezier(0.34,1.4,0.64,1)",
+        }}
+      >
+        {/* HEADER */}
+        <div style={{
+          padding: "20px 24px",
+          borderBottom: "1px solid #e2e8f0",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "linear-gradient(135deg, " + notifType.bg + " 0%, #fff 100%)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              background: notifType.color,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              fontSize: "20px",
+              fontWeight: 700,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            }}>
+              {notifType.type === 'book' ? 'N' :
+               notifType.type === 'system' ? 'S' :
+               'A'}
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: "12px", color: "#6b7280", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                {notifType.type}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "8px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "8px",
+              color: "#6b7280",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#f1f5f9";
+              e.currentTarget.style.color = "#111";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "none";
+              e.currentTarget.style.color = "#6b7280";
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* CONTENT */}
+        <div style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "24px",
+        }}>
+          {/* SUBJECT */}
+          <h2 style={{
+            margin: "0 0 12px 0",
+            fontSize: "20px",
+            fontWeight: 700,
+            color: "#111",
+            lineHeight: 1.3,
+          }}>
+            {ann.subject}
+          </h2>
+
+          {/* TIMESTAMP & CATEGORY */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            marginBottom: "20px",
+            flexWrap: "wrap",
+          }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              fontSize: "12px",
+              color: "#6b7280",
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              {formattedDate}
+            </div>
+
+            <div style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "4px 12px",
+              background: notifType.tagBg,
+              color: notifType.tagColor,
+              borderRadius: "12px",
+              fontSize: "11px",
+              fontWeight: 600,
+              textTransform: "capitalize",
+            }}>
+              <div style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: notifType.tagColor,
+              }} />
+              {notifType.type === 'blender' ? 'Blender Course' :
+               notifType.type === 'python' ? 'Python Course' :
+               notifType.type === 'photoshop' ? 'Photoshop Course' :
+               notifType.type === 'support' ? 'Support' :
+               notifType.type === 'book' ? 'New Book' :
+               notifType.type === 'event' ? 'Event' :
+               notifType.type === 'deadline' ? 'Deadline' :
+               notifType.type === 'system' ? 'System' :
+               notifType.type === 'alert' ? 'Alert' :
+               'Announcement'}
+            </div>
+          </div>
+
+          {/* DIVIDER */}
+          <div style={{ height: "1px", background: "#e2e8f0", margin: "20px 0" }} />
+
+          {/* SENT BY */}
+          {ann.creator_role && ann.creator_name && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              padding: "12px",
+              background: "#f8fafc",
+              borderRadius: "8px",
+              marginBottom: "20px",
+            }}>
+              {ann.creator_avatar ? (
+                <img
+                  src={ann.creator_avatar}
+                  alt={ann.creator_name}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    flexShrink: 0,
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  background: notifType.color,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
+                  fontWeight: 600,
+                  flexShrink: 0,
+                  fontSize: "14px",
+                }}>
+                  {ann.creator_name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div style={{ flex: 1 }}>
+                <p style={{
+                  margin: "0 0 4px 0",
+                  fontSize: "12px",
+                  color: "#111",
+                  fontWeight: 600,
+                }}>
+                  {ann.creator_name}
+                </p>
+                <p style={{
+                  margin: 0,
+                  fontSize: "11px",
+                  color: "#6b7280",
+                  textTransform: "capitalize",
+                }}>
+                  {ann.creator_role}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* DIVIDER */}
+          <div style={{ height: "1px", background: "#e2e8f0", margin: "20px 0" }} />
+
+          {/* DESCRIPTION */}
+          {ann.description && (
+            <>
+              <h3 style={{
+                margin: "0 0 12px 0",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#64748b",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}>
+                Details
+              </h3>
+              <p style={{
+                margin: "0 0 20px 0",
+                fontSize: "14px",
+                color: "#4b5563",
+                lineHeight: 1.6,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+              }}>
+                {ann.description}
+              </p>
+            </>
+          )}
+
+          {/* ATTACHMENTS */}
+          {ann.attachments && ann.attachments.length > 0 && (
+            <>
+              <h3 style={{
+                margin: "0 0 12px 0",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#64748b",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}>
+                Attachments ({ann.attachments.length})
+              </h3>
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}>
+                {ann.attachments.map((file, idx) => (
+                  <a
+                    key={idx}
+                    href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}${file.file_path}`}
+                    download={file.file_name}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "12px",
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "8px",
+                      textDecoration: "none",
+                      color: "#2563eb",
+                      transition: "all 0.15s",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#eff6ff";
+                      e.currentTarget.style.borderColor = "#bfdbfe";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#f8fafc";
+                      e.currentTarget.style.borderColor = "#e2e8f0";
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{
+                        margin: "0 0 3px 0",
+                        fontSize: "13px",
+                        fontWeight: 500,
+                        color: "#111",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}>
+                        {file.file_name}
+                      </p>
+                      <p style={{
+                        margin: 0,
+                        fontSize: "11px",
+                        color: "#9ca3af",
+                      }}>
+                        {formatFileSize(file.file_size)}
+                      </p>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3v-7"/>
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
+
+        </div>
+
+        {/* FOOTER */}
+        <div style={{
+          padding: "16px 24px",
+          borderTop: "1px solid #e2e8f0",
+          background: "#f8fafc",
+          display: "flex",
+          gap: "12px",
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: "10px 16px",
+              background: "#fff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: 600,
+              color: "#64748b",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#f1f5f9";
+              e.currentTarget.style.borderColor = "#cbd5e1";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#fff";
+              e.currentTarget.style.borderColor = "#e2e8f0";
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
+/* ───────────────────────────────────────────── */
 /* MAIN */
 /* ───────────────────────────────────────────── */
 
@@ -382,10 +787,11 @@ const NotificationsModal = ({
   onClose,
   anchorRef,
 }) => {
-  const [tab, setTab]         = useState("all");
-  const [readIds, setReadIds] = useState(getReadIds);
-  const [pos, setPos]         = useState(null);
-  const [closing, setClosing] = useState(false);
+  const [tab, setTab]              = useState("all");
+  const [readIds, setReadIds]      = useState(getReadIds);
+  const [pos, setPos]              = useState(null);
+  const [closing, setClosing]      = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
 
   /* ── POSITION ── */
   useEffect(() => {
@@ -439,6 +845,10 @@ const NotificationsModal = ({
   };
 
   const handleRead = (id) => { markAsRead(id); setReadIds(getReadIds()); };
+
+  const handleCloseDetail = () => {
+    setSelectedNotification(null);
+  };
 
   const unreadCount = announcements.filter((a) => !readIds.has(String(a.id))).length;
   const filtered    = tab === "unread"
@@ -612,6 +1022,7 @@ const NotificationsModal = ({
                 ann={ann}
                 isUnread={!readIds.has(String(ann.id))}
                 onRead={handleRead}
+                onSelect={setSelectedNotification}
               />
             ))
           )}
@@ -693,6 +1104,14 @@ const NotificationsModal = ({
         @keyframes ntfPopIn   { from{opacity:0;transform:scale(0.91) translateY(-8px)} to{opacity:1;transform:scale(1) translateY(0)} }
         @keyframes ntfPopOut  { from{opacity:1;transform:scale(1) translateY(0)} to{opacity:0;transform:scale(0.91) translateY(-8px)} }
       `}</style>
+
+      {/* DETAIL MODAL */}
+      {selectedNotification && (
+        <NotificationDetail
+          ann={selectedNotification}
+          onClose={handleCloseDetail}
+        />
+      )}
     </>
   );
 };
