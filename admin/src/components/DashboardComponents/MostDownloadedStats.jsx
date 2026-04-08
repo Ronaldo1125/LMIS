@@ -31,7 +31,7 @@ const MostDownloadedStats = ({ dark }) => {
         const token = getToken();
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        const res = await fetch(`${API_BASE_URL}/api/uploads/meta/statistics`, { headers });
+        const res = await fetch(`${API_BASE_URL}/uploads/meta/statistics`, { headers });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();

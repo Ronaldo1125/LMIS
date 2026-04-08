@@ -40,7 +40,7 @@ export default function DuplicateTitlesDetector({ dark = false }) {
       try {
         const token = getToken()
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
-        const res = await fetch(`${API_BASE_URL}/api/books?limit=999999&showArchived=false`, { headers })
+        const res = await fetch(`${API_BASE_URL}/books?limit=999999&showArchived=false`, { headers })
         if (!res.ok) throw new Error()
         const data = await res.json()
         const books = data.books || []

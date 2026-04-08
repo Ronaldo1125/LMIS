@@ -6,6 +6,8 @@ import {
   CheckCircleIcon,
 } from '@heroicons/react/24/outline'
 
+const API_URL = import.meta.env.VITE_API_URL
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const dicebearUrl = (seed) =>
   `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(seed)}`
@@ -17,9 +19,6 @@ const extractSeed = (url, fallback) => {
   } catch { return fallback }
 }
 
-// ─── Inject global input styles into <head> ───────────────────────────────────
-// This is the ONLY reliable way to beat browser default + autofill overrides.
-// Inline styles and even !important on the element lose to UA stylesheet + autofill.
 function useInputStyles(dark) {
   useEffect(() => {
     const id = 'myprofile-input-styles'
@@ -378,7 +377,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, iconBg, iconColor, textPri
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
-  useInputStyles(dark)   // ← Injects/updates .mp-input CSS in <head> on every dark toggle
+  useInputStyles(dark)
 
   const [localUser, setLocalUser] = useState(user || {})
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar || dicebearUrl(user?.username || 'default'))
@@ -421,7 +420,7 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
   const token = () => localStorage.getItem('authToken')
 
   const saveFullName = async (newName) => {
-    const res = await fetch(`http://localhost:5000/api/adminpanel-users/${localUser.id}/profile`, {
+    const res = await fetch(`${API_URL}/adminpanel-users/${localUser.id}/profile`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
       body: JSON.stringify({ full_name: newName }),
@@ -434,7 +433,7 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
 
   const saveUsername = async (newUn) => {
     if (!unForm.password) throw new Error('Current password is required.')
-    const res = await fetch(`http://localhost:5000/api/adminpanel-users/${localUser.id}/username`, {
+    const res = await fetch(`${API_URL}/adminpanel-users/${localUser.id}/username`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
       body: JSON.stringify({ newUsername: newUn, currentPassword: unForm.password }),
@@ -451,7 +450,7 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
     setAvatarUrl(url)
     updateUser({ avatar: url })
     try {
-      const res = await fetch(`http://localhost:5000/api/adminpanel-users/${localUser.id}/avatar`, {
+      const res = await fetch(`${API_URL}/adminpanel-users/${localUser.id}/avatar`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
         body: JSON.stringify({ avatar: url }),
@@ -473,7 +472,7 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
     if (pwForm.new.length < 6) { setPwError('Password must be at least 6 characters.'); return }
     setPwLoading(true)
     try {
-      const res = await fetch(`http://localhost:5000/api/adminpanel-users/${localUser.id}/reset-password`, {
+      const res = await fetch(`${API_URL}/adminpanel-users/${localUser.id}/reset-password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
         body: JSON.stringify({ password: pwForm.new }),
@@ -490,13 +489,20 @@ const MyProfile = ({ user, setUser, dark, setDark, onLogout }) => {
   }
 
   const handleDeleteAccount = async () => {
-    const res = await fetch(`http://localhost:5000/api/adminpanel-users/${localUser.id}`, {
+    const res = await fetch(`${API_URL}/adminpanel-users/${localUser.id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token()}` },
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.message || 'Failed to delete account.')
+
+    // Clear all auth data
     localStorage.removeItem('authToken')
+    localStorage.removeItem('user')
+    localStorage.removeItem('userRole')
+    sessionStorage.clear()
+
+    // Call logout callback to redirect to login
     if (onLogout) onLogout()
   }
 

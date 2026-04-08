@@ -392,8 +392,8 @@ export default function CurrencyOfCollection({ dark = false }) {
       try {
         const h = getToken() ? { Authorization: `Bearer ${getToken()}` } : {}
         const [cr, br] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/books/meta/categories`, { headers: h }),
-          fetch(`${API_BASE_URL}/api/books?limit=999999&showArchived=false`, { headers: h }),
+          fetch(`${API_BASE_URL}/books/meta/categories`, { headers: h }),
+          fetch(`${API_BASE_URL}/books?limit=999999&showArchived=false`, { headers: h }),
         ])
         setCategories(cr.ok ? await cr.json() : [])
         const bd = br.ok ? await br.json() : {}

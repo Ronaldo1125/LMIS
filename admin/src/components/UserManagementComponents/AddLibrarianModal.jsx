@@ -124,10 +124,10 @@ const handleSubmit = async (e) => {
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        username: formData.username,
-        password: formData.password,
-        full_name: formData.full_name
-      })
+  username: formData.username.trim(),
+  password: formData.password,
+  full_name: formData.full_name.trim()
+})
     })
 
     const data = await response.json()
