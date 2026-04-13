@@ -67,7 +67,6 @@ const DeleteConfirmModal = ({ subject, onConfirm, onCancel, dark, confirming }) 
   const border      = dark ? '#1c2f4a' : '#e8eef6'
   const textPrimary = dark ? '#e8edf5' : '#0f172a'
   const textMuted   = dark ? '#5a7a99' : '#64748b'
-  const accent      = '#154A9A'
   const danger      = '#ef4444'
   const dangerLight = dark ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.06)'
   const dangerBorder = 'rgba(239,68,68,0.25)'
