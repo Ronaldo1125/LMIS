@@ -5,6 +5,7 @@ import SearchBar from './UserManagementComponents/SearchBar'
 import UsersTable from './UserManagementComponents/UsersTable'
 import AddLibrarianModal from './UserManagementComponents/AddLibrarianModal'
 import ResetPasswordModal from './UserManagementComponents/ResetPasswordModal'
+import ConfirmModal from './UserManagementComponents/ConfirmModal'
 import axios from 'axios'
 
 const API_URL = `${import.meta.env.VITE_API_URL}/adminpanel-users`
@@ -21,6 +22,18 @@ function UserManagement({ dark }) {
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
   const [currentUserRole, setCurrentUserRole] = useState(null)
+
+  // Confirmation modal states
+  const [showConfirmDeactivate, setShowConfirmDeactivate] = useState(false)
+  const [selectedUserForDeactivate, setSelectedUserForDeactivate] = useState(null)
+  const [showConfirmSetActive, setShowConfirmSetActive] = useState(false)
+  const [selectedUserForSetActive, setSelectedUserForSetActive] = useState(null)
+  const [showConfirmMakeStaff, setShowConfirmMakeStaff] = useState(false)
+  const [selectedUserForMakeStaff, setSelectedUserForMakeStaff] = useState(null)
+  const [showConfirmMakePatron, setShowConfirmMakePatron] = useState(false)
+  const [selectedUserForMakePatron, setSelectedUserForMakePatron] = useState(null)
+  const [showConfirmReset, setShowConfirmReset] = useState(false)
+  const [selectedUserForReset, setSelectedUserForReset] = useState(null)
 
   useEffect(() => {
     let role = localStorage.getItem('userRole')
@@ -146,12 +159,16 @@ function UserManagement({ dark }) {
     }
   }
 
-  const handleDeactivateAccount = async (userId) => {
+  const handleDeactivateAccount = (user) => {
+    setSelectedUserForDeactivate(user)
+    setShowConfirmDeactivate(true)
+  }
+
+  const handleConfirmDeactivate = async () => {
     if (!isAdmin) { alert('Only administrators can deactivate accounts'); return }
-    if (!confirm('Are you sure you want to deactivate this account?')) return
     try {
       const token = localStorage.getItem('authToken')
-      await axios.put(`${API_URL}/${userId}/deactivate`, {}, {
+      await axios.put(`${API_URL}/${selectedUserForDeactivate.id}/deactivate`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       })
       alert('Account deactivated successfully!')
@@ -159,18 +176,20 @@ function UserManagement({ dark }) {
     } catch (error) {
       alert(error.response?.data?.message || 'Error deactivating account')
     }
+    setShowConfirmDeactivate(false)
+    setSelectedUserForDeactivate(null)
   }
 
-  const handleSetActiveLibrarian = async (userId) => {
+  const handleSetActiveLibrarian = (user) => {
+    setSelectedUserForSetActive(user)
+    setShowConfirmSetActive(true)
+  }
+
+  const handleConfirmSetActive = async () => {
     if (!isAdmin) { alert('Only administrators can set the active librarian'); return }
-    if (!confirm(
-      'Set this librarian as the active librarian?\n\n' +
-      'This will automatically deactivate the current active librarian.\n' +
-      'Only ONE librarian can be active at a time.'
-    )) return
     try {
       const token = localStorage.getItem('authToken')
-      await axios.put(`${API_URL}/${userId}/set-active-librarian`, {}, {
+      await axios.put(`${API_URL}/${selectedUserForSetActive.id}/set-active-librarian`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       })
       alert('Active librarian set successfully!')
@@ -178,52 +197,76 @@ function UserManagement({ dark }) {
     } catch (error) {
       alert(error.response?.data?.message || 'Error setting active librarian')
     }
+    setShowConfirmSetActive(false)
+    setSelectedUserForSetActive(null)
   }
 
-  const handleMakeStaff = async (user) => {
-    if (user.source !== 'users') {
+  const handleMakeStaff = (user) => {
+    setSelectedUserForMakeStaff(user)
+    setShowConfirmMakeStaff(true)
+  }
+
+  const handleConfirmMakeStaff = async () => {
+    if (selectedUserForMakeStaff.source !== 'users') {
       alert('This account type cannot be promoted to Staff.')
+      setShowConfirmMakeStaff(false)
+      setSelectedUserForMakeStaff(null)
       return
     }
-    if (!confirm(`Promote "${user.name}" from Patron to Staff?`)) return
     try {
       const token = localStorage.getItem('authToken')
       await axios.patch(
-        `${USERTYPE_API_URL}/${user.id}/user-type`,
+        `${USERTYPE_API_URL}/${selectedUserForMakeStaff.id}/user-type`,
         { user_type: 'Staff' },
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      alert(`${user.name} has been promoted to Staff!`)
+      alert(`${selectedUserForMakeStaff.name} has been promoted to Staff!`)
       fetchUsers(); fetchStats()
     } catch (error) {
       alert(error.response?.data?.message || 'Error updating user type')
     }
+    setShowConfirmMakeStaff(false)
+    setSelectedUserForMakeStaff(null)
   }
 
-  const handleMakePatron = async (user) => {
-    if (user.source !== 'users') {
+  const handleMakePatron = (user) => {
+    setSelectedUserForMakePatron(user)
+    setShowConfirmMakePatron(true)
+  }
+
+  const handleConfirmMakePatron = async () => {
+    if (selectedUserForMakePatron.source !== 'users') {
       alert('This account type cannot be demoted to Patron.')
+      setShowConfirmMakePatron(false)
+      setSelectedUserForMakePatron(null)
       return
     }
-    if (!confirm(`Demote "${user.name}" from Staff to Patron?`)) return
     try {
       const token = localStorage.getItem('authToken')
       await axios.patch(
-        `${USERTYPE_API_URL}/${user.id}/user-type`,
+        `${USERTYPE_API_URL}/${selectedUserForMakePatron.id}/user-type`,
         { user_type: 'Patron' },
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      alert(`${user.name} has been demoted to Patron!`)
+      alert(`${selectedUserForMakePatron.name} has been demoted to Patron!`)
       fetchUsers(); fetchStats()
     } catch (error) {
       alert(error.response?.data?.message || 'Error updating user type')
     }
+    setShowConfirmMakePatron(false)
+    setSelectedUserForMakePatron(null)
   }
 
   const handleOpenResetPassword = (user) => {
-    if (!isAdmin) { alert('Only administrators can reset passwords'); return }
-    setSelectedUser(user)
+    setSelectedUserForReset(user)
+    setShowConfirmReset(true)
+  }
+
+  const handleConfirmReset = () => {
+    setSelectedUser(selectedUserForReset)
     setShowResetPasswordModal(true)
+    setShowConfirmReset(false)
+    setSelectedUserForReset(null)
   }
 
   // ── Styles ────────────────────────────────────────────────────────────────
@@ -307,6 +350,51 @@ function UserManagement({ dark }) {
       </div>
 
       {/* Modals */}
+      {showConfirmDeactivate && selectedUserForDeactivate && (
+        <ConfirmModal
+          title="Deactivate Account"
+          message={`Are you sure you want to deactivate the account for "${selectedUserForDeactivate.name}"? This action cannot be undone.`}
+          onConfirm={handleConfirmDeactivate}
+          onCancel={() => { setShowConfirmDeactivate(false); setSelectedUserForDeactivate(null) }}
+          dark={dark}
+        />
+      )}
+      {showConfirmSetActive && selectedUserForSetActive && (
+        <ConfirmModal
+          title="Set Active Librarian"
+          message={`Set "${selectedUserForSetActive.name}" as the active librarian? This will automatically deactivate the current active librarian. Only ONE librarian can be active at a time.`}
+          onConfirm={handleConfirmSetActive}
+          onCancel={() => { setShowConfirmSetActive(false); setSelectedUserForSetActive(null) }}
+          dark={dark}
+        />
+      )}
+      {showConfirmMakeStaff && selectedUserForMakeStaff && (
+        <ConfirmModal
+          title="Promote to Staff"
+          message={`Promote "${selectedUserForMakeStaff.name}" from Patron to Staff?`}
+          onConfirm={handleConfirmMakeStaff}
+          onCancel={() => { setShowConfirmMakeStaff(false); setSelectedUserForMakeStaff(null) }}
+          dark={dark}
+        />
+      )}
+      {showConfirmMakePatron && selectedUserForMakePatron && (
+        <ConfirmModal
+          title="Demote to Patron"
+          message={`Demote "${selectedUserForMakePatron.name}" from Staff to Patron?`}
+          onConfirm={handleConfirmMakePatron}
+          onCancel={() => { setShowConfirmMakePatron(false); setSelectedUserForMakePatron(null) }}
+          dark={dark}
+        />
+      )}
+      {showConfirmReset && selectedUserForReset && (
+        <ConfirmModal
+          title="Reset Password"
+          message={`Are you sure you want to reset the password for "${selectedUserForReset.name}"?`}
+          onConfirm={handleConfirmReset}
+          onCancel={() => { setShowConfirmReset(false); setSelectedUserForReset(null) }}
+          dark={dark}
+        />
+      )}
       {showAddLibrarianModal && (
         <AddLibrarianModal
           onClose={() => setShowAddLibrarianModal(false)}

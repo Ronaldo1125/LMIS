@@ -126,7 +126,7 @@ function UsersTable({
           ) : (
             isAdmin && (
               <button
-                onClick={() => onSetActiveLibrarian(user.id)}
+                onClick={() => onSetActiveLibrarian(user)}
                 style={{ ...btn, background: '#6366f1', color: '#fff' }}
                 title="Set as active librarian"
                 onMouseEnter={e => e.currentTarget.style.background = '#4338ca'}
@@ -169,7 +169,7 @@ function UsersTable({
           )}
           {isAdmin && user.status === 'Active' && (
             <button
-              onClick={() => onDeactivateAccount(user.id)}
+              onClick={() => onDeactivateAccount(user)}
               style={deactivateBtn}
               onMouseEnter={e => e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.28)' : '#fecaca'}
               onMouseLeave={e => e.currentTarget.style.background = deactivateBtn.background}
