@@ -5,6 +5,7 @@ import FrequentlySearched from "./Components/FrequentlySearched/FrequentlySearch
 import RecentAdditions from "./Components/RecentAdditions/RecentAdditions";
 import Category from "./Components/Category/Category";
 import News from "./Components/News/News";
+import Feedback from "./Components/Feedback/Feedback";
 import Footer from "./Components/Footer/Footer";
 import ReportsSection from "./Components/Reports/Reports";
 import ThesisPapersSection from "./Components/ThesisPapers/ThesisPapers";
@@ -59,7 +60,7 @@ export default function Page() {
         <News />
       </div>
 
-     
+      <Feedback />
 
       <Footer />
 

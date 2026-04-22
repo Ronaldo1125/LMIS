@@ -32,12 +32,12 @@ const ReportsSection = () => {
   const scrollRef = useRef(null);
 
   const getConfig = () => {
-    if (windowWidth < 640)   return { cardWidth: 120, cardHeight: 160, gap: 16, padX: 16, cols: 2 };
-    if (windowWidth < 768)   return { cardWidth: 140, cardHeight: 187, gap: 20, padX: 24, cols: 3 };
-    if (windowWidth < 1024)  return { cardWidth: 160, cardHeight: 213, gap: 24, padX: 32, cols: 4 };
-    if (windowWidth < 1280)  return { cardWidth: 180, cardHeight: 240, gap: 28, padX: 32, cols: 5 };
-    if (windowWidth <= 1440) return { cardWidth: 190, cardHeight: 253, gap: 32, padX: 32, cols: 5 };
-    return                          { cardWidth: 200, cardHeight: 267, gap: 32, padX: 48, cols: 6 };
+    if (windowWidth < 640)   return { cardWidth: 100, cardHeight: 133, gap: 16, padX: 16, cols: 2 };
+    if (windowWidth < 768)   return { cardWidth: 120, cardHeight: 160, gap: 20, padX: 24, cols: 3 };
+    if (windowWidth < 1024)  return { cardWidth: 140, cardHeight: 187, gap: 24, padX: 32, cols: 4 };
+    if (windowWidth < 1280)  return { cardWidth: 160, cardHeight: 213, gap: 28, padX: 32, cols: 5 };
+    if (windowWidth <= 1440) return { cardWidth: 170, cardHeight: 227, gap: 32, padX: 32, cols: 5 };
+    return                          { cardWidth: 180, cardHeight: 240, gap: 32, padX: 48, cols: 6 };
   };
 
   const cfg = getConfig();
@@ -316,11 +316,7 @@ const ReportsSection = () => {
       `}</style>
 
       <section style={{ background: "#fff", borderTop: "1px solid #f0f2f5" }}>
-        {/*
-          overflow:hidden here is the wall — cards clip at 1600px.
-          padding here gives the side breathing room WITHOUT being
-          on the scroll row (which would push content past the boundary).
-        */}
+       
         <div style={{
           maxWidth: 1700,
           margin: "0 auto",
@@ -330,7 +326,7 @@ const ReportsSection = () => {
             : `44px ${cfg.padX}px 40px`,
         }}>
 
-          {/* ── Mobile Header ── */}
+        
           {windowWidth < 768 && (
             <div style={{
               display: "flex",
@@ -369,7 +365,7 @@ const ReportsSection = () => {
             </div>
           )}
 
-          {/* ── Header ── */}
+          
           {windowWidth >= 768 && (
             <div style={{
               display: "flex",
@@ -409,7 +405,7 @@ const ReportsSection = () => {
             </div>
           )}
 
-          {/* ── Scroll Row ── no horizontal padding here */}
+      
           <div
             ref={scrollRef}
             className="lmis-scroll"
@@ -477,7 +473,7 @@ const ReportsSection = () => {
                     background: "#fff",
                   }}
                 >
-                  {/* Cover */}
+                 
                   <div style={{
                     width: cfg.cardWidth, height: cfg.cardHeight,
                     background: "#f0f4ff", position: "relative", overflow: "hidden",
@@ -502,7 +498,6 @@ const ReportsSection = () => {
                     )}
                   </div>
 
-                  {/* Info */}
                   <div style={{ padding: "12px 12px 14px" }}>
                     <div style={{
                       fontSize: 13, fontWeight: 700, color: "#111827", lineHeight: 1.25,

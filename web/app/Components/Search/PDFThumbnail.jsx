@@ -108,8 +108,8 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
         const deviceRatio = window.devicePixelRatio || 1;
 
         const PADDING     = 12;
-        const containerW  = (wrapper.offsetWidth  || 200) - PADDING;
-        const containerH  = (wrapper.offsetHeight || 267) - PADDING;
+        const containerW  = (wrapper.offsetWidth  || 100) - PADDING;
+        const containerH  = (wrapper.offsetHeight || 133) - PADDING;
 
         const viewport = page.getViewport({ scale: 1 });
         const scale = Math.min(

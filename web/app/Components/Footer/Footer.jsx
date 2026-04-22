@@ -73,89 +73,91 @@ const Footer = () => {
   };
 
   return (
-    <footer className={`w-full bg-blue-950 text-white ${footerPadding}`}>
-      <div className="max-w-[1600px] mx-auto w-full">
-        <div className={`grid ${gridCols} ${gridGap}`}>
+    <>
+      <footer className={`w-full bg-blue-950 text-white ${footerPadding}`}>
+        <div className="max-w-[1600px] mx-auto w-full">
+          <div className={`grid ${gridCols} ${gridGap}`}>
 
-        
-          <div className="flex items-start">
-            <div className="w-full max-w-[160px]">
-              <img
-                src="/assets/other/depdevlogo.png"
-                alt="Depdev Logo"
-                className="w-full h-auto object-contain filter brightness-0 invert"
-                style={{ maxHeight: '48px', width: 'auto', maxWidth: '100%' }}
-              />
-            </div>
-          </div>
+            
+              <div className="flex items-start">
+                <div className="w-full max-w-[160px]">
+                  <img
+                    src="/assets/other/depdevlogo.png"
+                    alt="Depdev Logo"
+                    className="w-full h-auto object-contain filter brightness-0 invert"
+                    style={{ maxHeight: '48px', width: 'auto', maxWidth: '100%' }}
+                  />
+                </div>
+              </div>
+
+            
+              <div>
+                <h3 className={`${titleSize} font-semibold mb-4`}>Quick Links</h3>
+                <ul className="space-y-2">
+                  {["Home", "Browse", "Recent Additions", "News"].map((link) => (
+                    <li key={link}>
+                      <button 
+                        onClick={getQuickLinkAction(link)}
+                        className={`${textSize} text-gray-300 hover:text-[#D0674B] transition-colors text-left w-full bg-transparent border-none cursor-pointer`}
+                      >
+                        {link}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
           
-          <div>
-            <h3 className={`${titleSize} font-semibold mb-4`}>Quick Links</h3>
-            <ul className="space-y-2">
-              {["Home", "Browse", "Recent Additions", "News"].map((link) => (
-                <li key={link}>
-                  <button 
-                    onClick={getQuickLinkAction(link)}
-                    className={`${textSize} text-gray-300 hover:text-[#D0674B] transition-colors text-left w-full bg-transparent border-none cursor-pointer`}
-                  >
-                    {link}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+              <div>
+                <h3 className={`${titleSize} font-semibold mb-4`}>Resources</h3>
+                <ul className="space-y-2">
+                  {[
+                    { label: "Books", category: "books" },
+                    { label: "Sourcebooks", category: "sourcebooks" },
+                    { label: "Periodicals", category: "periodicals" },
+                    { label: "Thesis / Research papers", category: "thesis" },
+                    { label: "Statute / Law / Legal documents", category: "statute" },
+                    { label: "Guide / Manuals", category: "guides" },
+                    { label: "Report", category: "reports" },
+                    { label: "Reference Materials", category: "reference" },
+                  ].map((resource) => (
+                    <li key={resource.category}>
+                      <a href={`/search?category=${resource.category}`} className={`${textSize} text-gray-300 hover:text-[#D0674B] transition-colors`}>
+                        {resource.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+             
+              <div>
+                <h3 className={`${titleSize} font-semibold mb-4`}>Contact</h3>
+                <ul className="space-y-2">
+                  <li className={`${textSize} text-gray-300`}>Email: info@lmis.edu</li>
+                  <li className={`${textSize} text-gray-300`}>Phone: +1 (555) 123-4567</li>
+                </ul>
+              </div>
+            </div>
 
         
-          <div>
-            <h3 className={`${titleSize} font-semibold mb-4`}>Resources</h3>
-            <ul className="space-y-2">
-              {[
-                { label: "Books", category: "books" },
-                { label: "Sourcebooks", category: "sourcebooks" },
-                { label: "Periodicals", category: "periodicals" },
-                { label: "Thesis / Research papers", category: "thesis" },
-                { label: "Statute / Law / Legal documents", category: "statute" },
-                { label: "Guide / Manuals", category: "guides" },
-                { label: "Report", category: "reports" },
-                { label: "Reference Materials", category: "reference" },
-              ].map((resource) => (
-                <li key={resource.category}>
-                  <a href={`/search?category=${resource.category}`} className={`${textSize} text-gray-300 hover:text-[#D0674B] transition-colors`}>
-                    {resource.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-         
-          <div>
-            <h3 className={`${titleSize} font-semibold mb-4`}>Contact</h3>
-            <ul className="space-y-2">
-              <li className={`${textSize} text-gray-300`}>Email: info@lmis.edu</li>
-              <li className={`${textSize} text-gray-300`}>Phone: +1 (555) 123-4567</li>
-            </ul>
-          </div>
-        </div>
-
-      
-        <div className="mt-16 pt-8 border-t border-gray-700">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className={`${textSize} text-gray-400 text-center md:text-left`}>
-              © {new Date().getFullYear()} LMIS. All rights reserved. Developed by: <a href="https://www.linkedin.com/in/jake-macua/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Jake M.</a>, <a href="https://www.linkedin.com/in/michaelalatraca/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Michael A.</a>, <a href="https://www.linkedin.com/in/charles-loneza-282b15387/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Charles L.</a>, <a href="https://www.linkedin.com/in/anzelbotin/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Anzel Victor B.</a>
-            </p>
-            <div className={`flex ${socialGap} ${bottomMargin} md:mt-0 mt-4`}>
-              {["Privacy Policy", "Terms of Service", "Support"].map((item) => (
-                <a key={item} href="#" className={`${textSize} text-gray-400 hover:text-[#D0674B] transition-colors`}>
-                  {item}
-                </a>
-              ))}
+            <div className="mt-4 pt-4 border-t border-gray-700">
+              <div className="flex flex-col md:flex-row justify-between items-center">
+                <p className={`${textSize} text-gray-400 text-center md:text-left`}>
+                  {new Date().getFullYear()} LMIS. All rights reserved. Developed by: <a href="https://www.linkedin.com/in/jake-macua/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Jake M.</a>, <a href="https://www.linkedin.com/in/michaelalatraca/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Michael A.</a>, <a href="https://www.linkedin.com/in/charles-loneza-282b15387/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Charles L.</a>, <a href="https://www.linkedin.com/in/anzelbotin/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Anzel Victor B.</a>
+                </p>
+                <div className={`flex ${socialGap} ${bottomMargin} md:mt-0 mt-4`}>
+                  {["Privacy Policy", "Terms of Service", "Support"].map((item) => (
+                    <a key={item} href="#" className={`${textSize} text-gray-400 hover:text-[#D0674B] transition-colors`}>
+                      {item}
+                    </a>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </footer>
+      </footer>
+    </>
   );
 };
 

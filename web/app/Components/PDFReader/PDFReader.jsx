@@ -13,7 +13,7 @@ function getToken() {
   return localStorage.getItem("token") || sessionStorage.getItem("token") || null;
 }
 
-/* ── Theme definitions ── */
+
 const THEMES = {
   light: {
     key: "light",
@@ -83,7 +83,7 @@ const THEMES = {
   },
 };
 
-/* ── Hook: returns current window width, SSR-safe ── */
+
 function useWindowWidth() {
   const [w, setW] = useState(0);
   useEffect(() => {
@@ -95,7 +95,7 @@ function useWindowWidth() {
   return w;
 }
 
-/* ── SVG icons for each theme ── */
+
 const ThemeIcons = {
   light: (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -123,7 +123,7 @@ const ThemeIcons = {
   ),
 };
 
-/* ── Theme Toggle — inline 3-button group ── */
+ 
 function ThemeToggle({ theme, onThemeChange, t }) {
   return (
     <div style={{
@@ -170,7 +170,7 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
   const isMobile = windowWidth > 0 && windowWidth < 640;
   const isTablet = windowWidth >= 640 && windowWidth < 1024;
 
-  /* ── Theme ── */
+  
   const [theme, setTheme] = useState(() => {
     if (typeof window === "undefined") return "light";
     return localStorage.getItem("pdfreader-theme") || "light";
@@ -195,12 +195,12 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
   const observerRef  = useRef(null);
   const [width, setWidth] = useState(0);
 
-  /* ── Disable two-up on mobile automatically ── */
+  
   useEffect(() => {
     if (isMobile && twoUp) setTwoUp(false);
   }, [isMobile, twoUp]);
 
-  /* ── FETCH ── */
+ 
   useEffect(() => {
     if (!uploadId) return;
     let cancel = false;
@@ -225,7 +225,7 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
     };
   }, [uploadId]);
 
-  /* ── RESIZE observer ── */
+  
   useEffect(() => {
     if (!containerRef.current) return;
     const ro = new ResizeObserver(([e]) => setWidth(e.contentRect.width));
@@ -233,7 +233,7 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
     return () => ro.disconnect();
   }, []);
 
-  /* ── INTERSECTION observer ── */
+  
   useEffect(() => {
     if (!numPages || !containerRef.current) return;
     if (observerRef.current) observerRef.current.disconnect();
@@ -268,14 +268,14 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
     if (observerRef.current) observerRef.current.observe(el);
   }, []);
 
-  /* ── DIMENSIONS ── */
+  
   const clamp     = (s) => Math.min(Math.max(s, 0.2), 3);
   const maxW      = isMobile ? 500 : isTablet ? 720 : 900;
   const baseWidth = Math.min(width || maxW, maxW);
   const pageWidth = twoUp ? (baseWidth - 24) / 2 : baseWidth;
   const finalWidth = pageWidth * scale;
 
-  /* ── PAGE JUMPS ── */
+ 
   const effectivePage = twoUp
     ? currentPage % 2 === 0 ? currentPage - 1 : currentPage
     : currentPage;
@@ -297,7 +297,6 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
     ? effectivePage + 2 > (numPages || 1)
     : currentPage >= (numPages || 1);
 
-  /* ── STYLE HELPERS ── */
   const iconBtn = {
     border: "none", background: "transparent", cursor: "pointer",
     padding: 6, borderRadius: 6, display: "flex",
@@ -333,11 +332,11 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
     background: t.zoomBtnBg,
   };
 
-  /* ── HEADER HEIGHT ── */
+ 
   const headerHeight  = isMobile ? 52 : 56;
   const toolbarHeight = isMobile ? 56 : 52;
 
-  /* ── RENDER ── */
+ 
   return (
     <div style={{
       position: "fixed", inset: 0, background: t.bg,
@@ -346,7 +345,7 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
       transition: "background 0.25s",
     }}>
 
-      {/* ══ HEADER ══ */}
+      
       <div style={{
         height: headerHeight,
         display: "flex", alignItems: "center",
@@ -384,11 +383,11 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
           )}
         </div>
 
-        {/* Theme toggle in header */}
+        
         <ThemeToggle theme={theme} onThemeChange={handleThemeChange} t={t} />
       </div>
 
-      {/* ══ PDF SCROLL AREA ══ */}
+     
       <div
         ref={containerRef}
         style={{
@@ -426,7 +425,6 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
                           display: "flex", gap: 12, marginBottom: 28,
                           boxShadow: t.pageShadow,
                           borderRadius: 3, overflow: "hidden",
-                          // Sepia filter on pages for sepia mode
                           filter: theme === "sepia" ? "sepia(0.35) brightness(0.97)" : "none",
                           transition: "filter 0.25s, box-shadow 0.25s",
                         }}
@@ -455,7 +453,6 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
         </div>
       </div>
 
-      {/* ══ BOTTOM TOOLBAR ══ */}
       <div style={{
         flexShrink: 0,
         height: toolbarHeight,
@@ -468,7 +465,7 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
         transition: "background 0.25s, border-color 0.25s",
       }}>
 
-        {/* LEFT — page navigation */}
+       
         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 0 : 2 }}>
           {!isMobile && (
             <button onClick={firstPage} style={navBtn(atStart)} disabled={atStart} title="First page">
@@ -518,7 +515,7 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
           )}
         </div>
 
-        {/* CENTRE — layout toggle (hidden on mobile) */}
+       
         {!isMobile && (
           <div style={{
             display: "flex", alignItems: "center",
@@ -542,7 +539,7 @@ const PDFReader = ({ uploadId, title, author, onClose }) => {
           </div>
         )}
 
-        {/* RIGHT — zoom */}
+       
         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 4 : 6 }}>
           <button onClick={() => setScale((s) => clamp(s - 0.1))} style={zoomBtn} title="Zoom out">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

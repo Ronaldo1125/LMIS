@@ -256,12 +256,15 @@ const Nav = () => {
         <div className="w-full h-16 flex items-center">
 
           <div className="flex items-center px-4 sm:px-6 lg:px-8 min-w-[220px]">
-            <Link href="/" className="block">
+            <Link href="/" className="flex items-center">
               <img
                 src="/assets/other/depdevlogo.png"
                 alt="Logo"
                 className="h-4 w-auto sm:h-6 lg:h-8"
               />
+              <span className="text-blue-900 text-xs sm:text-sm lg:text-base font-semibold">
+                V LIBRARY
+              </span>
             </Link>
           </div>
 

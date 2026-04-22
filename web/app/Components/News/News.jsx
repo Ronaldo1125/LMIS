@@ -10,7 +10,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 
 
-// ── Pastel bg pool for cards without images ─────────────────────────────────
+
 
 const BG_POOL = ["#dce8f5", "#e0ecf8", "#d6e5f5", "#e8f0fb", "#d0e4f7"];
 
@@ -18,7 +18,7 @@ const getBg = (i) => BG_POOL[i % BG_POOL.length];
 
 
 
-// ── Placeholder SVG ─────────────────────────────────────────────────────────
+
 
 const Placeholder = () => (
 
@@ -34,7 +34,7 @@ const Placeholder = () => (
 
 
 
-// ── Skeleton card ────────────────────────────────────────────────────────────
+
 
 const SkeletonCard = ({ large }) => (
 
@@ -66,7 +66,7 @@ const SkeletonCard = ({ large }) => (
 
 
 
-// ── Main component ───────────────────────────────────────────────────────────
+
 
 const News = () => {
 
@@ -82,7 +82,7 @@ const News = () => {
 
 
 
-  // ── responsive configuration ──────────────────────────────────────
+ 
 
   const getResponsiveConfig = () => {
 
@@ -130,7 +130,7 @@ const News = () => {
 
       };
 
-    } else if (windowWidth < 1024) { // Small desktop
+    } else if (windowWidth < 1024) { 
 
       return {
 
@@ -152,7 +152,7 @@ const News = () => {
 
       };
 
-    } else { // Large desktop
+    } else { 
 
       return {
 
@@ -184,7 +184,7 @@ const News = () => {
 
 
 
-  // ── window resize listener ────────────────────────────────────────────
+  
 
   useEffect(() => {
 
@@ -200,7 +200,7 @@ const News = () => {
 
 
 
-  // Fetch news from backend — thumbnail already stored in DB
+  
 
   useEffect(() => {
 
@@ -224,7 +224,7 @@ const News = () => {
 
           ...item,
 
-          // Use backend-stored thumbnail directly (saved by link-preview-js)
+     
 
           ogImage: item.thumbnail || null,
 
@@ -268,7 +268,7 @@ const News = () => {
 
 
 
-  // Group into slides based on responsive config
+  
 
   const slides = [];
 
@@ -312,7 +312,7 @@ const News = () => {
 
       <div style={{ background: "#fff" }}>
 
-        {/* ── Section Header ── */}
+      
 
         <div style={{
 
@@ -346,7 +346,7 @@ const News = () => {
 
             
 
-            {/* Mobile navigation arrows */}
+          
 
             {windowWidth < 640 && (
 
@@ -402,7 +402,7 @@ const News = () => {
 
 
 
-          {/* Desktop navigation arrows */}
+         
 
           {windowWidth >= 640 && (
 
@@ -462,7 +462,7 @@ const News = () => {
 
 
 
-        {/* ── Error state ── */}
+       
 
         {error && (
 
@@ -476,7 +476,7 @@ const News = () => {
 
 
 
-        {/* ── News Grid ── */}
+       
 
         <div style={{
 
@@ -532,7 +532,7 @@ const News = () => {
 
               >
 
-                {/* Thumbnail */}
+            
 
                 <div style={{
 
@@ -584,7 +584,7 @@ const News = () => {
 
 
 
-                {/* Category */}
+              
 
                 <div style={{
 
@@ -600,7 +600,7 @@ const News = () => {
 
 
 
-                {/* Title */}
+               
 
                 <h3 style={{
 
@@ -622,7 +622,7 @@ const News = () => {
 
 
 
-                {/* Date */}
+              
 
                 <div style={{ fontSize: 11, color: "#9ca3af" }}>{item.formattedDate}</div>
 

@@ -2,14 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
 import NotificationsModal from "./NotificationsModal";
 import { getReadIds } from "./NotificationsModal";
 import BookmarkedTab from "../MyProfile/BookmarkedTab";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000") + "/api";
-
-// ── Premium SVG Icon Set ────────────────────────────────────────────────────
 
 const IconMenu = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -96,9 +95,9 @@ const IconNewspaper = () => (
   </svg>
 );
 
-// ── Main Component ──────────────────────────────────────────────────────────
-
 const MobileNav = () => {
+  const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen]                     = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen]       = useState(false);
@@ -113,6 +112,10 @@ const MobileNav = () => {
   const [avatarSeed, setAvatarSeed]             = useState("felix");
   const [avatarPage, setAvatarPage]             = useState(0);
   const [formData, setFormData]                 = useState({ fullName: "", username: "", email: "" });
+  const [scrolled, setScrolled]                 = useState(false);
+
+  // Check if we're on the landing page
+  const isLandingPage = pathname === "/";
 
   const dicebearUrl = (seed) =>
     `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(seed)}`;
@@ -127,6 +130,14 @@ const MobileNav = () => {
       } catch {}
     }
     return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleInputChange = (e) => {
@@ -180,13 +191,11 @@ const MobileNav = () => {
     e.preventDefault();
     closeMenu();
     
-    // Navigate to homepage with hash if not already there
     if (window.location.pathname !== "/") {
       window.location.href = `/${targetId}`;
       return;
     }
     
-    // Scroll to section if on homepage
     const el = document.querySelector(targetId);
     if (el) {
       const offsetPosition = el.getBoundingClientRect().top + window.pageYOffset - 80;
@@ -197,7 +206,6 @@ const MobileNav = () => {
   const getToken = () =>
     localStorage.getItem("token") || sessionStorage.getItem("token");
 
-  // Fetch notifications
   const fetchNotifications = async () => {
     try {
       setNotificationsLoading(true);
@@ -218,7 +226,6 @@ const MobileNav = () => {
       const data = await res.json();
       setAnnouncements(data || []);
 
-      // Check for unread notifications
       const readIds = getReadIds();
       const unreadCount = data?.filter(a => !readIds.has(String(a.id))).length || 0;
       setHasNotifications(unreadCount > 0);
@@ -254,14 +261,11 @@ const MobileNav = () => {
 
   const avatarSeeds = ["felix", "leo", "luna", "max", "mia", "nova", "ace", "zoe", "kai", "sam", "ivy", "rex"];
 
-  // ─── Profile Sub-panel ───────────────────────────────────────────────────
   const ProfileSubPanel = () => (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
 
-      {/* Hero card */}
       <div style={{ margin: "16px 16px 16px", background: "#f4f4f4", borderRadius: "16px", padding: "18px 20px", position: "relative", overflow: "hidden" }}>
 
-        {/* Name + email row */}
         <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "16px" }}>
           <div style={{ width: "58px", height: "58px", borderRadius: "50%", background: "#e0e0e0", border: "2.5px solid #d0d0d0", overflow: "hidden", flexShrink: 0 }}>
             <img src={dicebearUrl(avatarSeed)} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -272,7 +276,6 @@ const MobileNav = () => {
           </div>
         </div>
 
-        {/* Avatar picker row */}
         <div>
           <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: "700", color: "#aaa", letterSpacing: "0.8px", textTransform: "uppercase" }}>Choose avatar</p>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -312,7 +315,6 @@ const MobileNav = () => {
         </div>
       </div>
 
-      {/* Tab pills */}
       <div style={{ display: "flex", gap: "8px", margin: "0 16px 16px", background: "#f4f4f6", borderRadius: "12px", padding: "4px" }}>
         {[
           { id: "profile", label: "Profile", Icon: IconUser },
@@ -336,14 +338,12 @@ const MobileNav = () => {
         ))}
       </div>
 
-      {/* Tab content */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
         {activeProfileTab === "profile" ? (
           <div>
             <p style={{ margin: "0 0 12px", fontSize: "11px", fontWeight: "700", color: "#bbb", letterSpacing: "0.8px", textTransform: "uppercase" }}>Account Info</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
 
-              {/* Full Name */}
               <div style={{ background: "#f4f4f4", borderRadius: "12px", padding: "12px 14px" }}>
                 <p style={{ margin: "0 0 5px", fontSize: "11px", color: "#888", fontWeight: "600", letterSpacing: "0.5px", textTransform: "uppercase" }}>Full Name</p>
                 <input
@@ -356,13 +356,11 @@ const MobileNav = () => {
                 />
               </div>
 
-              {/* Email — read only */}
               <div style={{ background: "#f4f4f4", borderRadius: "12px", padding: "12px 14px" }}>
                 <p style={{ margin: "0 0 5px", fontSize: "11px", color: "#888", fontWeight: "600", letterSpacing: "0.5px", textTransform: "uppercase" }}>Email</p>
                 <p style={{ margin: 0, fontSize: "14px", color: "#999", fontWeight: "500" }}>{user?.email}</p>
               </div>
 
-              {/* Username */}
               <div style={{ background: "#f4f4f4", borderRadius: "12px", padding: "12px 14px" }}>
                 <p style={{ margin: "0 0 5px", fontSize: "11px", color: "#888", fontWeight: "600", letterSpacing: "0.5px", textTransform: "uppercase" }}>Username</p>
                 <input
@@ -377,12 +375,10 @@ const MobileNav = () => {
             </div>
           </div>
         ) : (
-          /* ── Saved Tab ── */
           <BookmarkedTab onClose={closeMenu} isMobile={true} />
         )}
       </div>
 
-      {/* Bottom actions */}
       <div style={{ padding: "24px 16px 28px", display: "flex", flexDirection: "column", gap: "8px" }}>
         {activeProfileTab === "profile" && (
           <button
@@ -411,7 +407,6 @@ const MobileNav = () => {
     </div>
   );
 
-  // ─── Nav Links ────────────────────────────────────────────────────────────
   const navItems = [
     { label: "Home",   href: "/",       Icon: IconHome },
     { label: "Browse", href: "/search", Icon: IconSearch },
@@ -421,11 +416,13 @@ const MobileNav = () => {
 
   return (
     <>
-      {/* ── Top Bar ── */}
-      <div className="lg:hidden" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+      <div className="lg:hidden" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backdropFilter: "blur(12px)", background: (isLandingPage && !scrolled) ? "transparent" : "#fff", borderBottom: (isLandingPage && !scrolled) ? "none" : "1px solid #fff" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px" }}>
-          <Link href="/" onClick={closeMenu}>
-            <img src="/assets/other/depdevlogo.png" alt="Logo" style={{ height: "30px", width: "auto" }} />
+          <Link href="/" onClick={closeMenu} style={{ display: "flex", alignItems: "center" }}>
+            <img src="/assets/other/depdevlogo.png" alt="Logo" style={{ height: "30px", width: "auto", filter: (isLandingPage && !scrolled) ? "brightness(0) invert(1)" : "none" }} />
+            <span style={{ fontSize: "14px", fontWeight: "400", color: (isLandingPage && !scrolled) ? "#fff" : "#1e3a8a" }}>
+              V LIBRARY
+            </span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             {user && (
@@ -435,7 +432,7 @@ const MobileNav = () => {
                   background: showNotifications ? "white" : "none", 
                   border: showNotifications ? "1px solid rgba(0,0,0,0.1)" : "none", 
                   cursor: "pointer", 
-                  color: showNotifications ? "#2563eb" : "#333", 
+                  color: showNotifications ? "#2563eb" : ((isLandingPage && !scrolled) ? "#fff" : "#1e3a8a"), 
                   padding: "6px", 
                   borderRadius: "50%", 
                   display: "flex", 
@@ -460,14 +457,13 @@ const MobileNav = () => {
                 )}
               </button>
             )}
-            <button onClick={toggleMenu} style={{ background: "none", border: "none", cursor: "pointer", color: "#333", padding: "6px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <button onClick={toggleMenu} style={{ background: "none", border: "none", cursor: "pointer", color: (isLandingPage && !scrolled) ? "#fff" : "#1e3a8a", padding: "6px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {isOpen ? <IconClose /> : <IconMenu />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── Backdrop ── */}
       {isOpen && (
         <div
           className="lg:hidden"
@@ -476,7 +472,6 @@ const MobileNav = () => {
         />
       )}
 
-      {/* ── Drawer ── */}
       <div
         className="lg:hidden"
         style={{
@@ -488,7 +483,6 @@ const MobileNav = () => {
           display: "flex", flexDirection: "column", overflowY: "auto", minHeight: 0,
         }}
       >
-        {/* Drawer Header */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", padding: "16px 20px 14px", borderBottom: "1px solid #f2f2f2" }}>
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             {isProfileOpen && (
@@ -511,14 +505,11 @@ const MobileNav = () => {
           </div>
         </div>
 
-        {/* Profile Sub-panel */}
         {user && isProfileOpen && <ProfileSubPanel />}
 
-        {/* Main nav content */}
         {showNav && (
           <div style={{ padding: "16px 16px 28px", display: "flex", flexDirection: "column", gap: "8px", flex: 1 }}>
 
-            {/* User card */}
             {user && (
               <button
                 onClick={() => setIsProfileOpen(true)}
@@ -540,7 +531,6 @@ const MobileNav = () => {
               </button>
             )}
 
-            {/* Login card (guest) */}
             {!user && (
               <div style={{ background: "#f4f4f4", borderRadius: "16px", padding: "18px", marginBottom: "8px" }}>
                 <p style={{ margin: "0 0 4px", fontSize: "15px", fontWeight: "700", color: "#111" }}>Welcome to the Library</p>
@@ -556,10 +546,8 @@ const MobileNav = () => {
               </div>
             )}
 
-            {/* Section label */}
             <p style={{ margin: "8px 4px 4px", fontSize: "11px", fontWeight: "700", color: "#bbb", letterSpacing: "0.8px", textTransform: "uppercase" }}>Menu</p>
 
-            {/* Nav items */}
             {navItems.map(({ label, href, Icon }) => (
               <Link
                 key={href}
@@ -573,7 +561,6 @@ const MobileNav = () => {
               </Link>
             ))}
 
-            {/* Recent Additions */}
             <button
               onClick={(e) => handleSmoothScroll(e, "#recent-additions")}
               style={{ display: "flex", alignItems: "center", gap: "12px", padding: "13px 14px", borderRadius: "12px", background: "transparent", border: "none", cursor: "pointer", width: "100%", textAlign: "left" }}
@@ -583,7 +570,6 @@ const MobileNav = () => {
               <span style={{ color: "#ccc" }}><IconChevronRight /></span>
             </button>
 
-            {/* Collections accordion */}
             <div style={{ borderRadius: "12px", overflow: "hidden", background: "transparent" }}>
               <button
                 onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
@@ -614,7 +600,6 @@ const MobileNav = () => {
               </div>
             </div>
 
-            {/* News */}
             <button
               onClick={(e) => handleSmoothScroll(e, "#news")}
               style={{ display: "flex", alignItems: "center", gap: "12px", padding: "13px 14px", borderRadius: "12px", background: "transparent", border: "none", cursor: "pointer", width: "100%", textAlign: "left" }}
@@ -624,14 +609,12 @@ const MobileNav = () => {
               <span style={{ color: "#ccc" }}><IconChevronRight /></span>
             </button>
 
-            {/* Logout */}
             {user && (
               <div style={{ marginTop: "auto", paddingTop: "16px" }}>
                 <button
                   onClick={handleLogout}
                   style={{
                     width: "100%", padding: "13px",
-                    background: "#f4f4f4", border: "none", borderRadius: "12px",
                     cursor: "pointer", fontSize: "14px", fontWeight: "700", color: "#111",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
                     transition: "background 0.2s",
@@ -646,7 +629,6 @@ const MobileNav = () => {
         )}
       </div>
 
-      {/* Notifications Modal */}
       {showNotifications && (
         <NotificationsModal
           announcements={announcements}

@@ -12,10 +12,8 @@ const RecentAdditions = () => {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
   const [windowWidth, setWindowWidth] = useState(0);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // ── Drag state (all in refs to avoid re-renders during RAF loop) ──
+  
   const isDragging   = useRef(false);
   const startX       = useRef(0);
   const scrollLeft   = useRef(0);
@@ -25,7 +23,7 @@ const RecentAdditions = () => {
   const hasDragged   = useRef(false);
   const scrollRef    = useRef();
 
-  // We still need a React state version of hasDragged for the click guard
+  
   const [hasDraggedState, setHasDraggedState] = useState(false);
 
   const getResponsiveConfig = () => {
@@ -34,8 +32,8 @@ const RecentAdditions = () => {
         sectionPadding: "20px 16px 32px",
         titleSize:      24,
         showHeaderText: true,
-        cardWidth:      120,
-        cardHeight:     160,
+        cardWidth:      100,
+        cardHeight:     133,
         gap:            12,
       };
     } else if (windowWidth < 768) {
@@ -43,11 +41,20 @@ const RecentAdditions = () => {
         sectionPadding: "32px 24px 40px",
         titleSize:      26,
         showHeaderText: true,
-        cardWidth:      140,
-        cardHeight:     187,
+        cardWidth:      120,
+        cardHeight:     160,
         gap:            16,
       };
     } else if (windowWidth < 1024) {
+      return {
+        sectionPadding: "40px 32px 48px",
+        titleSize:      28,
+        showHeaderText: false,
+        cardWidth:      140,
+        cardHeight:     187,
+        gap:            20,
+      };
+    } else if (windowWidth < 1280) {
       return {
         sectionPadding: "40px 32px 48px",
         titleSize:      28,
@@ -56,22 +63,13 @@ const RecentAdditions = () => {
         cardHeight:     213,
         gap:            20,
       };
-    } else if (windowWidth < 1280) {
-      return {
-        sectionPadding: "40px 32px 48px",
-        titleSize:      28,
-        showHeaderText: false,
-        cardWidth:      180,
-        cardHeight:     240,
-        gap:            20,
-      };
     } else if (windowWidth <= 1440) {
       return {
         sectionPadding: "40px 32px 48px",
         titleSize:      28,
         showHeaderText: false,
-        cardWidth:      190,
-        cardHeight:     253,
+        cardWidth:      170,
+        cardHeight:     227,
         gap:            20,
       };
     } else {
@@ -79,8 +77,8 @@ const RecentAdditions = () => {
         sectionPadding: "44px 48px 56px",
         titleSize:      28,
         showHeaderText: false,
-        cardWidth:      200,
-        cardHeight:     267,
+        cardWidth:      180,
+        cardHeight:     240,
         gap:            24,
       };
     }
@@ -114,42 +112,6 @@ const RecentAdditions = () => {
     return () => { isMounted = false; };
   }, []);
 
-  const updateScrollButtons = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    
-    // Simple logic: if there are books, assume scrolling is possible
-    // Let the scroll behavior handle the actual limits
-    const hasBooks = books.length > 0;
-    const isAtStart = el.scrollLeft <= 4;
-    const isAtEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 4;
-    
-    setCanScrollLeft(hasBooks && !isAtStart);
-    setCanScrollRight(hasBooks && !isAtEnd);
-  };
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    
-    const handleScroll = () => updateScrollButtons();
-    el.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Initial check and resize observer
-    const resizeObserver = new ResizeObserver(() => {
-      updateScrollButtons();
-    });
-    resizeObserver.observe(el);
-    
-    // Initial check after content loads
-    setTimeout(updateScrollButtons, 100);
-    
-    return () => {
-      el.removeEventListener('scroll', handleScroll);
-      resizeObserver.disconnect();
-    };
-  }, [books]);
-
   const scroll = (dir) => {
     const el = scrollRef.current;
     if (!el) return;
@@ -157,7 +119,7 @@ const RecentAdditions = () => {
     el.scrollBy({ left: dir === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
   };
 
-  // ── Momentum helpers ──
+ 
 
   const cancelMomentum = () => {
     if (rafId.current) {
@@ -170,7 +132,7 @@ const RecentAdditions = () => {
     const el = scrollRef.current;
     if (!el) return;
 
-    // Decelerate at ~92% per frame (~60 fps → feels natural)
+   
     velocity.current *= 0.92;
 
     if (Math.abs(velocity.current) < 0.5) {
@@ -183,7 +145,7 @@ const RecentAdditions = () => {
     rafId.current = requestAnimationFrame(applyMomentum);
   };
 
-  // ── Mouse events ──
+ 
 
   const handleMouseDown = (e) => {
     cancelMomentum();
@@ -204,7 +166,7 @@ const RecentAdditions = () => {
     const x    = e.pageX - scrollRef.current.offsetLeft;
     const walk = x - startX.current;
 
-    // Update velocity for momentum (negative: scroll follows finger direction)
+   
     velocity.current = e.pageX - lastX.current;
     lastX.current    = e.pageX;
 
@@ -219,7 +181,7 @@ const RecentAdditions = () => {
   const handleMouseUp = () => {
     isDragging.current = false;
     if (scrollRef.current) scrollRef.current.style.cursor = "grab";
-    // Kick off momentum coast
+   
     rafId.current = requestAnimationFrame(applyMomentum);
   };
 
@@ -230,7 +192,6 @@ const RecentAdditions = () => {
     rafId.current = requestAnimationFrame(applyMomentum);
   };
 
-  // ── Touch events ──
 
   const handleTouchStart = (e) => {
     cancelMomentum();
@@ -265,7 +226,7 @@ const RecentAdditions = () => {
     rafId.current = requestAnimationFrame(applyMomentum);
   };
 
-  // ── Click guard ──
+  
   const handleBookClick = (book) => {
     if (hasDragged.current) return;
     const id = book.book_id ?? book.id;
@@ -273,10 +234,10 @@ const RecentAdditions = () => {
     router.push(`/book/${id}`);
   };
 
-  // Cleanup RAF on unmount
+  
   useEffect(() => () => cancelMomentum(), []);
 
-  // ── Sub-components ──
+  
 
   const SkeletonCard = () => (
     <div style={{
@@ -353,13 +314,9 @@ const RecentAdditions = () => {
           cursor: pointer;
           transition: background 0.15s, border-color 0.15s;
         }
-        .nav-btn:hover:not(:disabled) {
+        .nav-btn:hover {
           background: #f0f4ff;
           border-color: #003087;
-        }
-        .nav-btn:disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
         }
       `}</style>
 
@@ -371,7 +328,7 @@ const RecentAdditions = () => {
           overflow: "hidden",
         }}>
 
-          {/* ── Header ── */}
+        
           <div style={{
             display: "flex",
             alignItems: windowWidth < 640 ? "flex-start" : "center",
@@ -385,53 +342,33 @@ const RecentAdditions = () => {
                 {config.showHeaderText && windowWidth < 640 ? "New Release" : "New Release"}
               </h2>
 
-              {/* Mobile arrows */}
+            
               {windowWidth < 640 && (
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <button 
-                    className="nav-btn" 
-                    onClick={() => scroll("left")} 
-                    disabled={!canScrollLeft}
-                    style={{ width: 36, height: 32 }}
-                  >
+                  <button className="nav-btn" onClick={() => scroll("left")} style={{ width: 36, height: 32 }}>
                     <ChevronLeft size={16} />
                   </button>
-                  <button 
-                    className="nav-btn" 
-                    onClick={() => scroll("right")} 
-                    disabled={!canScrollRight}
-                    style={{ width: 36, height: 32 }}
-                  >
+                  <button className="nav-btn" onClick={() => scroll("right")} style={{ width: 36, height: 32 }}>
                     <ChevronRight size={16} />
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Desktop arrows */}
+           
             {windowWidth >= 640 && (
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                <button 
-                  className="nav-btn" 
-                  onClick={() => scroll("left")} 
-                  disabled={!canScrollLeft}
-                  style={{ width: 40, height: 36 }}
-                >
+                <button className="nav-btn" onClick={() => scroll("left")} style={{ width: 40, height: 36 }}>
                   <ChevronLeft size={18} />
                 </button>
-                <button 
-                  className="nav-btn" 
-                  onClick={() => scroll("right")} 
-                  disabled={!canScrollRight}
-                  style={{ width: 40, height: 36 }}
-                >
+                <button className="nav-btn" onClick={() => scroll("right")} style={{ width: 40, height: 36 }}>
                   <ChevronRight size={18} />
                 </button>
               </div>
             )}
           </div>
 
-          {/* ── Scroll Row ── */}
+       
           <div
             ref={scrollRef}
             className="scroll-container"
@@ -464,7 +401,7 @@ const RecentAdditions = () => {
                   borderRadius: 2,
                 }}
               >
-                {/* Cover */}
+                
                 <div style={{
                   width: config.cardWidth,
                   height: config.cardHeight,
@@ -493,7 +430,7 @@ const RecentAdditions = () => {
                   )}
                 </div>
 
-                {/* Info */}
+               
                 <div style={{ padding: "12px 12px 14px" }}>
                   <div style={{
                     fontSize: 13, fontWeight: 700, color: "#111827",
