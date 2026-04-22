@@ -57,7 +57,7 @@ const ActivityLogs = ({ dark }) => {
 
   const [showPurge, setShowPurge] = useState(false)
   const [purging, setPurging]     = useState(false)
-  const [purgeDays, setPurgeDays] = useState(90)
+  const purgeDays = 90
 
   const dropdownRef = useRef(null)
   useEffect(() => {
@@ -194,34 +194,6 @@ const ActivityLogs = ({ dark }) => {
   return (
     <div style={{ padding: '1.5rem' }}>
 
-      {/* Page Header */}
-      <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: textPrimary, display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-            <Activity style={{ width: '1.75rem', height: '1.75rem', color: iconColor }} />
-            Activity Logs
-          </h1>
-          <p style={{ color: textSecondary, marginTop: '0.25rem', fontSize: '0.875rem', margin: '0.25rem 0 0' }}>
-            Monitor and track all system activities
-          </p>
-        </div>
-        <button
-          onClick={() => setShowPurge(true)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '0.4rem',
-            padding: '0.5rem 1rem', borderRadius: '0.5rem', cursor: 'pointer',
-            background: 'transparent', border: `1px solid ${dangerColor}`,
-            color: dangerColor, fontSize: '0.8rem', fontWeight: 600,
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.12)' : '#fee2e2' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-        >
-          <Trash2 style={{ width: '0.95rem', height: '0.95rem' }} />
-          Purge Logs
-        </button>
-      </div>
-
       {/* Error banner */}
       {error && (
         <div style={{
@@ -334,6 +306,23 @@ const ActivityLogs = ({ dark }) => {
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <ActionButton onClick={clearFilters} icon={XCircleIcon} label="Clear" dark={dark} inputBg={inputBg} border={border} textSecondary={textSecondary} />
               <ActionButton onClick={exportLogs} icon={ArrowDownTrayIcon} label="Export CSV" variant="primary" dark={dark} inputBg={inputBg} border={border} textSecondary={textSecondary} />
+              <button
+                onClick={() => setShowPurge(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                  padding: '0.625rem 1.25rem', borderRadius: '0.5rem',
+                  background: 'transparent', border: `1px solid ${dangerColor}`,
+                  color: dangerColor, cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
+                  transition: 'all 0.2s ease',
+                  transform: 'none',
+                  boxShadow: 'none',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = dark ? 'rgba(239,68,68,0.12)' : '#fee2e2' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+              >
+                <Trash2 style={{ width: '1.125rem', height: '1.125rem' }} />
+                <span>Purge Logs</span>
+              </button>
             </div>
           </div>
         </div>
@@ -457,17 +446,9 @@ const ActivityLogs = ({ dark }) => {
                 <p style={{ margin: 0, fontSize: '0.8rem', color: textSecondary }}>This action cannot be undone.</p>
               </div>
             </div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: textSecondary }}>
-              Delete logs older than:
-            </label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-              <input
-                type="number" min={1} max={365} value={purgeDays}
-                onChange={e => setPurgeDays(Number(e.target.value))}
-                style={{ ...inputStyle, padding: '0.5rem 0.75rem', width: '5rem' }}
-              />
-              <span style={{ color: textSecondary, fontSize: '0.875rem' }}>days</span>
-            </div>
+            <p style={{ marginBottom: '1.5rem', fontSize: '0.875rem', color: textSecondary }}>
+              This will delete all logs older than {purgeDays} days.
+            </p>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowPurge(false)}
@@ -480,7 +461,7 @@ const ActivityLogs = ({ dark }) => {
                 disabled={purging}
                 style={{ padding: '0.6rem 1.25rem', borderRadius: '0.5rem', cursor: purging ? 'wait' : 'pointer', background: dangerColor, border: 'none', color: '#fff', fontWeight: 600, fontSize: '0.875rem', opacity: purging ? 0.7 : 1 }}
               >
-                {purging ? 'Purging…' : `Delete older than ${purgeDays}d`}
+                {purging ? 'Purging…' : `Delete older than ${purgeDays} days`}
               </button>
             </div>
           </div>

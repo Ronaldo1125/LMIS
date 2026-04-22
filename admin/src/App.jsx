@@ -37,8 +37,10 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const initialAuth = getInitialAuthState()
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuth.isAuthenticated)
-  // Normalize on load so the shape is always consistent
   const [user, setUser] = useState(() => normalizeUser(initialAuth.user))
+
+  // Only show spinner if there's a token to verify, otherwise go straight to login
+  const [isVerifying, setIsVerifying] = useState(!!localStorage.getItem('authToken'))
 
   // ── Dark mode ──────────────────────────────────────────────
   const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark')
@@ -49,6 +51,54 @@ function App() {
     else { root.classList.remove('dark'); localStorage.setItem('theme', 'light') }
   }, [dark])
 
+  // ── Token verification on mount ────────────────────────────
+  useEffect(() => {
+    const token = localStorage.getItem('authToken')
+    if (!token) {
+      setIsVerifying(false)
+      return
+    }
+
+    const verifyToken = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/verify`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          const normalized = normalizeUser(data.user)
+          setIsAuthenticated(true)
+          setUser(normalized)
+          localStorage.setItem('user', JSON.stringify(normalized))
+        } else {
+          // Token expired, invalid, or account deactivated — force re-login
+          localStorage.removeItem('authToken')
+          localStorage.removeItem('user')
+          localStorage.removeItem('userRole')
+          setIsAuthenticated(false)
+          setUser(null)
+        }
+      } catch (err) {
+        console.error('Token verification failed:', err)
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('user')
+        localStorage.removeItem('userRole')
+        setIsAuthenticated(false)
+        setUser(null)
+      } finally {
+        setIsVerifying(false)
+      }
+    }
+
+    verifyToken()
+  }, []) // runs once on mount
+
+  // ── Page title ─────────────────────────────────────────────
   useEffect(() => {
     const pageTitles = {
       dashboard:        'Dashboard',
@@ -56,7 +106,7 @@ function App() {
       accessions:       'Accessions',
       acquisitions:     'Acquisitions',
       'user-management':'User Management',
-      'news': 'News and Announcements',
+      'news':           'News and Announcements',
       security:         'Security',
       profile:          'My Profile',
       help:             'Help & Support',
@@ -68,7 +118,6 @@ function App() {
     const normalized = normalizeUser(userData)
     setIsAuthenticated(true)
     setUser(normalized)
-    // Keep localStorage in sync with the normalized shape
     localStorage.setItem('user', JSON.stringify(normalized))
   }
 
@@ -84,7 +133,6 @@ function App() {
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        // ✅ Pass setCurrentView and user so DashboardHeader can navigate
         return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
       case 'cataloging':
         return <Cataloging dark={dark} />
@@ -95,7 +143,7 @@ function App() {
       case 'acquisitions':
         return <Acquisitions dark={dark} />
       case 'news':
-      return <NewsAnnouncements dark={dark} />
+        return <NewsAnnouncements dark={dark} />
       case 'security':
         return <Security dark={dark} />
       case 'profile':
@@ -108,6 +156,25 @@ function App() {
       default:
         return <Dashboard user={user} setCurrentView={setCurrentView} dark={dark} />
     }
+  }
+
+  // ── Guards ─────────────────────────────────────────────────
+
+  // While verifying token, show a neutral loading screen (prevents login page flash)
+  if (isVerifying) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        background: dark ? '#07111f' : '#f8fafc',
+      }}>
+        <p style={{ color: dark ? '#94a3b8' : '#64748b', fontSize: '14px' }}>
+          Loading...
+        </p>
+      </div>
+    )
   }
 
   if (!isAuthenticated) return <AccountLogin onLoginSuccess={handleLoginSuccess} />
