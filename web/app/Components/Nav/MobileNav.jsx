@@ -206,37 +206,47 @@ const MobileNav = () => {
   const getToken = () =>
     localStorage.getItem("token") || sessionStorage.getItem("token");
 
-  const fetchNotifications = async () => {
-    try {
-      setNotificationsLoading(true);
-      setNotificationsError(null);
+const fetchNotifications = async () => {
+  try {
+    setNotificationsLoading(true);
+    setNotificationsError(null);
 
-      const token = getToken();
-      if (!token) {
-        setNotificationsError('Authentication required');
-        return;
-      }
-
-      const res = await fetch(`${API_BASE}/announcements`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error('Failed to fetch');
-
-      const data = await res.json();
-      setAnnouncements(data || []);
-
-      const readIds = getReadIds();
-      const unreadCount = data?.filter(a => !readIds.has(String(a.id))).length || 0;
-      setHasNotifications(unreadCount > 0);
-
-    } catch (err) {
-      console.error('Notifications fetch error:', err);
-      setNotificationsError('Failed to load notifications');
-    } finally {
-      setNotificationsLoading(false);
+    const token = getToken();
+    if (!token) {
+      setNotificationsError('Authentication required');
+      return;
     }
-  };
+
+    const res = await fetch(`${API_BASE}/announcements`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // ✅ ADD THIS BLOCK
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setUser?.(null); // if you have access to setUser, call it; otherwise the page reload handles it
+      window.location.reload(); // forces re-render with logged-out state
+      return;
+    }
+
+    if (!res.ok) throw new Error('Failed to fetch');
+
+    const data = await res.json();
+    setAnnouncements(data || []);
+
+    const readIds = getReadIds();
+    const unreadCount = data?.filter(a => !readIds.has(String(a.id))).length || 0;
+    setHasNotifications(unreadCount > 0);
+
+  } catch (err) {
+    console.error('Notifications fetch error:', err);
+    setNotificationsError('Failed to load notifications');
+  } finally {
+    setNotificationsLoading(false);
+  }
+};
 
   useEffect(() => {
     if (user) {

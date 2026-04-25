@@ -1,26 +1,16 @@
 "use client";
-
-
-
 import React, { useState, useEffect, useRef } from "react";
-
 import Link from "next/link";
-
 import { useRouter } from "next/navigation";
-
 import { LogOut, User, ChevronDown, Bell } from "lucide-react";
-
 import MobileNav from "./MobileNav";
-
 import Login from "../Auth/Login";
-
 import Register from "../Auth/Register";
-
 import MyProfile from "../MyProfile";
-
 import NotificationsModal from "./NotificationsModal";
-
 import { getReadIds } from "./NotificationsModal";
+
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000") + "/api";
 
 const dicebearUrl = (seed) =>
   `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(seed)}`;
@@ -63,33 +53,46 @@ const Nav = () => {
     localStorage.getItem("token") || sessionStorage.getItem("token");
 
   const fetchNotifications = async () => {
-    try {
-      setNotificationsLoading(true);
-      setNotificationsError(null);
-      const token = getToken();
-      if (!token) {
-        setNotificationsError("Authentication required");
-        return;
-      }
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/announcements`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      setAnnouncements(data || []);
-      const readIds = getReadIds();
-      const unreadCount = data?.filter((a) => !readIds.has(String(a.id))).length || 0;
-      setHasNotifications(unreadCount > 0);
-    } catch (err) {
-      console.error("Notifications fetch error:", err);
-      setNotificationsError("Failed to load notifications");
-    } finally {
-      setNotificationsLoading(false);
+  try {
+    setNotificationsLoading(true);
+    setNotificationsError(null);
+
+    const token = getToken();
+    if (!token) {
+      setNotificationsError('Authentication required');
+      return;
     }
-  };
+
+    const res = await fetch(`${API_BASE}/announcements`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // ✅ ADD THIS BLOCK
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setUser?.(null); // if you have access to setUser, call it; otherwise the page reload handles it
+      window.location.reload(); // forces re-render with logged-out state
+      return;
+    }
+
+    if (!res.ok) throw new Error('Failed to fetch');
+
+    const data = await res.json();
+    setAnnouncements(data || []);
+
+    const readIds = getReadIds();
+    const unreadCount = data?.filter(a => !readIds.has(String(a.id))).length || 0;
+    setHasNotifications(unreadCount > 0);
+
+  } catch (err) {
+    console.error('Notifications fetch error:', err);
+    setNotificationsError('Failed to load notifications');
+  } finally {
+    setNotificationsLoading(false);
+  }
+};
 
   useEffect(() => {
     if (user) {

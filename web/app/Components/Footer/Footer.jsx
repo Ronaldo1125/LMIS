@@ -147,11 +147,15 @@ const Footer = () => {
                   {new Date().getFullYear()} LMIS. All rights reserved. Developed by: <a href="https://www.linkedin.com/in/jake-macua/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Jake M.</a>, <a href="https://www.linkedin.com/in/michaelalatraca/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Michael A.</a>, <a href="https://www.linkedin.com/in/charles-loneza-282b15387/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Charles L.</a>, <a href="https://www.linkedin.com/in/anzelbotin/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Anzel Victor B.</a>
                 </p>
                 <div className={`flex ${socialGap} ${bottomMargin} md:mt-0 mt-4`}>
-                  {["Privacy Policy", "Terms of Service", "Support"].map((item) => (
-                    <a key={item} href="#" className={`${textSize} text-gray-400 hover:text-[#D0674B] transition-colors`}>
-                      {item}
-                    </a>
-                  ))}
+                  <a href="/privacy-terms" className={`${textSize} text-gray-400 hover:text-[#D0674B] transition-colors`}>
+                    Privacy Policy
+                  </a>
+                  <a href="/privacy-terms" className={`${textSize} text-gray-400 hover:text-[#D0674B] transition-colors`}>
+                    Terms of Service
+                  </a>
+                  <a href="#" className={`${textSize} text-gray-400 hover:text-[#D0674B] transition-colors`}>
+                    Support
+                  </a>
                 </div>
               </div>
             </div>

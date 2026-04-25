@@ -10,6 +10,8 @@ import AccountLogin from './components/AccountLogin'
 import MyProfile from './pages/MyProfile'
 import HelpSupport from './pages/HelpSupport'
 import NewsAnnouncements from './components/NewsAnnouncements'
+import Feedbacks from './components/Feedbacks'
+import PrivacyTermsEditor from './components/PrivacyTermsEditor'
 
 const getInitialAuthState = () => {
   const token = localStorage.getItem('authToken')
@@ -107,6 +109,8 @@ function App() {
       acquisitions:     'Acquisitions',
       'user-management':'User Management',
       'news':           'News and Announcements',
+      'feedbacks':      'Feedbacks',
+      'privacy-terms':  'Privacy & Terms',
       security:         'Security',
       profile:          'My Profile',
       help:             'Help & Support',
@@ -144,6 +148,10 @@ function App() {
         return <Acquisitions dark={dark} />
       case 'news':
         return <NewsAnnouncements dark={dark} />
+      case 'feedbacks':
+        return <Feedbacks dark={dark} />
+      case 'privacy-terms':
+        return <PrivacyTermsEditor dark={dark} />
       case 'security':
         return <Security dark={dark} />
       case 'profile':

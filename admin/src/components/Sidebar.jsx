@@ -10,6 +10,7 @@ import {
   ChevronDoubleRightIcon,
   NewspaperIcon
 } from '@heroicons/react/24/outline'
+import { MessageSquare, FileText } from 'lucide-react'
 import { useState } from 'react'
 import ConfirmationModal from './AccessionsComponents/ConfirmationModal'
 
@@ -22,7 +23,9 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
     { id: 'accessions',       label: 'Accessions',       icon: DocumentPlusIcon },
     { id: 'acquisitions',     label: 'Acquisitions',     icon: ClipboardDocumentCheckIcon },
     { id: 'news',             label: 'Announcements',    icon: NewspaperIcon },
+    { id: 'feedbacks',        label: 'Feedbacks',        icon: MessageSquare },
     { id: 'user-management',  label: 'User Management',  icon: UsersIcon },
+    { id: 'privacy-terms',    label: 'Privacy & Terms',  icon: FileText },
     { id: 'security',         label: 'Security',         icon: ShieldCheckIcon },
   ]
 
