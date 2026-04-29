@@ -88,6 +88,12 @@ app.use('/api', newsAnnouncementsRoutes);
 const bookmarksRouter = require('./routes/bookmarks');
 app.use('/api/bookmarks', bookmarksRouter);
 
+const privacyTermsRoutes = require('./routes/privacyTerms');
+app.use('/api/privacy-terms', privacyTermsRoutes);
+
+const feedbacksRoutes = require('./routes/feedbacks');
+app.use('/api/feedbacks', feedbacksRoutes);
+
 const activityLogsRoutes = require('./routes/activityLogs');
 app.use('/api/activity-logs', activityLogsRoutes);
 

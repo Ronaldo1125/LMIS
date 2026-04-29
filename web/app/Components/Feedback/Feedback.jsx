@@ -1,14 +1,45 @@
 import { useState } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 export default function Feedback() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (rating === 0) return;
-    setSubmitted(true);
+    
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      
+      const response = await fetch(`${API_URL}/api/feedbacks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ rating, comment }),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        const data = await response.json();
+        setError(data.message || "Failed to submit feedback");
+      }
+    } catch (err) {
+      console.error("Feedback submission error:", err);
+      setError("An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -165,6 +196,7 @@ export default function Feedback() {
           font-family: inherit;
           resize: vertical;
           box-sizing: border-box;
+          color: #000;
         }
 
         .fb-textarea:focus {
@@ -346,13 +378,21 @@ export default function Feedback() {
 
                 <textarea
                   className="fb-textarea"
-                  placeholder="Write your wishlist books (optional)"
+                  placeholder="What do you think of the website? Do you have books you want uploaded?"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />
 
-                <button className="fb-submit-btn" onClick={handleSubmit}>
-                  Submit
+                {error && (
+                  <p style={{ color: "#dc2626", fontSize: "12px", margin: 0 }}>{error}</p>
+                )}
+
+                <button 
+                  className="fb-submit-btn" 
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit"}
                 </button>
               </div>
             )}

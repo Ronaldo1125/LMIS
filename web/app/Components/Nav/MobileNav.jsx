@@ -200,20 +200,26 @@ const MobileNav = () => {
     try {
       setNotificationsLoading(true);
       setNotificationsError(null);
+
       const token = getToken();
       if (!token) {
         setNotificationsError('Authentication required');
         return;
       }
+
       const res = await fetch(`${API_BASE}/announcements`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (!res.ok) throw new Error('Failed to fetch');
+
       const data = await res.json();
       setAnnouncements(data || []);
+
       const readIds = getReadIds();
       const unreadCount = data?.filter(a => !readIds.has(String(a.id))).length || 0;
       setHasNotifications(unreadCount > 0);
+
     } catch (err) {
       console.error('Notifications fetch error:', err);
       setNotificationsError('Failed to load notifications');

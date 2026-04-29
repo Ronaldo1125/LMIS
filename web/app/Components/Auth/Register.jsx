@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000") + "/api";
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
@@ -275,9 +276,9 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
 
               <p className="text-[12px] text-gray-600 mt-4 leading-relaxed">
                 By continuing, you agree to our{" "}
-                <span className="text-blue-800 cursor-pointer underline">Terms</span>
+                <Link href="/privacy-terms" className="text-blue-800 cursor-pointer underline">Terms</Link>
                 {" "}and{" "}
-                <span className="text-blue-800 cursor-pointer underline">Privacy Policy</span>.
+                <Link href="/privacy-terms" className="text-blue-800 cursor-pointer underline">Privacy Policy</Link>.
               </p>
 
               <p className="mt-5 text-[13px] text-gray-600">
