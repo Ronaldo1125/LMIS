@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { User, Bookmark, LogOut } from "lucide-react";
 import { dicebearUrl, getRoleClass } from "./utils/profileUtils";
@@ -9,18 +7,6 @@ const MENU = [
   { id: "bookmarked", label: "Bookmarked", icon: Bookmark },
 ];
 
-/**
- * Left sidebar with avatar, display name, role badge, nav links, and logout.
- *
- * @param {object}   props
- * @param {string}   props.avatarSeed  - Seed used to render the avatar
- * @param {string}   props.displayName - Full name or username to show
- * @param {string}   props.username    - @ handle
- * @param {string}   props.role        - User role (Admin / Librarian / Patron / …)
- * @param {string}   props.activeTab   - Currently active tab id
- * @param {Function} props.onTabChange - Called with the new tab id
- * @param {Function} props.onLogout    - Called when Logout is clicked
- */
 export default function ProfileSidebar({
   avatarSeed,
   displayName,
@@ -31,55 +17,61 @@ export default function ProfileSidebar({
   onLogout,
 }) {
   return (
-    <div className="w-56 border-r border-zinc-100 bg-zinc-50 flex flex-col items-center px-4 py-7 shrink-0">
-      {/* Avatar */}
-      <div className="w-20 h-20 rounded-full bg-zinc-100 border-2 border-zinc-200 overflow-hidden mb-4">
-        <img src={dicebearUrl(avatarSeed)} alt="avatar" className="w-full h-full object-cover" />
+    <div className="w-64 border-r border-gray-100 bg-white flex flex-col px-4 py-8 shrink-0">
+
+      {/* Avatar + identity */}
+      <div className="flex flex-col items-center text-center px-2 mb-8">
+        <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-gray-100 mb-4">
+          <img src={dicebearUrl(avatarSeed)} alt="avatar" className="w-full h-full object-cover" />
+        </div>
+        <p className="text-sm font-semibold text-gray-800 truncate w-full leading-tight">
+          {displayName}
+        </p>
+        <p className="text-xs text-gray-400 truncate w-full mt-1">
+          @{username}
+        </p>
+        {role && (
+          <span className={`mt-2.5 text-[10px] font-medium px-2.5 py-0.5 rounded-full ${getRoleClass(role)}`}>
+            {role}
+          </span>
+        )}
       </div>
 
-      {/* Name / username */}
-      <p className="text-sm font-semibold text-zinc-700 truncate max-w-[152px] text-center leading-tight">
-        {displayName}
-      </p>
-      <p className="text-xs text-zinc-400 mb-1 text-center truncate max-w-[152px]">
-        @{username}
-      </p>
-
-      {/* Role badge */}
-      {role && (
-        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full mb-6 ${getRoleClass(role)}`}>
-          {role}
-        </span>
-      )}
-
       {/* Nav */}
-      <nav className="w-full flex flex-col gap-0.5">
+      <nav className="flex flex-col gap-1 w-full">
         {MENU.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => onTabChange(id)}
-            className={`flex items-center gap-2.5 w-full px-3 py-2 text-sm rounded-lg text-left transition-colors ${
+            className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm rounded-lg text-left transition-all ${
               activeTab === id
-                ? "bg-white text-zinc-800 font-medium shadow-sm border border-zinc-200"
-                : "text-zinc-400 hover:text-zinc-600 hover:bg-white/60"
+                ? "bg-gray-100 text-gray-900 font-medium"
+                : "text-gray-400 hover:text-gray-700 hover:bg-gray-50"
             }`}
           >
-            <Icon size={15} strokeWidth={1.8} />
+            <Icon
+              size={16}
+              strokeWidth={activeTab === id ? 2.2 : 1.8}
+              className={activeTab === id ? "text-gray-800" : "text-gray-400"}
+            />
             {label}
           </button>
         ))}
       </nav>
 
       {/* Logout */}
-      <div className="mt-auto pt-4 border-t border-zinc-100 w-full">
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-zinc-400 hover:text-red-500 rounded-lg transition-colors"
-        >
-          <LogOut size={15} strokeWidth={1.8} />
-          Logout
-        </button>
+      <div className="mt-auto w-full">
+        <div className="border-t border-gray-100 pt-4">
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+          >
+            <LogOut size={16} strokeWidth={1.8} />
+            Logout
+          </button>
+        </div>
       </div>
+
     </div>
   );
 }

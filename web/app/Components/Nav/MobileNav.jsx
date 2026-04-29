@@ -29,12 +29,6 @@ const IconChevronRight = ({ size = 16 }) => (
   </svg>
 );
 
-const IconChevronDown = ({ open }) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ transform: open ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)" }}>
-    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
 const IconUser = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
     <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.6"/>
@@ -99,7 +93,6 @@ const MobileNav = () => {
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen]                     = useState(false);
-  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen]       = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [announcements, setAnnouncements]         = useState([]);
@@ -114,7 +107,6 @@ const MobileNav = () => {
   const [formData, setFormData]                 = useState({ fullName: "", username: "", email: "" });
   const [scrolled, setScrolled]                 = useState(false);
 
-  // Check if we're on the landing page
   const isLandingPage = pathname === "/";
 
   const dicebearUrl = (seed) =>
@@ -190,12 +182,10 @@ const MobileNav = () => {
   const handleSmoothScroll = (e, targetId) => {
     e.preventDefault();
     closeMenu();
-    
     if (window.location.pathname !== "/") {
       window.location.href = `/${targetId}`;
       return;
     }
-    
     const el = document.querySelector(targetId);
     if (el) {
       const offsetPosition = el.getBoundingClientRect().top + window.pageYOffset - 80;
@@ -210,26 +200,20 @@ const MobileNav = () => {
     try {
       setNotificationsLoading(true);
       setNotificationsError(null);
-
       const token = getToken();
       if (!token) {
         setNotificationsError('Authentication required');
         return;
       }
-
       const res = await fetch(`${API_BASE}/announcements`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (!res.ok) throw new Error('Failed to fetch');
-
       const data = await res.json();
       setAnnouncements(data || []);
-
       const readIds = getReadIds();
       const unreadCount = data?.filter(a => !readIds.has(String(a.id))).length || 0;
       setHasNotifications(unreadCount > 0);
-
     } catch (err) {
       console.error('Notifications fetch error:', err);
       setNotificationsError('Failed to load notifications');
@@ -245,27 +229,12 @@ const MobileNav = () => {
   }, [user]);
 
   const displayName = user?.full_name?.split(" ")[0] || user?.username || "";
-  const initials = (user?.full_name || user?.username || "?")
-    .split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-
-  const collectionItems = [
-    { label: "Books",                        cat: "books" },
-    { label: "Sourcebooks",                  cat: "sourcebooks" },
-    { label: "Databases & Reports",          cat: "databases & reports" },
-    { label: "Periodicals",                  cat: "periodicals" },
-    { label: "Thesis / Research Papers",     cat: "thesis / research papers" },
-    { label: "Statute / Legal Documents",    cat: "statute / law / legal documents" },
-    { label: "Guide / Manuals",              cat: "guide / manuals" },
-    { label: "Reference Materials",          cat: "reference materials" },
-  ];
 
   const avatarSeeds = ["felix", "leo", "luna", "max", "mia", "nova", "ace", "zoe", "kai", "sam", "ivy", "rex"];
 
   const ProfileSubPanel = () => (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-
       <div style={{ margin: "16px 16px 16px", background: "#f4f4f4", borderRadius: "16px", padding: "18px 20px", position: "relative", overflow: "hidden" }}>
-
         <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "16px" }}>
           <div style={{ width: "58px", height: "58px", borderRadius: "50%", background: "#e0e0e0", border: "2.5px solid #d0d0d0", overflow: "hidden", flexShrink: 0 }}>
             <img src={dicebearUrl(avatarSeed)} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -275,7 +244,6 @@ const MobileNav = () => {
             <p style={{ margin: "3px 0 0", fontSize: "12px", color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</p>
           </div>
         </div>
-
         <div>
           <p style={{ margin: "0 0 8px", fontSize: "10px", fontWeight: "700", color: "#aaa", letterSpacing: "0.8px", textTransform: "uppercase" }}>Choose avatar</p>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -343,7 +311,6 @@ const MobileNav = () => {
           <div>
             <p style={{ margin: "0 0 12px", fontSize: "11px", fontWeight: "700", color: "#bbb", letterSpacing: "0.8px", textTransform: "uppercase" }}>Account Info</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-
               <div style={{ background: "#f4f4f4", borderRadius: "12px", padding: "12px 14px" }}>
                 <p style={{ margin: "0 0 5px", fontSize: "11px", color: "#888", fontWeight: "600", letterSpacing: "0.5px", textTransform: "uppercase" }}>Full Name</p>
                 <input
@@ -355,12 +322,10 @@ const MobileNav = () => {
                   style={{ width: "100%", background: "transparent", border: "none", fontSize: "14px", color: "#111", fontWeight: "500", outline: "none", padding: 0, margin: 0, fontFamily: "inherit" }}
                 />
               </div>
-
               <div style={{ background: "#f4f4f4", borderRadius: "12px", padding: "12px 14px" }}>
                 <p style={{ margin: "0 0 5px", fontSize: "11px", color: "#888", fontWeight: "600", letterSpacing: "0.5px", textTransform: "uppercase" }}>Email</p>
                 <p style={{ margin: 0, fontSize: "14px", color: "#999", fontWeight: "500" }}>{user?.email}</p>
               </div>
-
               <div style={{ background: "#f4f4f4", borderRadius: "12px", padding: "12px 14px" }}>
                 <p style={{ margin: "0 0 5px", fontSize: "11px", color: "#888", fontWeight: "600", letterSpacing: "0.5px", textTransform: "uppercase" }}>Username</p>
                 <input
@@ -408,15 +373,15 @@ const MobileNav = () => {
   );
 
   const navItems = [
-    { label: "Home",   href: "/",       Icon: IconHome },
-    { label: "Browse", href: "/search", Icon: IconSearch },
+    { label: "Home",       href: "/",       Icon: IconHome },
+    { label: "Browse",     href: "/search", Icon: IconSearch },
   ];
 
   const showNav = !user || !isProfileOpen;
 
   return (
     <>
-      <div className="lg:hidden" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backdropFilter: "blur(12px)", background: (isLandingPage && !scrolled) ? "transparent" : "#fff", borderBottom: (isLandingPage && !scrolled) ? "none" : "1px solid #fff" }}>
+      <div className="lg:hidden" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backdropFilter: "blur(12px)", background: (isLandingPage && !scrolled) ? "transparent" : "#fff", borderBottom: (isLandingPage && !scrolled) ? "none" : "1px solid #f0f0f0" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px" }}>
           <Link href="/" onClick={closeMenu} style={{ display: "flex", alignItems: "center" }}>
             <img src="/assets/other/depdevlogo.png" alt="Logo" style={{ height: "30px", width: "auto", filter: (isLandingPage && !scrolled) ? "brightness(0) invert(1)" : "none" }} />
@@ -426,17 +391,17 @@ const MobileNav = () => {
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             {user && (
-              <button 
+              <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                style={{ 
-                  background: showNotifications ? "white" : "none", 
-                  border: showNotifications ? "1px solid rgba(0,0,0,0.1)" : "none", 
-                  cursor: "pointer", 
-                  color: showNotifications ? "#2563eb" : ((isLandingPage && !scrolled) ? "#fff" : "#1e3a8a"), 
-                  padding: "6px", 
-                  borderRadius: "50%", 
-                  display: "flex", 
-                  alignItems: "center", 
+                style={{
+                  background: showNotifications ? "white" : "none",
+                  border: showNotifications ? "1px solid rgba(0,0,0,0.1)" : "none",
+                  cursor: "pointer",
+                  color: showNotifications ? "#2563eb" : ((isLandingPage && !scrolled) ? "#fff" : "#1e3a8a"),
+                  padding: "6px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
                   justifyContent: "center",
                   position: "relative",
                   boxShadow: showNotifications ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
@@ -445,15 +410,7 @@ const MobileNav = () => {
               >
                 <Bell size={16} />
                 {hasNotifications && (
-                  <span style={{
-                    position: "absolute",
-                    top: "4px",
-                    right: "4px",
-                    width: "8px",
-                    height: "8px",
-                    background: "red",
-                    borderRadius: "50%",
-                  }} />
+                  <span style={{ position: "absolute", top: "4px", right: "4px", width: "8px", height: "8px", background: "red", borderRadius: "50%" }} />
                 )}
               </button>
             )}
@@ -550,7 +507,7 @@ const MobileNav = () => {
 
             {navItems.map(({ label, href, Icon }) => (
               <Link
-                key={href}
+                key={label}
                 href={href}
                 onClick={closeMenu}
                 style={{ display: "flex", alignItems: "center", gap: "12px", padding: "13px 14px", textDecoration: "none", borderRadius: "12px", background: "transparent", color: "#111" }}
@@ -570,35 +527,14 @@ const MobileNav = () => {
               <span style={{ color: "#ccc" }}><IconChevronRight /></span>
             </button>
 
-            <div style={{ borderRadius: "12px", overflow: "hidden", background: "transparent" }}>
-              <button
-                onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
-                style={{ display: "flex", alignItems: "center", gap: "12px", padding: "13px 14px", border: "none", background: "none", cursor: "pointer", width: "100%", textAlign: "left" }}
-              >
-                <span style={{ color: "rgb(25,18,101)", display: "flex" }}><IconCollection /></span>
-                <span style={{ flex: 1, fontSize: "14px", fontWeight: "600", color: "#111" }}>Collection</span>
-                <span style={{ color: "#aaa" }}><IconChevronDown open={isCollectionsOpen} /></span>
-              </button>
-              <div style={{ maxHeight: isCollectionsOpen ? "700px" : "0", overflow: "hidden", transition: "max-height 0.45s cubic-bezier(0.4,0,0.2,1)" }}>
-                {collectionItems.map((item, i) => (
-                  <Link
-                    key={item.cat}
-                    href={`/search?category=${encodeURIComponent(item.cat)}`}
-                    onClick={closeMenu}
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                      padding: "11px 14px", textDecoration: "none",
-                      borderBottom: i < collectionItems.length - 1 ? "1px solid #efefef" : "none",
-                    }}
-                  >
-                    <span style={{ fontSize: "13px", color: "#444", fontWeight: "500" }}>{item.label}</span>
-                    <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "rgb(25,18,101)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
+            <button
+              onClick={(e) => handleSmoothScroll(e, "#categories")}
+              style={{ display: "flex", alignItems: "center", gap: "12px", padding: "13px 14px", borderRadius: "12px", background: "transparent", border: "none", cursor: "pointer", width: "100%", textAlign: "left" }}
+            >
+              <span style={{ color: "rgb(25,18,101)", display: "flex" }}><IconCollection /></span>
+              <span style={{ flex: 1, fontSize: "14px", fontWeight: "600", color: "#111" }}>Collections</span>
+              <span style={{ color: "#ccc" }}><IconChevronRight /></span>
+            </button>
 
             <button
               onClick={(e) => handleSmoothScroll(e, "#news")}
@@ -617,7 +553,7 @@ const MobileNav = () => {
                     width: "100%", padding: "13px",
                     cursor: "pointer", fontSize: "14px", fontWeight: "700", color: "#111",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                    transition: "background 0.2s",
+                    transition: "background 0.2s", background: "none", border: "none",
                   }}
                 >
                   <IconLogout />

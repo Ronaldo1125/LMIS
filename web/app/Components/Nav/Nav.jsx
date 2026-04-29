@@ -1,25 +1,13 @@
 "use client";
 
-
-
 import React, { useState, useEffect, useRef } from "react";
-
 import Link from "next/link";
-
-import { useRouter } from "next/navigation";
-
+import { useRouter, usePathname } from "next/navigation";
 import { LogOut, User, ChevronDown, Bell } from "lucide-react";
-
 import MobileNav from "./MobileNav";
-
 import Login from "../Auth/Login";
-
 import Register from "../Auth/Register";
-
-import MyProfile from "../MyProfile";
-
 import NotificationsModal from "./NotificationsModal";
-
 import { getReadIds } from "./NotificationsModal";
 
 const dicebearUrl = (seed) =>
@@ -37,15 +25,17 @@ const extractSeed = (avatarValue) => {
 
 const Nav = () => {
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
-  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [showMyProfile, setShowMyProfile] = useState(false);
-  const [profileInitialTab, setProfileInitialTab] = useState("profile");
   const [user, setUser] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    setIsScrolled(window.scrollY > 10);
+  }, []);
+
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [hasNotifications, setHasNotifications] = useState(false);
@@ -54,10 +44,12 @@ const Nav = () => {
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [notificationsError, setNotificationsError] = useState(null);
   const profileRef = useRef(null);
-  const collectionBtnRef = useRef(null);
-  const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isLandingPage = pathname === "/";
+  const isTransparent = isLandingPage && !isScrolled;
 
   const getToken = () =>
     localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -97,13 +89,8 @@ const Nav = () => {
     }
   }, [user]);
 
-  const handleHome = () => {
-    router.push("/");
-  };
-
-  const handleBrowse = () => {
-    router.push("/search");
-  };
+  const handleHome = () => router.push("/");
+  const handleBrowse = () => router.push("/search");
 
   const handleCollections = (category = null) => {
     setIsCollectionsOpen(false);
@@ -119,19 +106,19 @@ const Nav = () => {
       if (window.location.pathname !== "/") {
         router.push("/#recent-additions");
       } else {
-        const element = document.getElementById("recent-additions");
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
+        document.getElementById("recent-additions")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     } else if (section === "news") {
       if (window.location.pathname !== "/") {
         router.push("/#news");
       } else {
-        const element = document.getElementById("news");
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
+        document.getElementById("news")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else if (section === "categories") {
+      if (window.location.pathname !== "/") {
+        router.push("/#categories");
+      } else {
+        document.getElementById("categories")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
   };
@@ -171,10 +158,7 @@ const Nav = () => {
   }, []);
 
   useEffect(() => {
-    const handleOpenProfileBookmarked = () => {
-      setProfileInitialTab("bookmarked");
-      setShowMyProfile(true);
-    };
+    const handleOpenProfileBookmarked = () => router.push('/profile?tab=bookmarked');
     window.addEventListener("openProfileBookmarked", handleOpenProfileBookmarked);
     return () => window.removeEventListener("openProfileBookmarked", handleOpenProfileBookmarked);
   }, []);
@@ -213,11 +197,6 @@ const Nav = () => {
     router.push("/");
   };
 
-  const handleUserUpdate = (updatedUser) => {
-    setUser(updatedUser);
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-  };
-
   const displayName = user?.full_name?.split(" ")[0] || user?.username || "";
 
   const Avatar = () => {
@@ -225,12 +204,14 @@ const Nav = () => {
     return (
       <div
         style={{
-          width: "34px",
-          height: "34px",
+          width: "36px",
+          height: "36px",
           borderRadius: "50%",
           overflow: "hidden",
           flexShrink: 0,
-          border: "2px solid rgba(25,18,101,0.15)",
+          border: isTransparent
+            ? "2px solid rgba(255,255,255,0.5)"
+            : "2px solid rgba(30,58,138,0.2)",
           backgroundColor: "#f4f4f5",
         }}
       >
@@ -245,236 +226,169 @@ const Nav = () => {
 
   return (
     <>
-
       <MobileNav />
 
       <nav
-        className={`hidden lg:block fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out bg-white ${
+        className={`hidden lg:block fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
           isVisible ? "transform translate-y-0" : "transform -translate-y-full"
         }`}
+        style={{
+          background: isTransparent ? "transparent" : "#fff",
+          borderBottom: "none",
+          backdropFilter: isTransparent ? "none" : undefined,
+          WebkitBackdropFilter: isTransparent ? "none" : undefined,
+          boxShadow: "none",
+        }}
       >
-        <div className="w-full h-16 flex items-center">
+        <div className="w-full h-20 flex items-center">
 
+          {/* Logo */}
           <div className="flex items-center px-4 sm:px-6 lg:px-8 min-w-[220px]">
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center gap-2">
               <img
                 src="/assets/other/depdevlogo.png"
                 alt="Logo"
-                className="h-4 w-auto sm:h-6 lg:h-8"
+             className="h-5 w-auto sm:h-7 lg:h-8"
+                style={{
+                  filter: isTransparent ? "brightness(0) invert(1)" : "none",
+                  transition: "filter 0.3s ease",
+                }}
               />
-              <span className="text-blue-900 text-xs sm:text-sm lg:text-base font-semibold">
+              <span
+                className="text-xs sm:text-sm lg:text-sm font-semibold tracking-wide"
+                style={{
+                  color: isTransparent ? "#fff" : "#1e3a8a",
+                  transition: "color 0.3s ease",
+                }}
+              >
                 V LIBRARY
               </span>
             </Link>
           </div>
 
+          {/* Nav Links */}
           <div className="flex-1 flex justify-center items-center">
-            <ul className="flex items-center gap-6 lg:gap-10 text-black text-xs sm:text-xs lg:text-sm font-medium">
+            <ul className="flex items-center gap-6 lg:gap-10 text-sm lg:text-[15px] font-medium">
               <li>
-                <button onClick={handleHome} className="hover:text-blue-600 transition cursor-pointer">
+                <button
+                  onClick={handleHome}
+                  className="hover:opacity-70 transition cursor-pointer"
+                  style={{ color: isTransparent ? "#fff" : "#111" }}
+                >
                   Home
                 </button>
               </li>
               <li>
-                <button onClick={handleBrowse} className="hover:text-blue-600 transition cursor-pointer">
+                <button
+                  onClick={handleBrowse}
+                  className="hover:opacity-70 transition cursor-pointer"
+                  style={{ color: isTransparent ? "#fff" : "#111" }}
+                >
                   Browse
                 </button>
               </li>
               <li>
                 <button
                   onClick={() => handleNewRelease("recent")}
-                  className="hover:text-blue-600 transition cursor-pointer"
+                  className="hover:opacity-70 transition cursor-pointer"
+                  style={{ color: isTransparent ? "#fff" : "#111" }}
                 >
                   New release
                 </button>
               </li>
               <li>
                 <button
-                  ref={collectionBtnRef}
-                  onClick={() => setIsCollectionsOpen(!isCollectionsOpen)}
-                  className="flex items-center gap-1 hover:text-blue-600 transition relative h-full cursor-pointer"
-                  style={{ paddingBottom: "2px" }}
+                  onClick={() => handleNewRelease("categories")}
+                  className="hover:opacity-70 transition cursor-pointer"
+                  style={{ color: isTransparent ? "#fff" : "#111" }}
                 >
                   Collection
-                  <ChevronDown
-                    size={14}
-                    style={{
-                      transition: "transform 0.3s ease",
-                      transform: isCollectionsOpen ? "rotate(180deg)" : "rotate(0deg)",
-                    }}
-                  />
-                  <span
-                    style={{
-                      position: "absolute",
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: "2px",
-                      backgroundColor: "rgb(25,18,101)",
-                      transform: isCollectionsOpen ? "scaleX(1)" : "scaleX(0)",
-                      transition: "transform 0.25s ease",
-                      transformOrigin: "left",
-                    }}
-                  />
                 </button>
-
-                <div
-                  ref={dropdownRef}
-                  style={{
-                    position: "fixed",
-                    top: "64px",
-                    left: 0,
-                    right: 0,
-                    zIndex: 50,
-                    overflow: "hidden",
-                    maxHeight: isCollectionsOpen ? "280px" : "0px",
-                    transition: "max-height 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
-                    pointerEvents: isCollectionsOpen ? "all" : "none",
-                  }}
-                >
-                  <div style={{ background: "#fff", position: "relative" }}>
-                    <div
-                      style={{
-                        maxWidth: "1600px",
-                        margin: "0 auto",
-                        display: "grid",
-                        gridTemplateColumns: "repeat(3, 1fr)",
-                        gap: "0 30px",
-                        padding: "28px 40px 24px",
-                        position: "relative",
-                        zIndex: 2,
-                      }}
-                    >
-                      <div>
-                        {[
-                          { label: "Books", category: "Books" },
-                          { label: "Sourcebooks", category: "Sourcebooks" },
-                          { label: "Periodicals", category: "Periodicals" },
-                        ].map((item, i) => (
-                          <button
-                            key={item.category}
-                            className="text-black hover:text-blue-600 transition-colors duration-200"
-                            onClick={() => handleCollections(item.category)}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              padding: "14px 0",
-                              borderBottom: "1px solid rgba(0,0,0,0.12)",
-                              textDecoration: "none",
-                              fontSize: "14px",
-                              width: "100%",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              textAlign: "left",
-                            }}
-                          >
-                            <span>{item.label}</span>
-                            <ArrowCircle />
-                          </button>
-                        ))}
-                      </div>
-                      <div>
-                        {[
-                          { label: "Thesis", category: "Thesis" },
-                          { label: "Statute / Legal documents", category: "Statute / Legal documents" },
-                          { label: "Guides", category: "Guides" },
-                        ].map((item, i) => (
-                          <button
-                            key={item.category}
-                            className="text-black hover:text-blue-600 transition-colors duration-200"
-                            onClick={() => handleCollections(item.category)}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              padding: "14px 0",
-                              borderBottom: "1px solid rgba(0,0,0,0.12)",
-                              textDecoration: "none",
-                              fontSize: "14px",
-                              width: "100%",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              textAlign: "left",
-                            }}
-                          >
-                            <span>{item.label}</span>
-                            <ArrowCircle />
-                          </button>
-                        ))}
-                      </div>
-                      <div>
-                        {[
-                          { label: "Reports", category: "Reports" },
-                          { label: "Reference", category: "Reference" },
-                        ].map((item, i) => (
-                          <button
-                            key={item.category}
-                            className="text-black hover:text-blue-600 transition-colors duration-200"
-                            onClick={() => handleCollections(item.category)}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              padding: "14px 0",
-                              borderBottom: "1px solid rgba(0,0,0,0.12)",
-                              textDecoration: "none",
-                              fontSize: "14px",
-                              width: "100%",
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              textAlign: "left",
-                            }}
-                          >
-                            <span>{item.label}</span>
-                            <ArrowCircle />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </li>
               <li>
-                <button onClick={() => handleNewRelease("news")} className="hover:text-blue-600 transition cursor-pointer">
+                <button
+                  onClick={() => handleNewRelease("news")}
+                  className="hover:opacity-70 transition cursor-pointer"
+                  style={{ color: isTransparent ? "#fff" : "#111" }}
+                >
                   News
                 </button>
               </li>
             </ul>
           </div>
 
+          {/* Right side — auth */}
           <div className="flex items-center px-4 sm:px-6 lg:px-8 min-w-[220px] justify-end">
-
             {user ? (
-              <div ref={profileRef} className="relative flex items-center gap-3">
+              <div ref={profileRef} className="relative flex items-center gap-2">
+
+                {/* Bell */}
                 <button
                   data-bell-button="true"
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className={`relative p-2 rounded-full transition ${
-                    showNotifications 
-                      ? "bg-white shadow-md" 
-                      : "hover:bg-gray-100"
-                  }`}
+                  className="relative p-2 rounded-full transition"
+                  style={{
+                    background: showNotifications
+                      ? "#fff"
+                      : isTransparent
+                      ? "rgba(255,255,255,0.2)"
+                      : "rgba(30,58,138,0.08)",
+                    boxShadow: showNotifications ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
+                  }}
                 >
-                  <Bell size={18} className={`text-gray-600 ${showNotifications ? "text-blue-600" : ""}`} />
+                  <Bell
+                    size={20}
+                    style={{
+                      color: showNotifications
+                        ? "#2563eb"
+                        : isTransparent
+                        ? "#fff"
+                        : "#1e3a8a",
+                      transition: "color 0.3s ease",
+                    }}
+                  />
                   {hasNotifications && (
                     <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                   )}
                 </button>
+
+                {/* Profile button */}
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2 rounded-full pr-2 pl-1 py-1 hover:bg-gray-100 transition"
+                  className="flex items-center gap-2 rounded-full pr-3 pl-1 py-1 transition"
+                  style={{
+                    background: isTransparent
+                      ? "rgba(255,255,255,0.2)"
+                      : "rgba(30,58,138,0.06)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = isTransparent
+                      ? "rgba(255,255,255,0.3)"
+                      : "rgba(30,58,138,0.12)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = isTransparent
+                      ? "rgba(255,255,255,0.2)"
+                      : "rgba(30,58,138,0.06)";
+                  }}
                 >
                   <Avatar />
-                  <span className="text-sm font-semibold text-gray-800 max-w-[110px] truncate">
+                  <span
+                    className="text-sm font-semibold max-w-[110px] truncate"
+                    style={{
+                      color: isTransparent ? "#fff" : "#1e3a8a",
+                      transition: "color 0.3s ease",
+                    }}
+                  >
                     {displayName}
                   </span>
                   <ChevronDown
-                    size={14}
-                    className={`text-gray-500 transition-transform duration-200 ${isProfileOpen ? "rotate-180" : ""}`}
+                    size={15}
+                    style={{
+                      color: isTransparent ? "rgba(255,255,255,0.8)" : "#1e3a8a",
+                      transition: "color 0.3s ease, transform 0.2s ease",
+                      transform: isProfileOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    }}
                   />
                 </button>
 
@@ -489,14 +403,14 @@ const Nav = () => {
                     </div>
                     <button
                       className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-                      onClick={() => { setIsProfileOpen(false); setShowMyProfile(true); }}
+                      onClick={() => { setIsProfileOpen(false); router.push('/profile'); }}
                     >
                       <User size={15} className="text-gray-400" />
                       My Profile
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition"
                     >
                       <LogOut size={15} />
                       Sign Out
@@ -506,35 +420,46 @@ const Nav = () => {
               </div>
             ) : (
               <>
-
                 <button
                   onClick={() => setShowLogin(true)}
-                  className="text-sm font-medium text-black hover:text-blue-600 hover:cursor-pointer transition mr-6"
+                  className="text-sm font-medium hover:opacity-70 hover:cursor-pointer transition mr-6"
+                  style={{
+                    color: isTransparent ? "#fff" : "#111",
+                    transition: "color 0.3s ease, opacity 0.2s ease",
+                  }}
                 >
                   Login
                 </button>
 
                 <button
                   onClick={() => setShowRegister(true)}
-                  className="px-8 py-2 text-white font-semibold backdrop-blur-sm hover:bg-blue-800 transition rounded-[3px] cursor-pointer"
-                  style={{ backgroundColor: "#1e3a8a" }}
+                  className="px-8 py-2.5 font-semibold transition rounded-[3px] cursor-pointer text-sm tracking-wide"
+                  style={
+                    isTransparent
+                      ? {
+                          backgroundColor: "#fff",
+                          color: "#1e3a8a",
+                          border: "none",
+                        }
+                      : {
+                          backgroundColor: "#1e3a8a",
+                          color: "#fff",
+                          border: "none",
+                        }
+                  }
                 >
                   Register
                 </button>
-
               </>
             )}
           </div>
         </div>
       </nav>
 
-      <div className="h-16" />
+      <div className="h-20" />
 
       {isBookmarksOpen && (
         <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsBookmarksOpen(false)} />
-      )}
-      {isCollectionsOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setIsCollectionsOpen(false)} />
       )}
       {showLogin && (
         <Login
@@ -550,18 +475,6 @@ const Nav = () => {
           onSwitchToLogin={() => { setShowRegister(false); setShowLogin(true); }}
         />
       )}
-      {showMyProfile && (
-        <MyProfile
-          onClose={() => {
-            setShowMyProfile(false);
-            setProfileInitialTab("profile");
-          }}
-          user={user}
-          onUserUpdate={handleUserUpdate}
-          initialTab={profileInitialTab}
-        />
-      )}
-
       {showNotifications && (
         <NotificationsModal
           announcements={announcements}

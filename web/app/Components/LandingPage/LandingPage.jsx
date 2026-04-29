@@ -35,17 +35,17 @@ const LandingPage = () => {
   };
 
   return (
-    <section className="relative w-full h-screen min-h-130 lg:min-h-160 overflow-hidden bg-black">
+    <section className="relative w-full h-screen min-h-10 lg:min-h-160 overflow-hidden bg-black">
 
       {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/assets/other/fix.png')" }}
+        style={{ backgroundImage: "url('/assets/other/bg2026.png')" }}
       />
 
       {/* Overlay */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-linear-to-r from-black/25 via-black/15 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-black/20 via-black/10 to-transparent" />
         <div className="absolute inset-0 bg-black/5" />
       </div>
 
@@ -53,18 +53,17 @@ const LandingPage = () => {
       <div className="relative z-10 h-full flex flex-col">
         <Nav />
 
-        <div className="flex-1 flex items-center">
+   <div className="flex-1 flex items-center sm:items-start sm:pt-48 md:pt-50 lg:pt-52 xl:pt-54">
           <div className="w-full px-6 md:px-10 lg:px-16 2xl:px-20 pb-12 md:pb-16">
             <div className="max-w-[480px] sm:max-w-[540px] md:max-w-[620px] lg:max-w-[700px] xl:max-w-[740px] 2xl:max-w-[860px]">
 
-              <h1 className="text-white leading-[1] tracking-tight text-[30px] sm:text-[48px] md:text-[54px] lg:text-[68px] 2xl:text-[76px]">
+              <h1 className="text-white leading-[1] tracking-tight text-[31px] sm:text-[48px] md:text-[54px] lg:text-[68px] 2xl:text-[76px]">
                 Discover Knowledge,
                 <br />
                 Preserve Heritage.
               </h1>
 
-              
-              <div className="mt-6 md:mt-7">
+              <div className="mt-6 md:mt-7 relative pb-7 sm:pb-0">
                 <form onSubmit={handleSearch}>
                   <div
                     className="flex flex-col w-full bg-white px-4 py-3 sm:py-4 2xl:py-5 gap-3 2xl:gap-4 rounded-[3px] transition-all duration-200"
@@ -100,7 +99,7 @@ const LandingPage = () => {
                       </button>
                     </div>
 
-                    <div className="hidden sm:flex items-center gap-2 flex-wrap pt-3 border-t border-gray-200">
+                    <div className="hidden sm:flex items-center justify-start gap-2 flex-wrap pt-3 border-t border-gray-200">
                       {Object.entries(fieldLabel).map(([f, lbl]) => (
                         <button
                           key={f}
@@ -118,22 +117,25 @@ const LandingPage = () => {
                     </div>
                   </div>
                 </form>
-              </div>
 
-              <div className="mt-3">
+                {/* Advanced Search: flows below on mobile, absolute on sm+ */}
                 <button
+                  type="button"
                   onClick={handleAdvancedSearch}
-                  className="text-white/70 text-[12px] sm:text-[13px] hover:text-white transition underline flex items-center gap-1.5 cursor-pointer"
+                  className="flex items-center gap-1.5 text-[12px] transition cursor-pointer
+                    mt-2 text-gray-300 hover:text-white
+                    sm:absolute sm:bottom-3 sm:right-4 sm:mt-0 sm:text-gray-600 sm:hover:text-gray-800"
                 >
                   <SlidersHorizontal size={12} />
                   Advanced Search
                 </button>
               </div>
+
             </div>
           </div>
         </div>
 
-        {/* RecentBookCard — bottom-right, pushed further right */}
+        {/* RecentBookCard — bottom-right */}
         <div className="absolute bottom-4 right-4 lg:bottom-4 lg:right-4 xl:bottom-5 xl:right-8">
           <RecentBookCard />
         </div>
