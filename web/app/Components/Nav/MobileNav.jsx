@@ -186,11 +186,20 @@ const MobileNav = () => {
       window.location.href = `/${targetId}`;
       return;
     }
-    const el = document.querySelector(targetId);
-    if (el) {
-      const offsetPosition = el.getBoundingClientRect().top + window.pageYOffset - 80;
-      window.scrollTo({ top: offsetPosition, behavior: "smooth" });
-    }
+    
+    // Try to find the element with retries
+    const scrollToElement = (retries = 0) => {
+      const el = document.querySelector(targetId);
+      if (el) {
+        const offsetPosition = el.getBoundingClientRect().top + window.pageYOffset - 80;
+        window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+      } else if (retries < 5) {
+        // Retry after 100ms if element not found (might be loading)
+        setTimeout(() => scrollToElement(retries + 1), 100);
+      }
+    };
+    
+    scrollToElement();
   };
 
   const getToken = () =>

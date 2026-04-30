@@ -269,21 +269,17 @@ function SortDropdown({ value, onChange }) {
   );
 }
 
-function SkeletonGrid({ count = 12, cardWidth, cardHeight }) {
+function SkeletonGrid({ count = 12 }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} style={{
-          width: cardWidth,
-          minWidth: cardWidth,
-          maxWidth: cardWidth,
-          flexShrink: 0,
           border: "1px solid #f3f4f6",
           borderRadius: 2,
           overflow: "hidden",
           animation: "pulse 1.5s infinite",
         }}>
-          <div style={{ width: "100%", height: cardHeight, background: "#eef2fb" }} />
+          <div style={{ width: "100%", aspectRatio: "3/4", background: "#eef2fb" }} />
           <div style={{ padding: "12px 12px 14px" }}>
             <div style={{ height: 13, background: "#eef2fb", borderRadius: 3, marginBottom: 8, width: "80%" }} />
             <div style={{ height: 11, background: "#eef2fb", borderRadius: 3, width: "60%" }} />
@@ -464,34 +460,8 @@ const Search = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState(null);
-  const [windowWidth, setWindowWidth] = useState(0);
 
   const LIMIT = 24;
-
-  const getResponsiveConfig = () => {
-    if (windowWidth < 640) {
-      return { cardWidth: 100, cardHeight: 133, gap: 12 };
-    } else if (windowWidth < 768) {
-      return { cardWidth: 120, cardHeight: 160, gap: 16 };
-    } else if (windowWidth < 1024) {
-      return { cardWidth: 140, cardHeight: 187, gap: 20 };
-    } else if (windowWidth < 1280) {
-      return { cardWidth: 160, cardHeight: 213, gap: 20 };
-    } else if (windowWidth <= 1440) {
-      return { cardWidth: 170, cardHeight: 227, gap: 20 };
-    } else {
-      return { cardWidth: 175, cardHeight: 233, gap: 24 };
-    }
-  };
-
-  const config = getResponsiveConfig();
-
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   useEffect(() => {
     (async () => {
@@ -708,6 +678,63 @@ const Search = () => {
         .field-pill.active   { background: #1e3a8a; color: #fff; }
         .field-pill.inactive { background: #f3f4f6; color: #374151; }
         .field-pill.inactive:hover { background: #e5e7eb; }
+
+        /* ─── CSS Grid for book cards ─── */
+        /*
+          Breakpoints (matching your px-* padding pattern):
+          < 480px  → 2 columns  (small mobile)
+          480-639  → 3 columns
+          640-767  → 3 columns
+          768-1023 → 4 columns
+          1024-1279→ 5 columns
+          1280-1439→ 6 columns
+          1440-1699→ 7 columns
+          ≥ 1700   → 8 columns
+        */
+        .books-grid {
+          display: grid;
+          gap: 12px;
+          padding-bottom: 32px;
+          /* default: 2 col mobile */
+          grid-template-columns: repeat(2, 1fr);
+        }
+        @media (min-width: 480px) {
+          .books-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        }
+        @media (min-width: 640px) {
+          .books-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        }
+        @media (min-width: 768px) {
+          .books-grid { grid-template-columns: repeat(4, 1fr); gap: 18px; }
+        }
+        @media (min-width: 1024px) {
+          .books-grid { grid-template-columns: repeat(5, 1fr); gap: 20px; }
+        }
+        @media (min-width: 1280px) {
+          .books-grid { grid-template-columns: repeat(6, 1fr); gap: 20px; }
+        }
+        @media (min-width: 1440px) {
+          .books-grid { grid-template-columns: repeat(7, 1fr); gap: 22px; }
+        }
+        @media (min-width: 1700px) {
+          .books-grid { grid-template-columns: repeat(8, 1fr); gap: 24px; }
+        }
+
+        /* Card cover: fixed aspect ratio, no need for JS width/height */
+        .book-cover {
+          width: 100%;
+          aspect-ratio: 3 / 4;
+          background: #f0f4ff;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .book-meta {
+          padding: 10px 10px 12px;
+        }
+        @media (min-width: 768px) {
+          .book-meta { padding: 12px 12px 14px; }
+        }
       `}</style>
 
       <div className="min-h-screen bg-white flex flex-col">
@@ -715,6 +742,7 @@ const Search = () => {
 
         <main className="flex-1 flex flex-col">
 
+          {/* ── Search header ── */}
           <section className="w-full bg-white border-b border-gray-200 pt-8 sm:pt-10 md:pt-12 pb-6 sm:pb-8">
             <div className="max-w-[1700px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 2xl:px-16">
 
@@ -772,6 +800,7 @@ const Search = () => {
                 </button>
               </div>
 
+              {/* Mobile field pills */}
               <div className="flex md:hidden items-center gap-1.5 flex-wrap mt-3">
                 {Object.entries(fieldLabel).map(([f, lbl]) => (
                   <button
@@ -784,6 +813,7 @@ const Search = () => {
                 ))}
               </div>
 
+              {/* Filters row */}
               <div className="flex items-center justify-between mt-3 sm:mt-4 flex-wrap gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   <CategoryDropdown
@@ -811,6 +841,7 @@ const Search = () => {
                 </button>
               </div>
 
+              {/* Advanced search panel */}
               {showAdvanced && (
                 <div
                   className="mt-4 rounded-lg p-4 sm:p-6"
@@ -899,8 +930,10 @@ const Search = () => {
             </div>
           </section>
 
+          {/* ── Results area ── */}
           <div className="flex-1 flex flex-col">
 
+            {/* Sort / view toggle bar */}
             <div className="max-w-[1700px] mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-12 2xl:px-16 pt-6 sm:pt-8">
               <div className="flex items-center justify-between mb-5 sm:mb-6 flex-wrap gap-3">
                 <span className="text-[13px] text-gray-500">
@@ -933,6 +966,7 @@ const Search = () => {
               </div>
             </div>
 
+            {/* Book list / grid */}
             <div className="max-w-[1700px] mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-12 2xl:px-16 pb-20 flex-1 flex flex-col">
 
               {error && !loading && (
@@ -941,19 +975,11 @@ const Search = () => {
                 </div>
               )}
 
+              {/* ── GRID VIEW ── */}
               {isGridView && (
-                <div style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: config.gap,
-                  paddingBottom: 32,
-                }}>
+                <div className="books-grid">
                   {loading ? (
-                    <SkeletonGrid
-                      count={LIMIT}
-                      cardWidth={config.cardWidth}
-                      cardHeight={config.cardHeight}
-                    />
+                    <SkeletonGrid count={LIMIT} />
                   ) : (
                     books.map((book) => (
                       <div
@@ -961,21 +987,13 @@ const Search = () => {
                         className="book-card"
                         onClick={() => onBookClick(book.id)}
                         style={{
-                          width:    config.cardWidth,
-                          minWidth: config.cardWidth,
-                          maxWidth: config.cardWidth,
-                          flexShrink: 0,
                           border: "1px solid #e5e7eb",
                           borderRadius: 2,
                           overflow: "hidden",
                         }}
                       >
-                        <div style={{
-                          width:    config.cardWidth,
-                          height:   config.cardHeight,
-                          background: "#f0f4ff",
-                          position: "relative",
-                        }}>
+                        {/* Cover */}
+                        <div className="book-cover">
                           {book.upload_id ? (
                             <PDFThumbnail uploadId={book.upload_id} title={book.title} />
                           ) : (
@@ -1003,7 +1021,8 @@ const Search = () => {
                           )}
                         </div>
 
-                        <div style={{ padding: "12px 12px 14px" }}>
+                        {/* Meta */}
+                        <div className="book-meta">
                           <div style={{
                             fontSize: 13, fontWeight: 700, color: "#111827",
                             lineHeight: 1.25, marginBottom: 6,
@@ -1033,6 +1052,7 @@ const Search = () => {
                 </div>
               )}
 
+              {/* ── LIST VIEW ── */}
               {!isGridView && (
                 <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
                   {loading ? (
@@ -1080,6 +1100,7 @@ const Search = () => {
                 </div>
               )}
 
+              {/* Empty state */}
               {!loading && !error && books.length === 0 && (
                 <div style={{
                   flex: 1,
@@ -1106,6 +1127,7 @@ const Search = () => {
                 </div>
               )}
 
+              {/* Pagination */}
               {!loading && books.length > 0 && (
                 <Pagination page={urlPage} totalPages={totalPages} onPage={onPage} />
               )}

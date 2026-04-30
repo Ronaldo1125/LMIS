@@ -19,7 +19,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={interDisplay.className + " antialiased"}>
+      <body className={interDisplay.className + " antialiased"} suppressHydrationWarning>
         {children}
       </body>
     </html>

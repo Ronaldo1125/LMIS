@@ -33,72 +33,94 @@ const Nav = () => {
   const [showRegister, setShowRegister] = useState(false);
   const [user, setUser] = useState(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // FIX 1: Initialize isScrolled based on window.scrollY immediately,
+  // but guard SSR with a mounted check to avoid hydration mismatch.
+  const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    setIsScrolled(window.scrollY > 10);
-  }, []);
-
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
   const [hasNotifications, setHasNotifications] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [notificationsError, setNotificationsError] = useState(null);
+  const [isProfileClosing, setIsProfileClosing] = useState(false);
+
+  // FIX 2: isCollectionsOpen was used in handleCollections but never declared — added here
+  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
+
   const profileRef = useRef(null);
   const notificationRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
 
+  // FIX 3: Derive isTransparent only after mount to prevent SSR/client mismatch
   const isLandingPage = pathname === "/";
-  const isTransparent = isLandingPage && !isScrolled;
+  const isTransparent = mounted && isLandingPage && !isScrolled;
+
+  // FIX 4: Single mount effect — set mounted, read scroll position immediately,
+  // and load user from localStorage. This ensures the nav renders correctly
+  // on refresh without waiting for a scroll event.
+  useEffect(() => {
+    setMounted(true);
+    const scrollY = window.scrollY;
+    setIsScrolled(scrollY > 10);
+    setLastScrollY(scrollY);
+
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch {}
+    }
+  }, []);
 
   const getToken = () =>
     localStorage.getItem("token") || sessionStorage.getItem("token");
 
   const fetchNotifications = async () => {
-  try {
-    setNotificationsLoading(true);
-    setNotificationsError(null);
+    try {
+      setNotificationsLoading(true);
+      setNotificationsError(null);
 
-    const token = getToken();
-    if (!token) {
-      setNotificationsError('Authentication required');
-      return;
+      const token = getToken();
+      if (!token) {
+        setNotificationsError("Authentication required");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/announcements`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setUser(null);
+        window.location.reload();
+        return;
+      }
+
+      if (!res.ok) throw new Error("Failed to fetch");
+
+      const data = await res.json();
+      setAnnouncements(data || []);
+
+      const readIds = getReadIds();
+      const unreadCount =
+        data?.filter((a) => !readIds.has(String(a.id))).length || 0;
+      setHasNotifications(unreadCount > 0);
+    } catch (err) {
+      console.error("Notifications fetch error:", err);
+      setNotificationsError("Failed to load notifications");
+    } finally {
+      setNotificationsLoading(false);
     }
-
-    const res = await fetch(`${API_BASE}/announcements`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    // ✅ ADD THIS BLOCK
-    if (res.status === 401) {
-      localStorage.removeItem("token");
-      sessionStorage.removeItem("token");
-      localStorage.removeItem("user");
-      setUser?.(null); // if you have access to setUser, call it; otherwise the page reload handles it
-      window.location.reload(); // forces re-render with logged-out state
-      return;
-    }
-
-    if (!res.ok) throw new Error('Failed to fetch');
-
-    const data = await res.json();
-    setAnnouncements(data || []);
-
-    const readIds = getReadIds();
-    const unreadCount = data?.filter(a => !readIds.has(String(a.id))).length || 0;
-    setHasNotifications(unreadCount > 0);
-
-  } catch (err) {
-    console.error('Notifications fetch error:', err);
-    setNotificationsError('Failed to load notifications');
-  } finally {
-    setNotificationsLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     if (user) {
@@ -112,7 +134,9 @@ const Nav = () => {
   const handleCollections = (category = null) => {
     setIsCollectionsOpen(false);
     if (category) {
-      router.push(`/search?category=${encodeURIComponent(category.toLowerCase())}`);
+      router.push(
+        `/search?category=${encodeURIComponent(category.toLowerCase())}`
+      );
     } else {
       router.push("/search");
     }
@@ -123,19 +147,25 @@ const Nav = () => {
       if (window.location.pathname !== "/") {
         router.push("/#recent-additions");
       } else {
-        document.getElementById("recent-additions")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document
+          .getElementById("recent-additions")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     } else if (section === "news") {
       if (window.location.pathname !== "/") {
         router.push("/#news");
       } else {
-        document.getElementById("news")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document
+          .getElementById("news")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     } else if (section === "categories") {
       if (window.location.pathname !== "/") {
         router.push("/#categories");
       } else {
-        document.getElementById("categories")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document
+          .getElementById("categories")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
   };
@@ -156,28 +186,29 @@ const Nav = () => {
   }, [lastScrollY]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {}
-    }
-  }, []);
-
-  useEffect(() => {
     const handler = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
-        setIsProfileOpen(false);
+        if (isProfileOpen) {
+          setIsProfileClosing(true);
+          setTimeout(() => {
+            setIsProfileOpen(false);
+            setIsProfileClosing(false);
+          }, 150);
+        }
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  }, [isProfileOpen, isProfileClosing]);
 
   useEffect(() => {
     const handleOpenProfileBookmarked = () => setShowProfileModal(true);
     window.addEventListener("openProfileBookmarked", handleOpenProfileBookmarked);
-    return () => window.removeEventListener("openProfileBookmarked", handleOpenProfileBookmarked);
+    return () =>
+      window.removeEventListener(
+        "openProfileBookmarked",
+        handleOpenProfileBookmarked
+      );
   }, []);
 
   useEffect(() => {
@@ -186,7 +217,11 @@ const Nav = () => {
       window.loginMessage = event.detail;
     };
     window.addEventListener("showLoginWithMessage", handleShowLoginWithMessage);
-    return () => window.removeEventListener("showLoginWithMessage", handleShowLoginWithMessage);
+    return () =>
+      window.removeEventListener(
+        "showLoginWithMessage",
+        handleShowLoginWithMessage
+      );
   }, []);
 
   const handleSearch = (e) => {
@@ -243,6 +278,29 @@ const Nav = () => {
 
   return (
     <>
+      <style jsx>{`
+        @keyframes modalSlideIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        @keyframes modalSlideOut {
+          from {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+          to {
+            opacity: 0;
+            transform: scale(0.95) translateY(-10px);
+          }
+        }
+      `}</style>
       <MobileNav />
 
       <nav
@@ -265,7 +323,7 @@ const Nav = () => {
               <img
                 src="/assets/other/depdevlogo.png"
                 alt="Logo"
-             className="h-5 w-auto sm:h-7 lg:h-8"
+                className="h-5 w-auto sm:h-7 lg:h-8"
                 style={{
                   filter: isTransparent ? "brightness(0) invert(1)" : "none",
                   transition: "filter 0.3s ease",
@@ -343,19 +401,39 @@ const Nav = () => {
                 <button
                   data-bell-button="true"
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-2 rounded-full transition"
+                  className="relative p-2 rounded-full transition cursor-pointer"
                   style={{
                     background: "#fff",
+                    border: isTransparent
+                      ? "1.5px solid transparent"
+                      : showNotifications
+                      ? "1.5px solid #1e3a8a"
+                      : "1.5px solid #e2e8f0",
+                    transition: "border-color 0.2s ease, background 0.2s ease, transform 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#bfcfeb";
+                    e.currentTarget.style.background = isTransparent
+                      ? "rgba(240,244,255,0.8)"
+                      : "#f0f4ff";
+                    e.currentTarget.style.transform = "scale(1.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = showNotifications
+                      ? "#1e3a8a"
+                      : isTransparent
+                      ? "transparent"
+                      : "#e2e8f0";
+                    e.currentTarget.style.background = isTransparent
+                      ? "rgba(255,255,255,0.9)"
+                      : "#fff";
+                    e.currentTarget.style.transform = "scale(1)";
                   }}
                 >
                   <Bell
                     size={20}
                     style={{
-                      color: showNotifications
-                        ? "#2563eb"
-                        : isTransparent
-                        ? "#2563eb"
-                        : "#1e3a8a",
+                      color: showNotifications ? "#2563eb" : "#1e3a8a",
                       transition: "color 0.3s ease",
                     }}
                   />
@@ -366,50 +444,90 @@ const Nav = () => {
 
                 {/* Profile button */}
                 <button
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2 rounded-full pr-3 pl-1 py-1 transition"
+                  onClick={() => {
+                    if (isProfileOpen) {
+                      setIsProfileClosing(true);
+                      setTimeout(() => {
+                        setIsProfileOpen(false);
+                        setIsProfileClosing(false);
+                      }, 150);
+                    } else {
+                      setIsProfileOpen(true);
+                    }
+                  }}
+                  className="flex items-center gap-2 rounded-full pr-3 pl-1 py-1 transition cursor-pointer"
                   style={{
                     background: "#fff",
+                    border: isTransparent
+                      ? "1.5px solid transparent"
+                      : isProfileOpen
+                      ? "1.5px solid #1e3a8a"
+                      : "1.5px solid #e2e8f0",
+                    transition: "border-color 0.2s ease, background 0.2s ease, transform 0.2s ease",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#f0f4ff";
+                    e.currentTarget.style.background = isTransparent
+                      ? "rgba(240,244,255,0.8)"
+                      : "#f0f4ff";
+                    e.currentTarget.style.borderColor = "#bfcfeb";
+                    e.currentTarget.style.transform = "scale(1.02)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "#fff";
+                    e.currentTarget.style.background = isTransparent
+                      ? "rgba(255,255,255,0.9)"
+                      : "#fff";
+                    e.currentTarget.style.borderColor = isProfileOpen
+                      ? "#1e3a8a"
+                      : isTransparent
+                      ? "transparent"
+                      : "#e2e8f0";
+                    e.currentTarget.style.transform = "scale(1)";
                   }}
                 >
                   <Avatar />
                   <span
                     className="text-sm font-semibold max-w-[110px] truncate"
-                    style={{
-                      color: isTransparent ? "#2563eb" : "#1e3a8a",
-                      transition: "color 0.3s ease",
-                    }}
+                    style={{ color: "#1e3a8a", transition: "color 0.3s ease" }}
                   >
                     {displayName}
                   </span>
                   <ChevronDown
                     size={15}
                     style={{
-                      color: isTransparent ? "#2563eb" : "#1e3a8a",
+                      color: "#1e3a8a",
                       transition: "color 0.3s ease, transform 0.2s ease",
                       transform: isProfileOpen ? "rotate(180deg)" : "rotate(0deg)",
                     }}
                   />
                 </button>
 
-                {isProfileOpen && (
+                {(isProfileOpen || isProfileClosing) && (
                   <div
                     className="absolute right-0 top-full mt-2 w-52 bg-white border border-gray-100 rounded-xl shadow-xl py-1.5 z-50"
-                    style={{ boxShadow: "0 8px 32px rgba(0,48,135,0.13)" }}
+                    style={{
+                      boxShadow: "0 8px 32px rgba(0,48,135,0.13)",
+                      animation: isProfileClosing
+                        ? "modalSlideOut 0.15s ease-out"
+                        : "modalSlideIn 0.15s ease-out",
+                      transformOrigin: "top right",
+                    }}
                   >
                     <div className="px-4 py-2.5 border-b border-gray-100">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{user.full_name}</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {user.full_name}
+                      </p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </div>
                     <button
                       className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-                      onClick={() => { setIsProfileOpen(false); setShowProfileModal(true); }}
+                      onClick={() => {
+                        setIsProfileClosing(true);
+                        setTimeout(() => {
+                          setIsProfileOpen(false);
+                          setIsProfileClosing(false);
+                          setShowProfileModal(true);
+                        }, 150);
+                      }}
                     >
                       <User size={15} className="text-gray-400" />
                       My Profile
@@ -450,7 +568,7 @@ const Nav = () => {
                       : {
                           backgroundColor: "#1e3a8a",
                           color: "#fff",
-                          border: "none",
+                          border: "1px solid #d1d5db",
                         }
                   }
                 >
@@ -462,23 +580,35 @@ const Nav = () => {
         </div>
       </nav>
 
-      <div className="h-20" />
+      {/* FIX 5: Only render the spacer when nav is NOT transparent.
+          On the landing page with transparent nav, the hero section
+          should start at the very top (behind the nav), so no spacer needed. */}
+      {!isLandingPage && <div className="h-20" />}
 
       {isBookmarksOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsBookmarksOpen(false)} />
+        <div
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsBookmarksOpen(false)}
+        />
       )}
       {showLogin && (
         <Login
           onClose={() => setShowLogin(false)}
           onSuccess={handleLoginSuccess}
-          onSwitchToRegister={() => { setShowLogin(false); setShowRegister(true); }}
+          onSwitchToRegister={() => {
+            setShowLogin(false);
+            setShowRegister(true);
+          }}
         />
       )}
       {showRegister && (
         <Register
           onClose={() => setShowRegister(false)}
           onSuccess={handleRegisterSuccess}
-          onSwitchToLogin={() => { setShowRegister(false); setShowLogin(true); }}
+          onSwitchToLogin={() => {
+            setShowRegister(false);
+            setShowLogin(true);
+          }}
         />
       )}
       {showNotifications && (
@@ -491,24 +621,34 @@ const Nav = () => {
         />
       )}
       {showProfileModal && (
-        <MyProfile
-          user={user}
-          onClose={() => setShowProfileModal(false)}
-        />
+        <MyProfile user={user} onClose={() => setShowProfileModal(false)} />
       )}
     </>
   );
 };
 
 const ArrowCircle = () => (
-  <span style={{
-    width: "24px", height: "24px",
-    backgroundColor: "rgb(25,18,101)",
-    borderRadius: "50%",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    flexShrink: 0, marginLeft: "12px",
-  }}>
-    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
+  <span
+    style={{
+      width: "24px",
+      height: "24px",
+      backgroundColor: "rgb(25,18,101)",
+      borderRadius: "50%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+      marginLeft: "12px",
+    }}
+  >
+    <svg
+      width="9"
+      height="9"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#fff"
+      strokeWidth="2.5"
+    >
       <polyline points="9 18 15 12 9 6" />
     </svg>
   </span>

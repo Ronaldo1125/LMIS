@@ -32,8 +32,8 @@ const FrequentlySearched = () => {
         sectionPadding: "20px 16px 32px",
         titleSize:      24,
         showHeaderText: true,
-        cardWidth:      100,
-        cardHeight:     133,
+        cardWidth:      120,
+        cardHeight:     160,
         gap:            12,
       };
     } else if (windowWidth < 768) {
@@ -41,8 +41,8 @@ const FrequentlySearched = () => {
         sectionPadding: "32px 24px 40px",
         titleSize:      26,
         showHeaderText: true,
-        cardWidth:      120,
-        cardHeight:     160,
+        cardWidth:      140,
+        cardHeight:     187,
         gap:            16,
       };
     } else if (windowWidth < 1024) {
