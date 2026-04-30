@@ -53,7 +53,7 @@ const LandingPage = () => {
       <div className="relative z-10 h-full flex flex-col">
         <Nav />
 
-   <div className="flex-1 flex items-center sm:items-start sm:pt-48 md:pt-50 lg:pt-52 xl:pt-54">
+   <div className="flex-1 flex items-center sm:items-start sm:pt-20 md:pt-24 lg:pt-28 xl:pt-32">
           <div className="w-full px-6 md:px-10 lg:px-16 2xl:px-20 pb-12 md:pb-16">
             <div className="max-w-[480px] sm:max-w-[540px] md:max-w-[620px] lg:max-w-[700px] xl:max-w-[740px] 2xl:max-w-[860px]">
 

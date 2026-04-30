@@ -43,6 +43,7 @@ const Nav = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [hasNotifications, setHasNotifications] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [notificationsError, setNotificationsError] = useState(null);
@@ -174,7 +175,7 @@ const Nav = () => {
   }, []);
 
   useEffect(() => {
-    const handleOpenProfileBookmarked = () => router.push('/profile?tab=bookmarked');
+    const handleOpenProfileBookmarked = () => setShowProfileModal(true);
     window.addEventListener("openProfileBookmarked", handleOpenProfileBookmarked);
     return () => window.removeEventListener("openProfileBookmarked", handleOpenProfileBookmarked);
   }, []);
@@ -419,7 +420,7 @@ const Nav = () => {
                     </div>
                     <button
                       className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-                      onClick={() => { setIsProfileOpen(false); router.push('/profile'); }}
+                      onClick={() => { setIsProfileOpen(false); setShowProfileModal(true); }}
                     >
                       <User size={15} className="text-gray-400" />
                       My Profile
@@ -498,6 +499,12 @@ const Nav = () => {
           error={notificationsError}
           onClose={() => setShowNotifications(false)}
           onRefresh={fetchNotifications}
+        />
+      )}
+      {showProfileModal && (
+        <MyProfile
+          user={user}
+          onClose={() => setShowProfileModal(false)}
         />
       )}
     </>
