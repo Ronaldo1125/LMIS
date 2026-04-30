@@ -345,12 +345,7 @@ const Nav = () => {
                   onClick={() => setShowNotifications(!showNotifications)}
                   className="relative p-2 rounded-full transition"
                   style={{
-                    background: showNotifications
-                      ? "#fff"
-                      : isTransparent
-                      ? "rgba(255,255,255,0.2)"
-                      : "rgba(30,58,138,0.08)",
-                    boxShadow: showNotifications ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
+                    background: "#fff",
                   }}
                 >
                   <Bell
@@ -359,7 +354,7 @@ const Nav = () => {
                       color: showNotifications
                         ? "#2563eb"
                         : isTransparent
-                        ? "#fff"
+                        ? "#2563eb"
                         : "#1e3a8a",
                       transition: "color 0.3s ease",
                     }}
@@ -374,26 +369,20 @@ const Nav = () => {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center gap-2 rounded-full pr-3 pl-1 py-1 transition"
                   style={{
-                    background: isTransparent
-                      ? "rgba(255,255,255,0.2)"
-                      : "rgba(30,58,138,0.06)",
+                    background: "#fff",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = isTransparent
-                      ? "rgba(255,255,255,0.3)"
-                      : "rgba(30,58,138,0.12)";
+                    e.currentTarget.style.background = "#f0f4ff";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = isTransparent
-                      ? "rgba(255,255,255,0.2)"
-                      : "rgba(30,58,138,0.06)";
+                    e.currentTarget.style.background = "#fff";
                   }}
                 >
                   <Avatar />
                   <span
                     className="text-sm font-semibold max-w-[110px] truncate"
                     style={{
-                      color: isTransparent ? "#fff" : "#1e3a8a",
+                      color: isTransparent ? "#2563eb" : "#1e3a8a",
                       transition: "color 0.3s ease",
                     }}
                   >
@@ -402,7 +391,7 @@ const Nav = () => {
                   <ChevronDown
                     size={15}
                     style={{
-                      color: isTransparent ? "rgba(255,255,255,0.8)" : "#1e3a8a",
+                      color: isTransparent ? "#2563eb" : "#1e3a8a",
                       transition: "color 0.3s ease, transform 0.2s ease",
                       transform: isProfileOpen ? "rotate(180deg)" : "rotate(0deg)",
                     }}

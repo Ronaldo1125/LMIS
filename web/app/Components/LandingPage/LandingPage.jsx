@@ -45,8 +45,8 @@ const LandingPage = () => {
 
       {/* Overlay */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-linear-to-r from-black/20 via-black/10 to-transparent" />
-        <div className="absolute inset-0 bg-black/5" />
+        <div className="absolute inset-0 bg-linear-to-r from-black/22 via-black/13 to-transparent" />
+        <div className="absolute inset-0 bg-black/7" />
       </div>
 
       {/* Content */}
