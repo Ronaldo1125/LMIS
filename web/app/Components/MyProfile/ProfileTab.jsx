@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import AvatarPicker from "./AvatarPicker";
 import DeleteAccountModal from "./DeleteAccountModal";
 import { authFetch } from "./utils/authFetch";
@@ -14,39 +14,26 @@ import {
   getRoleClass,
 } from "./utils/profileUtils";
 
-/**
- * Full profile editing panel: avatar picker, name/username fields,
- * role badge, and danger-zone delete.
- *
- * @param {object}   props
- * @param {object}   props.user         - Current user object from auth state
- * @param {Function} props.onUserUpdate - Called with the merged updated user object
- */
 export default function ProfileTab({ user, onUserUpdate }) {
-  // ── Avatar state ──────────────────────────────────────────────────────────
   const [avatarSeed, setAvatarSeed]       = useState(() => extractSeed(user?.avatar || user?.username || "default"));
   const [avatarChanged, setAvatarChanged] = useState(false);
   const [avatarSaving, setAvatarSaving]   = useState(false);
   const [avatarSuccess, setAvatarSuccess] = useState(false);
   const [suggestions, setSuggestions]     = useState(() => Array.from({ length: 5 }, randomSeed));
 
-  // ── Form state ────────────────────────────────────────────────────────────
-  const [formData, setFormData] = useState({
+  const [editingField, setEditingField] = useState(null);
+  const [fieldValues, setFieldValues]   = useState({
     fullName: user?.full_name || "",
     username: user?.username  || "",
     email:    user?.email     || "",
   });
-  const [isEditing, setIsEditing]   = useState(false);
-  const [saving, setSaving]         = useState(false);
-  const [saveError, setSaveError]   = useState(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saving, setSaving]       = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
-  // ── Delete state ──────────────────────────────────────────────────────────
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting]               = useState(false);
   const [deleteError, setDeleteError]         = useState(null);
 
-  // ── Sync with prop changes (e.g. after re-login) ──────────────────────────
   useEffect(() => {
     if (user?.avatar) {
       setAvatarSeed(extractSeed(user.avatar));
@@ -58,14 +45,13 @@ export default function ProfileTab({ user, onUserUpdate }) {
   }, [user?.avatar, user?.username]);
 
   useEffect(() => {
-    setFormData({
+    setFieldValues({
       fullName: user?.full_name || "",
       username: user?.username  || "",
       email:    user?.email     || "",
     });
   }, [user?.full_name, user?.username, user?.email]);
 
-  // ── Avatar handlers ───────────────────────────────────────────────────────
   const savedAvatarSeed = extractSeed(user?.avatar || user?.username || "default");
 
   const handlePickSeed = (seed) => {
@@ -92,49 +78,29 @@ export default function ProfileTab({ user, onUserUpdate }) {
       setAvatarSuccess(true);
       setTimeout(() => setAvatarSuccess(false), 3000);
     } catch {
-      // surface error toast here if desired
     } finally {
       setAvatarSaving(false);
     }
   };
 
-  // ── Profile form handlers ─────────────────────────────────────────────────
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setIsEditing(true);
-    setSaveSuccess(false);
-    setSaveError(null);
-  };
-
-  const handleClear = () => {
-    setFormData({
-      fullName: user?.full_name || "",
-      username: user?.username  || "",
-      email:    user?.email     || "",
-    });
-    setIsEditing(false);
-    setSaveError(null);
-    setSaveSuccess(false);
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    setSaveError(null);
-    setSaveSuccess(false);
+  const handleFieldSave = async (field) => {
+    setSaving(true); setSaveError(null);
     try {
+      const payload =
+        field === "fullName"
+          ? { full_name: fieldValues.fullName }
+          : { username: fieldValues.username };
       const res = await authFetch(`/api/auth/${user?.id}/profile`, {
         method: "PATCH",
-        body: JSON.stringify({ full_name: formData.fullName, username: formData.username }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Failed to save.");
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.message || "Failed");
       }
-      const updatedFields = { full_name: formData.fullName, username: formData.username };
-      persistUserChanges(updatedFields);
-      onUserUpdate?.({ ...user, ...updatedFields });
-      setSaveSuccess(true);
-      setIsEditing(false);
+      persistUserChanges(payload);
+      onUserUpdate?.({ ...user, ...payload });
+      setEditingField(null);
     } catch (err) {
       setSaveError(err.message);
     } finally {
@@ -142,15 +108,23 @@ export default function ProfileTab({ user, onUserUpdate }) {
     }
   };
 
-  // ── Delete handlers ───────────────────────────────────────────────────────
+  const handleFieldCancel = () => {
+    setFieldValues((p) => ({
+      ...p,
+      fullName: user?.full_name || p.fullName,
+      username: user?.username  || p.username,
+    }));
+    setEditingField(null);
+    setSaveError(null);
+  };
+
   const handleDeleteAccount = async () => {
-    setDeleting(true);
-    setDeleteError(null);
+    setDeleting(true); setDeleteError(null);
     try {
       const res = await authFetch(`/api/auth/${user?.id}`, { method: "DELETE" });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || "Failed to delete account.");
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.message || "Failed");
       }
       clearAuthAndRedirect();
     } catch (err) {
@@ -160,22 +134,33 @@ export default function ProfileTab({ user, onUserUpdate }) {
     }
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
+      <style>{`
+        .profile-scroll::-webkit-scrollbar { width: 2px; }
+        .profile-scroll::-webkit-scrollbar-track { background: transparent; }
+        .profile-scroll::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 99px; }
+        .profile-scroll::-webkit-scrollbar-thumb:hover { background: #d1d1d5; }
+        * { scrollbar-width: thin; scrollbar-color: #e4e4e7 transparent; }
+      `}</style>
+
       {showDeleteModal && (
         <DeleteAccountModal
-          username={formData.username}
+          username={fieldValues.username}
           onConfirm={handleDeleteAccount}
           onCancel={() => setShowDeleteModal(false)}
           deleting={deleting}
         />
       )}
 
-      <div className="max-w-md">
-        <h2 className="text-base font-semibold text-zinc-800 mb-1">Profile</h2>
-        <p className="text-xs text-zinc-400 mb-6">Manage your personal information</p>
+      <div className="profile-scroll w-full max-w-xl flex flex-col gap-3">
 
+        <div className="mb-1">
+          <h2 className="text-base font-semibold text-zinc-800 mb-0.5">Profile</h2>
+          <p className="text-xs text-zinc-400">Manage your personal information</p>
+        </div>
+
+        {/* 1. Avatar */}
         <AvatarPicker
           avatarSeed={avatarSeed}
           suggestions={suggestions}
@@ -189,7 +174,7 @@ export default function ProfileTab({ user, onUserUpdate }) {
 
         {/* Role badge */}
         {user?.role && (
-          <div className="flex items-center gap-2 mb-6 p-3 bg-zinc-50 border border-zinc-100 rounded-lg">
+          <div className="flex items-center gap-2 px-3 py-2 bg-zinc-50 border border-zinc-100 rounded-lg">
             <span className="text-xs text-zinc-400">Account type</span>
             <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${getRoleClass(user.role)}`}>
               {user.role}
@@ -200,98 +185,149 @@ export default function ProfileTab({ user, onUserUpdate }) {
           </div>
         )}
 
-        {/* Fields */}
-        <div className="flex flex-col gap-5">
-          {[
-            { label: "Full Name", name: "fullName", type: "text" },
-            { label: "Username",  name: "username",  type: "text" },
-          ].map(({ label, name, type }) => (
-            <div key={name} className="flex flex-col gap-1.5">
-              <label className="text-xs uppercase tracking-widest text-zinc-400 font-medium">
-                {label}
-              </label>
-              <input
-                name={name}
-                type={type}
-                value={formData[name]}
-                onChange={handleChange}
-                className="w-full bg-white border border-zinc-200 text-zinc-800 text-sm px-4 py-2.5 rounded-md outline-none focus:border-zinc-400 transition-colors"
-              />
-            </div>
-          ))}
-
-          {/* Email — read-only */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs uppercase tracking-widest text-zinc-400 font-medium">
-              Email
-            </label>
-            <div className="w-full bg-zinc-50 border border-zinc-200 text-zinc-400 text-sm px-4 py-2.5 rounded-md cursor-not-allowed select-none">
-              {formData.email}
-            </div>
-            <p className="text-[10px] text-zinc-300">Email address cannot be changed</p>
-          </div>
-        </div>
-
-        {/* Feedback messages */}
         {saveError && (
-          <p className="mt-4 text-xs text-red-500 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+          <p className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-md px-3 py-2">
             {saveError}
           </p>
         )}
-        {saveSuccess && (
-          <p className="mt-4 text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
-            Profile updated successfully.
-          </p>
-        )}
-        {deleteError && (
-          <p className="mt-4 text-xs text-red-500 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-            {deleteError}
-          </p>
-        )}
+
+        {/* 2. Email */}
+        <Section title="Email">
+          <FieldRow
+            icon={
+              <svg width="18" height="18" fill="none" stroke="#1e3a8a" strokeWidth="2" viewBox="0 0 24 24">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M2 7l10 7 10-7"/>
+              </svg>
+            }
+            value={fieldValues.email}
+            readonly
+          />
+        </Section>
+
+        {/* 3. Name */}
+        <Section title="Name">
+          <FieldRow
+            icon={
+              <svg width="18" height="18" fill="none" stroke="#1e3a8a" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            }
+            value={fieldValues.fullName}
+            isEditing={editingField === "fullName"}
+            saving={saving}
+            onEdit={() => setEditingField("fullName")}
+            onCancel={handleFieldCancel}
+            onSave={() => handleFieldSave("fullName")}
+            onChange={(v) => setFieldValues((p) => ({ ...p, fullName: v }))}
+          />
+        </Section>
+
+        {/* 4. Username */}
+        <Section title="Username">
+          <FieldRow
+            icon={
+              <svg width="18" height="18" fill="none" stroke="#1e3a8a" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>
+              </svg>
+            }
+            value={fieldValues.username}
+            isEditing={editingField === "username"}
+            saving={saving}
+            onEdit={() => setEditingField("username")}
+            onCancel={handleFieldCancel}
+            onSave={() => handleFieldSave("username")}
+            onChange={(v) => setFieldValues((p) => ({ ...p, username: v }))}
+          />
+        </Section>
 
         {/* Danger zone */}
-        <div className="mt-10 pt-6 border-t border-zinc-100">
-          <p className="text-xs uppercase tracking-widest text-zinc-300 font-medium mb-3">
+        <div className="pt-4 mt-1 border-t border-zinc-100">
+          <p className="text-xs uppercase tracking-widest text-zinc-300 font-medium mb-2">
             Danger zone
           </p>
-          <div className="flex items-center justify-between p-3 bg-red-50 border border-red-100 rounded-lg">
+          <div className="flex items-center justify-between px-4 py-3 bg-red-50 border border-red-100 rounded-lg">
             <div>
               <p className="text-xs font-medium text-red-600">Delete account</p>
               <p className="text-[10px] text-red-400 mt-0.5">
                 Permanently remove your account and all data
               </p>
+              {deleteError && (
+                <p className="text-[10px] text-red-500 mt-0.5">{deleteError}</p>
+              )}
             </div>
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-red-200 text-red-500 bg-white hover:bg-red-600 hover:text-white hover:border-red-600 rounded-lg transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-red-200 text-red-500 bg-white hover:bg-red-600 hover:text-white hover:border-red-600 rounded-lg transition-all ml-4 shrink-0"
             >
-              <Trash2 size={11} />
               Delete
             </button>
           </div>
         </div>
 
-        {/* Sticky save / clear bar */}
-        {isEditing && (
-          <div className="absolute bottom-6 right-6 flex gap-2">
-            <button
-              onClick={handleClear}
-              disabled={saving}
-              className="px-4 py-2 text-sm border border-zinc-200 text-zinc-500 rounded-lg hover:border-zinc-300 transition-colors disabled:opacity-40"
-            >
-              Clear
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors disabled:opacity-40 flex items-center gap-2"
-            >
-              {saving && <Loader2 size={13} className="animate-spin" />}
-              {saving ? "Saving…" : "Save changes"}
-            </button>
-          </div>
-        )}
       </div>
     </>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-[11px] uppercase tracking-widest text-zinc-400 font-medium">{title}</p>
+      {children}
+    </div>
+  );
+}
+
+function FieldRow({ icon, value, readonly, isEditing, saving, onEdit, onCancel, onSave, onChange }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+      {!isEditing ? (
+        <div className="flex items-center gap-3">
+          <span className="text-gray-400 shrink-0">{icon}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-semibold text-gray-400 mb-0.5">Primary</p>
+            <p className="text-sm text-gray-800 font-medium leading-tight">{value}</p>
+          </div>
+          {!readonly && (
+            <button
+              onClick={onEdit}
+              className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors shrink-0"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+      ) : (
+        <div>
+          <div className="flex items-center gap-3 mb-2.5">
+            <span className="text-gray-400 shrink-0">{icon}</span>
+            <p className="text-[10px] font-semibold text-gray-400">Primary</p>
+            <div className="ml-auto flex items-center gap-3">
+              <button onClick={onCancel} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+                Cancel
+              </button>
+              <button
+                onClick={onSave}
+                disabled={saving}
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700 disabled:opacity-50 flex items-center gap-1 transition-colors"
+              >
+                {saving && <Loader2 size={11} className="animate-spin" />}
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+          <input
+            autoFocus
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full bg-gray-50 border border-blue-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-blue-100 transition-all"
+          />
+        </div>
+      )}
+    </div>
   );
 }

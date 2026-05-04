@@ -68,6 +68,21 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
       };
       script.onerror = () => {
         console.error("Failed to load Google script");
+        // Retry once after a delay
+        setTimeout(() => {
+          const retryScript = document.createElement("script");
+          retryScript.src = "https://accounts.google.com/gsi/client";
+          retryScript.async = true;
+          retryScript.defer = true;
+          retryScript.onload = () => {
+            console.log("Google script loaded successfully (retry)");
+            init();
+          };
+          retryScript.onerror = () => {
+            console.error("Failed to load Google script (retry)");
+          };
+          document.head.appendChild(retryScript);
+        }, 2000);
       };
       document.head.appendChild(script);
     } else if (window.google && window.google.accounts) {
