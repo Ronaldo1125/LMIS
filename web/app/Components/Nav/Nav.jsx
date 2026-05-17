@@ -304,7 +304,7 @@ const Nav = () => {
       <MobileNav />
 
       <nav
-        className={`hidden lg:block fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
+        className={`hidden lg:block fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-in-out ${
           isVisible ? "transform translate-y-0" : "transform -translate-y-full"
         }`}
         style={{
@@ -318,8 +318,8 @@ const Nav = () => {
         <div className="w-full h-20 flex items-center">
 
           {/* Logo */}
-          <div className="flex items-center px-4 sm:px-6 lg:px-8 min-w-[220px]">
-            <Link href="/" className="flex items-center gap-2">
+          <div className="flex items-center px-2 sm:px-4 lg:px-6 min-w-[220px]">
+            <Link href="/" className="flex items-center gap-1">
               <img
                 src="/assets/other/depdevlogo.png"
                 alt="Logo"
@@ -336,7 +336,7 @@ const Nav = () => {
                   transition: "color 0.3s ease",
                 }}
               >
-                V LIBRARY
+                5 LIBRARY
               </span>
             </Link>
           </div>
@@ -404,29 +404,22 @@ const Nav = () => {
                   className="relative p-2 rounded-full transition cursor-pointer"
                   style={{
                     background: "#fff",
-                    border: isTransparent
-                      ? "1.5px solid transparent"
-                      : showNotifications
+                    border: showNotifications
                       ? "1.5px solid #1e3a8a"
                       : "1.5px solid #e2e8f0",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                     transition: "border-color 0.2s ease, background 0.2s ease, transform 0.2s ease",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = "#bfcfeb";
-                    e.currentTarget.style.background = isTransparent
-                      ? "rgba(240,244,255,0.8)"
-                      : "#f0f4ff";
+                    e.currentTarget.style.background = "#f0f4ff";
                     e.currentTarget.style.transform = "scale(1.05)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = showNotifications
                       ? "#1e3a8a"
-                      : isTransparent
-                      ? "transparent"
                       : "#e2e8f0";
-                    e.currentTarget.style.background = isTransparent
-                      ? "rgba(255,255,255,0.9)"
-                      : "#fff";
+                    e.currentTarget.style.background = "#fff";
                     e.currentTarget.style.transform = "scale(1)";
                   }}
                 >
@@ -458,28 +451,21 @@ const Nav = () => {
                   className="flex items-center gap-2 rounded-full pr-3 pl-1 py-1 transition cursor-pointer"
                   style={{
                     background: "#fff",
-                    border: isTransparent
-                      ? "1.5px solid transparent"
-                      : isProfileOpen
+                    border: isProfileOpen
                       ? "1.5px solid #1e3a8a"
                       : "1.5px solid #e2e8f0",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                     transition: "border-color 0.2s ease, background 0.2s ease, transform 0.2s ease",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = isTransparent
-                      ? "rgba(240,244,255,0.8)"
-                      : "#f0f4ff";
+                    e.currentTarget.style.background = "#f0f4ff";
                     e.currentTarget.style.borderColor = "#bfcfeb";
                     e.currentTarget.style.transform = "scale(1.02)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = isTransparent
-                      ? "rgba(255,255,255,0.9)"
-                      : "#fff";
+                    e.currentTarget.style.background = "#fff";
                     e.currentTarget.style.borderColor = isProfileOpen
                       ? "#1e3a8a"
-                      : isTransparent
-                      ? "transparent"
                       : "#e2e8f0";
                     e.currentTarget.style.transform = "scale(1)";
                   }}

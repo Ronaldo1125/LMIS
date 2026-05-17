@@ -36,11 +36,9 @@ const CheckIcon = () => (
   </svg>
 );
 
-// ─── Register component ────────────────────────────────────────────────────
+
 const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
-  // "choose" → pick Google
-  // "complete" → fill in name / username
-  // "logging-in" → existing account detected, logging in silently
+  
   const [step, setStep] = useState("choose");
 
   const [googleCredential, setGoogleCredential] = useState(null);
@@ -56,7 +54,7 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
 
   const googleBtnRef = useRef(null);
 
-  // ── Inject / init Google GSI button ──────────────────────────────────────
+  
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID || step !== "choose") return;
 
@@ -96,7 +94,7 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
     }
   }, [step]);
 
-  // ── Google credential callback ────────────────────────────────────────────
+  
   const handleGoogleCallback = (response) => {
     setError("");
     const profile = decodeJwt(response.credential);
@@ -106,45 +104,38 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
     setEmail(profile.email    || "");
     setUsername((profile.email || "").split("@")[0].replace(/[^a-zA-Z0-9_]/g, ""));
 
-    // ── NEW: probe whether this Google email already has an account ──────
-    // We do a lightweight pre-check via the register endpoint.
-    // The backend returns HTTP 200 + already_exists:true for existing users.
+    
     probeExistingAccount(response.credential, profile);
   };
 
-  // ── Probe: is this email already registered? ──────────────────────────────
-  // Calls /google/register with a dummy username; the server:
-  //   • existing user  → 200  { already_exists: true, token, user }
-  //   • new user       → 409  (username taken) or 201 — we ignore both here
-  //     and just move the user to the "complete" step.
+  
   const probeExistingAccount = async (credential, profile) => {
     setLoading(true);
     try {
       const res  = await fetch(`${API_BASE}/auth/google/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Send a nonsense username — the server short-circuits on existing email
-        // before it ever validates the username.
+        
         body: JSON.stringify({ credential, full_name: profile.name || "probe", username: "__probe__" }),
       });
       const data = await res.json();
 
       if (res.ok && data.already_exists) {
-        // ── Existing account → log them in directly ──────────────────────
+        
         handleLoginSuccess(data, true);
       } else {
-        // ── New account → proceed to profile-completion step ─────────────
+        
         setStep("complete");
       }
     } catch {
-      // Network error — let them proceed; the submit will surface the real error
+      
       setStep("complete");
     } finally {
       setLoading(false);
     }
   };
 
-  // ── Shared success handler (new register + silent login) ──────────────────
+  
   const handleLoginSuccess = (data, isExisting = false) => {
     localStorage.setItem("token", data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
@@ -156,14 +147,14 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
     setTimeout(() => { onSuccess?.(data); onClose?.(); }, isExisting ? 1200 : 900);
   };
 
-  // ── Back button from "complete" step ─────────────────────────────────────
+  
   const goBack = () => {
     setStep("choose");
     setError(""); setSuccess("");
     setGoogleCredential(null);
   };
 
-  // ── Final submit (profile completion) ────────────────────────────────────
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); setSuccess("");
@@ -183,7 +174,7 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
       const data = await res.json();
 
       if (res.ok && data.already_exists) {
-        // Edge-case: account was created between probe and submit
+       
         handleLoginSuccess(data, true);
       } else if (res.status === 409) {
         setError(data.message || "That username is already taken. Please choose another.");
@@ -208,7 +199,7 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
       >
         <div className="relative w-full max-w-[420px] bg-white border border-black/8 rounded-[20px] p-8 pb-8 text-center font-inter shadow-[0_20px_60px_rgba(0,0,0,0.15),inset_0_0_0_1px_rgba(0,0,0,0.05)] backdrop-blur-[24px] max-h-[92vh] overflow-y-auto animate-fade-up">
 
-          {/* Close button */}
+         
           <button
             onClick={onClose}
             className="absolute top-4 right-4 bg-gray-100 border-none text-gray-600 text-xl cursor-pointer w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ease leading-none p-0 hover:bg-black/8 hover:text-blue-800"
@@ -216,7 +207,7 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
             ×
           </button>
 
-          {/* Back button (complete step only) */}
+          
           {step === "complete" && (
             <button
               onClick={goBack}
@@ -232,7 +223,7 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
             className="w-[120px] h-auto block mx-auto mb-7"
           />
 
-          {/* ── STEP: choose ──────────────────────────────────────────────── */}
+         
           {step === "choose" && (
             <>
               <h2 className="text-[22px] font-semibold text-black mb-1 tracking-[-0.3px]">
@@ -248,8 +239,7 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
                 </div>
               )}
 
-              {/* Google button — real GSI button overlaid invisibly for auth,
-                  styled button shown visually underneath */}
+             
               {GOOGLE_CLIENT_ID ? (
                 <div className="relative mb-2">
                   <div
@@ -293,7 +283,7 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
             </>
           )}
 
-          {/* ── STEP: logging-in (existing account detected) ──────────────── */}
+         
           {step === "logging-in" && (
             <div className="py-6 flex flex-col items-center gap-4">
               <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-1">
@@ -311,7 +301,7 @@ const Register = ({ onClose, onSwitchToLogin, onSuccess }) => {
             </div>
           )}
 
-          {/* ── STEP: complete (new user — fill in profile) ───────────────── */}
+          
           {step === "complete" && (
             <>
               <h2 className="text-[22px] font-semibold text-blue-800 mb-1 tracking-[-0.3px]">

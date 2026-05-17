@@ -287,7 +287,7 @@ const RelatedBooks = ({ currentBookId }) => {
         paddingRight: windowWidth < 640 ? "16px" : windowWidth < 1024 ? "24px" : "32px",
       }}>
         <div style={{
-          maxWidth: 1600,
+          maxWidth: 1900,
           margin: "0 auto",
         }}>
           <div style={{

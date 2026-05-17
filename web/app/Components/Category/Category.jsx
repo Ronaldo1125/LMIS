@@ -110,7 +110,7 @@ export default function Category() {
 
     <section id="categories" className="w-full bg-white py-10 sm:py-12 lg:py-16">
 
-      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12">
+      <div className="max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-12">
 
         <div className="mb-6 sm:mb-8">
 

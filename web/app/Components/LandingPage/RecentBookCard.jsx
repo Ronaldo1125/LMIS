@@ -15,6 +15,7 @@ const RecentBookCard = () => {
   const router = useRouter();
   const [recentBook, setRecentBook] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastValidBook, setLastValidBook] = useState(null); 
 
   useEffect(() => {
     const fetchRecentBook = async () => {
@@ -23,12 +24,26 @@ const RecentBookCard = () => {
         const token = getToken();
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        const res = await fetch(`${API_BASE}/api/search?page=1&limit=1`, { headers });
+        const res = await fetch(`${API_BASE}/api/search?page=1&limit=10`, { headers });
         if (!res.ok) throw new Error(`Server error ${res.status}`);
 
         const data = await res.json();
         const books = data.results || data.data || [];
-        if (books.length > 0) setRecentBook(books[0]);
+        
+        
+        const filteredBooks = books.filter(book => {
+          const title = book.title || "";
+          return title.length <= 35; 
+        });
+        
+        if (filteredBooks.length > 0) {
+          const newestShortBook = filteredBooks[0];
+          setRecentBook(newestShortBook);
+          setLastValidBook(newestShortBook); 
+        } else {
+         
+          setRecentBook(lastValidBook);
+        }
       } catch (err) {
         console.error("Failed to fetch recent book:", err);
       } finally {
@@ -45,9 +60,9 @@ const RecentBookCard = () => {
 
   if (loading) {
     return (
-      <div className="bg-[#f4f4f4] rounded shadow-sm p-4 flex gap-4 w-[240px] sm:w-[280px] animate-pulse">
+      <div className="bg-[#f4f4f4] rounded shadow-sm p-4 flex gap-4 min-w-[200px] sm:min-w-[240px] md:min-w-[260px] max-w-[300px] animate-pulse">
         <div className="w-[56px] h-[52px] sm:w-[64px] sm:h-[60px] bg-gray-200 rounded flex-shrink-0" />
-        <div className="flex flex-col justify-between flex-1 py-1">
+        <div className="flex flex-col justify-between flex-1 py-1 min-w-0">
           <div className="space-y-1.5">
             <div className="h-3 bg-gray-200 rounded w-3/4" />
             <div className="h-2.5 bg-gray-200 rounded w-1/2" />
@@ -61,11 +76,11 @@ const RecentBookCard = () => {
   if (!recentBook) return null;
 
   return (
-    <div onClick={handleReadHere} className="group/card relative bg-[#ffff] rounded shadow-sm  p-4 flex gap-4 w-[240px] sm:w-[280px] overflow-hidden transition-shadow duration-200 hover:shadow-md cursor-pointer">
-      {/* Sliding blue-900 fill from left */}
+    <div onClick={handleReadHere} className="group/card relative bg-[#ffff] rounded shadow-sm  p-4 flex gap-4 min-w-[200px] sm:min-w-[240px] md:min-w-[260px] max-w-[300px] overflow-hidden transition-shadow duration-200 hover:shadow-md cursor-pointer">
+      
       <div className="pointer-events-none absolute inset-0 bg-blue-900 translate-x-[-100%] group-hover/card:translate-x-0 transition-transform duration-300 ease-in-out" />
 
-      {/* Thumbnail */}
+     
       <div className="relative z-10 w-[56px] h-[52px] sm:w-[64px] sm:h-[60px] flex-shrink-0 rounded overflow-hidden shadow-sm">
         {recentBook.upload_id ? (
           <PDFThumbnail
@@ -82,10 +97,10 @@ const RecentBookCard = () => {
         )}
       </div>
 
-      {/* Info */}
+     
       <div className="relative z-10 flex flex-col justify-between flex-1 min-w-0">
         <div>
-          <h3 className="font-semibold text-gray-900 group-hover/card:text-white text-[12px] leading-snug line-clamp-2 mb-0.5 transition-colors duration-300">
+          <h3 className="font-semibold text-gray-900 group-hover/card:text-white text-[11px] leading-tight line-clamp-2 mb-0.5 transition-colors duration-300">
             {recentBook.title}
           </h3>
           <p className="text-gray-500 group-hover/card:text-blue-200 text-[11px] leading-snug transition-colors duration-300">

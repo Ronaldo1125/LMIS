@@ -58,8 +58,8 @@
 .bd-main-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; align-items: start; }
 @media (min-width: 1024px) { .bd-main-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 2.5rem; } }
 
-/* ── FIXED: box-sizing: border-box so padding is counted inside the 1600px, not added on top ── */
-.bd-page-wrap { max-width: 1600px; margin: 0 auto; padding: 20px 16px 48px; box-sizing: border-box; }
+/* ── FIXED: box-sizing: border-box so padding is counted inside the 1900px, not added on top ── */
+.bd-page-wrap { max-width: 1900px; margin: 0 auto; padding: 20px 16px 48px; box-sizing: border-box; }
 @media (min-width: 640px)  { .bd-page-wrap { padding: 24px 24px 56px; } }
 @media (min-width: 1024px) { .bd-page-wrap { padding: 28px 32px 64px; } }
 
@@ -104,7 +104,7 @@
 
 .bd-btn-icon { width: 40px; height: 45px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f5f5f5; color: #666; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
 .bd-btn-icon:hover { color: rgb(18,18,18); }
-.bd-btn-icon.on { background: #fbbf24; color: #000; }
+.bd-btn-icon.on { color: rgb(18,18,18); }
 
 .bd-divider { height: 1px; background: #f3f4f6; margin: 0 0 22px; }
 .bd-info-section { margin-bottom: 24px; }

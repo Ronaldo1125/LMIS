@@ -107,15 +107,17 @@ export default function PDFThumbnail({ uploadId, title = "Book cover", style, cl
 
         const deviceRatio = window.devicePixelRatio || 1;
 
-        const PADDING     = 12;
+        const isMobile = window.innerWidth < 640;
+        const PADDING     = isMobile ? 7 : 12;
         const containerW  = (wrapper.offsetWidth  || 100) - PADDING;
         const containerH  = (wrapper.offsetHeight || 133) - PADDING;
 
         const viewport = page.getViewport({ scale: 1 });
+        const scaleFactor = isMobile ? 0.70 : 0.7;
         const scale = Math.min(
           (containerW * deviceRatio) / viewport.width,
           (containerH * deviceRatio) / viewport.height,
-        ) * 0.8;
+        ) * scaleFactor;
 
         const scaled = page.getViewport({ scale });
 

@@ -324,7 +324,7 @@ const News = () => {
 
           padding: config.headerPadding,
 
-          maxWidth: 1700,
+          maxWidth: 1900,
 
           marginLeft: "auto",
 
@@ -466,7 +466,7 @@ const News = () => {
 
         {error && (
 
-          <div style={{ maxWidth: 1700, margin: "0 auto", padding: `0 ${config.contentPadding} 40px`, color: "#dc2626", fontSize: 12 }}>
+          <div style={{ maxWidth: 1900, margin: "0 auto", padding: `0 ${config.contentPadding} 40px`, color: "#dc2626", fontSize: 12 }}>
 
             Failed to load news: {error}
 
@@ -480,7 +480,7 @@ const News = () => {
 
         <div style={{
 
-          maxWidth: 1700,
+          maxWidth: 1900,
 
           margin: "0 auto",
 

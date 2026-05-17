@@ -17,7 +17,7 @@ const ReportsSection = () => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // ── Drag state (all in refs to avoid re-renders during RAF loop) ──
+  
   const isDragging   = useRef(false);
   const startX       = useRef(0);
   const scrollLeft   = useRef(0);
@@ -26,18 +26,18 @@ const ReportsSection = () => {
   const rafId        = useRef(null);
   const hasDragged   = useRef(false);
 
-  // We still need a React state version of hasDragged for the click guard
+  
   const [hasDraggedState, setHasDraggedState] = useState(false);
 
   const scrollRef = useRef(null);
 
   const getConfig = () => {
-    if (windowWidth < 640)   return { cardWidth: 120, cardHeight: 160, gap: 16, padX: 16, cols: 2 };
-    if (windowWidth < 768)   return { cardWidth: 140, cardHeight: 187, gap: 20, padX: 24, cols: 3 };
-    if (windowWidth < 1024)  return { cardWidth: 140, cardHeight: 187, gap: 24, padX: 32, cols: 4 };
-    if (windowWidth < 1280)  return { cardWidth: 160, cardHeight: 213, gap: 28, padX: 32, cols: 5 };
-    if (windowWidth <= 1440) return { cardWidth: 170, cardHeight: 227, gap: 32, padX: 32, cols: 5 };
-    return                          { cardWidth: 180, cardHeight: 240, gap: 32, padX: 48, cols: 6 };
+    if (windowWidth < 640)   return { cardWidth: 155, cardHeight: 207, gap: 16, padX: 16, cols: 2 };
+    if (windowWidth < 768)   return { cardWidth: 155, cardHeight: 207, gap: 20, padX: 24, cols: 3 };
+    if (windowWidth < 1024)  return { cardWidth: 160, cardHeight: 213, gap: 24, padX: 32, cols: 4 };
+    if (windowWidth < 1280)  return { cardWidth: 180, cardHeight: 240, gap: 28, padX: 32, cols: 5 };
+    if (windowWidth <= 1440) return { cardWidth: 190, cardHeight: 253, gap: 32, padX: 32, cols: 5 };
+    return                          { cardWidth: 200, cardHeight: 267, gap: 32, padX: 48, cols: 6 };
   };
 
   const cfg = getConfig();
@@ -71,8 +71,7 @@ const ReportsSection = () => {
     const el = scrollRef.current;
     if (!el) return;
     
-    // Simple logic: if there are books, assume scrolling is possible
-    // Let the scroll behavior handle the actual limits
+    
     const hasBooks = books.length > 0;
     const isAtStart = el.scrollLeft <= 4;
     const isAtEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 4;
@@ -88,13 +87,11 @@ const ReportsSection = () => {
     const handleScroll = () => updateScrollButtons();
     el.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Initial check and resize observer
     const resizeObserver = new ResizeObserver(() => {
       updateScrollButtons();
     });
     resizeObserver.observe(el);
     
-    // Initial check after content loads
     setTimeout(updateScrollButtons, 100);
     
     return () => {
@@ -110,8 +107,6 @@ const ReportsSection = () => {
     el.scrollBy({ left: dir === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
   };
 
-  // ── Momentum helpers ──
-
   const cancelMomentum = () => {
     if (rafId.current) {
       cancelAnimationFrame(rafId.current);
@@ -123,7 +118,6 @@ const ReportsSection = () => {
     const el = scrollRef.current;
     if (!el) return;
 
-    // Decelerate at ~92% per frame (~60 fps → feels natural)
     velocity.current *= 0.92;
 
     if (Math.abs(velocity.current) < 0.5) {
@@ -135,8 +129,6 @@ const ReportsSection = () => {
     el.scrollLeft -= velocity.current;
     rafId.current = requestAnimationFrame(applyMomentum);
   };
-
-  // ── Mouse events ──
 
   const handleMouseDown = (e) => {
     cancelMomentum();
@@ -157,7 +149,6 @@ const ReportsSection = () => {
     const x    = e.pageX - scrollRef.current.offsetLeft;
     const walk = x - startX.current;
 
-    // Update velocity for momentum (negative: scroll follows finger direction)
     velocity.current = e.pageX - lastX.current;
     lastX.current    = e.pageX;
 
@@ -172,7 +163,6 @@ const ReportsSection = () => {
   const handleMouseUp = () => {
     isDragging.current = false;
     if (scrollRef.current) scrollRef.current.style.cursor = "grab";
-    // Kick off momentum coast
     rafId.current = requestAnimationFrame(applyMomentum);
   };
 
@@ -182,8 +172,6 @@ const ReportsSection = () => {
     if (scrollRef.current) scrollRef.current.style.cursor = "grab";
     rafId.current = requestAnimationFrame(applyMomentum);
   };
-
-  // ── Touch events ──
 
   const handleTouchStart = (e) => {
     cancelMomentum();
@@ -218,7 +206,6 @@ const ReportsSection = () => {
     rafId.current = requestAnimationFrame(applyMomentum);
   };
 
-  // ── Click guard ──
   const handleBookClick = (book) => {
     if (hasDragged.current) return;
     const id = book.book_id ?? book.id;
@@ -226,7 +213,6 @@ const ReportsSection = () => {
     router.push(`/book/${id}`);
   };
 
-  // Cleanup RAF on unmount
   useEffect(() => () => cancelMomentum(), []);
 
   const NavBtn = ({ dir, disabled, onClick }) => (
@@ -318,7 +304,7 @@ const ReportsSection = () => {
       <section style={{ background: "#fff", borderTop: "1px solid #f0f2f5" }}>
        
         <div style={{
-          maxWidth: 1700,
+          maxWidth: 1900,
           margin: "0 auto",
           overflow: "hidden",
           padding: windowWidth < 640

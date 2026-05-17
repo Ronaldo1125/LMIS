@@ -19,7 +19,6 @@ export default function ProfileSidebar({
   return (
     <div className="w-64 border-r border-gray-100 bg-white flex flex-col px-4 py-8 shrink-0">
 
-      {/* Avatar + identity */}
       <div className="flex flex-col items-center text-center px-2 mb-8">
         <div className="w-20 h-20 rounded-full overflow-hidden ring-2 ring-gray-100 mb-4">
           <img src={dicebearUrl(avatarSeed)} alt="avatar" className="w-full h-full object-cover" />
@@ -37,7 +36,6 @@ export default function ProfileSidebar({
         )}
       </div>
 
-      {/* Nav */}
       <nav className="flex flex-col gap-1 w-full">
         {MENU.map(({ id, label, icon: Icon }) => (
           <button
@@ -59,7 +57,6 @@ export default function ProfileSidebar({
         ))}
       </nav>
 
-      {/* Logout */}
       <div className="mt-auto w-full">
         <div className="border-t border-gray-100 pt-4">
           <button

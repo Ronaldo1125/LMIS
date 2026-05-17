@@ -160,7 +160,6 @@ export default function ProfileTab({ user, onUserUpdate }) {
           <p className="text-xs text-zinc-400">Manage your personal information</p>
         </div>
 
-        {/* 1. Avatar */}
         <AvatarPicker
           avatarSeed={avatarSeed}
           suggestions={suggestions}
@@ -172,7 +171,6 @@ export default function ProfileTab({ user, onUserUpdate }) {
           onSave={handleSaveAvatar}
         />
 
-        {/* Role badge */}
         {user?.role && (
           <div className="flex items-center gap-2 px-3 py-2 bg-zinc-50 border border-zinc-100 rounded-lg">
             <span className="text-xs text-zinc-400">Account type</span>
@@ -191,7 +189,6 @@ export default function ProfileTab({ user, onUserUpdate }) {
           </p>
         )}
 
-        {/* 2. Email */}
         <Section title="Email">
           <FieldRow
             icon={
@@ -205,7 +202,6 @@ export default function ProfileTab({ user, onUserUpdate }) {
           />
         </Section>
 
-        {/* 3. Name */}
         <Section title="Name">
           <FieldRow
             icon={
@@ -224,7 +220,6 @@ export default function ProfileTab({ user, onUserUpdate }) {
           />
         </Section>
 
-        {/* 4. Username */}
         <Section title="Username">
           <FieldRow
             icon={
@@ -243,7 +238,6 @@ export default function ProfileTab({ user, onUserUpdate }) {
           />
         </Section>
 
-        {/* Danger zone */}
         <div className="pt-4 mt-1 border-t border-zinc-100">
           <p className="text-xs uppercase tracking-widest text-zinc-300 font-medium mb-2">
             Danger zone

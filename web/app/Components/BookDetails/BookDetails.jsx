@@ -69,9 +69,7 @@ function BibliographicDetails({ book, accessionNo }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// Animated Check — payment-success style
-// ─────────────────────────────────────────────
+
 function AnimatedCheckCircle({ visible }) {
   return (
     <div style={{
@@ -108,9 +106,7 @@ function AnimatedCheckCircle({ visible }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// Bookmark Toast
-// ─────────────────────────────────────────────
+
 function BookmarkToast({ visible, onView }) {
   const [checkVisible, setCheckVisible] = useState(false);
 
@@ -402,7 +398,7 @@ const BookDetails = ({ bookId }) => {
                     className={`bd-btn-icon ${bookmarked ? "on" : ""}`}
                     title={bookmarked ? "Remove bookmark" : "Bookmark"}
                   >
-                    {bookmarkLoading ? <Spinner /> : <Bookmark size={17} />}
+                    {bookmarkLoading ? <Spinner /> : bookmarked ? <BookmarkCheck size={17} /> : <Bookmark size={17} />}
                   </button>
                 )}
                 {!isLoggedIn && (

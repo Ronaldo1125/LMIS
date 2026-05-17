@@ -397,11 +397,11 @@ const MobileNav = () => {
   return (
     <>
       <div className="lg:hidden" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backdropFilter: "blur(12px)", background: (isLandingPage && !scrolled) ? "transparent" : "#fff", borderBottom: (isLandingPage && !scrolled) ? "none" : "1px solid #f0f0f0" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px" }}>
-          <Link href="/" onClick={closeMenu} style={{ display: "flex", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 12px" }}>
+          <Link href="/" onClick={closeMenu} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
             <img src="/assets/other/depdevlogo.png" alt="Logo" style={{ height: "30px", width: "auto", filter: (isLandingPage && !scrolled) ? "brightness(0) invert(1)" : "none" }} />
             <span style={{ fontSize: "14px", fontWeight: "400", color: (isLandingPage && !scrolled) ? "#fff" : "#1e3a8a" }}>
-              V LIBRARY
+              5 LIBRARY
             </span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -455,7 +455,7 @@ const MobileNav = () => {
           display: "flex", flexDirection: "column", overflowY: "auto", minHeight: 0,
         }}
       >
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", padding: "16px 20px 14px", borderBottom: "1px solid #f2f2f2" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", padding: "16px 20px 14px", borderBottom: "1px solid #e5e5e5" }}>
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             {isProfileOpen && (
               <button
