@@ -205,7 +205,6 @@ function App() {
         flex: 1,
         overflowX: 'hidden',
         overflowY: 'auto',
-        paddingLeft: '1.5rem',
         background: dark ? '#07111f' : '#f8fafc',
         transition: 'background 0.45s ease',
       }}>

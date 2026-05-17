@@ -6,6 +6,7 @@ import RecentAdditions from "./Components/RecentAdditions/RecentAdditions";
 import Category from "./Components/Category/Category";
 import News from "./Components/News/News";
 import Feedback from "./Components/Feedback/Feedback";
+import PopupFeedback from "./Components/Feedback/PopupFeedback";
 import Footer from "./Components/Footer/Footer";
 import ReportsSection from "./Components/Reports/Reports";
 import ThesisPapersSection from "./Components/ThesisPapers/ThesisPapers";
@@ -14,7 +15,6 @@ import { useEffect } from "react";
 export default function Page() {
 
   useEffect(() => {
-    // Only handle hash changes from user interactions, not automatic page loads
     const handleHashChange = () => {
       const hash = window.location.hash;
       if (hash) {
@@ -31,9 +31,7 @@ export default function Page() {
   }, []);
 
   return (
-
     <div>
-
       <LandingPage />
 
       <div id="recent-additions">
@@ -44,16 +42,13 @@ export default function Page() {
         <FrequentlySearched />
       </div>
 
-       <div id="thesis-papers">
+      <div id="thesis-papers">
         <ThesisPapersSection />
       </div>
 
       <div id="reports">
         <ReportsSection />
-
-      <Category />
-
-     
+        <Category />
       </div>
 
       <div id="news">
@@ -61,11 +56,9 @@ export default function Page() {
       </div>
 
       <Feedback />
-
       <Footer />
 
+      <PopupFeedback />
     </div>
-
   );
-
 }
