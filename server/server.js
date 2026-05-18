@@ -15,8 +15,12 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
-  'http://192.168.1.94:3000',
-  'http://192.168.1.94:3001'
+  'http://192.168.1.94:3000',   // old IP, keep or remove
+  'http://192.168.1.94:3001',
+  'http://192.168.1.236:3000',  // ← your new IP
+  'http://192.168.1.236:3001',
+  'http://192.168.1.147:3000',
+  'http://192.168.1.147:3001',
 ].filter(Boolean);
 
 app.use(cors({
@@ -113,9 +117,10 @@ app.use((req, res) => {
 
 const startServer = async () => {
   try {
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
+    app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Network access: http://192.168.1.147:${PORT}`);
+  });
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

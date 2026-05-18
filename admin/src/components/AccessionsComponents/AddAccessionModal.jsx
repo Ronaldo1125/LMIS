@@ -34,6 +34,8 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
   const searchRef = useRef(null)
   const resultsRef = useRef(null)
   const debounceRef = useRef(null)
+  // Track whether pointer is inside dropdown to prevent premature close
+  const isPointerInDropdown = useRef(false)
 
   // ── Reset local state when modal closes ──────────────────────────────────────
   useEffect(() => {
@@ -129,6 +131,7 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
     setSearchQuery(book.title)
     setShowResults(false)
     setAutofilled(true)
+    isPointerInDropdown.current = false
   }
 
   const handleClearAutofill = () => {
@@ -308,7 +311,11 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
                 }}
                 onBlur={e => {
                   e.target.style.borderColor = dark ? '#1a3356' : '#93c5fd'
-                  setTimeout(() => setShowResults(false), 150)
+                  // Only hide dropdown if pointer is not inside it
+                  // This fixes touchpad/tap: onBlur fires before onClick on touch devices
+                  if (!isPointerInDropdown.current) {
+                    setShowResults(false)
+                  }
                 }}
               />
               {autofilled && (
@@ -322,6 +329,10 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
               {showResults && (
                 <div
                   ref={resultsRef}
+                  // Set flag on any pointer/touch enter so blur doesn't close the dropdown
+                  onMouseEnter={() => { isPointerInDropdown.current = true }}
+                  onMouseLeave={() => { isPointerInDropdown.current = false }}
+                  onTouchStart={() => { isPointerInDropdown.current = true }}
                   style={{
                     position: 'absolute', zIndex: 30, marginTop: '0.25rem',
                     width: '100%',
@@ -351,6 +362,14 @@ const AddAccessionModal = ({ isOpen, onClose, onSubmit, newAccession, setNewAcce
                         <li key={book.id} style={{ borderBottom: `1px solid ${dropdownBorder}` }}>
                           <button
                             type="button"
+                            // onMouseDown fires before onBlur — preventDefault keeps focus on
+                            // the input so the blur→hide sequence never runs on mouse clicks.
+                            // onTouchEnd handles tap on touch/trackpad devices.
+                            onMouseDown={e => e.preventDefault()}
+                            onTouchEnd={e => {
+                              e.preventDefault()
+                              handleSelectBook(book)
+                            }}
                             onClick={() => handleSelectBook(book)}
                             style={{
                               width: '100%', textAlign: 'left',

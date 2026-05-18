@@ -97,7 +97,7 @@ const RecentAdditions = () => {
     let isMounted = true;
     const fetchBooks = async () => {
       try {
-        const r = await fetch(`http://localhost:5000/api/acquisitions`);
+       const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/acquisitions`);
         if (!r.ok) throw new Error(`Server error ${r.status}`);
         const data = await r.json();
         if (isMounted) { setBooks(data.data ?? []); setError(null); }
