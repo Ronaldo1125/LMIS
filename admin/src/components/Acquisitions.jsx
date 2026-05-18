@@ -72,10 +72,10 @@ const Acquisitions = ({ dark }) => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = acquisitionsData.filter(book =>
-        book.title.toLowerCase().includes(query) ||
-        book.author.toLowerCase().includes(query) ||
-        (book.accession_no && book.accession_no.toLowerCase().includes(query))
-      );
+      (book.title?.toLowerCase().includes(query) ?? false) ||
+      (book.author?.toLowerCase().includes(query) ?? false) ||
+      (book.accession_no?.toLowerCase().includes(query) ?? false)
+    );
     }
     const sorted = [...filtered];
     if (sortBy === 'alphabetical') {
