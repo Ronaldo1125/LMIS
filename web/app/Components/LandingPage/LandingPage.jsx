@@ -37,23 +37,23 @@ const LandingPage = () => {
   return (
     <section className="relative w-full h-screen min-h-10 lg:min-h-160 overflow-hidden bg-black">
 
-      {/* Background image */}
+     
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url('/assets/other/bg2026.png')" }}
       />
 
-      {/* Overlay */}
+     
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-linear-to-r from-black/22 via-black/13 to-transparent" />
         <div className="absolute inset-0 bg-black/7" />
       </div>
 
-      {/* Content */}
+     
       <div className="relative z-10 h-full flex flex-col">
         <Nav />
 
-   <div className="flex-1 flex items-center sm:items-start sm:pt-40 md:pt-44 lg:pt-48 xl:pt-52">
+   <div className="flex-1 flex items-center sm:items-start sm:pt-40 md:pt-44 lg:pt-48 xl:pt-52 2xl:pt-60">
           <div className="w-full px-6 md:px-10 lg:px-16 2xl:px-20 pb-12 md:pb-16">
             <div className="max-w-[480px] sm:max-w-[540px] md:max-w-[620px] lg:max-w-[700px] xl:max-w-[740px] 2xl:max-w-[860px]">
 
@@ -118,7 +118,7 @@ const LandingPage = () => {
                   </div>
                 </form>
 
-                {/* Advanced Search: flows below on mobile, absolute on sm+ */}
+               
                 <button
                   type="button"
                   onClick={handleAdvancedSearch}
@@ -135,7 +135,7 @@ const LandingPage = () => {
           </div>
         </div>
 
-        {/* RecentBookCard — bottom-right */}
+       
         <div className="absolute bottom-4 right-4 lg:bottom-4 lg:right-4 xl:bottom-5 xl:right-8">
           <RecentBookCard />
         </div>

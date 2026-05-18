@@ -1,37 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 
 const Footer = () => {
-  const [windowWidth, setWindowWidth] = useState(0);
   const router = useRouter();
 
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const isMobile = windowWidth > 0 && windowWidth < 640;
-  const isTablet = windowWidth >= 640 && windowWidth < 768;
-
-  const textSize = isMobile ? "text-xs" : "text-sm";
-  const titleSize = isMobile ? "text-base" : "text-lg";
-  const footerPadding = isMobile ? "py-12 px-4" : isTablet ? "py-14 px-8" : "py-16 px-20";
-  const gridCols = isMobile ? "grid-cols-1" : isTablet ? "grid-cols-2" : "grid-cols-4";
-  const gridGap = isMobile ? "gap-8" : isTablet ? "gap-12" : "gap-16";
-  const socialGap = isMobile ? "space-x-4" : isTablet ? "space-x-5" : "space-x-6";
-  const bottomMargin = isMobile ? "mt-4" : "mt-0";
-
-  const handleHome = () => {
-    router.push("/");
-  };
-
-  const handleBrowse = () => {
-    router.push("/search");
-  };
+  const handleHome = () => router.push("/");
+  const handleBrowse = () => router.push("/search");
 
   const handleNewRelease = (section = "recent") => {
     if (section === "recent") {
@@ -59,107 +35,295 @@ const Footer = () => {
 
   const getQuickLinkAction = (link) => {
     switch (link) {
-      case "Home":
-        return handleHome;
-      case "Browse":
-        return handleBrowse;
-      case "Recent Additions":
-        return () => handleNewRelease("recent");
-      case "News":
-        return () => handleNewRelease("news");
-      default:
-        return () => {};
+      case "Home": return handleHome;
+      case "Browse": return handleBrowse;
+      case "Recent Additions": return () => handleNewRelease("recent");
+      case "News": return () => handleNewRelease("news");
+      default: return () => {};
     }
   };
 
   return (
     <>
-      <footer className={`w-full bg-blue-950 text-white ${footerPadding}`}>
-        <div className="max-w-[1600px] mx-auto w-full">
-          <div className={`grid ${gridCols} ${gridGap}`}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .lmis-footer {
+          background-color: #172554;
+          padding: 4rem 3rem 2.5rem;
+          color: #ffffff;
+          font-family: inherit;
+          display: flex;
+          flex-direction: column;
+        }
 
-            
-              <div className="flex items-start">
-                <div className="w-full max-w-[160px]">
-                  <img
-                    src="/assets/other/depdevlogo.png"
-                    alt="Depdev Logo"
-                    className="w-full h-auto object-contain filter brightness-0 invert"
-                    style={{ maxHeight: '48px', width: 'auto', maxWidth: '100%' }}
-                  />
-                </div>
-              </div>
+        .lmis-footer-inner {
+          max-width: 1900px;
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          width: 100%;
+        }
 
-            
-              <div>
-                <h3 className={`${titleSize} font-semibold mb-4`}>Quick Links</h3>
-                <ul className="space-y-2">
-                  {["Home", "Browse", "Recent Additions", "News"].map((link) => (
-                    <li key={link}>
-                      <button 
-                        onClick={getQuickLinkAction(link)}
-                        className={`${textSize} text-gray-300 hover:text-[#D0674B] transition-colors text-left w-full bg-transparent border-none cursor-pointer`}
-                      >
-                        {link}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+        .lmis-footer-grid {
+          display: grid;
+          grid-template-columns: 1.2fr 1fr 1.4fr 0.9fr 0.9fr;
+          gap: 3rem;
+          margin-bottom: 5rem;
+        }
 
-          
-              <div>
-                <h3 className={`${titleSize} font-semibold mb-4`}>Resources</h3>
-                <ul className="space-y-2">
-                  {[
-                    { label: "Books", category: "books" },
-                    { label: "Sourcebooks", category: "sourcebooks" },
-                    { label: "Periodicals", category: "periodicals" },
-                    { label: "Thesis / Research papers", category: "thesis" },
-                    { label: "Statute / Law / Legal documents", category: "statute" },
-                    { label: "Guide / Manuals", category: "guides" },
-                    { label: "Report", category: "reports" },
-                    { label: "Reference Materials", category: "reference" },
-                  ].map((resource) => (
-                    <li key={resource.category}>
-                      <a href={`/search?category=${resource.category}`} className={`${textSize} text-gray-300 hover:text-[#D0674B] transition-colors`}>
-                        {resource.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+        .lmis-footer-col-title {
+          font-size: 0.85rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 1.5rem;
+          color: #ffffff;
+        }
 
-             
-              <div>
-                <h3 className={`${titleSize} font-semibold mb-4`}>Contact</h3>
-                <ul className="space-y-2">
-                  <li className={`${textSize} text-gray-300`}>Email: info@lmis.edu</li>
-                  <li className={`${textSize} text-gray-300`}>Phone: +1 (555) 123-4567</li>
-                </ul>
-              </div>
+        .lmis-footer-links {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.7rem;
+        }
+
+        .lmis-footer-link {
+          color: rgba(255,255,255,0.7);
+          text-decoration: none;
+          font-size: 1rem;
+          font-weight: 400;
+          transition: color 0.2s;
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          text-align: left;
+        }
+
+        .lmis-footer-link:hover {
+          color: #ffffff;
+        }
+
+        .lmis-footer-text {
+          color: rgba(255,255,255,0.7);
+          font-size: 1rem;
+          font-weight: 400;
+          margin: 0;
+          line-height: 1.7;
+        }
+
+        .lmis-footer-bottom {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-top: 1.5rem;
+          border-top: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .lmis-footer-bottom-mobile {
+          display: none;
+          flex-direction: column;
+          align-items: center;
+          padding-top: 1.5rem;
+          border-top: 1px solid rgba(255,255,255,0.15);
+          gap: 0.3rem;
+        }
+
+        .lmis-footer-copyright {
+          font-size: 0.85rem;
+          color: rgba(255,255,255,0.5);
+          font-weight: 400;
+          margin: 0;
+        }
+
+        .lmis-footer-dev {
+          font-size: 0.85rem;
+          color: rgba(255,255,255,0.5);
+          font-weight: 400;
+          margin: 0;
+        }
+
+        .lmis-footer-dev a {
+          color: #ffffff;
+          text-decoration: none;
+          font-weight: 500;
+        }
+
+        .lmis-footer-dev a:hover {
+          text-decoration: underline;
+        }
+
+        .lmis-footer-mobile-only {
+          display: none;
+        }
+
+        @media (max-width: 1024px) {
+          .lmis-footer-grid {
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2.5rem;
+          }
+          .lmis-footer-brand {
+            grid-column: span 3;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .lmis-footer {
+            padding: 3rem 1.5rem 2rem;
+          }
+          .lmis-footer-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+          }
+          .lmis-footer-brand {
+            grid-column: span 2;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .lmis-footer {
+            padding: 2.5rem 1.5rem 1.5rem;
+          }
+          .lmis-footer-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem 2rem;
+            margin-bottom: 0;
+          }
+          .lmis-footer-brand {
+            grid-column: span 2;
+          }
+          .lmis-footer-col-contact {
+            order: 2;
+          }
+          .lmis-footer-col-quicklinks {
+            order: 1;
+          }
+          .lmis-footer-col-resources {
+            order: 3;
+          }
+          .lmis-footer-col-support {
+            order: 4;
+          }
+          .lmis-footer-bottom {
+            display: none;
+          }
+          .lmis-footer-bottom-mobile {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .lmis-footer-mobile-only {
+            display: block;
+          }
+          .lmis-footer-links {
+            gap: 0.4rem;
+          }
+          .lmis-footer-copyright {
+            color: #ffffff;
+          }
+        }
+      `}} />
+
+      <footer className="lmis-footer">
+        <div className="lmis-footer-inner">
+          <div className="lmis-footer-grid">
+            {/* Logo */}
+            <div className="lmis-footer-brand">
+              <img
+                src="/assets/other/depdevlogo.png"
+                alt="Depdev Logo"
+                style={{ width: 160, height: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.9 }}
+              />
             </div>
 
-        
-            <div className="mt-4 pt-4 border-t border-gray-700">
-              <div className="flex flex-col md:flex-row justify-between items-center">
-                <p className={`${textSize} text-gray-400 text-center md:text-left`}>
-                  {new Date().getFullYear()} LMIS. All rights reserved. Developed by: <a href="https://www.linkedin.com/in/jake-macua/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Jake M.</a>, <a href="https://www.linkedin.com/in/michaelalatraca/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Michael A.</a>, <a href="https://www.linkedin.com/in/charles-loneza-282b15387/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Charles L.</a>, <a href="https://www.linkedin.com/in/anzelbotin/" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">Anzel Victor B.</a>
-                </p>
-                <div className={`flex ${socialGap} ${bottomMargin} md:mt-0 mt-4`}>
-                  <a href="/privacy-terms" className={`${textSize} text-gray-400 hover:text-[#D0674B] transition-colors`}>
-                    Privacy Policy
-                  </a>
-                  <a href="/privacy-terms" className={`${textSize} text-gray-400 hover:text-[#D0674B] transition-colors`}>
-                    Terms of Service
-                  </a>
-                  <a href="#" className={`${textSize} text-gray-400 hover:text-[#D0674B] transition-colors`}>
-                    Support
-                  </a>
-                </div>
-              </div>
+            {/* Quick Links */}
+            <div className="lmis-footer-col-quicklinks">
+              <h4 className="lmis-footer-col-title">Quick Links</h4>
+              <ul className="lmis-footer-links">
+                {["Home", "Browse", "Recent Additions", "News"].map((link) => (
+                  <li key={link}>
+                    <button className="lmis-footer-link" onClick={getQuickLinkAction(link)}>
+                      {link}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div className="lmis-footer-col-resources">
+              <h4 className="lmis-footer-col-title">Resources</h4>
+              <ul className="lmis-footer-links">
+                {[
+                  { label: "Books", category: "books" },
+                  { label: "Sourcebooks", category: "sourcebooks" },
+                  { label: "Periodicals", category: "periodicals" },
+                  { label: "Thesis / Research papers", category: "thesis" },
+                  { label: "Statute / Law / Legal documents", category: "statute" },
+                  { label: "Guide / Manuals", category: "guides" },
+                  { label: "Report", category: "reports" },
+                  { label: "Reference Materials", category: "reference" },
+                ].map((resource) => (
+                  <li key={resource.category}>
+                    <a href={`/search?category=${resource.category}`} className="lmis-footer-link">
+                      {resource.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div className="lmis-footer-col-contact">
+              <h4 className="lmis-footer-col-title">Contact</h4>
+              <ul className="lmis-footer-links">
+                <li><span className="lmis-footer-text">Email: info@lmis.edu</span></li>
+                <li><span className="lmis-footer-text">Phone: +1 (555) 123-4567</span></li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div className="lmis-footer-col-support">
+              <h4 className="lmis-footer-col-title">Support</h4>
+              <ul className="lmis-footer-links">
+                <li><a href="/privacy-terms" className="lmis-footer-link">Privacy Policy</a></li>
+                <li><a href="/privacy-terms" className="lmis-footer-link">Terms of Service</a></li>
+              </ul>
             </div>
           </div>
+
+          <div className="lmis-footer-mobile-only" style={{ marginTop: '2.5rem', marginBottom: '4rem' }}>
+            <h4 className="lmis-footer-col-title">Developed by</h4>
+            <ul className="lmis-footer-links">
+              <li><a href="https://www.linkedin.com/in/jake-macua/" target="_blank" rel="noopener noreferrer" className="lmis-footer-link">Jake Macua</a></li>
+              <li><a href="https://www.linkedin.com/in/anzelbotin/" target="_blank" rel="noopener noreferrer" className="lmis-footer-link">Anzel Botin</a></li>
+              <li><a href="https://www.linkedin.com/in/michaelalatraca/" target="_blank" rel="noopener noreferrer" className="lmis-footer-link">Mich Alatraca</a></li>
+              <li><a href="https://www.linkedin.com/in/charles-loneza-282b15387/" target="_blank" rel="noopener noreferrer" className="lmis-footer-link">Charles Ethan Loneza</a></li>
+            </ul>
+          </div>
+
+          <div className="lmis-footer-bottom">
+            <p className="lmis-footer-copyright">
+              © {new Date().getFullYear()} All rights reserved.
+            </p>
+            <p className="lmis-footer-dev">
+              Developed by: <a href="https://www.linkedin.com/in/jake-macua/" target="_blank" rel="noopener noreferrer">Jake M.</a>, <a href="https://www.linkedin.com/in/michaelalatraca/" target="_blank" rel="noopener noreferrer">Michael A.</a>, <a href="https://www.linkedin.com/in/charles-loneza-282b15387/" target="_blank" rel="noopener noreferrer">Charles L.</a>, <a href="https://www.linkedin.com/in/anzelbotin/" target="_blank" rel="noopener noreferrer">Anzel Victor B.</a>
+            </p>
+          </div>
+
+          <div className="lmis-footer-bottom-mobile">
+            <p className="lmis-footer-copyright">
+              DEPDEV LMIS
+            </p>
+            <p className="lmis-footer-copyright">
+              © {new Date().getFullYear()} All rights reserved.
+            </p>
+          </div>
+        </div>
       </footer>
     </>
   );

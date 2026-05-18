@@ -64,7 +64,7 @@ export default function Feedback() {
         }
 
         .feedback-inner {
-          max-width: 1700px;
+          max-width: 1900px;
           margin: 0 auto;
           padding: 40px 60px 50px;
           display: flex;
@@ -188,7 +188,7 @@ export default function Feedback() {
 
         .fb-textarea {
           width: 100%;
-          min-height: 80px;
+          min-height: 120px;
           padding: 12px;
           border: 1px solid #ddd;
           border-radius: 8px;
@@ -268,7 +268,7 @@ export default function Feedback() {
           .fb-textarea {
             font-size: 13px;
             padding: 10px;
-            min-height: 70px;
+            min-height: 100px;
           }
           .fb-submit-btn {
             padding: 8px 20px;
@@ -317,7 +317,7 @@ export default function Feedback() {
           .fb-textarea {
             font-size: 12px;
             padding: 8px;
-            min-height: 60px;
+            min-height: 90px;
             border-radius: 6px;
           }
           .fb-submit-btn {
@@ -341,10 +341,10 @@ export default function Feedback() {
           <div className="fb-content-left">
             <h2 className="fb-headline">
               HOW WAS YOUR VISIT?<br />
-              <span>TELL US WHAT YOU THINK</span>
+              <span>We'd love to hear from you!</span>
             </h2>
             <p className="fb-description">
-              Your feedback helps us improve our library services and create a better experience for everyone. Share your thoughts and wishlist books with us.
+              Your thoughts help us make our library better for everyone. Share your feedback, suggest improvements, or tell us which books you'd love to see on our shelves. Together, we can create a library experience you'll truly enjoy.
             </p>
           </div>
 
@@ -357,7 +357,7 @@ export default function Feedback() {
 
             {showFeedback && !submitted && (
               <div className="fb-feedback-modal">
-                <p className="fb-question">What was your experience while using library?</p>
+                <p className="fb-question">How was your library experience?<br />Pick the emoji that best shows your experience.</p>
 
                 <div className="fb-emoji-ratings">
                   {['😞', '😕', '😐', '😊', '😍'].map((emoji, index) => (
@@ -378,7 +378,7 @@ export default function Feedback() {
 
                 <textarea
                   className="fb-textarea"
-                  placeholder="What do you think of the website? Do you have books you want uploaded?"
+                  placeholder="Tell us more! What did you think of our website? Your feedback helps us grow and serve you better."
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />
@@ -387,8 +387,8 @@ export default function Feedback() {
                   <p style={{ color: "#dc2626", fontSize: "12px", margin: 0 }}>{error}</p>
                 )}
 
-                <button 
-                  className="fb-submit-btn" 
+                <button
+                  className="fb-submit-btn"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
                 >

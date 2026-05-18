@@ -3,15 +3,6 @@
 import React, { useState } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 
-/**
- * Modal that asks the user to type their username before confirming deletion.
- *
- * @param {object}   props
- * @param {string}   props.username  - Username the user must type to confirm
- * @param {Function} props.onConfirm - Called when the user confirms deletion
- * @param {Function} props.onCancel  - Called when the user cancels
- * @param {boolean}  props.deleting  - Shows a loading spinner while true
- */
 export default function DeleteAccountModal({ username, onConfirm, onCancel, deleting }) {
   const [confirmText, setConfirmText] = useState("");
   const isMatch = confirmText === username;
@@ -19,7 +10,6 @@ export default function DeleteAccountModal({ username, onConfirm, onCancel, dele
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60]">
       <div className="bg-white w-[420px] max-w-[92vw] rounded-xl border border-zinc-200 shadow-2xl overflow-hidden">
-        {/* Header */}
         <div className="bg-red-50 border-b border-red-100 px-6 py-5 flex items-start gap-3">
           <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
             <AlertTriangle size={16} className="text-red-600" />
@@ -32,7 +22,6 @@ export default function DeleteAccountModal({ username, onConfirm, onCancel, dele
           </div>
         </div>
 
-        {/* Body */}
         <div className="px-6 py-5">
           <p className="text-xs text-zinc-500 leading-relaxed mb-4">
             Deleting your account will permanently remove all your data, bookmarks, and activity
@@ -52,11 +41,10 @@ export default function DeleteAccountModal({ username, onConfirm, onCancel, dele
             />
           </div>
           {confirmText.length > 0 && !isMatch && (
-            <p className="text-[10px] text-red-400 mt-1.5">Username doesn&apos;t match</p>
+            <p className="text-[10px] text-red-400 mt-1.5">Username doesn't match</p>
           )}
         </div>
 
-        {/* Footer */}
         <div className="px-6 pb-5 flex gap-2 justify-end">
           <button
             onClick={onCancel}

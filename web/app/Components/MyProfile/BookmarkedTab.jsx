@@ -9,9 +9,6 @@ import { authFetch } from "./utils/authFetch";
 import { getCategoryClass } from "./utils/profileUtils";
 import PDFThumbnail from "../Search/PDFThumbnail";
 
-// ─────────────────────────────────────────────
-// New List Modal
-// ─────────────────────────────────────────────
 function NewListModal({ onClose, onCreate }) {
   const [name, setName] = useState("");
   const handleCreate = () => { const t = name.trim(); if (!t) return; onCreate(t); onClose(); };
@@ -42,9 +39,6 @@ function NewListModal({ onClose, onCreate }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// Add-to-List popover
-// ─────────────────────────────────────────────
 function AddToListPopover({ book, lists, onAddToList, onOpenNewListModal, onClose }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -80,13 +74,10 @@ function AddToListPopover({ book, lists, onAddToList, onOpenNewListModal, onClos
   );
 }
 
-// ─────────────────────────────────────────────
-// Folder helpers
-// ─────────────────────────────────────────────
 const FOLDER_ACCENTS = ["#C9A96E","#7B9E87","#8FA3BF","#C17F6B","#A08BBB","#B5A07A","#7AABB5"];
 function folderAccent(id) {
   let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  for (let i = 0; i <id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
   return FOLDER_ACCENTS[Math.abs(hash) % FOLDER_ACCENTS.length];
 }
 
@@ -109,16 +100,13 @@ function PremiumFolderSVG({ accent }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// Collections tab — matte folder grid
-// ─────────────────────────────────────────────
 function CollectionsView({ lists, bookmarks, onDeleteList, onRemoveFromList, onClose, onOpenNewListModal }) {
   const [activeList, setActiveList] = useState(null);
   const [hovered, setHovered] = useState(null);
 
   if (activeList) {
     const list = lists.find((l) => l.id === activeList);
-    const books = bookmarks.filter((b) => list?.bookIds.includes(b.id));
+    const books = bookmarks.filter((b) => list.bookIds.includes(b.id));
     return (
       <div>
         <button onClick={() => setActiveList(null)}
@@ -126,7 +114,7 @@ function CollectionsView({ lists, bookmarks, onDeleteList, onRemoveFromList, onC
           <ArrowLeft size={13} /> All Collections
         </button>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-zinc-800">{list?.name}</h3>
+          <h3 className="text-base font-semibold text-zinc-800">{list.name}</h3>
           <span className="text-xs text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full">
             {books.length} book{books.length !== 1 ? "s" : ""}
           </span>
@@ -184,7 +172,6 @@ function CollectionsView({ lists, bookmarks, onDeleteList, onRemoveFromList, onC
             return (
               <div key={list.id} style={{ position: "relative" }}
                 onMouseEnter={() => setHovered(list.id)} onMouseLeave={() => setHovered(null)}>
-                {/* Delete X */}
                 <button onClick={(e) => { e.stopPropagation(); onDeleteList(list.id); }}
                   style={{
                     position: "absolute", top: 8, right: 8, zIndex: 10,
@@ -219,7 +206,6 @@ function CollectionsView({ lists, bookmarks, onDeleteList, onRemoveFromList, onC
               </div>
             );
           })}
-          {/* Ghost new folder */}
           <button onClick={onOpenNewListModal}
             style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left", opacity: 0.4, transition: "opacity 0.15s" }}
             onMouseEnter={e => e.currentTarget.style.opacity = "0.7"}
@@ -240,9 +226,6 @@ function CollectionsView({ lists, bookmarks, onDeleteList, onRemoveFromList, onC
   );
 }
 
-// ─────────────────────────────────────────────
-// Main Component
-// ─────────────────────────────────────────────
 export default function BookmarkedTab({ onClose, isMobile = false }) {
   const [activeTab, setActiveTab]               = useState("bookmarked");
   const [bookmarks, setBookmarks]               = useState([]);
@@ -321,7 +304,6 @@ export default function BookmarkedTab({ onClose, isMobile = false }) {
     <>
       {showNewListModal && <NewListModal onClose={() => setShowNewListModal(false)} onCreate={createList} />}
 
-      {/* ── Pill tabs ── */}
       <div style={{ display: "flex", alignItems: "center", marginBottom: isMobile ? 16 : 20 }}>
         <div style={{ display: "flex", gap: 2, background: "#F3F4F6", borderRadius: 99, padding: isMobile ? 4 : 4, flexShrink: 0 }}>
           {[
@@ -351,7 +333,6 @@ export default function BookmarkedTab({ onClose, isMobile = false }) {
         </button>
       </div>
 
-      {/* ── Collections ── */}
       {activeTab === "collections" && (
         <CollectionsView
           lists={lists} bookmarks={bookmarks}
@@ -360,7 +341,6 @@ export default function BookmarkedTab({ onClose, isMobile = false }) {
         />
       )}
 
-      {/* ── Bookmarked ── */}
       {activeTab === "bookmarked" && (
         <>
           {bookmarksLoading && (
@@ -400,7 +380,6 @@ export default function BookmarkedTab({ onClose, isMobile = false }) {
                   const progress = isFinished ? 100 : (book.reading_progress ?? 0);
                   return (
                     <div key={book.id} style={{ position: "relative" }} className="flex items-start gap-4 py-4 first:pt-0">
-                      {/* Thumbnail */}
                       <Link href={`/book/${book.id}`} onClick={onClose}
                         style={{ width: 64, height: 86, flexShrink: 0, borderRadius: 3, overflow: "hidden", border: "1px solid #e5e7eb", display: "block" }}>
                         {book.upload_id
@@ -412,7 +391,6 @@ export default function BookmarkedTab({ onClose, isMobile = false }) {
                         }
                       </Link>
 
-                      {/* Info */}
                       <div className="flex-1 min-w-0 pt-1">
                         <Link href={`/book/${book.id}`} onClick={onClose}
                           className="block text-sm font-semibold text-zinc-800 leading-snug hover:text-zinc-950 transition-colors line-clamp-2 mb-1">
@@ -445,7 +423,6 @@ export default function BookmarkedTab({ onClose, isMobile = false }) {
                         )}
                       </div>
 
-                      {/* Three-dot */}
                       <div style={{ position: "relative", flexShrink: 0 }}>
                         <button onClick={(e) => { e.stopPropagation(); setAddToListOpen(null); setMenuOpen(menuOpen === book.id ? null : book.id); }}
                           className="mt-1 p-1.5 rounded text-zinc-800 hover:text-zinc-950 hover:bg-zinc-100 transition-colors">

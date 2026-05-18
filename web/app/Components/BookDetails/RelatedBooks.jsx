@@ -14,17 +14,17 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const getResponsiveConfig = (w) => {
   if (w < 640) {
-    return { sectionPadding: "20px 16px 32px", titleSize: 22, cardWidth: 100, cardHeight: 133, gap: 12 };
+    return { sectionPadding: "20px 16px 32px", titleSize: 22, cardWidth: 155, cardHeight: 207, gap: 12 };
   } else if (w < 768) {
-    return { sectionPadding: "28px 24px 40px", titleSize: 24, cardWidth: 120, cardHeight: 160, gap: 14 };
+    return { sectionPadding: "28px 24px 40px", titleSize: 24, cardWidth: 155, cardHeight: 207, gap: 16 };
   } else if (w < 1024) {
-    return { sectionPadding: "36px 32px 48px", titleSize: 26, cardWidth: 140, cardHeight: 187, gap: 16 };
+    return { sectionPadding: "36px 32px 48px", titleSize: 26, cardWidth: 160, cardHeight: 213, gap: 20 };
   } else if (w < 1280) {
-    return { sectionPadding: "40px 40px 52px", titleSize: 28, cardWidth: 160, cardHeight: 213, gap: 20 };
+    return { sectionPadding: "40px 40px 52px", titleSize: 28, cardWidth: 180, cardHeight: 240, gap: 20 };
   } else if (w < 1536) {
-    return { sectionPadding: "44px 48px 56px", titleSize: 28, cardWidth: 170, cardHeight: 227, gap: 22 };
+    return { sectionPadding: "44px 48px 56px", titleSize: 28, cardWidth: 190, cardHeight: 253, gap: 20 };
   } else {
-    return { sectionPadding: "48px 64px 64px", titleSize: 28, cardWidth: 180, cardHeight: 240, gap: 24 };
+    return { sectionPadding: "48px 64px 64px", titleSize: 28, cardWidth: 200, cardHeight: 267, gap: 24 };
   }
 };
 
@@ -287,7 +287,7 @@ const RelatedBooks = ({ currentBookId }) => {
         paddingRight: windowWidth < 640 ? "16px" : windowWidth < 1024 ? "24px" : "32px",
       }}>
         <div style={{
-          maxWidth: 1600,
+          maxWidth: 1900,
           margin: "0 auto",
         }}>
           <div style={{

@@ -689,7 +689,7 @@ const Search = () => {
           1024-1279→ 5 columns
           1280-1439→ 6 columns
           1440-1699→ 7 columns
-          ≥ 1700   → 8 columns
+          ≥ 1900   → 8 columns
         */
         .books-grid {
           display: grid;
@@ -716,7 +716,7 @@ const Search = () => {
         @media (min-width: 1440px) {
           .books-grid { grid-template-columns: repeat(7, 1fr); gap: 22px; }
         }
-        @media (min-width: 1700px) {
+        @media (min-width: 1900px) {
           .books-grid { grid-template-columns: repeat(8, 1fr); gap: 24px; }
         }
 
@@ -744,7 +744,7 @@ const Search = () => {
 
           {/* ── Search header ── */}
           <section className="w-full bg-white border-b border-gray-200 pt-8 sm:pt-10 md:pt-12 pb-6 sm:pb-8">
-            <div className="max-w-[1700px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 2xl:px-16">
+            <div className="max-w-[1900px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 2xl:px-16">
 
               <h1 className="text-2xl sm:text-3xl md:text-4xl 2xl:text-5xl font-medium text-gray-900 mb-5 sm:mb-6 tracking-tight">
                 {pageTitle}
@@ -800,7 +800,7 @@ const Search = () => {
                 </button>
               </div>
 
-              {/* Mobile field pills */}
+             
               <div className="flex md:hidden items-center gap-1.5 flex-wrap mt-3">
                 {Object.entries(fieldLabel).map(([f, lbl]) => (
                   <button
@@ -813,7 +813,6 @@ const Search = () => {
                 ))}
               </div>
 
-              {/* Filters row */}
               <div className="flex items-center justify-between mt-3 sm:mt-4 flex-wrap gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   <CategoryDropdown
@@ -841,7 +840,7 @@ const Search = () => {
                 </button>
               </div>
 
-              {/* Advanced search panel */}
+             
               {showAdvanced && (
                 <div
                   className="mt-4 rounded-lg p-4 sm:p-6"
@@ -930,11 +929,11 @@ const Search = () => {
             </div>
           </section>
 
-          {/* ── Results area ── */}
+       
           <div className="flex-1 flex flex-col">
 
-            {/* Sort / view toggle bar */}
-            <div className="max-w-[1700px] mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-12 2xl:px-16 pt-6 sm:pt-8">
+           
+            <div className="max-w-[1900px] mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-12 2xl:px-16 pt-6 sm:pt-8">
               <div className="flex items-center justify-between mb-5 sm:mb-6 flex-wrap gap-3">
                 <span className="text-[13px] text-gray-500">
                   {loading ? (
@@ -966,8 +965,8 @@ const Search = () => {
               </div>
             </div>
 
-            {/* Book list / grid */}
-            <div className="max-w-[1700px] mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-12 2xl:px-16 pb-20 flex-1 flex flex-col">
+           
+            <div className="max-w-[1900px] mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-12 2xl:px-16 pb-20 flex-1 flex flex-col">
 
               {error && !loading && (
                 <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-red-600 text-[13px] mb-5">
@@ -975,7 +974,7 @@ const Search = () => {
                 </div>
               )}
 
-              {/* ── GRID VIEW ── */}
+            
               {isGridView && (
                 <div className="books-grid">
                   {loading ? (
@@ -992,7 +991,7 @@ const Search = () => {
                           overflow: "hidden",
                         }}
                       >
-                        {/* Cover */}
+                        
                         <div className="book-cover">
                           {book.upload_id ? (
                             <PDFThumbnail uploadId={book.upload_id} title={book.title} />
@@ -1021,7 +1020,7 @@ const Search = () => {
                           )}
                         </div>
 
-                        {/* Meta */}
+                      
                         <div className="book-meta">
                           <div style={{
                             fontSize: 13, fontWeight: 700, color: "#111827",
@@ -1052,7 +1051,7 @@ const Search = () => {
                 </div>
               )}
 
-              {/* ── LIST VIEW ── */}
+              
               {!isGridView && (
                 <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
                   {loading ? (
@@ -1100,7 +1099,7 @@ const Search = () => {
                 </div>
               )}
 
-              {/* Empty state */}
+              
               {!loading && !error && books.length === 0 && (
                 <div style={{
                   flex: 1,
@@ -1127,7 +1126,7 @@ const Search = () => {
                 </div>
               )}
 
-              {/* Pagination */}
+              
               {!loading && books.length > 0 && (
                 <Pagination page={urlPage} totalPages={totalPages} onPage={onPage} />
               )}

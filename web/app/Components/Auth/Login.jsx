@@ -68,7 +68,7 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
       };
       script.onerror = () => {
         console.error("Failed to load Google script");
-        // Retry once after a delay
+        
         setTimeout(() => {
           const retryScript = document.createElement("script");
           retryScript.src = "https://accounts.google.com/gsi/client";
@@ -139,7 +139,7 @@ const Login = ({ onClose, onSwitchToRegister, onSuccess }) => {
         className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-md z-[1000]"
         onClick={(e) => e.target === e.currentTarget && onClose?.()}
       >
-        <div className="bg-white p-8 pb-8 rounded-[20px] border border-black/8 shadow-[0_20px_60px_rgba(0,0,0,0.15),inset_0_0_0_1px_rgba(0,0,0,0.05)] w-full max-w-[420px] text-center relative font-inter backdrop-blur-[24px] max-h-[92vh] overflow-y-auto animate-fade-up">
+        <div className="bg-white p-6 pb-6 md:p-8 md:pb-8 rounded-[20px] border border-black/8 shadow-[0_20px_60px_rgba(0,0,0,0.15),inset_0_0_0_1px_rgba(0,0,0,0.05)] w-full max-w-[340px] md:max-w-[420px] text-center relative font-inter backdrop-blur-[24px] max-h-[92vh] overflow-y-auto animate-fade-up">
           
           <button 
             onClick={onClose} 

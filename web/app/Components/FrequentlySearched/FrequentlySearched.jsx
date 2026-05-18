@@ -32,8 +32,8 @@ const FrequentlySearched = () => {
         sectionPadding: "20px 16px 32px",
         titleSize:      24,
         showHeaderText: true,
-        cardWidth:      120,
-        cardHeight:     160,
+        cardWidth:      155,
+        cardHeight:     207,
         gap:            12,
       };
     } else if (windowWidth < 768) {
@@ -41,20 +41,11 @@ const FrequentlySearched = () => {
         sectionPadding: "32px 24px 40px",
         titleSize:      26,
         showHeaderText: true,
-        cardWidth:      140,
-        cardHeight:     187,
+        cardWidth:      155,
+        cardHeight:     207,
         gap:            16,
       };
     } else if (windowWidth < 1024) {
-      return {
-        sectionPadding: "40px 32px 48px",
-        titleSize:      28,
-        showHeaderText: false,
-        cardWidth:      140,
-        cardHeight:     187,
-        gap:            20,
-      };
-    } else if (windowWidth < 1280) {
       return {
         sectionPadding: "40px 32px 48px",
         titleSize:      28,
@@ -63,13 +54,22 @@ const FrequentlySearched = () => {
         cardHeight:     213,
         gap:            20,
       };
+    } else if (windowWidth < 1280) {
+      return {
+        sectionPadding: "40px 32px 48px",
+        titleSize:      28,
+        showHeaderText: false,
+        cardWidth:      180,
+        cardHeight:     240,
+        gap:            20,
+      };
     } else if (windowWidth <= 1440) {
       return {
         sectionPadding: "40px 32px 48px",
         titleSize:      28,
         showHeaderText: false,
-        cardWidth:      170,
-        cardHeight:     227,
+        cardWidth:      190,
+        cardHeight:     253,
         gap:            20,
       };
     } else {
@@ -77,8 +77,8 @@ const FrequentlySearched = () => {
         sectionPadding: "44px 48px 56px",
         titleSize:      28,
         showHeaderText: false,
-        cardWidth:      180,
-        cardHeight:     240,
+        cardWidth:      200,
+        cardHeight:     267,
         gap:            24,
       };
     }
@@ -363,7 +363,7 @@ const FrequentlySearched = () => {
 
       <div style={{ background: "#fff" }}>
         <div style={{
-          maxWidth: 1700,
+          maxWidth: 1900,
           margin: "0 auto",
           padding: config.sectionPadding,
           overflow: "hidden",
