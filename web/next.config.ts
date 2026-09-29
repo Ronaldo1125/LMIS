@@ -15,13 +15,13 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "http",
-        hostname: "localhost",
+        hostname: "192.168.0.120",
         port: "5000",
         pathname: "/api/**",
       },
       {
         protocol: "http",
-        hostname: "localhost",
+        hostname: "192.168.0.120",
         port: "5000",
         pathname: "/uploads/**",
       },
@@ -31,11 +31,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:5000/api/:path*",
+        destination: "http://192.168.0.120:5000/api/:path*",
       },
       {
         source: "/uploads/:path*",
-        destination: "http://localhost:5000/uploads/:path*",
+        destination: "http://192.168.0.120:5000/uploads/:path*",
       },
     ];
   },

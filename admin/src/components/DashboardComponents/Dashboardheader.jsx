@@ -280,7 +280,7 @@ const DashboardHeader = ({ user, setCurrentView, dark }) => {
         {/* Left — Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           <img
-            src="/LOGO.svg" alt="LMIS Logo"
+            src="/admin/LOGO.svg" alt="LMIS Logo"
             style={{
               width: isSticky ? '2.5rem' : '3rem', height: isSticky ? '2.5rem' : '3rem',
               transition: 'all 0.3s ease',

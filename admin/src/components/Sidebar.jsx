@@ -90,7 +90,7 @@ const Sidebar = ({ isOpen, setIsSidebarOpen, currentView, setCurrentView, dark }
             justifyContent: isOpen ? 'flex-start' : 'center',
             transition: 'border-color 0.45s ease',
           }}>
-            <img src="/LOGO.svg" alt="LMIS Logo" style={{ width: '3rem', height: '3rem', flexShrink: 0, filter: 'brightness(0) invert(1)' }} />
+            <img src="/admin/LOGO.svg" alt="LMIS Logo" style={{ width: '3rem', height: '3rem', flexShrink: 0, filter: 'brightness(0) invert(1)' }} />
             <div style={{
               display: 'flex', flexDirection: 'column', marginLeft: '0.75rem',
               opacity: isOpen ? 1 : 0,

@@ -15,22 +15,22 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
-  'http://192.168.1.94:3000',   // old IP, keep or remove
-  'http://192.168.1.94:3001',
-  'http://192.168.1.236:3000',  // ← your new IP
-  'http://192.168.1.236:3001',
-  'http://192.168.1.147:3000',
-  'http://192.168.1.147:3001',
+  'http://192.168.0.120:3000',   // old IP, keep or remove
+  'http://192.168.0.120:3001',
+  'http://192.168.0.120:5173',  // ← your new IP
+  //'http://192.168.1.147:3000',
+  //'http://192.168.1.147:3001',
 ].filter(Boolean);
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    callback(new Error(`CORS policy: origin ${origin} not allowed`));
-  },
+ // origin: (origin, callback) => {
+ //   if (!origin) return callback(null, true);
+ //   if (allowedOrigins.includes(origin)) {
+ //     return callback(null, true);
+ //   }
+ //   callback(new Error(`CORS policy: origin ${origin} not allowed`));
+ // },
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS','PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']

@@ -4,7 +4,7 @@ function LoginHeader() {
       {/* Logo */}
       <div className="flex justify-center mb-8">
         <img 
-          src="/LOGO.svg" 
+          src="/admin/LOGO.svg" 
           alt="Library Logo" 
           className="h-20 w-auto"
         />

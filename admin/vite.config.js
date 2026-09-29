@@ -5,6 +5,7 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/admin/',
   server: {
     proxy: {
       '/api': {
@@ -12,6 +13,8 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    port: 5173,
+    strictPort: true,
   },
   css: {
     preprocessorOptions: {
